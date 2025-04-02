@@ -1,0 +1,21 @@
+IDEA YACHT is a comprehensive yacht management software designed to streamline the planned maintenance processes of superyachts. It offers a suite of functionalities aimed at enhancing operational efficiency, ensuring regulatory compliance, and preserving the vessel's value.
+
+**Key Features of IDEA YACHT's Planned Maintenance System:**
+
+1. **Centralized Maintenance Scheduling:** The software allows for the organization of all maintenance tasks within a single platform, enabling the scheduling of routine maintenance and the setting of automated reminders to ensure timely execution. citeturn0search7
+
+2. **Maintenance Plan Development:** IDEA can program maintenance plans based on manufacturer recommendations, yard or crew instructions, and major and auxiliary equipment requirements to fulfill recommended maintenance intervals precisely by a proven standard. citeturn0search0
+
+3. **Service History Tracking:** The system automatically records maintenance activities, creating a comprehensive service history for each piece of equipment. This feature aids in audit reporting and analysis. citeturn0search4
+
+4. **Inventory Management Integration:** IDEA YACHT integrates inventory tracking with maintenance schedules, allowing for efficient monitoring of spare parts and supplies. This integration ensures that necessary components are available when needed, reducing downtime. citeturn0search7
+
+5. **Mobile Application Support:** The software offers a mobile app that enables crew members to perform maintenance tasks, record data, and access information on the go, even offline. This mobility enhances the efficiency of engine room rounds and other maintenance activities. citeturn0search10
+
+6. **Digital Documentation and Reporting:** IDEA YACHT facilitates the digital recording of maintenance work and the generation of reports, improving accuracy and compliance with regulatory requirements. citeturn0search7
+
+7. **Predictive Maintenance Capabilities:** By analyzing data from various systems and components, the software can predict potential issues before they escalate, allowing for proactive maintenance and reducing the risk of unexpected breakdowns. citeturn0search7
+
+8. **Crew Training and Procedural Consistency:** The system provides step-by-step procedures with visual aids for maintenance tasks, which is beneficial for crew training and ensuring consistency during crew changes. citeturn0search10
+
+Implementing IDEA YACHT's planned maintenance functionalities can lead to increased equipment reliability, cost savings, simplified audit preparation, and enhanced service for guests. citeturn0search4 
