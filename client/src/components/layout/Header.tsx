@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Bell, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 
 interface HeaderProps {
   title: string;
@@ -14,6 +15,8 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
       <div className="container mx-auto px-6 flex justify-between items-center">
         <h1 className="font-semibold text-xl">{title}</h1>
         <div className="flex items-center space-x-4">
+          <ThemeSwitcher />
+          
           <Button variant="ghost" size="sm" className="flex items-center text-gray-500">
             <Bell className="h-5 w-5 mr-1" />
             <span className="hidden lg:inline">Notifications</span>
@@ -23,11 +26,14 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
               </span>
             )}
           </Button>
+          
           <Button variant="ghost" size="sm" className="flex items-center text-gray-500">
             <HelpCircle className="h-5 w-5 mr-1" />
             <span className="hidden lg:inline">Help</span>
           </Button>
+          
           <div className="h-8 w-px bg-gray-200"></div>
+          
           <div className="flex items-center">
             <img
               src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&auto=format&fit=crop"

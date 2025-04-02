@@ -78,20 +78,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               Main
             </p>
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a
-                  className={cn(
-                    "flex items-center px-4 py-2 text-sm rounded-md mb-1",
-                    location === item.href
-                      ? "bg-navy"
-                      : "hover:bg-navy"
-                  )}
-                  onClick={() => setIsOpen(true)}
-                >
-                  {item.icon}
-                  {item.label}
-                </a>
-              </Link>
+              <div key={item.href} className="mb-1">
+                <Link href={item.href}>
+                  <div
+                    className={cn(
+                      "flex items-center px-4 py-2 text-sm rounded-md cursor-pointer",
+                      location === item.href
+                        ? "bg-navy"
+                        : "hover:bg-navy"
+                    )}
+                    onClick={() => setIsOpen(true)}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
 
@@ -100,20 +102,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               Yacht Systems
             </p>
             {systemItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a
-                  className={cn(
-                    "flex items-center px-4 py-2 text-sm rounded-md mb-1",
-                    location === item.href
-                      ? "bg-navy"
-                      : "hover:bg-navy"
-                  )}
-                  onClick={() => setIsOpen(true)}
-                >
-                  {item.icon}
-                  {item.label}
-                </a>
-              </Link>
+              <div key={item.href} className="mb-1">
+                <Link href={item.href}>
+                  <div
+                    className={cn(
+                      "flex items-center px-4 py-2 text-sm rounded-md cursor-pointer",
+                      location === item.href
+                        ? "bg-navy"
+                        : "hover:bg-navy"
+                    )}
+                    onClick={() => setIsOpen(true)}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         </nav>
@@ -121,16 +125,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         {/* Sidebar Footer */}
         <div className="mt-auto p-4 border-t border-navy">
           <Link href="/settings">
-            <a className="flex items-center text-sm hover:text-gray-300">
+            <div className="flex items-center text-sm hover:text-gray-300 cursor-pointer">
               <Settings className="h-5 w-5 mr-2" />
               Settings
-            </a>
+            </div>
           </Link>
           <Link href="/logout">
-            <a className="flex items-center text-sm hover:text-gray-300 mt-3">
+            <div className="flex items-center text-sm hover:text-gray-300 mt-3 cursor-pointer">
               <LogOut className="h-5 w-5 mr-2" />
               Logout
-            </a>
+            </div>
           </Link>
         </div>
       </div>

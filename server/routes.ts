@@ -2,6 +2,8 @@ import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import fs from "fs";
+import path from "path";
 import { 
   insertUserSchema, 
   insertEquipmentSchema, 
@@ -537,6 +539,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to get dashboard data" });
+    }
+  });
+  
+  // =========== Theme Routes =============
+  
+  // Update theme settings
+  apiRouter.post("/update-theme", async (req: Request, res: Response) => {
+    try {
+      const themeData = req.body;
+      const themeFilePath = path.resolve('./theme.json');
+      
+      // Validate theme data
+      if (!themeData || typeof themeData !== 'object') {
+        return res.status(400).json({ message: "Invalid theme data" });
+      }
+      
+      // Validate required fields
+      const requiredFields = ['variant', 'primary', 'appearance', 'radius'];
+      for (const field of requiredFields) {
+        if (!(field in themeData)) {
+          return res.status(400).json({ 
+            message: `Missing required field: ${field}`,
+            requiredFields 
+          });
+        }
+      }
+      
+      // Write the theme data to theme.json
+      fs.writeFileSync(themeFilePath, JSON.stringify(themeData, null, 2));
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'theme_updated',
+        description: `Application theme updated`,
+        userId: null,
+        relatedEntityType: 'system',
+        relatedEntityId: 0,
+        metadata: { 
+          appearance: themeData.appearance,
+          variant: themeData.variant
+        }
+      });
+      
+      res.json({ 
+        message: "Theme updated successfully",
+        theme: themeData
+      });
+    } catch (error) {
+      console.error("Failed to update theme:", error);
+      res.status(500).json({ message: "Failed to update theme" });
     }
   });
   
