@@ -3,7 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  /* Base transition for all theme changes */
   :root {
+    --transition-duration: 300ms;
+    --transition-timing: ease;
+
+    /* Theme colors */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -33,6 +38,13 @@
     --ring: 203 71% 40%;
 
     --radius: 0.5rem;
+
+    /* Apply transitions to color properties */
+    transition: 
+      background-color var(--transition-duration) var(--transition-timing),
+      color var(--transition-duration) var(--transition-timing),
+      border-color var(--transition-duration) var(--transition-timing),
+      box-shadow var(--transition-duration) var(--transition-timing);
   }
 
   [data-theme="dark"] {

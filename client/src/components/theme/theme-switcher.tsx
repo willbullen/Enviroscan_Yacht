@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { themes } from "./theme-provider";
 import { Button } from "@/components/ui/button";
 
 type Theme = {
@@ -7,6 +6,51 @@ type Theme = {
   primary: string;
   appearance: "light" | "dark" | "system";
   radius: number;
+};
+
+// Predefined themes
+const themes = {
+  light: {
+    variant: "professional",
+    primary: "hsl(203, 71%, 40%)", // Navy blue
+    appearance: "light",
+    radius: 0.5,
+  } as Theme,
+  
+  dark: {
+    variant: "professional",
+    primary: "hsl(203, 71%, 40%)", // Navy blue
+    appearance: "dark",
+    radius: 0.5,
+  } as Theme,
+
+  ocean: {
+    variant: "tint",
+    primary: "hsl(195, 83%, 38%)", // Ocean blue
+    appearance: "light",
+    radius: 0.75,
+  } as Theme,
+
+  sunset: {
+    variant: "vibrant",
+    primary: "hsl(25, 95%, 53%)", // Sunset orange
+    appearance: "light",
+    radius: 1,
+  } as Theme,
+
+  midnight: {
+    variant: "tint",
+    primary: "hsl(250, 60%, 30%)", // Midnight purple
+    appearance: "dark",
+    radius: 0.5,
+  } as Theme,
+  
+  system: {
+    variant: "professional",
+    primary: "hsl(203, 71%, 40%)", // Navy blue
+    appearance: "system",
+    radius: 0.5,
+  } as Theme,
 };
 import {
   DropdownMenu,
@@ -38,7 +82,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 
 export function ThemeSwitcher() {
-  // Initialize with default theme
+  // Using local state with localStorage management
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
       const savedTheme = localStorage.getItem("yacht-theme");
@@ -52,6 +96,40 @@ export function ThemeSwitcher() {
   const [customizeOpen, setCustomizeOpen] = useState<boolean>(false);
   const [customTheme, setCustomTheme] = useState<Theme>(theme);
 
+  // Makes sure theme changes are reflected in the DOM
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme.appearance);
+  }, [theme]);
+
+  // Handle system preference changes for "system" appearance
+  useEffect(() => {
+    if (theme.appearance !== "system") return;
+    
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    
+    const handleChange = () => {
+      document.documentElement.setAttribute(
+        "data-theme", 
+        mediaQuery.matches ? "dark" : "light"
+      );
+    };
+    
+    mediaQuery.addEventListener("change", handleChange);
+    // Set initial value
+    handleChange();
+    
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [theme.appearance]);
+
+  // Track if we're initializing for the first time to prevent unnecessary API calls
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  useEffect(() => {
+    // One-time effect to handle initialization
+    if (isInitializing) {
+      setIsInitializing(false);
+    }
+  }, [isInitializing]);
+  
   // Only update theme.json when called from UI interactions, not on initial load
   const setTheme = (newTheme: Theme, updateServer: boolean = false) => {
     // Don't do anything if theme hasn't changed

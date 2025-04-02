@@ -48,20 +48,11 @@ export function ThemeProvider({
     // Save theme to localStorage whenever it changes
     localStorage.setItem("yacht-theme", JSON.stringify(theme));
 
-    // Apply the theme to the JSON file
-    // This is a client-side effect, but we can update a data attribute for styling
+    // Apply the theme to the document for styling
     document.documentElement.setAttribute("data-theme", theme.appearance);
     
-    // Update theme.json via an API call
-    fetch('/api/update-theme', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(theme),
-    }).catch(error => {
-      console.error('Failed to update theme.json:', error);
-    });
+    // Note: API calls for theme updates are now handled exclusively by the ThemeSwitcher component
+    // to prevent continuous API calls and flickering
   }, [theme]);
 
   // Handle system preference changes for "system" appearance
