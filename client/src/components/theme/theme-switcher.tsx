@@ -52,21 +52,29 @@ export function ThemeSwitcher() {
   const [customizeOpen, setCustomizeOpen] = useState<boolean>(false);
   const [customTheme, setCustomTheme] = useState<Theme>(theme);
 
-  const setTheme = (newTheme: Theme) => {
+  // Only update theme.json when called from UI interactions, not on initial load
+  const setTheme = (newTheme: Theme, updateServer: boolean = false) => {
+    // Don't do anything if theme hasn't changed
+    if (JSON.stringify(theme) === JSON.stringify(newTheme) && !updateServer) {
+      return;
+    }
+    
     setThemeState(newTheme);
     localStorage.setItem("yacht-theme", JSON.stringify(newTheme));
     document.documentElement.setAttribute("data-theme", newTheme.appearance);
     
-    // Update theme.json via an API call
-    fetch('/api/update-theme', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newTheme),
-    }).catch(error => {
-      console.error('Failed to update theme.json:', error);
-    });
+    // Only update theme.json via API when explicitly requested
+    if (updateServer) {
+      fetch('/api/update-theme', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTheme),
+      }).catch(error => {
+        console.error('Failed to update theme.json:', error);
+      });
+    }
   };
 
   // Icons for different themes
@@ -87,7 +95,7 @@ export function ThemeSwitcher() {
 
   // Apply the custom theme
   const applyCustomTheme = () => {
-    setTheme(customTheme);
+    setTheme(customTheme, true);
     setCustomizeOpen(false);
   };
 
@@ -109,17 +117,17 @@ export function ThemeSwitcher() {
           <DropdownMenuLabel>Choose Theme</DropdownMenuLabel>
           <DropdownMenuSeparator />
           
-          <DropdownMenuItem onClick={() => setTheme(themes.light)}>
+          <DropdownMenuItem onClick={() => setTheme(themes.light, true)}>
             <Sun className="mr-2 h-4 w-4" />
             <span>Light</span>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onClick={() => setTheme(themes.dark)}>
+          <DropdownMenuItem onClick={() => setTheme(themes.dark, true)}>
             <Moon className="mr-2 h-4 w-4" />
             <span>Dark</span>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onClick={() => setTheme(themes.system)}>
+          <DropdownMenuItem onClick={() => setTheme(themes.system, true)}>
             <Laptop className="mr-2 h-4 w-4" />
             <span>System</span>
           </DropdownMenuItem>
@@ -128,17 +136,17 @@ export function ThemeSwitcher() {
           
           <DropdownMenuLabel>Theme Presets</DropdownMenuLabel>
           
-          <DropdownMenuItem onClick={() => setTheme(themes.ocean)}>
+          <DropdownMenuItem onClick={() => setTheme(themes.ocean, true)}>
             <span className="w-4 h-4 rounded-full bg-[hsl(195,83%,38%)] mr-2"></span>
             <span>Ocean</span>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onClick={() => setTheme(themes.sunset)}>
+          <DropdownMenuItem onClick={() => setTheme(themes.sunset, true)}>
             <span className="w-4 h-4 rounded-full bg-[hsl(25,95%,53%)] mr-2"></span>
             <span>Sunset</span>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onClick={() => setTheme(themes.midnight)}>
+          <DropdownMenuItem onClick={() => setTheme(themes.midnight, true)}>
             <span className="w-4 h-4 rounded-full bg-[hsl(250,60%,30%)] mr-2"></span>
             <span>Midnight</span>
           </DropdownMenuItem>
