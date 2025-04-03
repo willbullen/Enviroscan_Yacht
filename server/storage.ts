@@ -3,7 +3,9 @@ import {
   equipment, type Equipment, type InsertEquipment,
   maintenanceTasks, type MaintenanceTask, type InsertMaintenanceTask,
   inventoryItems, type InventoryItem, type InsertInventoryItem,
-  activityLogs, type ActivityLog, type InsertActivityLog
+  activityLogs, type ActivityLog, type InsertActivityLog,
+  maintenanceHistory, type MaintenanceHistory, type InsertMaintenanceHistory,
+  predictiveMaintenance, type PredictiveMaintenance, type InsertPredictiveMaintenance
 } from "@shared/schema";
 
 // modify the interface with any CRUD methods
@@ -47,6 +49,21 @@ export interface IStorage {
   // Activity log operations
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
   getRecentActivityLogs(limit: number): Promise<ActivityLog[]>;
+  
+  // Maintenance history operations
+  getMaintenanceHistory(id: number): Promise<MaintenanceHistory | undefined>;
+  getMaintenanceHistoryByEquipment(equipmentId: number): Promise<MaintenanceHistory[]>;
+  createMaintenanceHistory(history: InsertMaintenanceHistory): Promise<MaintenanceHistory>;
+  updateMaintenanceHistory(id: number, history: Partial<MaintenanceHistory>): Promise<MaintenanceHistory | undefined>;
+  deleteMaintenanceHistory(id: number): Promise<boolean>;
+  
+  // Predictive maintenance operations
+  getPredictiveMaintenance(id: number): Promise<PredictiveMaintenance | undefined>;
+  getPredictiveMaintenanceByEquipment(equipmentId: number): Promise<PredictiveMaintenance[]>;
+  createPredictiveMaintenance(prediction: InsertPredictiveMaintenance): Promise<PredictiveMaintenance>;
+  updatePredictiveMaintenance(id: number, prediction: Partial<PredictiveMaintenance>): Promise<PredictiveMaintenance | undefined>;
+  deletePredictiveMaintenance(id: number): Promise<boolean>;
+  generatePredictiveMaintenanceForEquipment(equipmentId: number): Promise<PredictiveMaintenance[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -55,12 +72,16 @@ export class MemStorage implements IStorage {
   private maintenanceTasks: Map<number, MaintenanceTask>;
   private inventoryItems: Map<number, InventoryItem>;
   private activityLogs: Map<number, ActivityLog>;
+  private maintenanceHistory: Map<number, MaintenanceHistory>;
+  private predictiveMaintenance: Map<number, PredictiveMaintenance>;
   
   private userCurrentId: number;
   private equipmentCurrentId: number;
   private taskCurrentId: number;
   private inventoryCurrentId: number;
   private logCurrentId: number;
+  private historyCurrentId: number;
+  private predictiveCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -68,12 +89,16 @@ export class MemStorage implements IStorage {
     this.maintenanceTasks = new Map();
     this.inventoryItems = new Map();
     this.activityLogs = new Map();
+    this.maintenanceHistory = new Map();
+    this.predictiveMaintenance = new Map();
     
     this.userCurrentId = 1;
     this.equipmentCurrentId = 1;
     this.taskCurrentId = 1;
     this.inventoryCurrentId = 1;
     this.logCurrentId = 1;
+    this.historyCurrentId = 1;
+    this.predictiveCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeData();
@@ -266,6 +291,209 @@ export class MemStorage implements IStorage {
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit);
   }
+  
+  // Maintenance history operations
+  async getMaintenanceHistory(id: number): Promise<MaintenanceHistory | undefined> {
+    return this.maintenanceHistory.get(id);
+  }
+
+  async getMaintenanceHistoryByEquipment(equipmentId: number): Promise<MaintenanceHistory[]> {
+    return Array.from(this.maintenanceHistory.values()).filter(
+      (history) => history.equipmentId === equipmentId
+    );
+  }
+
+  async createMaintenanceHistory(insertHistory: InsertMaintenanceHistory): Promise<MaintenanceHistory> {
+    const id = this.historyCurrentId++;
+    const createdAt = new Date();
+    const history: MaintenanceHistory = { ...insertHistory, id, createdAt };
+    this.maintenanceHistory.set(id, history);
+    return history;
+  }
+
+  async updateMaintenanceHistory(id: number, historyUpdate: Partial<MaintenanceHistory>): Promise<MaintenanceHistory | undefined> {
+    const existingHistory = this.maintenanceHistory.get(id);
+    if (!existingHistory) return undefined;
+    
+    const updatedHistory = { ...existingHistory, ...historyUpdate };
+    this.maintenanceHistory.set(id, updatedHistory);
+    return updatedHistory;
+  }
+
+  async deleteMaintenanceHistory(id: number): Promise<boolean> {
+    return this.maintenanceHistory.delete(id);
+  }
+  
+  // Predictive maintenance operations
+  async getPredictiveMaintenance(id: number): Promise<PredictiveMaintenance | undefined> {
+    return this.predictiveMaintenance.get(id);
+  }
+
+  async getPredictiveMaintenanceByEquipment(equipmentId: number): Promise<PredictiveMaintenance[]> {
+    return Array.from(this.predictiveMaintenance.values()).filter(
+      (prediction) => prediction.equipmentId === equipmentId
+    );
+  }
+
+  async createPredictiveMaintenance(insertPrediction: InsertPredictiveMaintenance): Promise<PredictiveMaintenance> {
+    const id = this.predictiveCurrentId++;
+    const createdAt = new Date();
+    const lastUpdated = new Date();
+    const prediction: PredictiveMaintenance = { ...insertPrediction, id, lastUpdated, createdAt };
+    this.predictiveMaintenance.set(id, prediction);
+    return prediction;
+  }
+
+  async updatePredictiveMaintenance(id: number, predictionUpdate: Partial<PredictiveMaintenance>): Promise<PredictiveMaintenance | undefined> {
+    const existingPrediction = this.predictiveMaintenance.get(id);
+    if (!existingPrediction) return undefined;
+    
+    // Always update lastUpdated when prediction is modified
+    const updatedPrediction = { 
+      ...existingPrediction, 
+      ...predictionUpdate,
+      lastUpdated: new Date()
+    };
+    this.predictiveMaintenance.set(id, updatedPrediction);
+    return updatedPrediction;
+  }
+
+  async deletePredictiveMaintenance(id: number): Promise<boolean> {
+    return this.predictiveMaintenance.delete(id);
+  }
+  
+  // Generate predictive maintenance forecast based on maintenance history
+  async generatePredictiveMaintenanceForEquipment(equipmentId: number): Promise<PredictiveMaintenance[]> {
+    // Get the equipment
+    const equipment = await this.getEquipment(equipmentId);
+    if (!equipment) {
+      throw new Error(`Equipment not found with ID: ${equipmentId}`);
+    }
+    
+    // Get all maintenance history for the equipment
+    const maintenanceRecords = await this.getMaintenanceHistoryByEquipment(equipmentId);
+    
+    // We need some maintenance history to make predictions
+    if (maintenanceRecords.length < 2) {
+      return []; // Not enough data to make predictions
+    }
+    
+    // Group maintenance records by type
+    const recordsByType: Record<string, MaintenanceHistory[]> = {};
+    
+    maintenanceRecords.forEach(record => {
+      if (!recordsByType[record.maintenanceType]) {
+        recordsByType[record.maintenanceType] = [];
+      }
+      recordsByType[record.maintenanceType].push(record);
+    });
+    
+    const predictions: PredictiveMaintenance[] = [];
+    
+    // For each maintenance type, calculate next predicted date and runtime
+    for (const [maintenanceType, records] of Object.entries(recordsByType)) {
+      // Sort records by date
+      records.sort((a, b) => new Date(a.serviceDate).getTime() - new Date(b.serviceDate).getTime());
+      
+      // Need at least 2 records of same type to establish a pattern
+      if (records.length < 2) continue;
+      
+      // Calculate average time between services
+      const intervals: number[] = [];
+      const runtimeIntervals: number[] = [];
+      
+      for (let i = 1; i < records.length; i++) {
+        const daysDiff = (new Date(records[i].serviceDate).getTime() - new Date(records[i-1].serviceDate).getTime()) / (1000 * 60 * 60 * 24);
+        intervals.push(daysDiff);
+        
+        // If we have runtime data, calculate runtime intervals
+        if (records[i].runtime && records[i-1].runtime) {
+          runtimeIntervals.push(records[i].runtime - records[i-1].runtime);
+        }
+      }
+      
+      // Calculate averages
+      const avgDays = intervals.reduce((sum, days) => sum + days, 0) / intervals.length;
+      
+      // Calculate the next predicted date
+      const lastServiceDate = new Date(records[records.length - 1].serviceDate);
+      const predictedDate = new Date(lastServiceDate);
+      predictedDate.setDate(predictedDate.getDate() + Math.round(avgDays));
+      
+      // Calculate next predicted runtime if we have enough data
+      let predictedRuntime = null;
+      if (runtimeIntervals.length > 0) {
+        const avgRuntime = runtimeIntervals.reduce((sum, hours) => sum + hours, 0) / runtimeIntervals.length;
+        predictedRuntime = records[records.length - 1].runtime + avgRuntime;
+      }
+      
+      // Calculate confidence based on variation in the data
+      // Lower standard deviation = higher confidence
+      let confidence = 0.7; // Default medium-high confidence
+      
+      if (intervals.length > 2) {
+        const mean = avgDays;
+        const squaredDiffs = intervals.map(interval => Math.pow(interval - mean, 2));
+        const variance = squaredDiffs.reduce((sum, squared) => sum + squared, 0) / intervals.length;
+        const stdDev = Math.sqrt(variance);
+        
+        // Normalize standard deviation to a confidence value (0 to 1)
+        // Lower stdDev means higher confidence
+        const maxExpectedStdDev = avgDays / 2; // Assuming this is the max reasonable variation
+        confidence = Math.max(0.1, Math.min(0.95, 1 - (stdDev / maxExpectedStdDev)));
+      }
+      
+      // Create reasoning factors
+      const reasoningFactors = {
+        numDataPoints: records.length,
+        avgTimeBetweenServices: avgDays,
+        lastServiceDate: lastServiceDate.toISOString(),
+        dataConsistency: confidence,
+        maintenanceHistory: records.map(r => ({
+          id: r.id,
+          date: r.serviceDate,
+          runtime: r.runtime
+        }))
+      };
+      
+      // Generate recommended action based on prediction
+      const daysToPrediction = (predictedDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
+      
+      let recommendedAction = '';
+      if (daysToPrediction < 0) {
+        recommendedAction = 'Maintenance overdue, schedule immediately';
+      } else if (daysToPrediction < 7) {
+        recommendedAction = 'Schedule maintenance within the next week';
+      } else if (daysToPrediction < 30) {
+        recommendedAction = 'Schedule maintenance within the next month';
+      } else {
+        recommendedAction = 'Routine maintenance, add to schedule';
+      }
+      
+      // Create a warning threshold (30% of avg interval)
+      const warningThreshold = Math.max(7, avgDays * 0.3);
+      
+      // Create a prediction
+      const prediction: InsertPredictiveMaintenance = {
+        equipmentId,
+        maintenanceType,
+        predictedDate,
+        predictedRuntime,
+        confidence,
+        reasoningFactors,
+        recommendedAction,
+        warningThreshold,
+        alertThreshold: Math.max(1, avgDays * 0.1), // 10% of avg interval, at least 1 day
+        historyDataPoints: records.length
+      };
+      
+      // Add to our predictions
+      const createdPrediction = await this.createPredictiveMaintenance(prediction);
+      predictions.push(createdPrediction);
+    }
+    
+    return predictions;
+  }
 
   // Initialize demo data
   private initializeData(): void {
@@ -404,6 +632,201 @@ export class MemStorage implements IStorage {
     equipmentList.forEach(equipment => {
       this.createEquipment(equipment as InsertEquipment);
     });
+    
+    // Create demo maintenance history records
+    // This will allow us to generate predictive maintenance data
+    const maintenanceHistoryRecords = [
+      // Engine oil change records for the main engine
+      {
+        equipmentId: 1,
+        maintenanceType: 'oil_change',
+        serviceDate: new Date('2021-09-10'),
+        runtime: 500,
+        description: 'Regular oil change',
+        findings: 'Normal wear, slight metal content in oil',
+        partsReplaced: ['oil_filter', 'oil_15w40'],
+        technician: 'Engineer L. Johnson',
+        cost: 350.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 2,
+        nextRecommendedDate: new Date('2022-03-10'),
+        nextRecommendedRuntime: 1000
+      },
+      {
+        equipmentId: 1,
+        maintenanceType: 'oil_change',
+        serviceDate: new Date('2022-03-15'),
+        runtime: 1050,
+        description: 'Regular oil change',
+        findings: 'Normal wear',
+        partsReplaced: ['oil_filter', 'oil_15w40'],
+        technician: 'Engineer L. Johnson',
+        cost: 350.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 2,
+        nextRecommendedDate: new Date('2022-09-15'),
+        nextRecommendedRuntime: 1500
+      },
+      {
+        equipmentId: 1,
+        maintenanceType: 'oil_change',
+        serviceDate: new Date('2022-09-12'),
+        runtime: 1520,
+        description: 'Regular oil change',
+        findings: 'Normal wear',
+        partsReplaced: ['oil_filter', 'oil_15w40'],
+        technician: 'Engineer A. Williams',
+        cost: 350.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 3,
+        nextRecommendedDate: new Date('2023-03-12'),
+        nextRecommendedRuntime: 2000
+      },
+      {
+        equipmentId: 1,
+        maintenanceType: 'oil_change',
+        serviceDate: new Date('2023-03-14'),
+        runtime: 2100,
+        description: 'Regular oil change',
+        findings: 'Slightly higher metal content, monitor',
+        partsReplaced: ['oil_filter', 'oil_15w40'],
+        technician: 'Engineer L. Johnson',
+        cost: 350.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 2,
+        nextRecommendedDate: new Date('2023-09-14'),
+        nextRecommendedRuntime: 2600
+      },
+      // Fuel filter replacements for main engine
+      {
+        equipmentId: 1,
+        maintenanceType: 'fuel_filter',
+        serviceDate: new Date('2021-11-20'),
+        runtime: 750,
+        description: 'Fuel filter replacement',
+        findings: 'Moderate contamination',
+        partsReplaced: ['primary_fuel_filter', 'secondary_fuel_filter'],
+        technician: 'Engineer L. Johnson',
+        cost: 180.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 2,
+        nextRecommendedDate: new Date('2022-05-20'),
+        nextRecommendedRuntime: 1250
+      },
+      {
+        equipmentId: 1,
+        maintenanceType: 'fuel_filter',
+        serviceDate: new Date('2022-05-25'),
+        runtime: 1200,
+        description: 'Fuel filter replacement',
+        findings: 'Low contamination',
+        partsReplaced: ['primary_fuel_filter', 'secondary_fuel_filter'],
+        technician: 'Engineer A. Williams',
+        cost: 180.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 3,
+        nextRecommendedDate: new Date('2022-11-25'),
+        nextRecommendedRuntime: 1700
+      },
+      {
+        equipmentId: 1,
+        maintenanceType: 'fuel_filter',
+        serviceDate: new Date('2022-11-28'),
+        runtime: 1750,
+        description: 'Fuel filter replacement',
+        findings: 'Moderate contamination, fuel quality issue noted',
+        partsReplaced: ['primary_fuel_filter', 'secondary_fuel_filter'],
+        technician: 'Engineer L. Johnson',
+        cost: 180.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 2,
+        nextRecommendedDate: new Date('2023-05-28'),
+        nextRecommendedRuntime: 2200
+      },
+      // Generator impeller replacements
+      {
+        equipmentId: 2,
+        maintenanceType: 'impeller_replacement',
+        serviceDate: new Date('2021-10-15'),
+        runtime: 450,
+        description: 'Water pump impeller replacement',
+        findings: 'Slight wear on blades',
+        partsReplaced: ['water_pump_impeller', 'gasket'],
+        technician: 'Engineer A. Williams',
+        cost: 120.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 3,
+        nextRecommendedDate: new Date('2022-04-15'),
+        nextRecommendedRuntime: 950
+      },
+      {
+        equipmentId: 2,
+        maintenanceType: 'impeller_replacement',
+        serviceDate: new Date('2022-04-20'),
+        runtime: 970,
+        description: 'Water pump impeller replacement',
+        findings: 'One blade damaged, rest in good condition',
+        partsReplaced: ['water_pump_impeller', 'gasket'],
+        technician: 'S. Thompson',
+        cost: 120.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 4,
+        nextRecommendedDate: new Date('2022-10-20'),
+        nextRecommendedRuntime: 1450
+      },
+      {
+        equipmentId: 2,
+        maintenanceType: 'impeller_replacement',
+        serviceDate: new Date('2022-10-17'),
+        runtime: 1420,
+        description: 'Water pump impeller replacement',
+        findings: 'Normal wear',
+        partsReplaced: ['water_pump_impeller', 'gasket'],
+        technician: 'Engineer A. Williams',
+        cost: 120.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 3,
+        nextRecommendedDate: new Date('2023-04-17'),
+        nextRecommendedRuntime: 1900
+      },
+      {
+        equipmentId: 2,
+        maintenanceType: 'impeller_replacement',
+        serviceDate: new Date('2023-04-12'),
+        runtime: 1880,
+        description: 'Water pump impeller replacement',
+        findings: 'Normal wear',
+        partsReplaced: ['water_pump_impeller', 'gasket'],
+        technician: 'Engineer L. Johnson',
+        cost: 120.00,
+        isSuccessful: true,
+        taskId: null,
+        createdById: 2,
+        nextRecommendedDate: new Date('2023-10-12'),
+        nextRecommendedRuntime: 2350
+      }
+    ];
+  
+    // Initialize maintenance history records
+    this.historyCurrentId = 1;
+    maintenanceHistoryRecords.forEach(record => {
+      this.createMaintenanceHistory(record as InsertMaintenanceHistory);
+    });
+    
+    // Generate initial predictive maintenance data
+    this.predictiveCurrentId = 1;
+    this.generatePredictiveMaintenanceForEquipment(1); // Main Engine
+    this.generatePredictiveMaintenanceForEquipment(2); // Generator
 
     // Create demo maintenance tasks
     const today = new Date();

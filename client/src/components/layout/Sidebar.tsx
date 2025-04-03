@@ -12,7 +12,8 @@ import {
   Lightbulb,
   Navigation, 
   ShieldCheck,
-  LogOut
+  LogOut,
+  BarChart4
 } from "lucide-react";
 
 interface SidebarProps {
@@ -28,6 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     { href: "/tasks", label: "Tasks", icon: <CheckSquare className="h-5 w-5 mr-3" /> },
     { href: "/equipment", label: "Equipment", icon: <Wrench className="h-5 w-5 mr-3" /> },
     { href: "/inventory", label: "Inventory", icon: <Package className="h-5 w-5 mr-3" /> },
+    { href: "/predictive-maintenance", label: "Predictive Maintenance", icon: <BarChart4 className="h-5 w-5 mr-3" /> },
     { href: "/reports", label: "Reports", icon: <FileText className="h-5 w-5 mr-3" /> },
     { href: "/calendar", label: "Calendar", icon: <CalendarIcon className="h-5 w-5 mr-3" /> },
   ];

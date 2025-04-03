@@ -524,21 +524,332 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recentActivity = await storage.getRecentActivityLogs(4);
       const allEquipment = await storage.getAllEquipment();
       
+      // Get predictive maintenance alerts
+      let predictiveMaintenance: any[] = [];
+      
+      // For each equipment, get predictive maintenance data
+      for (const equip of allEquipment) {
+        const predictions = await storage.getPredictiveMaintenanceByEquipment(equip.id);
+        
+        // Add equipment names to predictions for easier display
+        const predictionsWithNames = predictions.map(p => ({
+          ...p,
+          equipmentName: equip.name,
+          equipmentCategory: equip.category
+        }));
+        
+        predictiveMaintenance = [...predictiveMaintenance, ...predictionsWithNames];
+      }
+      
+      // Filter to only get predictions that need attention soon
+      const today = new Date();
+      const alertPredictions = predictiveMaintenance.filter(prediction => {
+        if (!prediction.predictedDate) return false;
+        
+        const predictedDate = new Date(prediction.predictedDate);
+        const daysUntilPredicted = (predictedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        
+        // Include if within warning threshold or past due
+        return daysUntilPredicted <= prediction.warningThreshold || daysUntilPredicted < 0;
+      });
+      
+      // Sort predictions by date (soonest first)
+      alertPredictions.sort((a, b) => {
+        if (!a.predictedDate) return 1;
+        if (!b.predictedDate) return -1;
+        return new Date(a.predictedDate).getTime() - new Date(b.predictedDate).getTime();
+      });
+      
       res.json({
         stats: {
           dueTasks: dueTasks.length,
           upcomingTasks: upcomingTasks.length,
           completedTasks: completedTasks.length,
-          lowStockItems: lowStockItems.length
+          lowStockItems: lowStockItems.length,
+          predictiveAlerts: alertPredictions.length
         },
         dueTasks,
         upcomingTasks: upcomingTasks.slice(0, 10),
         recentActivity,
         equipmentOverview: allEquipment.slice(0, 3),
-        inventoryStatus: lowStockItems.slice(0, 4)
+        inventoryStatus: lowStockItems.slice(0, 4),
+        predictiveAlerts: alertPredictions.slice(0, 5)
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to get dashboard data" });
+    }
+  });
+  
+  // =========== Maintenance History Routes =============
+  
+  // Get all maintenance history
+  apiRouter.get("/maintenance-history", async (_req: Request, res: Response) => {
+    try {
+      const allEquipment = await storage.getAllEquipment();
+      let allHistory: any[] = [];
+      
+      // Get maintenance history for all equipment
+      for (const equipment of allEquipment) {
+        const history = await storage.getMaintenanceHistoryByEquipment(equipment.id);
+        
+        // Add equipment details to each history entry
+        const historyWithDetails = history.map(h => ({
+          ...h,
+          equipmentName: equipment.name,
+          equipmentCategory: equipment.category
+        }));
+        
+        allHistory = [...allHistory, ...historyWithDetails];
+      }
+      
+      // Sort by service date (most recent first)
+      allHistory.sort((a, b) => 
+        new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime()
+      );
+      
+      res.json(allHistory);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get maintenance history" });
+    }
+  });
+  
+  // Get maintenance history by ID
+  apiRouter.get("/maintenance-history/:id", async (req: Request, res: Response) => {
+    try {
+      const historyId = Number(req.params.id);
+      const history = await storage.getMaintenanceHistory(historyId);
+      
+      if (!history) {
+        return res.status(404).json({ message: "Maintenance history record not found" });
+      }
+      
+      // Get equipment details
+      const equipment = await storage.getEquipment(history.equipmentId);
+      
+      res.json({
+        ...history,
+        equipmentName: equipment?.name,
+        equipmentCategory: equipment?.category
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get maintenance history record" });
+    }
+  });
+  
+  // Get maintenance history by equipment
+  apiRouter.get("/maintenance-history/equipment/:equipmentId", async (req: Request, res: Response) => {
+    try {
+      const equipmentId = Number(req.params.equipmentId);
+      const history = await storage.getMaintenanceHistoryByEquipment(equipmentId);
+      
+      // Get equipment details
+      const equipment = await storage.getEquipment(equipmentId);
+      if (!equipment) {
+        return res.status(404).json({ message: "Equipment not found" });
+      }
+      
+      // Add equipment details to each history entry
+      const historyWithDetails = history.map(h => ({
+        ...h,
+        equipmentName: equipment.name,
+        equipmentCategory: equipment.category
+      }));
+      
+      // Sort by service date (most recent first)
+      historyWithDetails.sort((a, b) => 
+        new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime()
+      );
+      
+      res.json(historyWithDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get maintenance history by equipment" });
+    }
+  });
+  
+  // Create new maintenance history record
+  apiRouter.post("/maintenance-history", async (req: Request, res: Response) => {
+    try {
+      const historyData = req.body;
+      const newHistory = await storage.createMaintenanceHistory(historyData);
+      
+      // Create an activity log for this maintenance
+      const equipment = await storage.getEquipment(newHistory.equipmentId);
+      await storage.createActivityLog({
+        activityType: "maintenance_performed",
+        description: `${newHistory.maintenanceType} performed on ${equipment?.name}`,
+        userId: newHistory.createdById,
+        relatedEntityType: "equipment",
+        relatedEntityId: newHistory.equipmentId
+      });
+      
+      res.status(201).json(newHistory);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid maintenance history data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create maintenance history record" });
+    }
+  });
+  
+  // Update maintenance history record
+  apiRouter.patch("/maintenance-history/:id", async (req: Request, res: Response) => {
+    try {
+      const historyId = Number(req.params.id);
+      const historyUpdate = req.body;
+      
+      const updatedHistory = await storage.updateMaintenanceHistory(historyId, historyUpdate);
+      
+      if (!updatedHistory) {
+        return res.status(404).json({ message: "Maintenance history record not found" });
+      }
+      
+      res.json(updatedHistory);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update maintenance history record" });
+    }
+  });
+  
+  // Delete maintenance history record
+  apiRouter.delete("/maintenance-history/:id", async (req: Request, res: Response) => {
+    try {
+      const historyId = Number(req.params.id);
+      const deleted = await storage.deleteMaintenanceHistory(historyId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Maintenance history record not found" });
+      }
+      
+      res.json({ message: "Maintenance history record deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete maintenance history record" });
+    }
+  });
+  
+  // =========== Predictive Maintenance Routes =============
+  
+  // Get all predictive maintenance records
+  apiRouter.get("/predictive-maintenance", async (_req: Request, res: Response) => {
+    try {
+      const allEquipment = await storage.getAllEquipment();
+      let allPredictions: any[] = [];
+      
+      // Get predictive maintenance for all equipment
+      for (const equipment of allEquipment) {
+        const predictions = await storage.getPredictiveMaintenanceByEquipment(equipment.id);
+        
+        // Add equipment details to each prediction
+        const predictionsWithDetails = predictions.map(p => ({
+          ...p,
+          equipmentName: equipment.name,
+          equipmentCategory: equipment.category
+        }));
+        
+        allPredictions = [...allPredictions, ...predictionsWithDetails];
+      }
+      
+      // Sort by predicted date (soonest first)
+      allPredictions.sort((a, b) => {
+        if (!a.predictedDate) return 1;
+        if (!b.predictedDate) return -1;
+        return new Date(a.predictedDate).getTime() - new Date(b.predictedDate).getTime();
+      });
+      
+      res.json(allPredictions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get predictive maintenance records" });
+    }
+  });
+  
+  // Get predictive maintenance by ID
+  apiRouter.get("/predictive-maintenance/:id", async (req: Request, res: Response) => {
+    try {
+      const predictionId = Number(req.params.id);
+      const prediction = await storage.getPredictiveMaintenance(predictionId);
+      
+      if (!prediction) {
+        return res.status(404).json({ message: "Predictive maintenance record not found" });
+      }
+      
+      // Get equipment details
+      const equipment = await storage.getEquipment(prediction.equipmentId);
+      
+      res.json({
+        ...prediction,
+        equipmentName: equipment?.name,
+        equipmentCategory: equipment?.category
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get predictive maintenance record" });
+    }
+  });
+  
+  // Get predictive maintenance by equipment
+  apiRouter.get("/predictive-maintenance/equipment/:equipmentId", async (req: Request, res: Response) => {
+    try {
+      const equipmentId = Number(req.params.equipmentId);
+      const predictions = await storage.getPredictiveMaintenanceByEquipment(equipmentId);
+      
+      // Get equipment details
+      const equipment = await storage.getEquipment(equipmentId);
+      if (!equipment) {
+        return res.status(404).json({ message: "Equipment not found" });
+      }
+      
+      // Add equipment details to each prediction
+      const predictionsWithDetails = predictions.map(p => ({
+        ...p,
+        equipmentName: equipment.name,
+        equipmentCategory: equipment.category
+      }));
+      
+      // Sort by predicted date (soonest first)
+      predictionsWithDetails.sort((a, b) => {
+        if (!a.predictedDate) return 1;
+        if (!b.predictedDate) return -1;
+        return new Date(a.predictedDate).getTime() - new Date(b.predictedDate).getTime();
+      });
+      
+      res.json(predictionsWithDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get predictive maintenance by equipment" });
+    }
+  });
+  
+  // Generate predictive maintenance for specific equipment
+  apiRouter.post("/predictive-maintenance/generate/:equipmentId", async (req: Request, res: Response) => {
+    try {
+      const equipmentId = Number(req.params.equipmentId);
+      
+      // Make sure equipment exists
+      const equipment = await storage.getEquipment(equipmentId);
+      if (!equipment) {
+        return res.status(404).json({ message: "Equipment not found" });
+      }
+      
+      // Delete existing predictions for this equipment
+      const existingPredictions = await storage.getPredictiveMaintenanceByEquipment(equipmentId);
+      for (const prediction of existingPredictions) {
+        await storage.deletePredictiveMaintenance(prediction.id);
+      }
+      
+      // Generate new predictions
+      const newPredictions = await storage.generatePredictiveMaintenanceForEquipment(equipmentId);
+      
+      // Create an activity log for this prediction generation
+      await storage.createActivityLog({
+        activityType: "predictions_generated",
+        description: `Generated ${newPredictions.length} maintenance predictions for ${equipment.name}`,
+        userId: null,
+        relatedEntityType: "equipment",
+        relatedEntityId: equipmentId
+      });
+      
+      res.json({
+        message: `Generated ${newPredictions.length} maintenance predictions for ${equipment.name}`,
+        predictions: newPredictions
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate predictive maintenance" });
     }
   });
   

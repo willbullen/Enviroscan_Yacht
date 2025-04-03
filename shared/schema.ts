@@ -107,3 +107,57 @@ export const activityLogs = pgTable("activity_logs", {
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true, timestamp: true });
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 export type ActivityLog = typeof activityLogs.$inferSelect;
+
+// Maintenance history for predictive analysis
+export const maintenanceHistory = pgTable("maintenance_history", {
+  id: serial("id").primaryKey(),
+  equipmentId: integer("equipment_id").references(() => equipment.id).notNull(),
+  maintenanceType: text("maintenance_type").notNull(), // routine, repair, inspection, replacement
+  serviceDate: timestamp("service_date").notNull(),
+  runtime: real("runtime").notNull(), // equipment runtime hours at service
+  description: text("description").notNull(),
+  findings: text("findings"), // issues discovered during maintenance
+  partsReplaced: json("parts_replaced"), // array of inventory item IDs
+  technician: text("technician"), // who did the work
+  cost: real("cost"), // cost of service
+  isSuccessful: boolean("is_successful").default(true),
+  taskId: integer("task_id").references(() => maintenanceTasks.id), // related task if any
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  nextRecommendedDate: timestamp("next_recommended_date"),
+  nextRecommendedRuntime: real("next_recommended_runtime"),
+  photos: json("photos"), // URLs to photos taken during maintenance
+  documents: json("documents"), // URLs to related documents
+});
+
+export const insertMaintenanceHistorySchema = createInsertSchema(maintenanceHistory).omit({ 
+  id: true, 
+  createdAt: true 
+});
+export type InsertMaintenanceHistory = z.infer<typeof insertMaintenanceHistorySchema>;
+export type MaintenanceHistory = typeof maintenanceHistory.$inferSelect;
+
+// Predictive maintenance model data
+export const predictiveMaintenance = pgTable("predictive_maintenance", {
+  id: serial("id").primaryKey(),
+  equipmentId: integer("equipment_id").references(() => equipment.id).notNull(),
+  maintenanceType: text("maintenance_type").notNull(), // type of maintenance being predicted
+  predictedDate: timestamp("predicted_date"), // next predicted date
+  predictedRuntime: real("predicted_runtime"), // next predicted runtime hours
+  confidence: real("confidence"), // confidence score (0-1)
+  reasoningFactors: json("reasoning_factors"), // factors that led to prediction
+  recommendedAction: text("recommended_action"),
+  warningThreshold: real("warning_threshold"), // days or hours before predicted date to warn
+  alertThreshold: real("alert_threshold"), // days or hours before predicted date to alert
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  historyDataPoints: integer("history_data_points"), // number of historical points used for prediction
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPredictiveMaintenanceSchema = createInsertSchema(predictiveMaintenance).omit({ 
+  id: true, 
+  lastUpdated: true,
+  createdAt: true 
+});
+export type InsertPredictiveMaintenance = z.infer<typeof insertPredictiveMaintenanceSchema>;
+export type PredictiveMaintenance = typeof predictiveMaintenance.$inferSelect;
