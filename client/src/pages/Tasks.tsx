@@ -43,7 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 import {
   Table,
   TableBody,
@@ -106,7 +106,7 @@ const Tasks = () => {
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const { toast } = useToast();
 
   // Fetch all tasks
@@ -314,7 +314,7 @@ const Tasks = () => {
 
         <TabsContent value="all" className="mt-0">
           {tasksLoading ? (
-            viewMode === "card" ? (
+            viewMode === ViewMode.CARDS ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array(6).fill(0).map((_, i) => (
                   <Skeleton key={i} className="h-[260px] w-full rounded-xl" />
@@ -330,7 +330,7 @@ const Tasks = () => {
               <h3 className="text-lg font-medium text-gray-500">No tasks found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or create a new task</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTasks.map((task) => {
                 const assignee = getAssigneeInfo(task.assignedToId);

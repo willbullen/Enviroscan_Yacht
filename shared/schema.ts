@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, real, json, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -328,3 +328,212 @@ export const insertCrewDocumentSchema = createInsertSchema(crewDocuments).omit({
 });
 export type InsertCrewDocument = z.infer<typeof insertCrewDocumentSchema>;
 export type CrewDocument = typeof crewDocuments.$inferSelect;
+
+// Financial Management Schema
+
+// Accounts/Chart of Accounts
+export const financialAccounts: any = pgTable("financial_accounts", {
+  id: serial("id").primaryKey(),
+  accountNumber: text("account_number").notNull().unique(),
+  accountName: text("account_name").notNull(),
+  accountType: text("account_type").notNull(), // asset, liability, equity, income, expense
+  category: text("category").notNull(), // operational, maintenance, crew, fuel, etc.
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  parentAccountId: integer("parent_account_id"),
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFinancialAccountSchema = createInsertSchema(financialAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertFinancialAccount = z.infer<typeof insertFinancialAccountSchema>;
+export type FinancialAccount = typeof financialAccounts.$inferSelect;
+
+// Vendors/Suppliers for financial transactions
+export const vendors = pgTable("vendors", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  contactPerson: text("contact_person"),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  taxIdentifier: text("tax_identifier"),
+  accountNumber: text("account_number"),
+  notes: text("notes"),
+  category: text("category"), // fuel, maintenance, provisions, etc.
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertVendorSchema = createInsertSchema(vendors).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertVendor = z.infer<typeof insertVendorSchema>;
+export type Vendor = typeof vendors.$inferSelect;
+
+// Budgets for expense planning
+export const budgets = pgTable("budgets", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
+  status: text("status").notNull(), // draft, active, closed
+  notes: text("notes"),
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBudgetSchema = createInsertSchema(budgets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBudget = z.infer<typeof insertBudgetSchema>;
+export type Budget = typeof budgets.$inferSelect;
+
+// Budget allocations to specific accounts
+export const budgetAllocations = pgTable("budget_allocations", {
+  id: serial("id").primaryKey(),
+  budgetId: integer("budget_id").references(() => budgets.id).notNull(),
+  accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBudgetAllocationSchema = createInsertSchema(budgetAllocations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBudgetAllocation = z.infer<typeof insertBudgetAllocationSchema>;
+export type BudgetAllocation = typeof budgetAllocations.$inferSelect;
+
+// Expense transactions
+export const expenses = pgTable("expenses", {
+  id: serial("id").primaryKey(),
+  description: text("description").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
+  exchangeRate: decimal("exchange_rate", { precision: 10, scale: 6 }).default("1").notNull(),
+  transactionDate: timestamp("transaction_date").notNull(),
+  category: text("category").notNull(), // maintenance, fuel, crew, provisions, etc.
+  accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
+  vendorId: integer("vendor_id").references(() => vendors.id),
+  paymentMethod: text("payment_method").notNull(), // credit card, bank transfer, cash, etc.
+  paymentStatus: text("payment_status").notNull(), // pending, paid, cancelled
+  receiptUrl: text("receipt_url"), // URL to receipt image/document
+  notes: text("notes"),
+  budgetId: integer("budget_id").references(() => budgets.id),
+  approvedById: integer("approved_by_id").references(() => users.id),
+  approvalDate: timestamp("approval_date"),
+  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertExpenseSchema = createInsertSchema(expenses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+export type Expense = typeof expenses.$inferSelect;
+
+// Invoices received
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  invoiceNumber: text("invoice_number").notNull(),
+  description: text("description").notNull(),
+  vendorId: integer("vendor_id").references(() => vendors.id).notNull(),
+  issueDate: timestamp("issue_date").notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }),
+  currency: text("currency").default("USD").notNull(),
+  exchangeRate: decimal("exchange_rate", { precision: 10, scale: 6 }).default("1").notNull(),
+  status: text("status").notNull(), // pending, approved, paid, disputed, cancelled
+  attachmentUrl: text("attachment_url"), // URL to invoice document
+  notes: text("notes"),
+  paymentDate: timestamp("payment_date"),
+  paymentMethod: text("payment_method"), // credit card, bank transfer, cash, etc.
+  paymentReference: text("payment_reference"),
+  approvedById: integer("approved_by_id").references(() => users.id),
+  approvalDate: timestamp("approval_date"),
+  accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
+  budgetId: integer("budget_id").references(() => budgets.id),
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+
+// Financial Reports
+export const financialReports = pgTable("financial_reports", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  reportType: text("report_type").notNull(), // budget_comparison, expense_summary, account_statement, etc.
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  createdById: integer("created_by_id").references(() => users.id),
+  creationDate: timestamp("creation_date").defaultNow().notNull(),
+  reportData: json("report_data"), // Structured JSON data for the report
+  notes: text("notes"),
+  attachmentUrl: text("attachment_url"), // URL to generated PDF report if applicable
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFinancialReportSchema = createInsertSchema(financialReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertFinancialReport = z.infer<typeof insertFinancialReportSchema>;
+export type FinancialReport = typeof financialReports.$inferSelect;
+
+// Payment Methods for expense tracking and management
+export const paymentMethods = pgTable("payment_methods", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  type: text("type").notNull(), // credit_card, bank_account, cash, digital_wallet
+  accountNumber: text("account_number"), // Last 4 digits for cards or account identifier
+  provider: text("provider"), // Bank name, card issuer, etc.
+  contactPerson: text("contact_person"), // Accounting contact at provider
+  expiryDate: timestamp("expiry_date"), // For credit cards
+  currencyCode: text("currency_code").default("USD").notNull(),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"),
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;

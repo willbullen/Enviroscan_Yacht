@@ -43,7 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 import {
   Table,
   TableBody,
@@ -80,7 +80,7 @@ const Inventory = () => {
   const [inventoryFormOpen, setInventoryFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [stockFilter, setStockFilter] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const { toast } = useToast();
 
   // Fetch all inventory items
@@ -326,7 +326,7 @@ const Inventory = () => {
 
         <TabsContent value="all" className="mt-0">
           {inventoryLoading ? (
-            viewMode === "card" ? (
+            viewMode === ViewMode.CARDS ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array(6).fill(0).map((_, i) => (
                   <Skeleton key={i} className="h-[280px] w-full rounded-xl" />
@@ -342,7 +342,7 @@ const Inventory = () => {
               <h3 className="text-lg font-medium text-gray-500">No inventory items found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredInventory.map((item) => {
                 const stockStatus = getStockStatus(item.quantity, item.minQuantity);
@@ -492,7 +492,7 @@ const Inventory = () => {
               <h3 className="text-lg font-medium text-gray-500">No fluids found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Content will be filtered by the selectedTab state */}
             </div>
@@ -524,7 +524,7 @@ const Inventory = () => {
               <h3 className="text-lg font-medium text-gray-500">No filters found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Content will be filtered by the selectedTab state */}
             </div>
@@ -556,7 +556,7 @@ const Inventory = () => {
               <h3 className="text-lg font-medium text-gray-500">No parts found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Content will be filtered by the selectedTab state */}
             </div>
@@ -588,7 +588,7 @@ const Inventory = () => {
               <h3 className="text-lg font-medium text-gray-500">No tools found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Content will be filtered by the selectedTab state */}
             </div>

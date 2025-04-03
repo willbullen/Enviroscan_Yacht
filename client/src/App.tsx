@@ -9,6 +9,7 @@ import YachtSystem from "@/pages/YachtSystem";
 import PredictiveMaintenance from "@/pages/PredictiveMaintenance";
 import ISMManagement from "@/pages/ISMManagement";
 import CrewManagement from "@/pages/CrewManagement";
+import FinancialManagement from "@/pages/FinancialManagement";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
       <Route path="/predictive-maintenance" component={PredictiveMaintenance} />
       <Route path="/ism-management" component={ISMManagement} />
       <Route path="/crew-management" component={CrewManagement} />
+      <Route path="/financial-management" component={FinancialManagement} />
       
       {/* Yacht System Routes */}
       <Route path="/mechanical" component={YachtSystem} />

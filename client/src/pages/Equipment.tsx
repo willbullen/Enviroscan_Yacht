@@ -53,7 +53,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { ViewToggle, ViewMode } from "@/components/ui/view-toggle";
+import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 
 interface Equipment {
   id: number;
@@ -90,7 +90,7 @@ const Equipment = () => {
   const [equipmentFormOpen, setEquipmentFormOpen] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const { toast } = useToast();
 
   // Fetch all equipment
@@ -283,7 +283,7 @@ const Equipment = () => {
 
         <TabsContent value="all" className="mt-0">
           {isLoading ? (
-            viewMode === "card" ? (
+            viewMode === ViewMode.CARDS ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array(6).fill(0).map((_, i) => (
                   <Skeleton key={i} className="h-[280px] w-full rounded-xl" />
@@ -297,7 +297,7 @@ const Equipment = () => {
               <h3 className="text-lg font-medium text-gray-500">No equipment found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or add new equipment</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredEquipment.map((item) => {
                 const serviceStatus = getServiceStatus(item);
@@ -435,7 +435,7 @@ const Equipment = () => {
         {/* These tabs use the same content as the "all" tab, but the content is filtered by the selectedTab state */}
         <TabsContent value="mechanical" className="mt-0">
           {isLoading ? (
-            viewMode === "card" ? (
+            viewMode === ViewMode.CARDS ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array(6).fill(0).map((_, i) => (
                   <Skeleton key={i} className="h-[280px] w-full rounded-xl" />
@@ -449,7 +449,7 @@ const Equipment = () => {
               <h3 className="text-lg font-medium text-gray-500">No equipment found</h3>
               <p className="text-gray-400 mt-1">Try changing your filters or add new equipment</p>
             </div>
-          ) : viewMode === "card" ? (
+          ) : viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredEquipment.map((item) => {
                 const serviceStatus = getServiceStatus(item);
@@ -587,7 +587,7 @@ const Equipment = () => {
         {/* Use the same format for electrical, navigation and safety tabs */}
         <TabsContent value="electrical" className="mt-0">
           {/* Content will be rendered using the filtered equipment based on selectedTab and viewMode */}
-          {viewMode === "card" ? (
+          {viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredEquipment.length === 0 ? (
                 <div className="col-span-full py-8 text-center">
@@ -616,7 +616,7 @@ const Equipment = () => {
 
         <TabsContent value="navigation" className="mt-0">
           {/* Content will be rendered using the filtered equipment based on selectedTab and viewMode */}
-          {viewMode === "card" ? (
+          {viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Card views for navigation equipment */}
             </div>
@@ -631,7 +631,7 @@ const Equipment = () => {
 
         <TabsContent value="safety" className="mt-0">
           {/* Content will be rendered using the filtered equipment based on selectedTab and viewMode */}
-          {viewMode === "card" ? (
+          {viewMode === ViewMode.CARDS ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Card views for safety equipment */}
             </div>

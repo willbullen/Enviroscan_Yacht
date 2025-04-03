@@ -15,7 +15,8 @@ import {
   LogOut,
   BarChart4,
   ClipboardCheck,
-  Users
+  Users,
+  DollarSign
 } from "lucide-react";
 
 interface SidebarProps {
@@ -34,6 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     { href: "/predictive-maintenance", label: "Predictive Maintenance", icon: <BarChart4 className="h-5 w-5 mr-3" /> },
     { href: "/ism-management", label: "ISM Management", icon: <ClipboardCheck className="h-5 w-5 mr-3" /> },
     { href: "/crew-management", label: "Crew Management", icon: <Users className="h-5 w-5 mr-3" /> },
+    { href: "/financial-management", label: "Financial Management", icon: <DollarSign className="h-5 w-5 mr-3" /> },
     { href: "/reports", label: "Reports", icon: <FileText className="h-5 w-5 mr-3" /> },
     { href: "/calendar", label: "Calendar", icon: <CalendarIcon className="h-5 w-5 mr-3" /> },
   ];

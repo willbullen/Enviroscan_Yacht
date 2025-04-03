@@ -1,36 +1,39 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { LayoutGrid, List } from "lucide-react";
+import React from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Grid2X2, List } from "lucide-react";
 
-export type ViewMode = "card" | "table";
+export enum ViewMode {
+  CARDS = "cards",
+  LIST = "list"
+}
 
-interface ViewToggleProps {
+export interface ViewToggleProps {
   viewMode: ViewMode;
-  onChange: (mode: ViewMode) => void;
-  className?: string;
+  onChange: (value: ViewMode) => void;
 }
 
-export function ViewToggle({ viewMode, onChange, className }: ViewToggleProps) {
+const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onChange }) => {
+  const handleValueChange = (value: string) => {
+    if (value) {
+      onChange(value as ViewMode);
+    }
+  };
+
   return (
-    <div className={`flex space-x-1 ${className}`}>
-      <Button
-        variant={viewMode === "card" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onChange("card")}
-        className="px-2"
-      >
-        <LayoutGrid className="h-4 w-4 mr-1" />
-        <span className="text-xs">Card</span>
-      </Button>
-      <Button
-        variant={viewMode === "table" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onChange("table")}
-        className="px-2"
-      >
-        <List className="h-4 w-4 mr-1" />
-        <span className="text-xs">List</span>
-      </Button>
-    </div>
+    <ToggleGroup
+      type="single"
+      value={viewMode}
+      onValueChange={handleValueChange}
+      className="border rounded-md"
+    >
+      <ToggleGroupItem value={ViewMode.CARDS} aria-label="Card View" variant="outline">
+        <Grid2X2 className="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem value={ViewMode.LIST} aria-label="List View" variant="outline">
+        <List className="h-4 w-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
   );
-}
+};
+
+export default ViewToggle;
