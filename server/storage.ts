@@ -9,8 +9,12 @@ import {
   ismDocuments, type IsmDocument, type InsertIsmDocument,
   ismAudits, type IsmAudit, type InsertIsmAudit,
   ismTraining, type IsmTraining, type InsertIsmTraining,
-  ismIncidents, type IsmIncident, type InsertIsmIncident
+  ismIncidents, type IsmIncident, type InsertIsmIncident,
+  crewMembers, type CrewMember, type InsertCrewMember,
+  crewDocuments, type CrewDocument, type InsertCrewDocument
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -110,6 +114,25 @@ export interface IStorage {
   createIsmIncident(incident: InsertIsmIncident): Promise<IsmIncident>;
   updateIsmIncident(id: number, incident: Partial<IsmIncident>): Promise<IsmIncident | undefined>;
   deleteIsmIncident(id: number): Promise<boolean>;
+  
+  // Crew operations
+  getCrewMember(id: number): Promise<CrewMember | undefined>;
+  getAllCrewMembers(): Promise<CrewMember[]>;
+  getCrewMembersByStatus(status: string): Promise<CrewMember[]>;
+  getCrewMembersByPosition(position: string): Promise<CrewMember[]>;
+  createCrewMember(member: InsertCrewMember): Promise<CrewMember>;
+  updateCrewMember(id: number, member: Partial<CrewMember>): Promise<CrewMember | undefined>;
+  deleteCrewMember(id: number): Promise<boolean>;
+  
+  // Crew Document operations
+  getCrewDocument(id: number): Promise<CrewDocument | undefined>;
+  getCrewDocumentsByCrewMember(crewMemberId: number): Promise<CrewDocument[]>;
+  getCrewDocumentsByType(documentType: string): Promise<CrewDocument[]>;
+  getCrewDocumentsByVerificationStatus(status: string): Promise<CrewDocument[]>;
+  getExpiringCrewDocuments(daysThreshold: number): Promise<CrewDocument[]>;
+  createCrewDocument(document: InsertCrewDocument): Promise<CrewDocument>;
+  updateCrewDocument(id: number, document: Partial<CrewDocument>): Promise<CrewDocument | undefined>;
+  deleteCrewDocument(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -1660,4 +1683,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from './databaseStorage';
+
+// Use DatabaseStorage with PostgreSQL for production
+export const storage = new DatabaseStorage();

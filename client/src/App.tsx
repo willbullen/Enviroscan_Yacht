@@ -8,6 +8,7 @@ import Calendar from "@/pages/Calendar";
 import YachtSystem from "@/pages/YachtSystem";
 import PredictiveMaintenance from "@/pages/PredictiveMaintenance";
 import ISMManagement from "@/pages/ISMManagement";
+import CrewManagement from "@/pages/CrewManagement";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
       <Route path="/calendar" component={Calendar} />
       <Route path="/predictive-maintenance" component={PredictiveMaintenance} />
       <Route path="/ism-management" component={ISMManagement} />
+      <Route path="/crew-management" component={CrewManagement} />
       
       {/* Yacht System Routes */}
       <Route path="/mechanical" component={YachtSystem} />

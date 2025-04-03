@@ -273,3 +273,58 @@ export const insertIsmIncidentSchema = createInsertSchema(ismIncidents).omit({
 });
 export type InsertIsmIncident = z.infer<typeof insertIsmIncidentSchema>;
 export type IsmIncident = typeof ismIncidents.$inferSelect;
+
+// Crew members schema
+export const crewMembers = pgTable("crew_members", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  fullName: text("full_name").notNull(),
+  position: text("position").notNull(), // Captain, Chief Engineer, Deckhand, etc.
+  nationality: text("nationality").notNull(),
+  dateOfBirth: timestamp("date_of_birth").notNull(),
+  emergencyContact: text("emergency_contact"),
+  phoneNumber: text("phone_number"),
+  email: text("email"),
+  joinDate: timestamp("join_date"),
+  contractExpiryDate: timestamp("contract_expiry_date"),
+  photo: text("photo"), // URL to photo
+  status: text("status").notNull(), // active, on-leave, inactive
+  notes: text("notes"),
+  medicalInformation: json("medical_information"), // allergies, conditions, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCrewMemberSchema = createInsertSchema(crewMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertCrewMember = z.infer<typeof insertCrewMemberSchema>;
+export type CrewMember = typeof crewMembers.$inferSelect;
+
+// Crew documents schema (Passports, Visas, Certificates, etc.)
+export const crewDocuments = pgTable("crew_documents", {
+  id: serial("id").primaryKey(),
+  crewMemberId: integer("crew_member_id").references(() => crewMembers.id).notNull(),
+  documentType: text("document_type").notNull(), // passport, visa, certificate, license, medical
+  documentNumber: text("document_number").notNull(),
+  title: text("title").notNull(), // "US Passport", "Seaman's Discharge Book", "STCW"
+  issuingAuthority: text("issuing_authority").notNull(),
+  issueDate: timestamp("issue_date").notNull(),
+  expiryDate: timestamp("expiry_date").notNull(),
+  documentFile: text("document_file"), // URL to document scan/photo
+  verificationStatus: text("verification_status").notNull(), // verified, pending, requires_renewal
+  notes: text("notes"),
+  reminderDays: integer("reminder_days").default(30), // Days before expiry to send reminder
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCrewDocumentSchema = createInsertSchema(crewDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertCrewDocument = z.infer<typeof insertCrewDocumentSchema>;
+export type CrewDocument = typeof crewDocuments.$inferSelect;

@@ -13,8 +13,12 @@ import {
   insertIsmDocumentSchema,
   insertIsmAuditSchema,
   insertIsmTrainingSchema,
-  insertIsmIncidentSchema
+  insertIsmIncidentSchema,
+  insertCrewMemberSchema,
+  insertCrewDocumentSchema,
+  crewDocuments
 } from "@shared/schema";
+import { db } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create API router
@@ -1512,7 +1516,303 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // =========== Theme Routes =============
   
-  // Update theme settings
+  // =========== Crew Management Routes =============
+  
+  // Get all crew members
+  apiRouter.get("/crew", async (_req: Request, res: Response) => {
+    try {
+      const crewMembers = await storage.getAllCrewMembers();
+      res.json(crewMembers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew members" });
+    }
+  });
+  
+  // Get crew member by ID
+  apiRouter.get("/crew/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const crewMember = await storage.getCrewMember(id);
+      
+      if (!crewMember) {
+        return res.status(404).json({ message: "Crew member not found" });
+      }
+      
+      res.json(crewMember);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew member" });
+    }
+  });
+  
+  // Get crew members by status
+  apiRouter.get("/crew/status/:status", async (req: Request, res: Response) => {
+    try {
+      const { status } = req.params;
+      const crewMembers = await storage.getCrewMembersByStatus(status);
+      res.json(crewMembers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew members by status" });
+    }
+  });
+  
+  // Get crew members by position
+  apiRouter.get("/crew/position/:position", async (req: Request, res: Response) => {
+    try {
+      const { position } = req.params;
+      const crewMembers = await storage.getCrewMembersByPosition(position);
+      res.json(crewMembers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew members by position" });
+    }
+  });
+  
+  // Create new crew member
+  apiRouter.post("/crew", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCrewMemberSchema.parse(req.body);
+      const crewMember = await storage.createCrewMember(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'crew_member_added',
+        description: `New crew member added: ${crewMember.fullName}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'crew',
+        relatedEntityId: crewMember.id,
+        metadata: { position: crewMember.position }
+      });
+      
+      res.status(201).json(crewMember);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid crew member data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create crew member" });
+    }
+  });
+  
+  // Update crew member
+  apiRouter.patch("/crew/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingCrewMember = await storage.getCrewMember(id);
+      
+      if (!existingCrewMember) {
+        return res.status(404).json({ message: "Crew member not found" });
+      }
+      
+      const updatedCrewMember = await storage.updateCrewMember(id, req.body);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'crew_member_updated',
+        description: `Crew member updated: ${existingCrewMember.fullName}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'crew',
+        relatedEntityId: id,
+        metadata: { updated: Object.keys(req.body) }
+      });
+      
+      res.json(updatedCrewMember);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update crew member" });
+    }
+  });
+  
+  // Delete crew member
+  apiRouter.delete("/crew/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const crewMember = await storage.getCrewMember(id);
+      
+      if (!crewMember) {
+        return res.status(404).json({ message: "Crew member not found" });
+      }
+      
+      await storage.deleteCrewMember(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'crew_member_deleted',
+        description: `Crew member deleted: ${crewMember.fullName}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'crew',
+        relatedEntityId: id,
+        metadata: { position: crewMember.position }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete crew member" });
+    }
+  });
+  
+  // Get all documents for a crew member
+  apiRouter.get("/crew/:crewMemberId/documents", async (req: Request, res: Response) => {
+    try {
+      const crewMemberId = parseInt(req.params.crewMemberId);
+      const documents = await storage.getCrewDocumentsByCrewMember(crewMemberId);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew member documents" });
+    }
+  });
+  
+  // Get all crew documents 
+  apiRouter.get("/crew-documents", async (_req: Request, res: Response) => {
+    try {
+      // This would need to be added to the DatabaseStorage class
+      const docs = await db.select().from(crewDocuments);
+      res.json(docs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew documents" });
+    }
+  });
+  
+  // Get crew document by ID
+  apiRouter.get("/crew-documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getCrewDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Crew document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew document" });
+    }
+  });
+  
+  // Get crew documents by type
+  apiRouter.get("/crew-documents/type/:documentType", async (req: Request, res: Response) => {
+    try {
+      const { documentType } = req.params;
+      const documents = await storage.getCrewDocumentsByType(documentType);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew documents by type" });
+    }
+  });
+  
+  // Get crew documents by verification status
+  apiRouter.get("/crew-documents/status/:status", async (req: Request, res: Response) => {
+    try {
+      const { status } = req.params;
+      const documents = await storage.getCrewDocumentsByVerificationStatus(status);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get crew documents by status" });
+    }
+  });
+  
+  // Get expiring crew documents
+  apiRouter.get("/crew-documents/expiring/:days", async (req: Request, res: Response) => {
+    try {
+      const days = parseInt(req.params.days);
+      if (isNaN(days) || days <= 0) {
+        return res.status(400).json({ message: "Invalid days parameter" });
+      }
+      
+      const documents = await storage.getExpiringCrewDocuments(days);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get expiring crew documents" });
+    }
+  });
+  
+  // Create new crew document
+  apiRouter.post("/crew-documents", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCrewDocumentSchema.parse(req.body);
+      const document = await storage.createCrewDocument(validatedData);
+      
+      // Get crew member for activity log
+      const crewMember = await storage.getCrewMember(document.crewMemberId);
+      const crewName = crewMember ? crewMember.fullName : `Crew ID ${document.crewMemberId}`;
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'crew_document_added',
+        description: `New document added for ${crewName}: ${document.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'crew_document',
+        relatedEntityId: document.id,
+        metadata: { 
+          documentType: document.documentType,
+          expiryDate: document.expiryDate.toISOString() 
+        }
+      });
+      
+      res.status(201).json(document);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid crew document data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create crew document" });
+    }
+  });
+  
+  // Update crew document
+  apiRouter.patch("/crew-documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingDocument = await storage.getCrewDocument(id);
+      
+      if (!existingDocument) {
+        return res.status(404).json({ message: "Crew document not found" });
+      }
+      
+      const updatedDocument = await storage.updateCrewDocument(id, req.body);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'crew_document_updated',
+        description: `Crew document updated: ${existingDocument.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'crew_document',
+        relatedEntityId: id,
+        metadata: { 
+          documentType: existingDocument.documentType,
+          updated: Object.keys(req.body)
+        }
+      });
+      
+      res.json(updatedDocument);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update crew document" });
+    }
+  });
+  
+  // Delete crew document
+  apiRouter.delete("/crew-documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getCrewDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Crew document not found" });
+      }
+      
+      await storage.deleteCrewDocument(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'crew_document_deleted',
+        description: `Crew document deleted: ${document.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'crew_document',
+        relatedEntityId: id,
+        metadata: { documentType: document.documentType }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete crew document" });
+    }
+  });
+
   apiRouter.post("/update-theme", async (req: Request, res: Response) => {
     try {
       const themeData = req.body;
