@@ -10,6 +10,7 @@ import { AlertCircle, CheckCircle2, CalendarClock, BarChart4, RefreshCcw, Wrench
 import { Progress } from '@/components/ui/progress';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import MainLayout from "@/components/layout/MainLayout";
 
 // Interface for the predictive maintenance data
 interface PredictiveMaintenance {
@@ -200,19 +201,19 @@ const PredictiveMaintenance = () => {
       (historyLoading && activeTab === 'history') || 
       equipmentLoading) {
     return (
-      <div className="container mx-auto py-6">
+      <MainLayout title="Predictive Maintenance">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <RefreshCcw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
             <h3 className="text-lg font-medium">Loading data...</h3>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <MainLayout title="Predictive Maintenance">
       <div className="flex flex-col space-y-6">
         {/* Header */}
         <div className="flex flex-col space-y-2">
@@ -457,7 +458,7 @@ const PredictiveMaintenance = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
