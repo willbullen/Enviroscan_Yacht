@@ -231,12 +231,10 @@ export function ThemeSwitcher() {
           
           <DropdownMenuSeparator />
           
-          <DialogTrigger asChild onClick={() => setCustomizeOpen(true)}>
-            <DropdownMenuItem>
-              <Palette className="mr-2 h-4 w-4" />
-              <span>Customize</span>
-            </DropdownMenuItem>
-          </DialogTrigger>
+          <DropdownMenuItem onClick={() => setCustomizeOpen(true)}>
+            <Palette className="mr-2 h-4 w-4" />
+            <span>Customize</span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
