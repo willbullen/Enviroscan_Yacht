@@ -5,7 +5,11 @@ import {
   inventoryItems, type InventoryItem, type InsertInventoryItem,
   activityLogs, type ActivityLog, type InsertActivityLog,
   maintenanceHistory, type MaintenanceHistory, type InsertMaintenanceHistory,
-  predictiveMaintenance, type PredictiveMaintenance, type InsertPredictiveMaintenance
+  predictiveMaintenance, type PredictiveMaintenance, type InsertPredictiveMaintenance,
+  ismDocuments, type IsmDocument, type InsertIsmDocument,
+  ismAudits, type IsmAudit, type InsertIsmAudit,
+  ismTraining, type IsmTraining, type InsertIsmTraining,
+  ismIncidents, type IsmIncident, type InsertIsmIncident
 } from "@shared/schema";
 
 // modify the interface with any CRUD methods
@@ -64,6 +68,48 @@ export interface IStorage {
   updatePredictiveMaintenance(id: number, prediction: Partial<PredictiveMaintenance>): Promise<PredictiveMaintenance | undefined>;
   deletePredictiveMaintenance(id: number): Promise<boolean>;
   generatePredictiveMaintenanceForEquipment(equipmentId: number): Promise<PredictiveMaintenance[]>;
+  
+  // ISM Document operations
+  getIsmDocument(id: number): Promise<IsmDocument | undefined>;
+  getAllIsmDocuments(): Promise<IsmDocument[]>;
+  getIsmDocumentsByType(documentType: string): Promise<IsmDocument[]>;
+  getIsmDocumentsByStatus(status: string): Promise<IsmDocument[]>;
+  getIsmDocumentsForReview(): Promise<IsmDocument[]>;
+  createIsmDocument(document: InsertIsmDocument): Promise<IsmDocument>;
+  updateIsmDocument(id: number, document: Partial<IsmDocument>): Promise<IsmDocument | undefined>;
+  deleteIsmDocument(id: number): Promise<boolean>;
+  
+  // ISM Audit operations
+  getIsmAudit(id: number): Promise<IsmAudit | undefined>;
+  getAllIsmAudits(): Promise<IsmAudit[]>;
+  getIsmAuditsByType(auditType: string): Promise<IsmAudit[]>;
+  getIsmAuditsByStatus(status: string): Promise<IsmAudit[]>;
+  getUpcomingIsmAudits(): Promise<IsmAudit[]>;
+  createIsmAudit(audit: InsertIsmAudit): Promise<IsmAudit>;
+  updateIsmAudit(id: number, audit: Partial<IsmAudit>): Promise<IsmAudit | undefined>;
+  deleteIsmAudit(id: number): Promise<boolean>;
+  
+  // ISM Training operations
+  getIsmTraining(id: number): Promise<IsmTraining | undefined>;
+  getAllIsmTraining(): Promise<IsmTraining[]>;
+  getIsmTrainingByType(trainingType: string): Promise<IsmTraining[]>;
+  getIsmTrainingByStatus(status: string): Promise<IsmTraining[]>;
+  getIsmTrainingByParticipant(userId: number): Promise<IsmTraining[]>;
+  getUpcomingIsmTraining(): Promise<IsmTraining[]>;
+  createIsmTraining(training: InsertIsmTraining): Promise<IsmTraining>;
+  updateIsmTraining(id: number, training: Partial<IsmTraining>): Promise<IsmTraining | undefined>;
+  deleteIsmTraining(id: number): Promise<boolean>;
+  
+  // ISM Incident operations
+  getIsmIncident(id: number): Promise<IsmIncident | undefined>;
+  getAllIsmIncidents(): Promise<IsmIncident[]>;
+  getIsmIncidentsByType(incidentType: string): Promise<IsmIncident[]>;
+  getIsmIncidentsByStatus(status: string): Promise<IsmIncident[]>;
+  getIsmIncidentsByReporter(userId: number): Promise<IsmIncident[]>;
+  getOpenIsmIncidents(): Promise<IsmIncident[]>;
+  createIsmIncident(incident: InsertIsmIncident): Promise<IsmIncident>;
+  updateIsmIncident(id: number, incident: Partial<IsmIncident>): Promise<IsmIncident | undefined>;
+  deleteIsmIncident(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -75,6 +121,12 @@ export class MemStorage implements IStorage {
   private maintenanceHistory: Map<number, MaintenanceHistory>;
   private predictiveMaintenance: Map<number, PredictiveMaintenance>;
   
+  // ISM Management maps
+  private ismDocuments: Map<number, IsmDocument>;
+  private ismAudits: Map<number, IsmAudit>;
+  private ismTraining: Map<number, IsmTraining>;
+  private ismIncidents: Map<number, IsmIncident>;
+  
   private userCurrentId: number;
   private equipmentCurrentId: number;
   private taskCurrentId: number;
@@ -82,6 +134,10 @@ export class MemStorage implements IStorage {
   private logCurrentId: number;
   private historyCurrentId: number;
   private predictiveCurrentId: number;
+  private ismDocumentCurrentId: number;
+  private ismAuditCurrentId: number;
+  private ismTrainingCurrentId: number;
+  private ismIncidentCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -92,6 +148,12 @@ export class MemStorage implements IStorage {
     this.maintenanceHistory = new Map();
     this.predictiveMaintenance = new Map();
     
+    // Initialize ISM maps
+    this.ismDocuments = new Map();
+    this.ismAudits = new Map();
+    this.ismTraining = new Map();
+    this.ismIncidents = new Map();
+    
     this.userCurrentId = 1;
     this.equipmentCurrentId = 1;
     this.taskCurrentId = 1;
@@ -99,6 +161,10 @@ export class MemStorage implements IStorage {
     this.logCurrentId = 1;
     this.historyCurrentId = 1;
     this.predictiveCurrentId = 1;
+    this.ismDocumentCurrentId = 1;
+    this.ismAuditCurrentId = 1;
+    this.ismTrainingCurrentId = 1;
+    this.ismIncidentCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeData();
@@ -493,6 +559,250 @@ export class MemStorage implements IStorage {
     }
     
     return predictions;
+  }
+  
+  // ISM Document operations
+  async getIsmDocument(id: number): Promise<IsmDocument | undefined> {
+    return this.ismDocuments.get(id);
+  }
+
+  async getAllIsmDocuments(): Promise<IsmDocument[]> {
+    return Array.from(this.ismDocuments.values());
+  }
+
+  async getIsmDocumentsByType(documentType: string): Promise<IsmDocument[]> {
+    return Array.from(this.ismDocuments.values()).filter(
+      (doc) => doc.documentType === documentType
+    );
+  }
+
+  async getIsmDocumentsByStatus(status: string): Promise<IsmDocument[]> {
+    return Array.from(this.ismDocuments.values()).filter(
+      (doc) => doc.status === status
+    );
+  }
+
+  async getIsmDocumentsForReview(): Promise<IsmDocument[]> {
+    const today = new Date();
+    
+    return Array.from(this.ismDocuments.values()).filter(
+      (doc) => doc.reviewDueDate && new Date(doc.reviewDueDate) <= today && doc.status !== 'obsolete'
+    );
+  }
+
+  async createIsmDocument(insertDocument: InsertIsmDocument): Promise<IsmDocument> {
+    const id = this.ismDocumentCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const document: IsmDocument = { ...insertDocument, id, createdAt, updatedAt };
+    this.ismDocuments.set(id, document);
+    return document;
+  }
+
+  async updateIsmDocument(id: number, documentUpdate: Partial<IsmDocument>): Promise<IsmDocument | undefined> {
+    const existingDocument = this.ismDocuments.get(id);
+    if (!existingDocument) return undefined;
+    
+    const updatedDocument = { 
+      ...existingDocument, 
+      ...documentUpdate,
+      updatedAt: new Date()
+    };
+    this.ismDocuments.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async deleteIsmDocument(id: number): Promise<boolean> {
+    return this.ismDocuments.delete(id);
+  }
+  
+  // ISM Audit operations
+  async getIsmAudit(id: number): Promise<IsmAudit | undefined> {
+    return this.ismAudits.get(id);
+  }
+
+  async getAllIsmAudits(): Promise<IsmAudit[]> {
+    return Array.from(this.ismAudits.values());
+  }
+
+  async getIsmAuditsByType(auditType: string): Promise<IsmAudit[]> {
+    return Array.from(this.ismAudits.values()).filter(
+      (audit) => audit.auditType === auditType
+    );
+  }
+
+  async getIsmAuditsByStatus(status: string): Promise<IsmAudit[]> {
+    return Array.from(this.ismAudits.values()).filter(
+      (audit) => audit.status === status
+    );
+  }
+
+  async getUpcomingIsmAudits(): Promise<IsmAudit[]> {
+    const today = new Date();
+    const thirtyDaysLater = new Date();
+    thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+    
+    return Array.from(this.ismAudits.values()).filter(
+      (audit) => audit.startDate && 
+                new Date(audit.startDate) >= today && 
+                new Date(audit.startDate) <= thirtyDaysLater && 
+                audit.status !== 'completed'
+    );
+  }
+
+  async createIsmAudit(insertAudit: InsertIsmAudit): Promise<IsmAudit> {
+    const id = this.ismAuditCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const audit: IsmAudit = { ...insertAudit, id, createdAt, updatedAt };
+    this.ismAudits.set(id, audit);
+    return audit;
+  }
+
+  async updateIsmAudit(id: number, auditUpdate: Partial<IsmAudit>): Promise<IsmAudit | undefined> {
+    const existingAudit = this.ismAudits.get(id);
+    if (!existingAudit) return undefined;
+    
+    const updatedAudit = { 
+      ...existingAudit, 
+      ...auditUpdate,
+      updatedAt: new Date()
+    };
+    this.ismAudits.set(id, updatedAudit);
+    return updatedAudit;
+  }
+
+  async deleteIsmAudit(id: number): Promise<boolean> {
+    return this.ismAudits.delete(id);
+  }
+  
+  // ISM Training operations
+  async getIsmTraining(id: number): Promise<IsmTraining | undefined> {
+    return this.ismTraining.get(id);
+  }
+
+  async getAllIsmTraining(): Promise<IsmTraining[]> {
+    return Array.from(this.ismTraining.values());
+  }
+
+  async getIsmTrainingByType(trainingType: string): Promise<IsmTraining[]> {
+    return Array.from(this.ismTraining.values()).filter(
+      (training) => training.trainingType === trainingType
+    );
+  }
+
+  async getIsmTrainingByStatus(status: string): Promise<IsmTraining[]> {
+    return Array.from(this.ismTraining.values()).filter(
+      (training) => training.status === status
+    );
+  }
+
+  async getIsmTrainingByParticipant(userId: number): Promise<IsmTraining[]> {
+    return Array.from(this.ismTraining.values()).filter(
+      (training) => {
+        const requiredParticipants = training.requiredParticipants as number[];
+        const actualParticipants = training.actualParticipants as number[];
+        return requiredParticipants.includes(userId) || actualParticipants.includes(userId);
+      }
+    );
+  }
+
+  async getUpcomingIsmTraining(): Promise<IsmTraining[]> {
+    const today = new Date();
+    const thirtyDaysLater = new Date();
+    thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+    
+    return Array.from(this.ismTraining.values()).filter(
+      (training) => training.scheduledDate && 
+                  new Date(training.scheduledDate) >= today && 
+                  new Date(training.scheduledDate) <= thirtyDaysLater && 
+                  training.status === 'planned'
+    );
+  }
+
+  async createIsmTraining(insertTraining: InsertIsmTraining): Promise<IsmTraining> {
+    const id = this.ismTrainingCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const training: IsmTraining = { ...insertTraining, id, createdAt, updatedAt };
+    this.ismTraining.set(id, training);
+    return training;
+  }
+
+  async updateIsmTraining(id: number, trainingUpdate: Partial<IsmTraining>): Promise<IsmTraining | undefined> {
+    const existingTraining = this.ismTraining.get(id);
+    if (!existingTraining) return undefined;
+    
+    const updatedTraining = { 
+      ...existingTraining, 
+      ...trainingUpdate,
+      updatedAt: new Date()
+    };
+    this.ismTraining.set(id, updatedTraining);
+    return updatedTraining;
+  }
+
+  async deleteIsmTraining(id: number): Promise<boolean> {
+    return this.ismTraining.delete(id);
+  }
+  
+  // ISM Incident operations
+  async getIsmIncident(id: number): Promise<IsmIncident | undefined> {
+    return this.ismIncidents.get(id);
+  }
+
+  async getAllIsmIncidents(): Promise<IsmIncident[]> {
+    return Array.from(this.ismIncidents.values());
+  }
+
+  async getIsmIncidentsByType(incidentType: string): Promise<IsmIncident[]> {
+    return Array.from(this.ismIncidents.values()).filter(
+      (incident) => incident.incidentType === incidentType
+    );
+  }
+
+  async getIsmIncidentsByStatus(status: string): Promise<IsmIncident[]> {
+    return Array.from(this.ismIncidents.values()).filter(
+      (incident) => incident.status === status
+    );
+  }
+
+  async getIsmIncidentsByReporter(userId: number): Promise<IsmIncident[]> {
+    return Array.from(this.ismIncidents.values()).filter(
+      (incident) => incident.reportedBy === userId
+    );
+  }
+
+  async getOpenIsmIncidents(): Promise<IsmIncident[]> {
+    return Array.from(this.ismIncidents.values()).filter(
+      (incident) => incident.status === 'open' || incident.status === 'in-progress'
+    );
+  }
+
+  async createIsmIncident(insertIncident: InsertIsmIncident): Promise<IsmIncident> {
+    const id = this.ismIncidentCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const incident: IsmIncident = { ...insertIncident, id, createdAt, updatedAt };
+    this.ismIncidents.set(id, incident);
+    return incident;
+  }
+
+  async updateIsmIncident(id: number, incidentUpdate: Partial<IsmIncident>): Promise<IsmIncident | undefined> {
+    const existingIncident = this.ismIncidents.get(id);
+    if (!existingIncident) return undefined;
+    
+    const updatedIncident = { 
+      ...existingIncident, 
+      ...incidentUpdate,
+      updatedAt: new Date()
+    };
+    this.ismIncidents.set(id, updatedIncident);
+    return updatedIncident;
+  }
+
+  async deleteIsmIncident(id: number): Promise<boolean> {
+    return this.ismIncidents.delete(id);
   }
 
   // Initialize demo data
@@ -1159,6 +1469,193 @@ export class MemStorage implements IStorage {
       
       const logWithTimestamp = { ...log, timestamp };
       this.activityLogs.set(this.logCurrentId++, logWithTimestamp as ActivityLog);
+    });
+    
+    // Initialize ISM Documents
+    const ismDocuments = [
+      {
+        title: 'Emergency Response Procedures',
+        documentType: 'procedure',
+        documentNumber: 'ISM-ERP-001',
+        version: '2.1',
+        status: 'approved',
+        approvedBy: 1, // Captain
+        approvalDate: new Date('2023-06-15'),
+        reviewDueDate: new Date('2024-06-15'),
+        content: 'Detailed procedures for emergency situations including fire, flooding, and man overboard.',
+        tags: ['emergency', 'safety', 'procedures'],
+        createdBy: 1
+      },
+      {
+        title: 'Waste Management Plan',
+        documentType: 'policy',
+        documentNumber: 'ISM-WMP-002',
+        version: '1.5',
+        status: 'approved',
+        approvedBy: 1,
+        approvalDate: new Date('2023-04-20'),
+        reviewDueDate: new Date('2024-04-20'),
+        content: 'Guidelines for handling waste onboard in compliance with MARPOL regulations.',
+        tags: ['environmental', 'waste', 'regulations'],
+        createdBy: 1
+      },
+      {
+        title: 'Pre-departure Safety Checklist',
+        documentType: 'checklist',
+        documentNumber: 'ISM-CHK-003',
+        version: '3.0',
+        status: 'review',
+        approvedBy: null,
+        approvalDate: null,
+        reviewDueDate: new Date('2023-12-01'),
+        content: 'Comprehensive checklist to ensure all safety measures are in place before departure.',
+        tags: ['safety', 'departure', 'checklist'],
+        createdBy: 2
+      },
+      {
+        title: 'Crew Training Manual',
+        documentType: 'manual',
+        documentNumber: 'ISM-TRN-004',
+        version: '2.3',
+        status: 'approved',
+        approvedBy: 1,
+        approvalDate: new Date('2023-03-10'),
+        reviewDueDate: new Date('2024-03-10'),
+        content: 'Comprehensive manual for crew training procedures and requirements.',
+        tags: ['training', 'crew', 'development'],
+        createdBy: 1
+      }
+    ];
+    
+    ismDocuments.forEach(doc => {
+      this.createIsmDocument(doc as InsertIsmDocument);
+    });
+    
+    // Initialize ISM Audits
+    const ismAudits = [
+      {
+        title: 'Annual Safety Audit',
+        auditType: 'internal',
+        status: 'planned',
+        startDate: new Date('2023-12-10'),
+        endDate: new Date('2023-12-12'),
+        auditScope: 'Comprehensive review of all safety procedures and equipment',
+        auditors: [1, 2], // Captain and Engineer1
+        location: 'Onboard',
+        findings: [],
+        correctiveActions: [],
+        createdBy: 1
+      },
+      {
+        title: 'Classification Society Inspection',
+        auditType: 'external',
+        status: 'completed',
+        startDate: new Date('2023-05-15'),
+        endDate: new Date('2023-05-16'),
+        auditScope: 'Hull inspection and safety systems verification',
+        auditors: ['John Smith (DNV GL)'],
+        location: 'Marina Bay',
+        findings: [
+          { id: 1, description: 'Life raft inspection certificate expired', severity: 'major' },
+          { id: 2, description: 'Fire extinguisher pressure gauge reading low in cabin 3', severity: 'minor' }
+        ],
+        correctiveActions: [
+          { id: 1, description: 'Schedule life raft inspection and certification', assignedTo: 2, dueDate: new Date('2023-05-30'), status: 'completed' },
+          { id: 2, description: 'Replace fire extinguisher in cabin 3', assignedTo: 3, dueDate: new Date('2023-05-20'), status: 'completed' }
+        ],
+        createdBy: 1
+      }
+    ];
+    
+    ismAudits.forEach(audit => {
+      this.createIsmAudit(audit as InsertIsmAudit);
+    });
+    
+    // Initialize ISM Training
+    const ismTraining = [
+      {
+        title: 'Fire Fighting Refresher',
+        trainingType: 'safety',
+        description: 'Annual refresher training on firefighting techniques and equipment use',
+        requiredParticipants: [1, 2, 3, 4, 5], // All crew
+        actualParticipants: [1, 2, 3, 4], // Technician2 missing
+        scheduledDate: new Date('2023-11-15'),
+        completionDate: null,
+        duration: 4, // hours
+        attachments: [],
+        notes: 'Will include practical exercise with fire extinguishers',
+        status: 'planned',
+        createdBy: 1
+      },
+      {
+        title: 'Man Overboard Drill',
+        trainingType: 'drill',
+        description: 'Practice drill for man overboard emergency response',
+        requiredParticipants: [1, 2, 3, 4, 5],
+        actualParticipants: [1, 2, 3, 4, 5],
+        scheduledDate: new Date('2023-08-10'),
+        completionDate: new Date('2023-08-10'),
+        duration: 2,
+        attachments: ['mob_drill_report_20230810.pdf'],
+        notes: 'Successfully completed. Response time improved by 15% from last drill.',
+        status: 'completed',
+        createdBy: 1
+      }
+    ];
+    
+    ismTraining.forEach(training => {
+      this.createIsmTraining(training as InsertIsmTraining);
+    });
+    
+    // Initialize ISM Incidents
+    const ismIncidents = [
+      {
+        title: 'Fuel Spillage During Bunkering',
+        incidentType: 'near-miss',
+        description: 'Small amount of fuel spilled on deck during bunkering operation. Contained before reaching water.',
+        dateReported: new Date('2023-09-05'),
+        dateOccurred: new Date('2023-09-04'),
+        location: 'Aft Deck',
+        reportedBy: 2, // Engineer1
+        severity: 'minor',
+        rootCause: 'Improper connection of fuel hose',
+        immediateActions: 'Spillage contained using absorbent materials. Transfer stopped immediately.',
+        correctiveActions: [
+          { id: 1, action: 'Revise bunkering procedure', status: 'in-progress', assignedTo: 1, dueDate: new Date('2023-09-30') },
+          { id: 2, action: 'Additional training for crew', status: 'planned', assignedTo: 2, dueDate: new Date('2023-10-15') }
+        ],
+        preventiveActions: [
+          { id: 1, action: 'Install improved fuel transfer monitoring system', status: 'planned', dueDate: new Date('2023-11-30') }
+        ],
+        status: 'in-progress',
+        verifiedBy: null,
+        verificationDate: null,
+        attachments: ['incident_report_20230905.pdf', 'photos_fuel_spill.jpg']
+      },
+      {
+        title: 'Navigation Equipment Malfunction',
+        incidentType: 'observation',
+        description: 'GPS system showed intermittent errors during coastal navigation.',
+        dateReported: new Date('2023-08-20'),
+        dateOccurred: new Date('2023-08-19'),
+        location: 'Bridge',
+        reportedBy: 1, // Captain
+        severity: 'minor',
+        rootCause: 'Software issue in navigation system',
+        immediateActions: 'Switched to backup navigation system',
+        correctiveActions: [
+          { id: 1, action: 'Update navigation system software', status: 'completed', assignedTo: 3, dueDate: new Date('2023-08-25') }
+        ],
+        preventiveActions: [],
+        status: 'closed',
+        verifiedBy: 1,
+        verificationDate: new Date('2023-08-26'),
+        attachments: []
+      }
+    ];
+    
+    ismIncidents.forEach(incident => {
+      this.createIsmIncident(incident as InsertIsmIncident);
     });
   }
 }

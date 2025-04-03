@@ -9,7 +9,11 @@ import {
   insertEquipmentSchema, 
   insertMaintenanceTaskSchema, 
   insertInventoryItemSchema,
-  insertActivityLogSchema
+  insertActivityLogSchema,
+  insertIsmDocumentSchema,
+  insertIsmAuditSchema,
+  insertIsmTrainingSchema,
+  insertIsmIncidentSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -850,6 +854,659 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to generate predictive maintenance" });
+    }
+  });
+  
+  // =========== ISM Document Routes =============
+  
+  // Get all ISM documents
+  apiRouter.get("/ism/documents", async (_req: Request, res: Response) => {
+    try {
+      const documents = await storage.getAllIsmDocuments();
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM documents" });
+    }
+  });
+  
+  // Get ISM document by ID
+  apiRouter.get("/ism/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getIsmDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ message: "ISM document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM document" });
+    }
+  });
+  
+  // Get ISM documents by type
+  apiRouter.get("/ism/documents/type/:documentType", async (req: Request, res: Response) => {
+    try {
+      const { documentType } = req.params;
+      const documents = await storage.getIsmDocumentsByType(documentType);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM documents by type" });
+    }
+  });
+  
+  // Get ISM documents by status
+  apiRouter.get("/ism/documents/status/:status", async (req: Request, res: Response) => {
+    try {
+      const { status } = req.params;
+      const documents = await storage.getIsmDocumentsByStatus(status);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM documents by status" });
+    }
+  });
+  
+  // Get ISM documents for review
+  apiRouter.get("/ism/documents/review", async (_req: Request, res: Response) => {
+    try {
+      const documents = await storage.getIsmDocumentsForReview();
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM documents for review" });
+    }
+  });
+  
+  // Create new ISM document
+  apiRouter.post("/ism/documents", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertIsmDocumentSchema.parse(req.body);
+      const document = await storage.createIsmDocument(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_document_created',
+        description: `New ISM document added: ${document.title}`,
+        userId: document.createdBy || null,
+        relatedEntityType: 'ism_document',
+        relatedEntityId: document.id,
+        metadata: { documentType: document.documentType, documentNumber: document.documentNumber }
+      });
+      
+      res.status(201).json(document);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid ISM document data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create ISM document" });
+    }
+  });
+  
+  // Update ISM document
+  apiRouter.patch("/ism/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingDocument = await storage.getIsmDocument(id);
+      
+      if (!existingDocument) {
+        return res.status(404).json({ message: "ISM document not found" });
+      }
+      
+      const updatedDocument = await storage.updateIsmDocument(id, req.body);
+      
+      // Log approval if status changed to approved
+      if (req.body.status === 'approved' && existingDocument.status !== 'approved') {
+        await storage.createActivityLog({
+          activityType: 'ism_document_approved',
+          description: `ISM document approved: ${existingDocument.title}`,
+          userId: req.body.approvedBy || null,
+          relatedEntityType: 'ism_document',
+          relatedEntityId: id,
+          metadata: { approvalDate: new Date().toISOString() }
+        });
+      } else {
+        // Log regular update
+        await storage.createActivityLog({
+          activityType: 'ism_document_updated',
+          description: `ISM document updated: ${existingDocument.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_document',
+          relatedEntityId: id,
+          metadata: { updated: Object.keys(req.body) }
+        });
+      }
+      
+      res.json(updatedDocument);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update ISM document" });
+    }
+  });
+  
+  // Delete ISM document
+  apiRouter.delete("/ism/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getIsmDocument(id);
+      
+      if (!document) {
+        return res.status(404).json({ message: "ISM document not found" });
+      }
+      
+      await storage.deleteIsmDocument(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_document_deleted',
+        description: `ISM document deleted: ${document.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'ism_document',
+        relatedEntityId: id,
+        metadata: { documentType: document.documentType, documentNumber: document.documentNumber }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete ISM document" });
+    }
+  });
+  
+  // =========== ISM Audit Routes =============
+  
+  // Get all ISM audits
+  apiRouter.get("/ism/audits", async (_req: Request, res: Response) => {
+    try {
+      const audits = await storage.getAllIsmAudits();
+      res.json(audits);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM audits" });
+    }
+  });
+  
+  // Get ISM audit by ID
+  apiRouter.get("/ism/audits/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const audit = await storage.getIsmAudit(id);
+      
+      if (!audit) {
+        return res.status(404).json({ message: "ISM audit not found" });
+      }
+      
+      res.json(audit);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM audit" });
+    }
+  });
+  
+  // Get ISM audits by type
+  apiRouter.get("/ism/audits/type/:auditType", async (req: Request, res: Response) => {
+    try {
+      const { auditType } = req.params;
+      const audits = await storage.getIsmAuditsByType(auditType);
+      res.json(audits);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM audits by type" });
+    }
+  });
+  
+  // Get ISM audits by status
+  apiRouter.get("/ism/audits/status/:status", async (req: Request, res: Response) => {
+    try {
+      const { status } = req.params;
+      const audits = await storage.getIsmAuditsByStatus(status);
+      res.json(audits);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM audits by status" });
+    }
+  });
+  
+  // Get upcoming ISM audits
+  apiRouter.get("/ism/audits/upcoming", async (_req: Request, res: Response) => {
+    try {
+      const audits = await storage.getUpcomingIsmAudits();
+      res.json(audits);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get upcoming ISM audits" });
+    }
+  });
+  
+  // Create new ISM audit
+  apiRouter.post("/ism/audits", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertIsmAuditSchema.parse(req.body);
+      const audit = await storage.createIsmAudit(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_audit_created',
+        description: `New ISM audit planned: ${audit.title}`,
+        userId: audit.createdBy || null,
+        relatedEntityType: 'ism_audit',
+        relatedEntityId: audit.id,
+        metadata: { auditType: audit.auditType, startDate: audit.startDate?.toISOString() }
+      });
+      
+      res.status(201).json(audit);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid ISM audit data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create ISM audit" });
+    }
+  });
+  
+  // Update ISM audit
+  apiRouter.patch("/ism/audits/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingAudit = await storage.getIsmAudit(id);
+      
+      if (!existingAudit) {
+        return res.status(404).json({ message: "ISM audit not found" });
+      }
+      
+      const updatedAudit = await storage.updateIsmAudit(id, req.body);
+      
+      // Log completion if status changed to completed
+      if (req.body.status === 'completed' && existingAudit.status !== 'completed') {
+        await storage.createActivityLog({
+          activityType: 'ism_audit_completed',
+          description: `ISM audit completed: ${existingAudit.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_audit',
+          relatedEntityId: id,
+          metadata: { 
+            completionDate: new Date().toISOString(),
+            findingsCount: existingAudit.findings ? 
+              (Array.isArray(existingAudit.findings) ? existingAudit.findings.length : 0) : 0
+          }
+        });
+      } else {
+        // Log regular update
+        await storage.createActivityLog({
+          activityType: 'ism_audit_updated',
+          description: `ISM audit updated: ${existingAudit.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_audit',
+          relatedEntityId: id,
+          metadata: { updated: Object.keys(req.body) }
+        });
+      }
+      
+      res.json(updatedAudit);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update ISM audit" });
+    }
+  });
+  
+  // Delete ISM audit
+  apiRouter.delete("/ism/audits/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const audit = await storage.getIsmAudit(id);
+      
+      if (!audit) {
+        return res.status(404).json({ message: "ISM audit not found" });
+      }
+      
+      await storage.deleteIsmAudit(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_audit_deleted',
+        description: `ISM audit deleted: ${audit.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'ism_audit',
+        relatedEntityId: id,
+        metadata: { auditType: audit.auditType }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete ISM audit" });
+    }
+  });
+  
+  // =========== ISM Training Routes =============
+  
+  // Get all ISM training
+  apiRouter.get("/ism/training", async (_req: Request, res: Response) => {
+    try {
+      const training = await storage.getAllIsmTraining();
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM training" });
+    }
+  });
+  
+  // Get ISM training by ID
+  apiRouter.get("/ism/training/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const training = await storage.getIsmTraining(id);
+      
+      if (!training) {
+        return res.status(404).json({ message: "ISM training not found" });
+      }
+      
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM training" });
+    }
+  });
+  
+  // Get ISM training by type
+  apiRouter.get("/ism/training/type/:trainingType", async (req: Request, res: Response) => {
+    try {
+      const { trainingType } = req.params;
+      const training = await storage.getIsmTrainingByType(trainingType);
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM training by type" });
+    }
+  });
+  
+  // Get ISM training by status
+  apiRouter.get("/ism/training/status/:status", async (req: Request, res: Response) => {
+    try {
+      const { status } = req.params;
+      const training = await storage.getIsmTrainingByStatus(status);
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM training by status" });
+    }
+  });
+  
+  // Get ISM training by participant
+  apiRouter.get("/ism/training/participant/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const training = await storage.getIsmTrainingByParticipant(userId);
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM training by participant" });
+    }
+  });
+  
+  // Get upcoming ISM training
+  apiRouter.get("/ism/training/upcoming", async (_req: Request, res: Response) => {
+    try {
+      const training = await storage.getUpcomingIsmTraining();
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get upcoming ISM training" });
+    }
+  });
+  
+  // Create new ISM training
+  apiRouter.post("/ism/training", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertIsmTrainingSchema.parse(req.body);
+      const training = await storage.createIsmTraining(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_training_created',
+        description: `New ISM training planned: ${training.title}`,
+        userId: training.createdBy || null,
+        relatedEntityType: 'ism_training',
+        relatedEntityId: training.id,
+        metadata: { 
+          trainingType: training.trainingType,
+          scheduledDate: training.scheduledDate?.toISOString(),
+          participantCount: training.requiredParticipants ? 
+            (Array.isArray(training.requiredParticipants) ? training.requiredParticipants.length : 0) : 0
+        }
+      });
+      
+      res.status(201).json(training);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid ISM training data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create ISM training" });
+    }
+  });
+  
+  // Update ISM training
+  apiRouter.patch("/ism/training/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingTraining = await storage.getIsmTraining(id);
+      
+      if (!existingTraining) {
+        return res.status(404).json({ message: "ISM training not found" });
+      }
+      
+      const updatedTraining = await storage.updateIsmTraining(id, req.body);
+      
+      // Log completion if status changed to completed
+      if (req.body.status === 'completed' && existingTraining.status !== 'completed') {
+        await storage.createActivityLog({
+          activityType: 'ism_training_completed',
+          description: `ISM training completed: ${existingTraining.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_training',
+          relatedEntityId: id,
+          metadata: { 
+            completionDate: req.body.completionDate || new Date().toISOString(),
+            participantCount: existingTraining.actualParticipants ? 
+              (Array.isArray(existingTraining.actualParticipants) ? existingTraining.actualParticipants.length : 0) : 0
+          }
+        });
+      } else {
+        // Log regular update
+        await storage.createActivityLog({
+          activityType: 'ism_training_updated',
+          description: `ISM training updated: ${existingTraining.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_training',
+          relatedEntityId: id,
+          metadata: { updated: Object.keys(req.body) }
+        });
+      }
+      
+      res.json(updatedTraining);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update ISM training" });
+    }
+  });
+  
+  // Delete ISM training
+  apiRouter.delete("/ism/training/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const training = await storage.getIsmTraining(id);
+      
+      if (!training) {
+        return res.status(404).json({ message: "ISM training not found" });
+      }
+      
+      await storage.deleteIsmTraining(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_training_deleted',
+        description: `ISM training deleted: ${training.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'ism_training',
+        relatedEntityId: id,
+        metadata: { trainingType: training.trainingType }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete ISM training" });
+    }
+  });
+  
+  // =========== ISM Incident Routes =============
+  
+  // Get all ISM incidents
+  apiRouter.get("/ism/incidents", async (_req: Request, res: Response) => {
+    try {
+      const incidents = await storage.getAllIsmIncidents();
+      res.json(incidents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM incidents" });
+    }
+  });
+  
+  // Get ISM incident by ID
+  apiRouter.get("/ism/incidents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const incident = await storage.getIsmIncident(id);
+      
+      if (!incident) {
+        return res.status(404).json({ message: "ISM incident not found" });
+      }
+      
+      res.json(incident);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM incident" });
+    }
+  });
+  
+  // Get ISM incidents by type
+  apiRouter.get("/ism/incidents/type/:incidentType", async (req: Request, res: Response) => {
+    try {
+      const { incidentType } = req.params;
+      const incidents = await storage.getIsmIncidentsByType(incidentType);
+      res.json(incidents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM incidents by type" });
+    }
+  });
+  
+  // Get ISM incidents by status
+  apiRouter.get("/ism/incidents/status/:status", async (req: Request, res: Response) => {
+    try {
+      const { status } = req.params;
+      const incidents = await storage.getIsmIncidentsByStatus(status);
+      res.json(incidents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM incidents by status" });
+    }
+  });
+  
+  // Get ISM incidents by reporter
+  apiRouter.get("/ism/incidents/reporter/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const incidents = await storage.getIsmIncidentsByReporter(userId);
+      res.json(incidents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM incidents by reporter" });
+    }
+  });
+  
+  // Get open ISM incidents
+  apiRouter.get("/ism/incidents/open", async (_req: Request, res: Response) => {
+    try {
+      const incidents = await storage.getOpenIsmIncidents();
+      res.json(incidents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get open ISM incidents" });
+    }
+  });
+  
+  // Create new ISM incident
+  apiRouter.post("/ism/incidents", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertIsmIncidentSchema.parse(req.body);
+      const incident = await storage.createIsmIncident(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_incident_reported',
+        description: `New ISM incident reported: ${incident.title}`,
+        userId: incident.reportedBy || null,
+        relatedEntityType: 'ism_incident',
+        relatedEntityId: incident.id,
+        metadata: { 
+          incidentType: incident.incidentType,
+          severity: incident.severity,
+          dateOccurred: incident.dateOccurred.toISOString()
+        }
+      });
+      
+      res.status(201).json(incident);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid ISM incident data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create ISM incident" });
+    }
+  });
+  
+  // Update ISM incident
+  apiRouter.patch("/ism/incidents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingIncident = await storage.getIsmIncident(id);
+      
+      if (!existingIncident) {
+        return res.status(404).json({ message: "ISM incident not found" });
+      }
+      
+      const updatedIncident = await storage.updateIsmIncident(id, req.body);
+      
+      // Log closure if status changed to closed
+      if (req.body.status === 'closed' && existingIncident.status !== 'closed') {
+        await storage.createActivityLog({
+          activityType: 'ism_incident_closed',
+          description: `ISM incident closed: ${existingIncident.title}`,
+          userId: req.body.verifiedBy || null,
+          relatedEntityType: 'ism_incident',
+          relatedEntityId: id,
+          metadata: { 
+            verificationDate: req.body.verificationDate || new Date().toISOString()
+          }
+        });
+      } else {
+        // Log regular update
+        await storage.createActivityLog({
+          activityType: 'ism_incident_updated',
+          description: `ISM incident updated: ${existingIncident.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_incident',
+          relatedEntityId: id,
+          metadata: { updated: Object.keys(req.body) }
+        });
+      }
+      
+      res.json(updatedIncident);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update ISM incident" });
+    }
+  });
+  
+  // Delete ISM incident
+  apiRouter.delete("/ism/incidents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const incident = await storage.getIsmIncident(id);
+      
+      if (!incident) {
+        return res.status(404).json({ message: "ISM incident not found" });
+      }
+      
+      await storage.deleteIsmIncident(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_incident_deleted',
+        description: `ISM incident deleted: ${incident.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'ism_incident',
+        relatedEntityId: id,
+        metadata: { incidentType: incident.incidentType, severity: incident.severity }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete ISM incident" });
     }
   });
   

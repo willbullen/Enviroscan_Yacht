@@ -13,7 +13,8 @@ import {
   Navigation, 
   ShieldCheck,
   LogOut,
-  BarChart4
+  BarChart4,
+  ClipboardCheck
 } from "lucide-react";
 
 interface SidebarProps {
@@ -30,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     { href: "/equipment", label: "Equipment", icon: <Wrench className="h-5 w-5 mr-3" /> },
     { href: "/inventory", label: "Inventory", icon: <Package className="h-5 w-5 mr-3" /> },
     { href: "/predictive-maintenance", label: "Predictive Maintenance", icon: <BarChart4 className="h-5 w-5 mr-3" /> },
+    { href: "/ism-management", label: "ISM Management", icon: <ClipboardCheck className="h-5 w-5 mr-3" /> },
     { href: "/reports", label: "Reports", icon: <FileText className="h-5 w-5 mr-3" /> },
     { href: "/calendar", label: "Calendar", icon: <CalendarIcon className="h-5 w-5 mr-3" /> },
   ];

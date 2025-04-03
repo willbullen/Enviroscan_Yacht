@@ -161,3 +161,115 @@ export const insertPredictiveMaintenanceSchema = createInsertSchema(predictiveMa
 });
 export type InsertPredictiveMaintenance = z.infer<typeof insertPredictiveMaintenanceSchema>;
 export type PredictiveMaintenance = typeof predictiveMaintenance.$inferSelect;
+
+// ISM Management Schema
+export const ismDocuments = pgTable("ism_documents", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  documentType: text("document_type").notNull(), // procedure, policy, checklist, form, report
+  documentNumber: text("document_number").notNull(), // ISM reference code
+  version: text("version").notNull(),
+  status: text("status").notNull(), // draft, review, approved, obsolete
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvalDate: timestamp("approval_date"),
+  reviewDueDate: timestamp("review_due_date"),
+  content: text("content"), // Main document content
+  attachmentPath: text("attachment_path"), // Path to attached file if any
+  tags: json("tags"), // For categorization
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertIsmDocumentSchema = createInsertSchema(ismDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertIsmDocument = z.infer<typeof insertIsmDocumentSchema>;
+export type IsmDocument = typeof ismDocuments.$inferSelect;
+
+// ISM Audit Schema
+export const ismAudits = pgTable("ism_audits", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  auditType: text("audit_type").notNull(), // internal, external, flag-state, class
+  status: text("status").notNull(), // planned, in-progress, completed, overdue
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  auditScope: text("audit_scope").notNull(),
+  auditors: json("auditors"), // Array of auditor names or IDs
+  location: text("location"),
+  findings: json("findings"), // Array of findings
+  correctiveActions: json("corrective_actions"), // Array of actions
+  reportAttachment: text("report_attachment"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertIsmAuditSchema = createInsertSchema(ismAudits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertIsmAudit = z.infer<typeof insertIsmAuditSchema>;
+export type IsmAudit = typeof ismAudits.$inferSelect;
+
+// ISM Training Schema
+export const ismTraining = pgTable("ism_training", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  trainingType: text("training_type").notNull(), // safety, technical, certification, drill
+  description: text("description"),
+  requiredParticipants: json("required_participants"), // Array of user IDs
+  actualParticipants: json("actual_participants"), // Array of user IDs
+  scheduledDate: timestamp("scheduled_date"),
+  completionDate: timestamp("completion_date"),
+  duration: real("duration"), // Hours
+  attachments: json("attachments"), // Array of attachment paths
+  notes: text("notes"),
+  status: text("status").notNull(), // planned, completed, cancelled
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertIsmTrainingSchema = createInsertSchema(ismTraining).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertIsmTraining = z.infer<typeof insertIsmTrainingSchema>;
+export type IsmTraining = typeof ismTraining.$inferSelect;
+
+// ISM Incidents/Non-conformities Schema
+export const ismIncidents = pgTable("ism_incidents", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  incidentType: text("incident_type").notNull(), // non-conformity, accident, near-miss, observation
+  description: text("description").notNull(),
+  dateReported: timestamp("date_reported").notNull(),
+  dateOccurred: timestamp("date_occurred").notNull(),
+  location: text("location"),
+  reportedBy: integer("reported_by").references(() => users.id),
+  severity: text("severity").notNull(), // minor, major, critical
+  rootCause: text("root_cause"),
+  immediateActions: text("immediate_actions"),
+  correctiveActions: json("corrective_actions"),
+  preventiveActions: json("preventive_actions"),
+  status: text("status").notNull(), // open, in-progress, closed
+  verifiedBy: integer("verified_by").references(() => users.id),
+  verificationDate: timestamp("verification_date"),
+  attachments: json("attachments"), // Array of attachment paths
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertIsmIncidentSchema = createInsertSchema(ismIncidents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertIsmIncident = z.infer<typeof insertIsmIncidentSchema>;
+export type IsmIncident = typeof ismIncidents.$inferSelect;
