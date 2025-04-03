@@ -18,10 +18,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   }, [isMobile]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Mobile Header */}
+    <div className="h-screen flex flex-col">
+      {/* Mobile Header - Fixed */}
       {isMobile && (
-        <div className="bg-navy-dark text-white p-4 flex justify-between items-center">
+        <div className="bg-navy-dark text-white p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-30">
           <div className="flex items-center">
             <img
               src="https://images.unsplash.com/photo-1659212209972-21e614984595?w=60&h=60&auto=format&crop=faces&fit=crop"
@@ -52,14 +52,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden bg-slate-50">
+      <div className="flex flex-1 h-screen bg-slate-50">
+        {/* Sidebar is already fixed by design */}
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          {/* Header is already sticky in Header.tsx */}
           <Header title={title} />
 
+          {/* Main Content - Scrollable */}
           <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50">
-            {children}
+            {/* Add padding-top for mobile to account for fixed header */}
+            <div className={isMobile ? "pt-16" : ""}>
+              {children}
+            </div>
           </main>
         </div>
       </div>

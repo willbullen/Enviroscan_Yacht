@@ -11,8 +11,8 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   const [notifications, setNotifications] = useState(3);
 
   return (
-    <header className="hidden md:flex bg-white shadow-sm h-16 z-10">
-      <div className="container mx-auto px-6 flex justify-between items-center">
+    <header className="hidden md:flex bg-white shadow-sm h-16 z-10 sticky top-0">
+      <div className="container mx-auto px-6 flex justify-between items-center h-full">
         <h1 className="font-semibold text-xl">{title}</h1>
         <div className="flex items-center space-x-4">
           <ThemeSwitcher />
