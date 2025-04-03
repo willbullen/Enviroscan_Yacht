@@ -8,7 +8,8 @@ import {
   Calendar, 
   CheckCircle2, 
   Clock, 
-  AlertTriangle 
+  AlertTriangle,
+  MoreHorizontal
 } from "lucide-react";
 import { format, isToday, isPast, isFuture, addMonths } from "date-fns";
 import MainLayout from "@/components/layout/MainLayout";
@@ -42,6 +43,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Task {
   id: number;
@@ -96,6 +106,7 @@ const Tasks = () => {
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const { toast } = useToast();
 
   // Fetch all tasks
@@ -281,31 +292,47 @@ const Tasks = () => {
 
       <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
         <div className="flex justify-between items-center mb-4">
-          <TabsList>
-            <TabsTrigger value="all">All Tasks</TabsTrigger>
-            <TabsTrigger value="due">Due</TabsTrigger>
-            <TabsTrigger value="in_progress">In Progress</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-          <div className="text-sm text-gray-500">
-            {filteredTasks.length} {filteredTasks.length === 1 ? "task" : "tasks"} found
+          <div className="flex items-center space-x-4">
+            <TabsList>
+              <TabsTrigger value="all">All Tasks</TabsTrigger>
+              <TabsTrigger value="due">Due</TabsTrigger>
+              <TabsTrigger value="in_progress">In Progress</TabsTrigger>
+              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-500">
+              {filteredTasks.length} {filteredTasks.length === 1 ? "task" : "tasks"} found
+            </div>
+            <ViewToggle 
+              viewMode={viewMode} 
+              onChange={setViewMode} 
+            />
           </div>
         </div>
 
         <TabsContent value="all" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasksLoading ? (
-              Array(6).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-[260px] w-full rounded-xl" />
-              ))
-            ) : filteredTasks.length === 0 ? (
-              <div className="col-span-full py-8 text-center">
-                <h3 className="text-lg font-medium text-gray-500">No tasks found</h3>
-                <p className="text-gray-400 mt-1">Try changing your filters or create a new task</p>
+          {tasksLoading ? (
+            viewMode === "card" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array(6).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-[260px] w-full rounded-xl" />
+                ))}
               </div>
             ) : (
-              filteredTasks.map((task) => {
+              <div className="rounded-md border">
+                <Skeleton className="h-[450px] w-full rounded-xl" />
+              </div>
+            )
+          ) : filteredTasks.length === 0 ? (
+            <div className="py-8 text-center">
+              <h3 className="text-lg font-medium text-gray-500">No tasks found</h3>
+              <p className="text-gray-400 mt-1">Try changing your filters or create a new task</p>
+            </div>
+          ) : viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTasks.map((task) => {
                 const assignee = getAssigneeInfo(task.assignedToId);
                 
                 return (
@@ -373,33 +400,101 @@ const Tasks = () => {
                     </CardFooter>
                   </Card>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Equipment</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Assigned To</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTasks.map((task) => {
+                    const assignee = getAssigneeInfo(task.assignedToId);
+                    
+                    return (
+                      <TableRow key={task.id}>
+                        <TableCell className="font-medium">{task.title}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            {statusIcons[task.status as keyof typeof statusIcons]}
+                            <span>{task.status.charAt(0).toUpperCase() + task.status.slice(1).replace('_', ' ')}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={priorityClasses[task.priority as keyof typeof priorityClasses]}>
+                            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{getEquipmentInfo(task.equipmentId)}</TableCell>
+                        <TableCell className={getDueDateClass(task.dueDate, task.status)}>
+                          {formatDueDate(task.dueDate)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Avatar className="h-5 w-5 mr-1">
+                              <AvatarImage src={assignee.avatar || undefined} />
+                              <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span>{assignee.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                                  Edit
+                                </DropdownMenuItem>
+                                {task.status === "due" || task.status === "upcoming" ? (
+                                  <DropdownMenuItem onClick={() => handleStartTask(task)}>
+                                    Start Task
+                                  </DropdownMenuItem>
+                                ) : task.status === "in_progress" ? (
+                                  <DropdownMenuItem onClick={() => handleCompleteTask(task)}>
+                                    Mark Complete
+                                  </DropdownMenuItem>
+                                ) : null}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="due" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {/* Dynamic content based on viewMode will be filtered by the selectedTab state */}
         </TabsContent>
 
         <TabsContent value="in_progress" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {/* Dynamic content based on viewMode will be filtered by the selectedTab state */}
         </TabsContent>
 
         <TabsContent value="upcoming" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {/* Dynamic content based on viewMode will be filtered by the selectedTab state */}
         </TabsContent>
 
         <TabsContent value="completed" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {/* Dynamic content based on viewMode will be filtered by the selectedTab state */}
         </TabsContent>
       </Tabs>
     </MainLayout>

@@ -8,7 +8,8 @@ import {
   AlertTriangle,
   Clock,
   CheckCircle,
-  Package
+  Package,
+  MoreHorizontal
 } from "lucide-react";
 import { format } from "date-fns";
 import MainLayout from "@/components/layout/MainLayout";
@@ -42,6 +43,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface InventoryItem {
   id: number;
@@ -70,6 +80,7 @@ const Inventory = () => {
   const [inventoryFormOpen, setInventoryFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [stockFilter, setStockFilter] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const { toast } = useToast();
 
   // Fetch all inventory items
@@ -293,31 +304,47 @@ const Inventory = () => {
 
       <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
         <div className="flex justify-between items-center mb-4">
-          <TabsList>
-            <TabsTrigger value="all">All Items</TabsTrigger>
-            <TabsTrigger value="fluids">Fluids</TabsTrigger>
-            <TabsTrigger value="filters">Filters</TabsTrigger>
-            <TabsTrigger value="parts">Parts</TabsTrigger>
-            <TabsTrigger value="tools">Tools</TabsTrigger>
-          </TabsList>
-          <div className="text-sm text-gray-500">
-            {filteredInventory.length} {filteredInventory.length === 1 ? "item" : "items"} found
+          <div className="flex items-center space-x-4">
+            <TabsList>
+              <TabsTrigger value="all">All Items</TabsTrigger>
+              <TabsTrigger value="fluids">Fluids</TabsTrigger>
+              <TabsTrigger value="filters">Filters</TabsTrigger>
+              <TabsTrigger value="parts">Parts</TabsTrigger>
+              <TabsTrigger value="tools">Tools</TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-500">
+              {filteredInventory.length} {filteredInventory.length === 1 ? "item" : "items"} found
+            </div>
+            <ViewToggle 
+              viewMode={viewMode} 
+              onChange={setViewMode} 
+            />
           </div>
         </div>
 
         <TabsContent value="all" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {inventoryLoading ? (
-              Array(6).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-[280px] w-full rounded-xl" />
-              ))
-            ) : filteredInventory.length === 0 ? (
-              <div className="col-span-full py-8 text-center">
-                <h3 className="text-lg font-medium text-gray-500">No inventory items found</h3>
-                <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
+          {inventoryLoading ? (
+            viewMode === "card" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array(6).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-[280px] w-full rounded-xl" />
+                ))}
               </div>
             ) : (
-              filteredInventory.map((item) => {
+              <div className="rounded-md border">
+                <Skeleton className="h-[450px] w-full rounded-xl" />
+              </div>
+            )
+          ) : filteredInventory.length === 0 ? (
+            <div className="py-8 text-center">
+              <h3 className="text-lg font-medium text-gray-500">No inventory items found</h3>
+              <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
+            </div>
+          ) : viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredInventory.map((item) => {
                 const stockStatus = getStockStatus(item.quantity, item.minQuantity);
                 const progressWidth = getProgressWidth(item.quantity, item.minQuantity);
                 
@@ -345,7 +372,7 @@ const Inventory = () => {
                           <span className="text-sm font-medium">Stock Level</span>
                           <span className="text-sm">{item.quantity} of {item.minQuantity} {item.unit}</span>
                         </div>
-                        <Progress value={progressWidth} className="h-2" indicatorClassName={stockStatus.progressColor} />
+                        <Progress value={progressWidth} className={`h-2 ${stockStatus.progressColor}`} />
                       </div>
                       
                       <div className="space-y-2 text-sm">
@@ -387,33 +414,204 @@ const Inventory = () => {
                     </CardFooter>
                   </Card>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Min. Quantity</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInventory.map((item) => {
+                    const stockStatus = getStockStatus(item.quantity, item.minQuantity);
+                    
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <Package className="h-4 w-4" />
+                            {item.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className={`flex items-center text-sm font-medium ${stockStatus.className}`}>
+                            {stockStatus.icon}
+                            {stockStatus.label}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {item.quantity} {item.unit}
+                        </TableCell>
+                        <TableCell>
+                          {item.minQuantity} {item.unit}
+                        </TableCell>
+                        <TableCell>
+                          {item.location || "Not specified"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditItem(item)}>
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleRestock(item)}>
+                                  Restock
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="fluids" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {filteredInventory.length === 0 ? (
+            <div className="py-8 text-center">
+              <h3 className="text-lg font-medium text-gray-500">No fluids found</h3>
+              <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
+            </div>
+          ) : viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Content will be filtered by the selectedTab state */}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Min. Quantity</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Content will be filtered by the selectedTab state */}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="filters" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {filteredInventory.length === 0 ? (
+            <div className="py-8 text-center">
+              <h3 className="text-lg font-medium text-gray-500">No filters found</h3>
+              <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
+            </div>
+          ) : viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Content will be filtered by the selectedTab state */}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Min. Quantity</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Content will be filtered by the selectedTab state */}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="parts" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {filteredInventory.length === 0 ? (
+            <div className="py-8 text-center">
+              <h3 className="text-lg font-medium text-gray-500">No parts found</h3>
+              <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
+            </div>
+          ) : viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Content will be filtered by the selectedTab state */}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Min. Quantity</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Content will be filtered by the selectedTab state */}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="tools" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Content will be filtered by the selectedTab state */}
-          </div>
+          {filteredInventory.length === 0 ? (
+            <div className="py-8 text-center">
+              <h3 className="text-lg font-medium text-gray-500">No tools found</h3>
+              <p className="text-gray-400 mt-1">Try changing your filters or add new items</p>
+            </div>
+          ) : viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Content will be filtered by the selectedTab state */}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Min. Quantity</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Content will be filtered by the selectedTab state */}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </MainLayout>
