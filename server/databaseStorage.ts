@@ -154,7 +154,7 @@ export class DatabaseStorage implements IStorage {
       .from(maintenanceTasks)
       .where(
         and(
-          eq(maintenanceTasks.status, "pending"),
+          eq(maintenanceTasks.status, "upcoming"),
           gte(maintenanceTasks.dueDate, today),
           lte(maintenanceTasks.dueDate, nextWeek)
         )

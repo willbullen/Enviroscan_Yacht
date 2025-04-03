@@ -299,7 +299,7 @@ const Equipment = () => {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Runtime:</span>
-                          <span className="font-mono">{item.runtime.toLocaleString()} hrs</span>
+                          <span className="font-mono">{item.runtime !== null ? `${item.runtime.toLocaleString()} hrs` : 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Installation Date:</span>
