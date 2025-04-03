@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import MainLayout from "@/components/layout/MainLayout";
 import {
   Tabs,
   TabsContent,
@@ -417,69 +418,71 @@ const ISMManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">ISM Management</h1>
-          <p className="text-muted-foreground">
-            Manage International Safety Management documents, audits, training, and incidents
-          </p>
+    <MainLayout>
+      <div className="p-4 space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">ISM Management</h1>
+            <p className="text-muted-foreground">
+              Manage International Safety Management documents, audits, training, and incidents
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              View Calendar
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Book className="w-4 h-4" />
+              ISM Code Reference
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            View Calendar
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Book className="w-4 h-4" />
-            ISM Code Reference
-          </Button>
-        </div>
-      </div>
-      
-      <Separator />
-      
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="documents" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Documents
-          </TabsTrigger>
-          <TabsTrigger value="audits" className="flex items-center gap-2">
-            <ClipboardCheck className="w-4 h-4" />
-            Audits
-          </TabsTrigger>
-          <TabsTrigger value="training" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Training
-          </TabsTrigger>
-          <TabsTrigger value="incidents" className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Incidents
-          </TabsTrigger>
-        </TabsList>
         
-        <Card className="border-none shadow-none mt-4">
-          <ScrollArea className="h-[70vh]">
-            <TabsContent value="documents" className="m-0">
-              {renderDocumentsList()}
-            </TabsContent>
-            
-            <TabsContent value="audits" className="m-0">
-              {renderAuditsList()}
-            </TabsContent>
-            
-            <TabsContent value="training" className="m-0">
-              {renderTrainingList()}
-            </TabsContent>
-            
-            <TabsContent value="incidents" className="m-0">
-              {renderIncidentsList()}
-            </TabsContent>
-          </ScrollArea>
-        </Card>
-      </Tabs>
-    </div>
+        <Separator />
+        
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="documents" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Documents
+            </TabsTrigger>
+            <TabsTrigger value="audits" className="flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4" />
+              Audits
+            </TabsTrigger>
+            <TabsTrigger value="training" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Training
+            </TabsTrigger>
+            <TabsTrigger value="incidents" className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Incidents
+            </TabsTrigger>
+          </TabsList>
+          
+          <Card className="border-none shadow-none mt-4">
+            <ScrollArea className="h-[70vh]">
+              <TabsContent value="documents" className="m-0">
+                {renderDocumentsList()}
+              </TabsContent>
+              
+              <TabsContent value="audits" className="m-0">
+                {renderAuditsList()}
+              </TabsContent>
+              
+              <TabsContent value="training" className="m-0">
+                {renderTrainingList()}
+              </TabsContent>
+              
+              <TabsContent value="incidents" className="m-0">
+                {renderIncidentsList()}
+              </TabsContent>
+            </ScrollArea>
+          </Card>
+        </Tabs>
+      </div>
+    </MainLayout>
   );
 };
 
