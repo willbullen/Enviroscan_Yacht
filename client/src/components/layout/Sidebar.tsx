@@ -57,22 +57,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     >
       {/* Sidebar Header - Desktop */}
       <div className="hidden md:flex items-center p-4 border-b border-navy">
-        <img
-          src="https://images.unsplash.com/photo-1659212209972-21e614984595?w=60&h=60&auto=format&crop=faces&fit=crop"
-          alt="Yacht Logo"
-          className="h-10 w-10 rounded-full mr-3"
-        />
+        <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 11l18-5v12L3 11z"></path>
+            <path d="M9.5 6.5l1 9.5"></path>
+            <path d="M16.5 15.5l-.3-12"></path>
+          </svg>
+        </div>
         <span className="font-semibold">IDEA YACHT</span>
       </div>
 
       <div className="flex flex-col h-full overflow-y-auto">
         {/* User Profile */}
         <div className="p-4 border-b border-navy flex items-center">
-          <img
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&auto=format&fit=crop"
-            alt="User Avatar"
-            className="rounded-full h-10 w-10 mr-3"
-          />
+          <div className="h-10 w-10 bg-green-500 rounded-full flex items-center justify-center text-white mr-3">
+            <span className="text-xs font-bold">CS</span>
+          </div>
           <div>
             <p className="font-semibold">Captain Smith</p>
             <p className="text-xs text-gray-300">Chief Engineer</p>
