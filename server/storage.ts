@@ -135,7 +135,6 @@ export interface IStorage {
   deleteCrewDocument(id: number): Promise<boolean>;
 }
 
-// Implementing all the methods defined in IStorage interface
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private equipment: Map<number, Equipment>;
@@ -151,10 +150,6 @@ export class MemStorage implements IStorage {
   private ismTraining: Map<number, IsmTraining>;
   private ismIncidents: Map<number, IsmIncident>;
   
-  // Crew Management maps
-  private crewMembers: Map<number, CrewMember>;
-  private crewDocuments: Map<number, CrewDocument>;
-  
   private userCurrentId: number;
   private equipmentCurrentId: number;
   private taskCurrentId: number;
@@ -166,8 +161,6 @@ export class MemStorage implements IStorage {
   private ismAuditCurrentId: number;
   private ismTrainingCurrentId: number;
   private ismIncidentCurrentId: number;
-  private crewMemberCurrentId: number;
-  private crewDocumentCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -184,10 +177,6 @@ export class MemStorage implements IStorage {
     this.ismTraining = new Map();
     this.ismIncidents = new Map();
     
-    // Initialize Crew maps
-    this.crewMembers = new Map();
-    this.crewDocuments = new Map();
-    
     this.userCurrentId = 1;
     this.equipmentCurrentId = 1;
     this.taskCurrentId = 1;
@@ -199,8 +188,6 @@ export class MemStorage implements IStorage {
     this.ismAuditCurrentId = 1;
     this.ismTrainingCurrentId = 1;
     this.ismIncidentCurrentId = 1;
-    this.crewMemberCurrentId = 1;
-    this.crewDocumentCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeData();
@@ -625,104 +612,6 @@ export class MemStorage implements IStorage {
       (doc) => doc.reviewDueDate && new Date(doc.reviewDueDate) <= today && doc.status !== 'obsolete'
     );
   }
-  
-  // Crew Member operations
-  async getCrewMember(id: number): Promise<CrewMember | undefined> {
-    return this.crewMembers.get(id);
-  }
-
-  async getAllCrewMembers(): Promise<CrewMember[]> {
-    return Array.from(this.crewMembers.values());
-  }
-
-  async getCrewMembersByStatus(status: string): Promise<CrewMember[]> {
-    return Array.from(this.crewMembers.values()).filter(
-      (member) => member.status === status
-    );
-  }
-
-  async getCrewMembersByPosition(position: string): Promise<CrewMember[]> {
-    return Array.from(this.crewMembers.values()).filter(
-      (member) => member.position === position
-    );
-  }
-
-  async createCrewMember(insertMember: InsertCrewMember): Promise<CrewMember> {
-    const id = this.crewMemberCurrentId++;
-    const createdAt = new Date();
-    const member: CrewMember = { ...insertMember, id, createdAt };
-    this.crewMembers.set(id, member);
-    return member;
-  }
-
-  async updateCrewMember(id: number, memberUpdate: Partial<CrewMember>): Promise<CrewMember | undefined> {
-    const existingMember = this.crewMembers.get(id);
-    if (!existingMember) return undefined;
-    
-    const updatedMember = { ...existingMember, ...memberUpdate };
-    this.crewMembers.set(id, updatedMember);
-    return updatedMember;
-  }
-
-  async deleteCrewMember(id: number): Promise<boolean> {
-    return this.crewMembers.delete(id);
-  }
-  
-  // Crew Document operations
-  async getCrewDocument(id: number): Promise<CrewDocument | undefined> {
-    return this.crewDocuments.get(id);
-  }
-
-  async getCrewDocumentsByCrewMember(crewMemberId: number): Promise<CrewDocument[]> {
-    return Array.from(this.crewDocuments.values()).filter(
-      (doc) => doc.crewMemberId === crewMemberId
-    );
-  }
-
-  async getCrewDocumentsByType(documentType: string): Promise<CrewDocument[]> {
-    return Array.from(this.crewDocuments.values()).filter(
-      (doc) => doc.documentType === documentType
-    );
-  }
-
-  async getCrewDocumentsByVerificationStatus(status: string): Promise<CrewDocument[]> {
-    return Array.from(this.crewDocuments.values()).filter(
-      (doc) => doc.verificationStatus === status
-    );
-  }
-
-  async getExpiringCrewDocuments(daysThreshold: number): Promise<CrewDocument[]> {
-    const today = new Date();
-    const threshold = new Date();
-    threshold.setDate(today.getDate() + daysThreshold);
-    
-    return Array.from(this.crewDocuments.values()).filter(
-      (doc) => doc.expiryDate && 
-               new Date(doc.expiryDate) > today && 
-               new Date(doc.expiryDate) <= threshold
-    );
-  }
-
-  async createCrewDocument(insertDocument: InsertCrewDocument): Promise<CrewDocument> {
-    const id = this.crewDocumentCurrentId++;
-    const createdAt = new Date();
-    const document: CrewDocument = { ...insertDocument, id, createdAt };
-    this.crewDocuments.set(id, document);
-    return document;
-  }
-
-  async updateCrewDocument(id: number, documentUpdate: Partial<CrewDocument>): Promise<CrewDocument | undefined> {
-    const existingDocument = this.crewDocuments.get(id);
-    if (!existingDocument) return undefined;
-    
-    const updatedDocument = { ...existingDocument, ...documentUpdate };
-    this.crewDocuments.set(id, updatedDocument);
-    return updatedDocument;
-  }
-
-  async deleteCrewDocument(id: number): Promise<boolean> {
-    return this.crewDocuments.delete(id);
-  }
 
   async createIsmDocument(insertDocument: InsertIsmDocument): Promise<IsmDocument> {
     const id = this.ismDocumentCurrentId++;
@@ -941,233 +830,6 @@ export class MemStorage implements IStorage {
 
   // Initialize demo data
   private initializeData(): void {
-    // Initialize crew members
-    const crewMembers = [
-      {
-        name: "John Smith",
-        position: "Captain",
-        nationality: "British",
-        dateOfBirth: new Date("1975-05-15"),
-        contactEmail: "jsmith@example.com",
-        contactPhone: "+44 7700 900123",
-        emergencyContact: "Jane Smith, +44 7700 900124",
-        joinDate: new Date("2020-01-10"),
-        status: "active",
-        department: "Deck",
-        notes: "Experienced captain with 20+ years at sea",
-        photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-        certificationsStatus: "valid",
-        nextCertRenewalDate: new Date("2025-01-15")
-      },
-      {
-        name: "Maria Rodriguez",
-        position: "Chief Engineer",
-        nationality: "Spanish",
-        dateOfBirth: new Date("1980-08-22"),
-        contactEmail: "mrodriguez@example.com",
-        contactPhone: "+34 612 345 678",
-        emergencyContact: "Carlos Rodriguez, +34 612 345 679",
-        joinDate: new Date("2020-02-15"),
-        status: "active",
-        department: "Engineering",
-        notes: "Expert in marine propulsion systems",
-        photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-        certificationsStatus: "valid",
-        nextCertRenewalDate: new Date("2024-09-30")
-      },
-      {
-        name: "David Chen",
-        position: "Chef",
-        nationality: "Chinese",
-        dateOfBirth: new Date("1985-12-10"),
-        contactEmail: "dchen@example.com",
-        contactPhone: "+86 135 1234 5678",
-        emergencyContact: "Li Chen, +86 135 1234 5679",
-        joinDate: new Date("2021-04-20"),
-        status: "active",
-        department: "Interior",
-        notes: "Specializes in international cuisine",
-        photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d",
-        certificationsStatus: "valid",
-        nextCertRenewalDate: new Date("2024-06-15")
-      },
-      {
-        name: "Sarah Johnson",
-        position: "Stewardess",
-        nationality: "American",
-        dateOfBirth: new Date("1990-03-25"),
-        contactEmail: "sjohnson@example.com",
-        contactPhone: "+1 212 555 6789",
-        emergencyContact: "Michael Johnson, +1 212 555 6780",
-        joinDate: new Date("2022-01-05"),
-        status: "active",
-        department: "Interior",
-        notes: "Background in luxury hospitality",
-        photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2",
-        certificationsStatus: "valid",
-        nextCertRenewalDate: new Date("2024-07-10")
-      },
-      {
-        name: "James Wilson",
-        position: "Deckhand",
-        nationality: "Australian",
-        dateOfBirth: new Date("1992-09-18"),
-        contactEmail: "jwilson@example.com",
-        contactPhone: "+61 4 1234 5678",
-        emergencyContact: "Emily Wilson, +61 4 1234 5679",
-        joinDate: new Date("2022-06-12"),
-        status: "active",
-        department: "Deck",
-        notes: "Strong seamanship skills",
-        photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-        certificationsStatus: "valid",
-        nextCertRenewalDate: new Date("2025-03-22")
-      }
-    ];
-    
-    // Initialize crew documents
-    const crewDocuments = [
-      {
-        crewMemberId: 1,
-        documentType: "Passport",
-        documentNumber: "GB123456789",
-        issueDate: new Date("2019-02-10"),
-        expiryDate: new Date("2029-02-10"),
-        issuingAuthority: "United Kingdom",
-        documentUrl: "https://example.com/documents/passport_smith.pdf",
-        notes: "10-year validity",
-        verificationStatus: "verified",
-        verificationDate: new Date("2020-01-05"),
-        verifiedById: 2
-      },
-      {
-        crewMemberId: 1,
-        documentType: "Master's License",
-        documentNumber: "UK-ML-56789",
-        issueDate: new Date("2018-05-20"),
-        expiryDate: new Date("2025-05-20"),
-        issuingAuthority: "Maritime and Coastguard Agency UK",
-        documentUrl: "https://example.com/documents/master_license_smith.pdf",
-        notes: "Unlimited tonnage",
-        verificationStatus: "verified",
-        verificationDate: new Date("2020-01-05"),
-        verifiedById: 2
-      },
-      {
-        crewMemberId: 2,
-        documentType: "Passport",
-        documentNumber: "ESP987654321",
-        issueDate: new Date("2017-07-15"),
-        expiryDate: new Date("2027-07-15"),
-        issuingAuthority: "Spain",
-        documentUrl: "https://example.com/documents/passport_rodriguez.pdf",
-        notes: "10-year validity",
-        verificationStatus: "verified",
-        verificationDate: new Date("2020-02-10"),
-        verifiedById: 1
-      },
-      {
-        crewMemberId: 2,
-        documentType: "Chief Engineer License",
-        documentNumber: "ES-CEL-12345",
-        issueDate: new Date("2019-08-05"),
-        expiryDate: new Date("2024-08-05"),
-        issuingAuthority: "Spanish Maritime Authority",
-        documentUrl: "https://example.com/documents/engineer_license_rodriguez.pdf",
-        notes: "Valid for vessels >3000kW",
-        verificationStatus: "verified",
-        verificationDate: new Date("2020-02-10"),
-        verifiedById: 1
-      },
-      {
-        crewMemberId: 3,
-        documentType: "Passport",
-        documentNumber: "CN123456789",
-        issueDate: new Date("2018-10-25"),
-        expiryDate: new Date("2028-10-25"),
-        issuingAuthority: "China",
-        documentUrl: "https://example.com/documents/passport_chen.pdf",
-        notes: "10-year validity",
-        verificationStatus: "verified",
-        verificationDate: new Date("2021-04-15"),
-        verifiedById: 1
-      },
-      {
-        crewMemberId: 3,
-        documentType: "Food Handling Certificate",
-        documentNumber: "FHC-2021-56789",
-        issueDate: new Date("2021-01-30"),
-        expiryDate: new Date("2024-01-30"),
-        issuingAuthority: "International Maritime Culinary Association",
-        documentUrl: "https://example.com/documents/food_cert_chen.pdf",
-        notes: "Includes advanced hygiene training",
-        verificationStatus: "verified",
-        verificationDate: new Date("2021-04-15"),
-        verifiedById: 1
-      },
-      {
-        crewMemberId: 4,
-        documentType: "Passport",
-        documentNumber: "US123456789",
-        issueDate: new Date("2020-05-15"),
-        expiryDate: new Date("2030-05-15"),
-        issuingAuthority: "United States",
-        documentUrl: "https://example.com/documents/passport_johnson.pdf",
-        notes: "10-year validity",
-        verificationStatus: "verified",
-        verificationDate: new Date("2021-12-20"),
-        verifiedById: 1
-      },
-      {
-        crewMemberId: 4,
-        documentType: "STCW Basic Training",
-        documentNumber: "STCW-BT-45678",
-        issueDate: new Date("2021-09-10"),
-        expiryDate: new Date("2026-09-10"),
-        issuingAuthority: "US Coast Guard",
-        documentUrl: "https://example.com/documents/stcw_johnson.pdf",
-        notes: "Includes firefighting and sea survival",
-        verificationStatus: "verified",
-        verificationDate: new Date("2021-12-20"),
-        verifiedById: 1
-      },
-      {
-        crewMemberId: 5,
-        documentType: "Passport",
-        documentNumber: "AU98765432",
-        issueDate: new Date("2019-11-08"),
-        expiryDate: new Date("2029-11-08"),
-        issuingAuthority: "Australia",
-        documentUrl: "https://example.com/documents/passport_wilson.pdf",
-        notes: "10-year validity",
-        verificationStatus: "verified",
-        verificationDate: new Date("2022-06-01"),
-        verifiedById: 1
-      },
-      {
-        crewMemberId: 5,
-        documentType: "Powerboat License",
-        documentNumber: "AU-PBL-23456",
-        issueDate: new Date("2020-08-15"),
-        expiryDate: new Date("2025-08-15"),
-        issuingAuthority: "Australian Maritime Safety Authority",
-        documentUrl: "https://example.com/documents/powerboat_wilson.pdf",
-        notes: "Category 2 - offshore operations",
-        verificationStatus: "verified",
-        verificationDate: new Date("2022-06-01"),
-        verifiedById: 1
-      }
-    ];
-    
-    // Add crew data to storage
-    crewMembers.forEach(member => {
-      this.createCrewMember(member as InsertCrewMember);
-    });
-    
-    crewDocuments.forEach(document => {
-      this.createCrewDocument(document as InsertCrewDocument);
-    });
-    
     // Create demo users
     const users = [
       {
@@ -2021,5 +1683,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use in-memory storage for development simplicity
-export const storage = new MemStorage();
+import { DatabaseStorage } from './databaseStorage';
+
+// Use DatabaseStorage with PostgreSQL for production
+export const storage = new DatabaseStorage();
