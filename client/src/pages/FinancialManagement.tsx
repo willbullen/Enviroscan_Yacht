@@ -191,7 +191,7 @@ const FinancialManagement: React.FC = () => {
   const renderAccountCards = () => {
     return mockAccounts.map(account => (
       <Card key={account.id} className="overflow-hidden">
-        <CardHeader className={`pb-2 ${account.accountType === 'income' ? 'bg-emerald-50' : 'bg-blue-50'}`}>
+        <CardHeader className={`pb-2 ${account.accountType === 'income' ? 'bg-emerald-50/20 dark:bg-emerald-950/20' : 'bg-blue-50/20 dark:bg-blue-950/20'}`}>
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -207,16 +207,16 @@ const FinancialManagement: React.FC = () => {
         <CardContent className="pt-4">
           <div className="flex flex-col gap-1">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Type:</span>
+              <span className="text-sm text-muted-foreground">Type:</span>
               <span className="capitalize">{account.accountType}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Category:</span>
+              <span className="text-sm text-muted-foreground">Category:</span>
               <span className="capitalize">{account.category}</span>
             </div>
             <Separator className="my-2" />
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Balance:</span>
+              <span className="text-sm text-muted-foreground">Balance:</span>
               <span className="font-bold text-lg font-mono">${account.balance.toLocaleString()}</span>
             </div>
           </div>
@@ -511,7 +511,7 @@ const FinancialManagement: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Financial Management</h1>
-            <p className="text-gray-500">Manage yacht finances, budgets, expenses, and reporting</p>
+            <p className="text-muted-foreground">Manage yacht finances, budgets, expenses, and reporting</p>
           </div>
           
           <div className="flex items-center gap-4">
