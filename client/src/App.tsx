@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import Dashboard from "@/pages/Dashboard";
 import Tasks from "@/pages/Tasks";
 import Equipment from "@/pages/Equipment";
@@ -11,10 +11,8 @@ import ISMManagement from "@/pages/ISMManagement";
 import CrewManagement from "@/pages/CrewManagement";
 import FinancialManagement from "@/pages/FinancialManagement";
 import NotFound from "@/pages/not-found";
-import MainLayout from "@/components/hud/MainLayout";
-import { useEffect } from "react";
 
-const AppRoutes = () => {
+function App() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
@@ -36,26 +34,6 @@ const AppRoutes = () => {
       
       <Route component={NotFound} />
     </Switch>
-  );
-};
-
-function App() {
-  const [location, setLocation] = useLocation();
-
-  useEffect(() => {
-    // Scroll to top when route changes
-    window.scrollTo(0, 0);
-    
-    // Hide all dropdowns when route changes
-    document.querySelectorAll('.dropdown-menu.show').forEach(dropdown => {
-      dropdown.classList.remove('show');
-    });
-  }, [location]);
-
-  return (
-    <MainLayout>
-      <AppRoutes />
-    </MainLayout>
   );
 }
 
