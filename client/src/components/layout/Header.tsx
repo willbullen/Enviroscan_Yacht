@@ -11,13 +11,13 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   const [notifications, setNotifications] = useState(3);
 
   return (
-    <header className="hidden md:flex bg-white shadow-sm h-16 z-10 sticky top-0">
+    <header className="hidden md:flex bg-background dark:border-b border-border shadow-sm h-16 z-10 sticky top-0">
       <div className="container mx-auto px-6 flex justify-between items-center h-full">
         <h1 className="font-semibold text-xl">{title}</h1>
         <div className="flex items-center space-x-4">
           <ThemeSwitcher />
           
-          <Button variant="ghost" size="sm" className="flex items-center text-gray-500">
+          <Button variant="ghost" size="sm" className="flex items-center text-muted-foreground">
             <Bell className="h-5 w-5 mr-1" />
             <span className="hidden lg:inline">Notifications</span>
             {notifications > 0 && (
@@ -27,19 +27,17 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             )}
           </Button>
           
-          <Button variant="ghost" size="sm" className="flex items-center text-gray-500">
+          <Button variant="ghost" size="sm" className="flex items-center text-muted-foreground">
             <HelpCircle className="h-5 w-5 mr-1" />
             <span className="hidden lg:inline">Help</span>
           </Button>
           
-          <div className="h-8 w-px bg-gray-200"></div>
+          <div className="h-8 w-px bg-border"></div>
           
           <div className="flex items-center">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&auto=format&fit=crop"
-              alt="User Avatar"
-              className="h-8 w-8 rounded-full mr-2"
-            />
+            <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white mr-2">
+              <span className="text-xs font-bold">CS</span>
+            </div>
             <span className="text-sm font-medium">Capt. Smith</span>
           </div>
         </div>

@@ -23,11 +23,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
       {isMobile && (
         <div className="bg-navy-dark text-white p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-30">
           <div className="flex items-center">
-            <img
-              src="https://images.unsplash.com/photo-1659212209972-21e614984595?w=60&h=60&auto=format&crop=faces&fit=crop"
-              alt="Yacht Logo"
-              className="h-10 w-10 rounded-full mr-3"
-            />
+            <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 11l18-5v12L3 11z"></path>
+                <path d="M9.5 6.5l1 9.5"></path>
+                <path d="M16.5 15.5l-.3-12"></path>
+              </svg>
+            </div>
             <span className="font-semibold text-lg">IDEA YACHT</span>
           </div>
           <button
@@ -52,7 +54,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         </div>
       )}
 
-      <div className="flex flex-1 h-screen bg-slate-50">
+      <div className="flex flex-1 h-screen bg-background">
         {/* Sidebar is already fixed by design */}
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
@@ -61,7 +63,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
           <Header title={title} />
 
           {/* Main Content - Scrollable */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-background">
             {/* Add padding-top for mobile to account for fixed header */}
             <div className={isMobile ? "pt-16" : ""}>
               {children}
