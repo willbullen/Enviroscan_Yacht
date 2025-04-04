@@ -10,6 +10,7 @@ import PredictiveMaintenance from "@/pages/PredictiveMaintenance";
 import ISMManagement from "@/pages/ISMManagement";
 import CrewManagement from "@/pages/CrewManagement";
 import FinancialManagement from "@/pages/FinancialManagement";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -32,6 +33,8 @@ function App() {
       <Route path="/navigation" component={YachtSystem} />
       <Route path="/safety" component={YachtSystem} />
       
+      {/* Settings and 404 */}
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

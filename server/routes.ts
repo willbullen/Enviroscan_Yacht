@@ -1823,19 +1823,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid theme data" });
       }
       
-      // Validate required fields
-      const requiredFields = ['variant', 'primary', 'appearance', 'radius'];
-      for (const field of requiredFields) {
-        if (!(field in themeData)) {
-          return res.status(400).json({ 
-            message: `Missing required field: ${field}`,
-            requiredFields 
-          });
-        }
+      // Read current theme data
+      let currentTheme = {};
+      try {
+        const themeContent = fs.readFileSync(themeFilePath, 'utf8');
+        currentTheme = JSON.parse(themeContent);
+      } catch (error) {
+        console.warn("Could not read current theme, using defaults", error);
+        currentTheme = {
+          primary: "blue",
+          variant: "tint",
+          appearance: "light",
+          radius: 0.5
+        };
       }
       
+      // Merge current theme with updates
+      const updatedTheme = {
+        ...currentTheme,
+        ...themeData
+      };
+      
       // Write the theme data to theme.json
-      fs.writeFileSync(themeFilePath, JSON.stringify(themeData, null, 2));
+      fs.writeFileSync(themeFilePath, JSON.stringify(updatedTheme, null, 2));
       
       // Log activity
       await storage.createActivityLog({
@@ -1845,14 +1855,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relatedEntityType: 'system',
         relatedEntityId: 0,
         metadata: { 
-          appearance: themeData.appearance,
-          variant: themeData.variant
+          appearance: updatedTheme.appearance,
+          variant: updatedTheme.variant || 'tint'
         }
       });
       
       res.json({ 
         message: "Theme updated successfully",
-        theme: themeData
+        theme: updatedTheme
       });
     } catch (error) {
       console.error("Failed to update theme:", error);
