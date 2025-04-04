@@ -57,14 +57,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     >
       {/* Sidebar Header - Desktop */}
       <div className="hidden md:flex items-center p-4 border-b border-navy">
-        <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white mr-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 11l18-5v12L3 11z"></path>
-            <path d="M9.5 6.5l1 9.5"></path>
-            <path d="M16.5 15.5l-.3-12"></path>
+        <div className="h-10 w-auto flex items-center justify-center text-white mr-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" fill="none">
+            <path d="M0 40l2.783-7.544C4.293 28.353 8.89 25.028 13.045 25.028h30.567l7.643 7.546H10.249c-4.157 0-8.75 3.325-10.264 7.426z" fill="white"/>
+            <path d="M3.789 28.784l2.783-7.545c1.513-4.1 6.11-7.426 10.266-7.426h15.398l7.644 7.544H14.04c-4.156 0-8.753 3.326-10.266 7.427z" fill="white"/>
+            <path d="M7.753 17.555l2.779-7.546c1.515-4.1 6.108-7.425 10.264-7.425h.064l7.644 7.544h-10.49c-4.157 0-8.749 3.326-10.261 7.427z" fill="white"/>
           </svg>
         </div>
-        <span className="font-semibold">IDEA YACHT</span>
+        <span className="font-semibold text-white">Eastwind Management</span>
       </div>
 
       <div className="flex flex-col h-full overflow-y-auto">
