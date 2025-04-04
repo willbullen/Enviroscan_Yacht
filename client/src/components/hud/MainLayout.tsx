@@ -1,7 +1,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import { ThemePanel } from './ThemePanel';
+import { ThemePanel } from '@/components/hud/ThemePanel';
 import AppSettingsProvider from './AppSettingsProvider';
 
 type MainLayoutProps = {
@@ -15,23 +15,26 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   useEffect(() => {
     // Check local storage for theme settings
-    const savedTheme = localStorage.getItem('app-theme');
-    const savedMode = localStorage.getItem('app-theme-mode');
+    const savedTheme = localStorage.getItem('app-theme') || 'theme-teal';
+    const savedMode = localStorage.getItem('app-theme-mode') || 'dark';
     
-    if (savedTheme) {
-      setCurrentTheme(savedTheme);
-      document.body.classList.add(savedTheme);
-    } else {
-      document.body.classList.add(currentTheme);
-    }
-    
-    if (savedMode) {
-      setThemeMode(savedMode);
-      if (savedMode === 'dark') {
-        document.body.classList.add('dark-mode');
+    // Remove any existing theme classes first
+    document.body.classList.forEach(className => {
+      if (className.startsWith('theme-') && className !== 'theme-panel') {
+        document.body.classList.remove(className);
       }
-    } else if (themeMode === 'dark') {
+    });
+    
+    // Apply theme
+    setCurrentTheme(savedTheme);
+    document.body.classList.add(savedTheme);
+    
+    // Apply dark mode
+    setThemeMode(savedMode);
+    if (savedMode === 'dark') {
       document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
     }
     
     // Check for mobile view
@@ -87,7 +90,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <Sidebar toggleSidebar={toggleSidebar} />
         
         <div className="app-content">
-          <div className="app-content-padding">
+          <div className="container-fluid py-3">
             {children}
           </div>
         </div>

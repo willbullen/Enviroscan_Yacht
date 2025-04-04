@@ -928,6 +928,16 @@ body.dark-mode {
   color: rgba(255, 255, 255, 0.5);
 }
 
+/* Apply theme variables to the root element and all children */
+body.theme-teal { --app-theme-color: #16a085; }
+body.theme-blue { --app-theme-color: #348fe2; }
+body.theme-purple { --app-theme-color: #8753de; }
+body.theme-orange { --app-theme-color: #f59c1a; }
+body.theme-green { --app-theme-color: #32a932; }
+body.theme-red { --app-theme-color: #ff5b57; }
+body.theme-gray { --app-theme-color: #6c757d; }
+body.theme-yellow { --app-theme-color: #ffd900; }
+
 body.dark-mode .app-header {
   background-color: #2b3035;
   border-color: rgba(255, 255, 255, 0.15);

@@ -18,6 +18,12 @@ export const ThemePanel = ({
 
   const togglePanel = () => {
     setActive(!active);
+    console.log("Theme panel toggled:", !active);
+  };
+  
+  const handleThemeClick = (themeClass: string) => {
+    console.log("Theme selected:", themeClass);
+    onThemeChange(themeClass);
   };
 
   const themes = [
@@ -70,7 +76,7 @@ export const ThemePanel = ({
                 <div 
                   key={index}
                   className={`theme-item ${currentTheme === theme.class ? 'active' : ''}`}
-                  onClick={() => onThemeChange(theme.class)}
+                  onClick={() => handleThemeClick(theme.class)}
                 >
                   <div className={`theme-color ${theme.class}`}></div>
                   <div className="theme-name">{theme.name}</div>
