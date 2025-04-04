@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Package, CheckCircle, AlertTriangle } from "lucide-react";
-import MainLayout from "@/components/layout/MainLayout";
+// Using the HUD MainLayout which has the theme support
+// import MainLayout from "@/components/layout/MainLayout";
 import StatsCard from "@/components/dashboard/StatsCard";
 import TasksTable from "@/components/dashboard/TasksTable";
 import EquipmentOverview from "@/components/dashboard/EquipmentCard";
@@ -15,7 +16,8 @@ const Dashboard = () => {
   });
 
   return (
-    <MainLayout title="Dashboard">
+    <>
+      <h1 className="mb-4 text-2xl font-semibold">Dashboard</h1>
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {isLoading ? (
@@ -78,7 +80,7 @@ const Dashboard = () => {
           <UpcomingMaintenance />
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 

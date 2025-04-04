@@ -12,7 +12,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { format, isToday, isPast, isFuture, addMonths } from "date-fns";
-import MainLayout from "@/components/layout/MainLayout";
+
 import TaskForm from "@/components/tasks/TaskForm";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -223,7 +223,7 @@ const Tasks = () => {
   };
 
   return (
-    <MainLayout title="Maintenance Tasks">
+    <>
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Maintenance Tasks</h1>
         <div className="flex gap-2">
@@ -497,7 +497,7 @@ const Tasks = () => {
           {/* Dynamic content based on viewMode will be filtered by the selectedTab state */}
         </TabsContent>
       </Tabs>
-    </MainLayout>
+    </>
   );
 };
 

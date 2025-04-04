@@ -12,7 +12,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { format } from "date-fns";
-import MainLayout from "@/components/layout/MainLayout";
+
 import InventoryForm from "@/components/inventory/InventoryForm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -234,7 +234,7 @@ const Inventory = () => {
   };
 
   return (
-    <MainLayout title="Inventory">
+    <>
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
         <div className="flex gap-2">
@@ -614,7 +614,7 @@ const Inventory = () => {
           )}
         </TabsContent>
       </Tabs>
-    </MainLayout>
+    </>
   );
 };
 
