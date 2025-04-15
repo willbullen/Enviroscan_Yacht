@@ -858,6 +858,35 @@ const FinancialManagement: React.FC = () => {
             <Plus className="h-4 w-4 mr-2" /> New Account
           </Button>
         );
+      case "journals":
+        return (
+          <Button>
+            <Plus className="h-4 w-4 mr-2" /> New Journal Entry
+          </Button>
+        );
+      case "banking":
+        return (
+          <Button>
+            <Plus className="h-4 w-4 mr-2" /> New Bank Account
+          </Button>
+        );
+      case "currencies":
+        return (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowCurrencyConverter(!showCurrencyConverter)}>
+              <ArrowLeftRight className="h-4 w-4 mr-2" /> Convert
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" /> New Rate
+            </Button>
+          </div>
+        );
+      case "payroll":
+        return (
+          <Button>
+            <Plus className="h-4 w-4 mr-2" /> New Payroll Run
+          </Button>
+        );
       case "budgets":
         return (
           <Button>
@@ -893,6 +922,118 @@ const FinancialManagement: React.FC = () => {
     }
   };
 
+  // Currency Converter Dialog
+  const CurrencyConverterDialog = () => {
+    const [amount, setAmount] = useState<number>(1);
+    const [fromCurrency, setFromCurrency] = useState<string>("USD");
+    const [toCurrency, setToCurrency] = useState<string>("EUR");
+    const [result, setResult] = useState<number | null>(null);
+    
+    const handleConvert = () => {
+      const rate = mockExchangeRates.find(
+        r => r.from === fromCurrency && r.to === toCurrency
+      );
+      
+      if (rate) {
+        setResult(amount * rate.rate);
+      } else {
+        // Try to find reverse rate and invert it
+        const reverseRate = mockExchangeRates.find(
+          r => r.from === toCurrency && r.to === fromCurrency
+        );
+        
+        if (reverseRate) {
+          setResult(amount / reverseRate.rate);
+        } else {
+          setResult(null);
+        }
+      }
+    };
+    
+    const uniqueCurrencies = Array.from(
+      new Set(mockExchangeRates.flatMap(rate => [rate.from, rate.to]))
+    );
+    
+    return (
+      <Dialog open={showCurrencyConverter} onOpenChange={setShowCurrencyConverter}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Currency Converter</DialogTitle>
+            <DialogDescription>
+              Convert between currencies using latest exchange rates.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Amount
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="fromCurrency" className="text-right">
+                From
+              </Label>
+              <Select value={fromCurrency} onValueChange={setFromCurrency}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueCurrencies.map(currency => (
+                    <SelectItem key={currency} value={currency}>
+                      {currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="toCurrency" className="text-right">
+                To
+              </Label>
+              <Select value={toCurrency} onValueChange={setToCurrency}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueCurrencies.map(currency => (
+                    <SelectItem key={currency} value={currency}>
+                      {currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {result !== null && (
+              <div className="mt-2 text-center font-bold text-lg">
+                {amount.toFixed(2)} {fromCurrency} = {result.toFixed(2)} {toCurrency}
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="flex gap-2 flex-row items-center">
+            <Button variant="outline" onClick={() => setShowCurrencyConverter(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConvert}>
+              Convert
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
   return (
     <MainLayout title="Financial Management">
       <div className="container mx-auto py-6">
@@ -907,12 +1048,21 @@ const FinancialManagement: React.FC = () => {
             {getTabAction()}
           </div>
         </div>
+        
+        {/* Currency converter dialog */}
+        <CurrencyConverterDialog />
 
         <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6 grid grid-cols-6 w-full">
+            <TabsList className="mb-4 max-w-full overflow-x-auto py-2 flex flex-nowrap">
               <TabsTrigger value="accounts" className="flex items-center gap-2">
                 <Wallet className="h-4 w-4" /> Accounts
+              </TabsTrigger>
+              <TabsTrigger value="journals" className="flex items-center gap-2">
+                <Receipt className="h-4 w-4" /> Journal Entries
+              </TabsTrigger>
+              <TabsTrigger value="banking" className="flex items-center gap-2">
+                <Building className="h-4 w-4" /> Banking
               </TabsTrigger>
               <TabsTrigger value="budgets" className="flex items-center gap-2">
                 <BarChart4 className="h-4 w-4" /> Budgets
@@ -925,6 +1075,12 @@ const FinancialManagement: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger value="vendors" className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" /> Vendors
+              </TabsTrigger>
+              <TabsTrigger value="payroll" className="flex items-center gap-2">
+                <Users className="h-4 w-4" /> Payroll
+              </TabsTrigger>
+              <TabsTrigger value="currencies" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" /> Currencies
               </TabsTrigger>
               <TabsTrigger value="reports" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" /> Reports
