@@ -1756,9 +1756,108 @@ const FinancialManagement: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <p className="text-center text-muted-foreground">
-                Bank account form under development
-              </p>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="accountName" className="text-right">
+                  Account Name
+                </Label>
+                <Input
+                  id="accountName"
+                  placeholder="Operations Account"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="accountType" className="text-right">
+                  Account Type
+                </Label>
+                <Select defaultValue="checking">
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="checking">Checking Account</SelectItem>
+                    <SelectItem value="savings">Savings Account</SelectItem>
+                    <SelectItem value="credit">Credit Card</SelectItem>
+                    <SelectItem value="investment">Investment Account</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="accountNumber" className="text-right">
+                  Account Number
+                </Label>
+                <Input
+                  id="accountNumber"
+                  placeholder="XXXX-XXXX-XXXX-XXXX"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="bankName" className="text-right">
+                  Bank Name
+                </Label>
+                <Input
+                  id="bankName"
+                  placeholder="Chase, HSBC, etc."
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="currency" className="text-right">
+                  Currency
+                </Label>
+                <Select defaultValue="USD">
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                    <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                    <SelectItem value="JPY">Japanese Yen (JPY)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="openingBalance" className="text-right">
+                  Opening Balance
+                </Label>
+                <Input
+                  id="openingBalance"
+                  type="number"
+                  placeholder="0.00"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="balanceDate" className="text-right">
+                  Balance Date
+                </Label>
+                <Input
+                  id="balanceDate"
+                  type="date"
+                  className="col-span-3"
+                  defaultValue={format(new Date(), "yyyy-MM-dd")}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="notes" className="text-right">
+                  Notes
+                </Label>
+                <Input
+                  id="notes"
+                  placeholder="Optional notes about this account"
+                  className="col-span-3"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowNewBankAccountDialog(false)}>Cancel</Button>
@@ -1777,9 +1876,88 @@ const FinancialManagement: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <p className="text-center text-muted-foreground">
-                Exchange rate form under development
-              </p>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="fromCurrency" className="text-right">
+                  From Currency
+                </Label>
+                <Select defaultValue="USD">
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select base currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                    <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                    <SelectItem value="JPY">Japanese Yen (JPY)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="toCurrency" className="text-right">
+                  To Currency
+                </Label>
+                <Select defaultValue="EUR">
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select target currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                    <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                    <SelectItem value="JPY">Japanese Yen (JPY)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="exchangeRate" className="text-right">
+                  Exchange Rate
+                </Label>
+                <Input
+                  id="exchangeRate"
+                  type="number"
+                  placeholder="1.00"
+                  step="0.0001"
+                  min="0.0001"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="rateDate" className="text-right">
+                  Rate Date
+                </Label>
+                <Input
+                  id="rateDate"
+                  type="date"
+                  className="col-span-3"
+                  defaultValue={format(new Date(), "yyyy-MM-dd")}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="dataSource" className="text-right">
+                  Data Source
+                </Label>
+                <Input
+                  id="dataSource"
+                  placeholder="e.g., European Central Bank, manual entry"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="col-span-4 mt-2">
+                <div className="bg-muted rounded-md p-3 text-sm">
+                  <p className="font-medium">Exchange Rate Conversion Example:</p>
+                  <p className="text-muted-foreground mt-1">
+                    1.00 USD = <span className="font-medium">0.93 EUR</span> (example)
+                  </p>
+                  <p className="text-muted-foreground mt-1">
+                    1.00 EUR = <span className="font-medium">1.07 USD</span> (example)
+                  </p>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowNewRateDialog(false)}>Cancel</Button>
@@ -1811,7 +1989,7 @@ const FinancialManagement: React.FC = () => {
         
         {/* Budget Dialog */}
         <Dialog open={showNewBudgetDialog} onOpenChange={setShowNewBudgetDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Budget</DialogTitle>
               <DialogDescription>
@@ -1819,9 +1997,129 @@ const FinancialManagement: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <p className="text-center text-muted-foreground">
-                Budget creation form under development
-              </p>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="budgetName" className="text-right">
+                  Budget Name
+                </Label>
+                <Input
+                  id="budgetName"
+                  placeholder="e.g., Annual Operations 2025"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="budgetType" className="text-right">
+                  Budget Type
+                </Label>
+                <Select defaultValue="operational">
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select budget type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="operational">Operational</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="crew">Crew</SelectItem>
+                    <SelectItem value="capital">Capital Expenditure</SelectItem>
+                    <SelectItem value="charter">Charter Season</SelectItem>
+                    <SelectItem value="refit">Refit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">
+                  Period
+                </Label>
+                <div className="flex col-span-3 space-x-2">
+                  <div className="flex-1">
+                    <Label htmlFor="startDate" className="sr-only">Start Date</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      defaultValue={format(new Date(), "yyyy-MM-dd")}
+                    />
+                  </div>
+                  <span className="flex items-center">to</span>
+                  <div className="flex-1">
+                    <Label htmlFor="endDate" className="sr-only">End Date</Label>
+                    <Input
+                      id="endDate"
+                      type="date"
+                      defaultValue={format(new Date(new Date().setMonth(new Date().getMonth() + 12)), "yyyy-MM-dd")}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="totalAmount" className="text-right">
+                  Total Amount
+                </Label>
+                <div className="col-span-3 flex gap-2">
+                  <Input
+                    id="totalAmount"
+                    type="number"
+                    min="0"
+                    placeholder="1000000"
+                    className="flex-1"
+                  />
+                  <Select defaultValue="USD">
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium text-center mb-4">Budget Allocation by Category</h3>
+                
+                <div className="space-y-3">
+                  {mockAccountCategories.filter(c => c.type === "expense").slice(0, 4).map((category, index) => (
+                    <div key={category.id} className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">
+                        {category.name}
+                      </Label>
+                      <div className="col-span-2">
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          placeholder="Allocation amount"
+                        />
+                      </div>
+                      <div className="text-muted-foreground text-sm">
+                        {index === 0 ? '25%' : index === 1 ? '30%' : index === 2 ? '15%' : '20%'}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">
+                      Other
+                    </Label>
+                    <div className="col-span-2">
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        placeholder="Allocation amount"
+                      />
+                    </div>
+                    <div className="text-muted-foreground text-sm">
+                      10%
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-sm text-muted-foreground text-center">
+                  <p>You can adjust category allocations after creating the budget.</p>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowNewBudgetDialog(false)}>Cancel</Button>
@@ -1832,14 +2130,179 @@ const FinancialManagement: React.FC = () => {
         
         {/* Add placeholders for other dialogs (expense, invoice, vendor, report) */}
         <Dialog open={showNewExpenseDialog} onOpenChange={setShowNewExpenseDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle>Add New Expense</DialogTitle>
+              <DialogDescription>
+                Record a new expense transaction.
+              </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <p className="text-center text-muted-foreground">
-                Expense form under development
-              </p>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="expenseDate" className="text-right">
+                  Date
+                </Label>
+                <div className="col-span-3">
+                  <Input
+                    id="expenseDate"
+                    type="date"
+                    defaultValue={format(new Date(), "yyyy-MM-dd")}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="expenseDescription" className="text-right">
+                  Description
+                </Label>
+                <Input
+                  id="expenseDescription"
+                  placeholder="Brief description of expense"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="expenseAmount" className="text-right">
+                  Amount
+                </Label>
+                <div className="col-span-3 flex gap-2">
+                  <Input
+                    id="expenseAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="flex-1"
+                  />
+                  <Select defaultValue="USD">
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                      <SelectItem value="JPY">JPY</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="expenseCategory" className="text-right">
+                  Category
+                </Label>
+                <Select>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockAccountCategories.filter(c => c.type === "expense").map(category => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="expenseSubcategory" className="text-right">
+                  Subcategory
+                </Label>
+                <Select>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Would be populated based on selected category */}
+                    <SelectItem value="101">General Operations</SelectItem>
+                    <SelectItem value="102">Port Fees</SelectItem>
+                    <SelectItem value="103">Administrative</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="paymentMethod" className="text-right">
+                  Payment Method
+                </Label>
+                <Select defaultValue="bank_account">
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank_account">Bank Account</SelectItem>
+                    <SelectItem value="credit_card">Credit Card</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="wire_transfer">Wire Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="vendor" className="text-right">
+                  Vendor
+                </Label>
+                <div className="flex space-x-2 col-span-3">
+                  <Select className="flex-1">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select vendor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mockVendors.map(vendor => (
+                        <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                          {vendor.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <Select defaultValue="pending">
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="receiptUpload" className="text-right">
+                  Receipt
+                </Label>
+                <div className="col-span-3">
+                  <Input
+                    id="receiptUpload"
+                    type="file"
+                    accept="image/*,.pdf"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="notes" className="text-right">
+                  Notes
+                </Label>
+                <Input
+                  id="notes"
+                  placeholder="Additional notes about this expense"
+                  className="col-span-3"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowNewExpenseDialog(false)}>Cancel</Button>
