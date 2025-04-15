@@ -2768,38 +2768,40 @@ April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insuran
 
         <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4 max-w-full overflow-x-auto py-2 flex flex-nowrap">
-              <TabsTrigger value="accounts" className="flex items-center gap-2">
-                <Wallet className="h-4 w-4" /> Accounts
-              </TabsTrigger>
-              <TabsTrigger value="journals" className="flex items-center gap-2">
-                <Receipt className="h-4 w-4" /> Journal Entries
-              </TabsTrigger>
-              <TabsTrigger value="banking" className="flex items-center gap-2">
-                <Building className="h-4 w-4" /> Banking
-              </TabsTrigger>
-              <TabsTrigger value="budgets" className="flex items-center gap-2">
-                <BarChart4 className="h-4 w-4" /> Budgets
-              </TabsTrigger>
-              <TabsTrigger value="expenses" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" /> Expenses
-              </TabsTrigger>
-              <TabsTrigger value="invoices" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Invoices
-              </TabsTrigger>
-              <TabsTrigger value="vendors" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" /> Vendors
-              </TabsTrigger>
-              <TabsTrigger value="payroll" className="flex items-center gap-2">
-                <Users className="h-4 w-4" /> Payroll
-              </TabsTrigger>
-              <TabsTrigger value="currencies" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" /> Currencies
-              </TabsTrigger>
-              <TabsTrigger value="reports" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Reports
-              </TabsTrigger>
-            </TabsList>
+            <div className="mb-4 overflow-x-auto">
+              <TabsList className="flex w-max px-0 bg-transparent h-auto border-b">
+                <TabsTrigger value="accounts" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <Wallet className="h-4 w-4" /> Accounts
+                </TabsTrigger>
+                <TabsTrigger value="journals" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <Receipt className="h-4 w-4" /> Journal Entries
+                </TabsTrigger>
+                <TabsTrigger value="banking" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <Building className="h-4 w-4" /> Banking
+                </TabsTrigger>
+                <TabsTrigger value="budgets" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <BarChart4 className="h-4 w-4" /> Budgets
+                </TabsTrigger>
+                <TabsTrigger value="expenses" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <DollarSign className="h-4 w-4" /> Expenses
+                </TabsTrigger>
+                <TabsTrigger value="invoices" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <FileText className="h-4 w-4" /> Invoices
+                </TabsTrigger>
+                <TabsTrigger value="vendors" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <CreditCard className="h-4 w-4" /> Vendors
+                </TabsTrigger>
+                <TabsTrigger value="payroll" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <Users className="h-4 w-4" /> Payroll
+                </TabsTrigger>
+                <TabsTrigger value="currencies" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <Globe className="h-4 w-4" /> Currencies
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <FileText className="h-4 w-4" /> Reports
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
             <TabsContent value={activeTab}>
               {renderContent()}
