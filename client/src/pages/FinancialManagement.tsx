@@ -32,6 +32,10 @@ const FinancialManagement: React.FC = () => {
   // State for view toggle (Card/Grid vs Table view)
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const [activeTab, setActiveTab] = useState("accounts");
+  
+  // Mock data for additional features (double-entry accounting, multi-currency, etc.)
+  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+  const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
 
   // Mock data for initial UI development
   const mockAccounts = [
@@ -40,6 +44,102 @@ const FinancialManagement: React.FC = () => {
     { id: 3, accountNumber: "10003", accountName: "Crew Salaries", accountType: "expense", category: "crew", balance: 320000, isActive: true },
     { id: 4, accountNumber: "10004", accountName: "Fuel Budget", accountType: "expense", category: "fuel", balance: 150000, isActive: true },
     { id: 5, accountNumber: "20001", accountName: "Charter Revenue", accountType: "income", category: "revenue", balance: 750000, isActive: true },
+  ];
+  
+  // Mock data for journal entries (double-entry bookkeeping)
+  const mockJournalEntries = [
+    { 
+      id: 1, 
+      date: new Date(2025, 3, 5),
+      description: "Monthly Engine Maintenance", 
+      debitAccount: "Maintenance Expense", 
+      creditAccount: "Cash", 
+      amount: 12500, 
+      currency: "USD",
+      status: "posted",
+      createdBy: "John Smith"
+    },
+    { 
+      id: 2, 
+      date: new Date(2025, 3, 10),
+      description: "Charter Revenue", 
+      debitAccount: "Accounts Receivable", 
+      creditAccount: "Charter Revenue", 
+      amount: 45000, 
+      currency: "EUR",
+      status: "posted",
+      createdBy: "John Smith"
+    },
+    { 
+      id: 3, 
+      date: new Date(2025, 3, 15),
+      description: "Crew Payroll", 
+      debitAccount: "Crew Expense", 
+      creditAccount: "Cash", 
+      amount: 28000, 
+      currency: "USD",
+      status: "pending",
+      createdBy: "Jane Doe"
+    },
+  ];
+  
+  // Mock data for bank accounts and reconciliation
+  const mockBankAccounts = [
+    { 
+      id: 1, 
+      accountName: "Operations Account", 
+      accountNumber: "CHASE-12345", 
+      bankName: "Chase", 
+      currency: "USD", 
+      currentBalance: 450000,
+      lastReconciled: new Date(2025, 2, 31)
+    },
+    { 
+      id: 2, 
+      accountName: "Euro Operations", 
+      accountNumber: "HSBC-67890", 
+      bankName: "HSBC", 
+      currency: "EUR", 
+      currentBalance: 320000,
+      lastReconciled: new Date(2025, 2, 15)
+    }
+  ];
+  
+  // Mock data for currency exchange rates
+  const mockExchangeRates = [
+    { from: "USD", to: "EUR", rate: 0.93, date: new Date(2025, 3, 15) },
+    { from: "USD", to: "GBP", rate: 0.79, date: new Date(2025, 3, 15) },
+    { from: "USD", to: "JPY", rate: 153.45, date: new Date(2025, 3, 15) },
+    { from: "EUR", to: "USD", rate: 1.07, date: new Date(2025, 3, 15) },
+    { from: "GBP", to: "USD", rate: 1.27, date: new Date(2025, 3, 15) },
+  ];
+
+  // Mock data for payroll
+  const mockPayrollData = [
+    { 
+      id: 1, 
+      name: "April 2025 Crew Payroll", 
+      periodStart: new Date(2025, 3, 1),
+      periodEnd: new Date(2025, 3, 15),
+      totalGross: 45000,
+      totalTax: 9000,
+      totalNet: 36000,
+      status: "processed",
+      processDate: new Date(2025, 3, 16),
+      employeeCount: 12
+    },
+    { 
+      id: 2, 
+      name: "March 2025 Crew Payroll", 
+      periodStart: new Date(2025, 2, 16),
+      periodEnd: new Date(2025, 2, 31),
+      totalGross: 44000,
+      totalTax: 8800,
+      totalNet: 35200,
+      status: "paid",
+      processDate: new Date(2025, 3, 1),
+      employeeCount: 12
+    }
   ];
 
   const mockBudgets = [
@@ -94,6 +194,94 @@ const FinancialManagement: React.FC = () => {
         {row.original.isActive ? "Active" : "Inactive"}
       </Badge>
     )},
+  ];
+  
+  // Journal entries columns for double-entry bookkeeping
+  const journalEntryColumns = [
+    { header: "Date", accessorKey: "date", cell: ({ row }: any) => (
+      format(row.original.date, "MMM d, yyyy")
+    )},
+    { header: "Description", accessorKey: "description" },
+    { header: "Debit Account", accessorKey: "debitAccount" },
+    { header: "Credit Account", accessorKey: "creditAccount" },
+    { header: "Amount", accessorKey: "amount", cell: ({ row }: any) => (
+      <span className="font-mono">
+        {row.original.currency === "USD" ? "$" : row.original.currency === "EUR" ? "€" : ""}
+        {Number(row.original.amount).toLocaleString()} {row.original.currency !== "USD" && row.original.currency !== "EUR" ? row.original.currency : ""}
+      </span>
+    )},
+    { header: "Status", accessorKey: "status", cell: ({ row }: any) => {
+      let variant = "default";
+      if (row.original.status === "posted") variant = "success";
+      if (row.original.status === "pending") variant = "outline";
+      
+      return (
+        <Badge variant={variant as any}>
+          <span className="capitalize">{row.original.status}</span>
+        </Badge>
+      );
+    }},
+    { header: "Created By", accessorKey: "createdBy" },
+  ];
+  
+  // Bank account columns
+  const bankAccountColumns = [
+    { header: "Account Name", accessorKey: "accountName" },
+    { header: "Account Number", accessorKey: "accountNumber" },
+    { header: "Bank", accessorKey: "bankName" },
+    { header: "Currency", accessorKey: "currency" },
+    { header: "Current Balance", accessorKey: "currentBalance", cell: ({ row }: any) => (
+      <span className="font-mono">
+        {row.original.currency === "USD" ? "$" : row.original.currency === "EUR" ? "€" : ""}
+        {Number(row.original.currentBalance).toLocaleString()} {row.original.currency !== "USD" && row.original.currency !== "EUR" ? row.original.currency : ""}
+      </span>
+    )},
+    { header: "Last Reconciled", accessorKey: "lastReconciled", cell: ({ row }: any) => (
+      format(row.original.lastReconciled, "MMM d, yyyy")
+    )},
+  ];
+  
+  // Exchange rate columns
+  const exchangeRateColumns = [
+    { header: "From", accessorKey: "from" },
+    { header: "To", accessorKey: "to" },
+    { header: "Rate", accessorKey: "rate", cell: ({ row }: any) => (
+      <span className="font-mono">{row.original.rate.toFixed(4)}</span>
+    )},
+    { header: "Date", accessorKey: "date", cell: ({ row }: any) => (
+      format(row.original.date, "MMM d, yyyy")
+    )},
+  ];
+  
+  // Payroll columns
+  const payrollColumns = [
+    { header: "Name", accessorKey: "name" },
+    { header: "Period", accessorKey: "period", cell: ({ row }: any) => (
+      <span>
+        {format(row.original.periodStart, "MMM d, yyyy")} - {format(row.original.periodEnd, "MMM d, yyyy")}
+      </span>
+    )},
+    { header: "Gross", accessorKey: "totalGross", cell: ({ row }: any) => (
+      <span className="font-mono">${Number(row.original.totalGross).toLocaleString()}</span>
+    )},
+    { header: "Tax", accessorKey: "totalTax", cell: ({ row }: any) => (
+      <span className="font-mono">${Number(row.original.totalTax).toLocaleString()}</span>
+    )},
+    { header: "Net", accessorKey: "totalNet", cell: ({ row }: any) => (
+      <span className="font-mono">${Number(row.original.totalNet).toLocaleString()}</span>
+    )},
+    { header: "Status", accessorKey: "status", cell: ({ row }: any) => {
+      let variant = "default";
+      if (row.original.status === "processed") variant = "outline";
+      if (row.original.status === "paid") variant = "success";
+      
+      return (
+        <Badge variant={variant as any}>
+          <span className="capitalize">{row.original.status}</span>
+        </Badge>
+      );
+    }},
+    { header: "Employees", accessorKey: "employeeCount" },
   ];
 
   const budgetColumns = [
@@ -439,6 +627,181 @@ const FinancialManagement: React.FC = () => {
       </Card>
     ));
   };
+  
+  // Function to render journal entry cards when in card view
+  const renderJournalEntryCards = () => {
+    return mockJournalEntries.map(entry => (
+      <Card key={entry.id} className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Receipt className="h-4 w-4" /> {entry.description}
+              </CardTitle>
+              <CardDescription>{format(entry.date, "MMM d, yyyy")}</CardDescription>
+            </div>
+            <Badge 
+              variant={
+                entry.status === "posted" ? "success" : 
+                entry.status === "pending" ? "outline" :
+                "default"
+              }
+            >
+              <span className="capitalize">{entry.status}</span>
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-500">Debit:</span>
+              <span>{entry.debitAccount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-500">Credit:</span>
+              <span>{entry.creditAccount}</span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Amount:</span>
+              <span className="font-bold text-lg font-mono">
+                {entry.currency === "USD" ? "$" : entry.currency === "EUR" ? "€" : ""}
+                {entry.amount.toLocaleString()} {entry.currency !== "USD" && entry.currency !== "EUR" ? entry.currency : ""}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-gray-500">Created by:</span>
+              <span>{entry.createdBy}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    ));
+  };
+  
+  // Function to render bank account cards when in card view
+  const renderBankAccountCards = () => {
+    return mockBankAccounts.map(account => (
+      <Card key={account.id} className="overflow-hidden">
+        <CardHeader className="pb-2 bg-blue-50/20 dark:bg-blue-950/20">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Building className="h-5 w-5" /> {account.accountName}
+              </CardTitle>
+              <CardDescription>{account.bankName} • {account.accountNumber}</CardDescription>
+            </div>
+            <Badge>{account.currency}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Current Balance:</span>
+              <span className="font-bold text-lg font-mono">
+                {account.currency === "USD" ? "$" : account.currency === "EUR" ? "€" : ""}
+                {account.currentBalance.toLocaleString()} {account.currency !== "USD" && account.currency !== "EUR" ? account.currency : ""}
+              </span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Last Reconciled:</span>
+              <span>{format(account.lastReconciled, "MMM d, yyyy")}</span>
+            </div>
+            <div className="mt-3">
+              <Button size="sm" variant="outline" className="w-full">Reconcile</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    ));
+  };
+  
+  // Function to render exchange rate cards when in card view
+  const renderExchangeRateCards = () => {
+    return mockExchangeRates.map((rate, index) => (
+      <Card key={index} className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Globe className="h-5 w-5" /> {rate.from} to {rate.to}
+            </CardTitle>
+          </div>
+          <CardDescription>{format(rate.date, "MMM d, yyyy")}</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Rate:</span>
+              <span className="font-bold text-lg font-mono">{rate.rate.toFixed(4)}</span>
+            </div>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-sm text-muted-foreground">Example:</span>
+              <span className="font-mono">
+                1.00 {rate.from} = {rate.rate.toFixed(4)} {rate.to}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    ));
+  };
+  
+  // Function to render payroll cards when in card view
+  const renderPayrollCards = () => {
+    return mockPayrollData.map(payroll => (
+      <Card key={payroll.id} className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="h-5 w-5" /> {payroll.name}
+              </CardTitle>
+              <CardDescription>
+                {format(payroll.periodStart, "MMM d, yyyy")} - {format(payroll.periodEnd, "MMM d, yyyy")}
+              </CardDescription>
+            </div>
+            <Badge 
+              variant={
+                payroll.status === "processed" ? "outline" : 
+                payroll.status === "paid" ? "success" : 
+                "default"
+              }
+            >
+              <span className="capitalize">{payroll.status}</span>
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Employees:</span>
+              <span>{payroll.employeeCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-500">Process Date:</span>
+              <span>{format(payroll.processDate, "MMM d, yyyy")}</span>
+            </div>
+            <Separator className="my-2" />
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <div className="text-sm text-gray-500">Gross</div>
+                <div className="font-bold font-mono">${payroll.totalGross.toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Tax</div>
+                <div className="font-bold font-mono">${payroll.totalTax.toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Net</div>
+                <div className="font-bold font-mono">${payroll.totalNet.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    ));
+  };
 
   // Determines which content to render based on active tab and view
   const renderContent = () => {
@@ -446,6 +809,14 @@ const FinancialManagement: React.FC = () => {
       switch (activeTab) {
         case "accounts":
           return <DataTable columns={accountColumns} data={mockAccounts} />;
+        case "journals":
+          return <DataTable columns={journalEntryColumns} data={mockJournalEntries} />;
+        case "banking":
+          return <DataTable columns={bankAccountColumns} data={mockBankAccounts} />;
+        case "currencies":
+          return <DataTable columns={exchangeRateColumns} data={mockExchangeRates} />;
+        case "payroll":
+          return <DataTable columns={payrollColumns} data={mockPayrollData} />;
         case "budgets":
           return <DataTable columns={budgetColumns} data={mockBudgets} />;
         case "expenses":
@@ -464,6 +835,10 @@ const FinancialManagement: React.FC = () => {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
           {activeTab === "accounts" && renderAccountCards()}
+          {activeTab === "journals" && renderJournalEntryCards()}
+          {activeTab === "banking" && renderBankAccountCards()}
+          {activeTab === "currencies" && renderExchangeRateCards()}
+          {activeTab === "payroll" && renderPayrollCards()}
           {activeTab === "budgets" && renderBudgetCards()}
           {activeTab === "expenses" && renderExpenseCards()}
           {activeTab === "invoices" && renderInvoiceCards()}
