@@ -390,7 +390,7 @@ export const financialAccounts = pgTable("financial_accounts", {
   category: text("category").notNull(), // operational, maintenance, crew, fuel, docking fees, etc.
   description: text("description"),
   isActive: boolean("is_active").default(true),
-  parentAccountId: integer("parent_account_id").references(() => financialAccounts.id),
+  parentAccountId: integer("parent_account_id"), // Self-reference to support parent-child relationships
   balance: decimal("balance", { precision: 12, scale: 2 }).default("0").notNull(),
   createdById: integer("created_by_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),

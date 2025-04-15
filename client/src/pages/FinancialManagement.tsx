@@ -12,7 +12,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Separator } from "@/components/ui/separator";
 import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
-import { DollarSign, Wallet, CreditCard, FileText, BarChart4, Calendar, Plus } from "lucide-react";
+import { 
+  DollarSign, 
+  Wallet, 
+  CreditCard, 
+  FileText, 
+  BarChart4, 
+  Calendar, 
+  Plus, 
+  Building, 
+  Receipt, 
+  Users, 
+  Globe, 
+  ArrowLeftRight
+} from "lucide-react";
 import { format } from "date-fns";
 
 const FinancialManagement: React.FC = () => {
