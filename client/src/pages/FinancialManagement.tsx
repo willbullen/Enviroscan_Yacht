@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 import { 
@@ -24,7 +25,9 @@ import {
   Receipt, 
   Users, 
   Globe, 
-  ArrowLeftRight
+  ArrowLeftRight,
+  Pencil,
+  ListTree
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -37,13 +40,88 @@ const FinancialManagement: React.FC = () => {
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
 
+  // Mock data for account categories and subcategories
+  const mockAccountCategories = [
+    { 
+      id: 1, 
+      name: "Operational", 
+      type: "expense",
+      subcategories: [
+        { id: 101, name: "General Operations" },
+        { id: 102, name: "Port Fees" },
+        { id: 103, name: "Administrative" }
+      ]
+    },
+    { 
+      id: 2, 
+      name: "Maintenance", 
+      type: "expense",
+      subcategories: [
+        { id: 201, name: "Engine" },
+        { id: 202, name: "Hull" },
+        { id: 203, name: "Interior" },
+        { id: 204, name: "Electronics" }
+      ]
+    },
+    { 
+      id: 3, 
+      name: "Crew", 
+      type: "expense",
+      subcategories: [
+        { id: 301, name: "Salaries" },
+        { id: 302, name: "Benefits" },
+        { id: 303, name: "Training" },
+        { id: 304, name: "Uniforms" }
+      ]
+    },
+    { 
+      id: 4, 
+      name: "Fuel", 
+      type: "expense",
+      subcategories: [
+        { id: 401, name: "Main Engines" },
+        { id: 402, name: "Generators" },
+        { id: 403, name: "Tenders" }
+      ]
+    },
+    { 
+      id: 5, 
+      name: "Revenue", 
+      type: "income",
+      subcategories: [
+        { id: 501, name: "Charter" },
+        { id: 502, name: "Owner Usage" },
+        { id: 503, name: "Special Events" }
+      ]
+    },
+    { 
+      id: 6, 
+      name: "Assets", 
+      type: "asset",
+      subcategories: [
+        { id: 601, name: "Current Assets" },
+        { id: 602, name: "Fixed Assets" },
+        { id: 603, name: "Long-term Investments" }
+      ]
+    },
+    { 
+      id: 7, 
+      name: "Liabilities", 
+      type: "liability",
+      subcategories: [
+        { id: 701, name: "Current Liabilities" },
+        { id: 702, name: "Long-term Liabilities" }
+      ]
+    }
+  ];
+
   // Mock data for initial UI development
   const mockAccounts = [
-    { id: 1, accountNumber: "10001", accountName: "Operational Expenses", accountType: "expense", category: "operational", balance: 250000, isActive: true },
-    { id: 2, accountNumber: "10002", accountName: "Maintenance Fund", accountType: "expense", category: "maintenance", balance: 180000, isActive: true },
-    { id: 3, accountNumber: "10003", accountName: "Crew Salaries", accountType: "expense", category: "crew", balance: 320000, isActive: true },
-    { id: 4, accountNumber: "10004", accountName: "Fuel Budget", accountType: "expense", category: "fuel", balance: 150000, isActive: true },
-    { id: 5, accountNumber: "20001", accountName: "Charter Revenue", accountType: "income", category: "revenue", balance: 750000, isActive: true },
+    { id: 1, accountNumber: "10001", accountName: "Operational Expenses", accountType: "expense", categoryId: 1, subcategoryId: 101, balance: 250000, isActive: true },
+    { id: 2, accountNumber: "10002", accountName: "Maintenance Fund", accountType: "expense", categoryId: 2, subcategoryId: 201, balance: 180000, isActive: true },
+    { id: 3, accountNumber: "10003", accountName: "Crew Salaries", accountType: "expense", categoryId: 3, subcategoryId: 301, balance: 320000, isActive: true },
+    { id: 4, accountNumber: "10004", accountName: "Fuel Budget", accountType: "expense", categoryId: 4, subcategoryId: 401, balance: 150000, isActive: true },
+    { id: 5, accountNumber: "20001", accountName: "Charter Revenue", accountType: "income", categoryId: 5, subcategoryId: 501, balance: 750000, isActive: true },
   ];
   
   // Mock data for journal entries (double-entry bookkeeping)
@@ -183,9 +261,20 @@ const FinancialManagement: React.FC = () => {
         {row.original.accountType.charAt(0).toUpperCase() + row.original.accountType.slice(1)}
       </Badge>
     )},
-    { header: "Category", accessorKey: "category", cell: ({ row }: any) => (
-      <span className="capitalize">{row.original.category}</span>
-    )},
+    { 
+      header: "Category", 
+      id: "category", 
+      cell: ({ row }: any) => {
+        const category = mockAccountCategories.find(c => c.id === row.original.categoryId);
+        const subcategory = category?.subcategories.find(s => s.id === row.original.subcategoryId);
+        return (
+          <div>
+            <div>{category?.name}</div>
+            {subcategory && <div className="text-xs text-muted-foreground">{subcategory.name}</div>}
+          </div>
+        );
+      }
+    },
     { header: "Balance", accessorKey: "balance", cell: ({ row }: any) => (
       <span className="font-mono">${Number(row.original.balance).toLocaleString()}</span>
     )},
@@ -413,7 +502,18 @@ const FinancialManagement: React.FC = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Category:</span>
-              <span className="capitalize">{account.category}</span>
+              <span>
+                {(() => {
+                  const category = mockAccountCategories.find(c => c.id === account.categoryId);
+                  const subcategory = category?.subcategories.find(s => s.id === account.subcategoryId);
+                  return (
+                    <span>
+                      {category?.name}
+                      {subcategory && <span className="text-xs text-muted-foreground ml-2">({subcategory.name})</span>}
+                    </span>
+                  );
+                })()}
+              </span>
             </div>
             <Separator className="my-2" />
             <div className="flex justify-between items-center">
@@ -1046,24 +1146,59 @@ const FinancialManagement: React.FC = () => {
     );
   };
   
+  // State for managing the category dialogs
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryType, setNewCategoryType] = useState("expense");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [newSubcategoryName, setNewSubcategoryName] = useState("");
+  
   // New Account Dialog
   const NewAccountDialog = () => {
     const [accountNumber, setAccountNumber] = useState("");
     const [accountName, setAccountName] = useState("");
     const [accountType, setAccountType] = useState("expense");
-    const [category, setCategory] = useState("");
+    const [categoryId, setCategoryId] = useState<number | null>(null);
+    const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
+    
+    // Filter available categories based on the selected account type
+    const availableCategories = mockAccountCategories.filter(
+      category => category.type === accountType
+    );
+    
+    // Get subcategories for the selected category
+    const availableSubcategories = categoryId 
+      ? mockAccountCategories.find(c => c.id === categoryId)?.subcategories || []
+      : [];
+    
+    // Reset subcategory when category changes
+    useEffect(() => {
+      setSubcategoryId(null);
+    }, [categoryId]);
+    
+    // Reset category when account type changes
+    useEffect(() => {
+      setCategoryId(null);
+    }, [accountType]);
     
     const handleSubmit = () => {
       // In a real application, this would make an API call to create the account
       // For demo purposes, we'll just log the values and close the dialog
-      console.log("Creating new account:", { accountNumber, accountName, accountType, category });
+      console.log("Creating new account:", { 
+        accountNumber, 
+        accountName, 
+        accountType, 
+        categoryId, 
+        subcategoryId 
+      });
       setShowNewAccountDialog(false);
       
       // Reset form values
       setAccountNumber("");
       setAccountName("");
       setAccountType("expense");
-      setCategory("");
+      setCategoryId(null);
+      setSubcategoryId(null);
     };
     
     return (
@@ -1123,12 +1258,70 @@ const FinancialManagement: React.FC = () => {
               <Label htmlFor="category" className="text-right">
                 Category
               </Label>
-              <Input
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="col-span-3"
-              />
+              <div className="col-span-3 flex gap-2">
+                <Select 
+                  value={categoryId ? categoryId.toString() : ""} 
+                  onValueChange={val => setCategoryId(val ? parseInt(val) : null)}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories.map(category => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => {
+                    setNewCategoryType(accountType);
+                    setShowCategoryDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="subcategory" className="text-right">
+                Subcategory
+              </Label>
+              <div className="col-span-3 flex gap-2">
+                <Select 
+                  value={subcategoryId ? subcategoryId.toString() : ""} 
+                  onValueChange={val => setSubcategoryId(val ? parseInt(val) : null)}
+                  disabled={!categoryId}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableSubcategories.map(subcategory => (
+                      <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
+                        {subcategory.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  disabled={!categoryId}
+                  onClick={() => {
+                    if (categoryId) {
+                      setSelectedCategoryId(categoryId);
+                      setShowCategoryDialog(true);
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           
@@ -1138,6 +1331,175 @@ const FinancialManagement: React.FC = () => {
             </Button>
             <Button type="submit" onClick={handleSubmit}>
               Create Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  // Category Management Dialog
+  const CategoryManagementDialog = () => {
+    const handleAddCategory = () => {
+      // In a real app, this would add the category to the database
+      console.log("Adding new category:", { name: newCategoryName, type: newCategoryType });
+      
+      // Reset form
+      setNewCategoryName("");
+      setSelectedCategoryId(null);
+    };
+    
+    const handleAddSubcategory = () => {
+      // In a real app, this would add the subcategory to the database
+      console.log("Adding new subcategory:", { 
+        categoryId: selectedCategoryId, 
+        name: newSubcategoryName 
+      });
+      
+      // Reset form
+      setNewSubcategoryName("");
+    };
+    
+    const selectedCategory = selectedCategoryId 
+      ? mockAccountCategories.find(c => c.id === selectedCategoryId)
+      : null;
+    
+    return (
+      <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedCategoryId ? `Manage ${selectedCategory?.name} Subcategories` : "Manage Account Categories"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedCategoryId 
+                ? "Add or edit subcategories for this account category." 
+                : "Create and organize categories for your chart of accounts."}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {selectedCategoryId ? (
+              // Subcategory management UI
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="New subcategory name"
+                    value={newSubcategoryName}
+                    onChange={(e) => setNewSubcategoryName(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleAddSubcategory}
+                    disabled={!newSubcategoryName.trim()}
+                  >
+                    Add
+                  </Button>
+                </div>
+                
+                <div className="border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Subcategory Name</TableHead>
+                        <TableHead className="w-[100px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedCategory?.subcategories.map(subcategory => (
+                        <TableRow key={subcategory.id}>
+                          <TableCell>{subcategory.name}</TableCell>
+                          <TableCell>
+                            <Button size="sm" variant="ghost">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setSelectedCategoryId(null)}
+                >
+                  Back to Categories
+                </Button>
+              </div>
+            ) : (
+              // Category management UI
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="New category name"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Select value={newCategoryType} onValueChange={setNewCategoryType}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asset">Asset</SelectItem>
+                      <SelectItem value="liability">Liability</SelectItem>
+                      <SelectItem value="equity">Equity</SelectItem>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={handleAddCategory}
+                    disabled={!newCategoryName.trim()}
+                  >
+                    Add
+                  </Button>
+                </div>
+                
+                <div className="border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Category Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Subcategories</TableHead>
+                        <TableHead className="w-[100px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mockAccountCategories.map(category => (
+                        <TableRow key={category.id}>
+                          <TableCell>{category.name}</TableCell>
+                          <TableCell className="capitalize">{category.type}</TableCell>
+                          <TableCell>{category.subcategories.length}</TableCell>
+                          <TableCell>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => setSelectedCategoryId(category.id)}
+                            >
+                              <ListTree className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowCategoryDialog(false);
+              setSelectedCategoryId(null);
+              setNewCategoryName("");
+              setNewSubcategoryName("");
+            }}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1196,6 +1558,7 @@ const FinancialManagement: React.FC = () => {
         <CurrencyConverterDialog />
         <NewAccountDialog />
         <NewJournalEntryDialog />
+        <CategoryManagementDialog />
         
         {/* Bank Account Dialog */}
         <Dialog open={showNewBankAccountDialog} onOpenChange={setShowNewBankAccountDialog}>
