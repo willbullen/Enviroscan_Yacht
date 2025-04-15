@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -2388,14 +2389,217 @@ April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insuran
         </Dialog>
         
         <Dialog open={showNewInvoiceDialog} onOpenChange={setShowNewInvoiceDialog}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Create New Invoice</DialogTitle>
+              <DialogDescription>
+                Create a new invoice for goods or services.
+              </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <p className="text-center text-muted-foreground">
-                Invoice form under development
-              </p>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="invoiceNumber" className="text-right">
+                  Invoice #
+                </Label>
+                <Input
+                  id="invoiceNumber"
+                  placeholder="INV-2025-001"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="vendorSelect" className="text-right">
+                  Vendor
+                </Label>
+                <Select defaultValue="">
+                  <SelectTrigger id="vendorSelect" className="col-span-3">
+                    <SelectValue placeholder="Select a vendor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Select a vendor</SelectItem>
+                    {mockVendors.map(vendor => (
+                      <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                        {vendor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="invoiceDescription" className="text-right">
+                  Description
+                </Label>
+                <Input
+                  id="invoiceDescription"
+                  placeholder="Invoice description"
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="issueDate" className="text-right">
+                    Issue Date
+                  </Label>
+                  <Input
+                    id="issueDate"
+                    type="date"
+                    defaultValue={format(new Date(), "yyyy-MM-dd")}
+                  />
+                </div>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="dueDate" className="text-right">
+                    Due Date
+                  </Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    defaultValue={format(new Date(new Date().setDate(new Date().getDate() + 30)), "yyyy-MM-dd")}
+                  />
+                </div>
+              </div>
+              
+              <Separator className="my-2" />
+              
+              <h3 className="font-medium text-sm">Invoice Items</h3>
+              
+              <div className="space-y-2">
+                <div className="grid grid-cols-12 gap-2">
+                  <div className="col-span-6">
+                    <Label htmlFor="item1-description">Description</Label>
+                    <Input
+                      id="item1-description"
+                      placeholder="Item description"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="item1-quantity">Quantity</Label>
+                    <Input
+                      id="item1-quantity"
+                      placeholder="1"
+                      type="number"
+                      min="1"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="item1-price">Unit Price</Label>
+                    <Input
+                      id="item1-price"
+                      placeholder="0.00"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="item1-total">Total</Label>
+                    <Input
+                      id="item1-total"
+                      placeholder="0.00"
+                      readOnly
+                      className="bg-muted/50"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-12 gap-2">
+                  <div className="col-span-6">
+                    <Input
+                      placeholder="Item description"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Input
+                      placeholder="1"
+                      type="number"
+                      min="1"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Input
+                      placeholder="0.00"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Input
+                      placeholder="0.00"
+                      readOnly
+                      className="bg-muted/50"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <Button variant="outline" className="w-full" size="sm">
+                <Plus className="h-4 w-4 mr-2" /> Add Item
+              </Button>
+              
+              <Separator className="my-2" />
+              
+              <div className="flex flex-col gap-2 ml-auto w-1/3">
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label className="text-right">Subtotal</Label>
+                  <Input value="0.00" readOnly className="bg-muted/50" />
+                </div>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label className="text-right">Tax</Label>
+                  <Input placeholder="0.00" type="number" min="0" step="0.01" />
+                </div>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label className="text-right font-medium">Total</Label>
+                  <Input value="0.00" readOnly className="bg-muted/50 font-medium" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="currency" className="text-right">
+                  Currency
+                </Label>
+                <Select defaultValue="USD">
+                  <SelectTrigger id="currency" className="col-span-3">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="GBP">GBP (£)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <Select defaultValue="draft">
+                  <SelectTrigger id="status" className="col-span-3">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="notes" className="text-right">
+                  Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Additional notes or terms..."
+                  className="col-span-3"
+                  rows={3}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowNewInvoiceDialog(false)}>Cancel</Button>
