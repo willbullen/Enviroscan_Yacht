@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
+import BatchImportDialog from "@/components/BatchImportDialog";
 import { 
   DollarSign, 
   Wallet, 
@@ -28,6 +29,7 @@ import {
   ArrowLeftRight,
   Pencil,
   ListTree,
+  FileUp,
   Trash
 } from "lucide-react";
 import { format } from "date-fns";
@@ -962,6 +964,48 @@ const FinancialManagement: React.FC = () => {
   const [showNewVendorDialog, setShowNewVendorDialog] = useState(false);
   const [showNewReportDialog, setShowNewReportDialog] = useState(false);
   
+  // Batch import dialog states
+  const [showJournalBatchImportDialog, setShowJournalBatchImportDialog] = useState(false);
+  const [showBudgetBatchImportDialog, setShowBudgetBatchImportDialog] = useState(false);
+  const [showExpenseBatchImportDialog, setShowExpenseBatchImportDialog] = useState(false);
+  const [showInvoiceBatchImportDialog, setShowInvoiceBatchImportDialog] = useState(false);
+  const [showVendorBatchImportDialog, setShowVendorBatchImportDialog] = useState(false);
+  const [showPayrollBatchImportDialog, setShowPayrollBatchImportDialog] = useState(false);
+  
+  // CSV templates
+  const journalEntriesTemplateContent = `date,description,debitAccountId,debitAmount,creditAccountId,creditAmount,currency,reference
+2025-04-15,Fuel Purchase,501,1200.00,101,1200.00,USD,INV-12345
+2025-04-15,Maintenance Service,502,850.50,101,850.50,USD,SVC-67890
+2025-04-15,Crew Salary,601,3500.00,101,3500.00,USD,PAY-54321`;
+
+  const budgetsTemplateContent = `name,type,startDate,endDate,totalAmount,currency,operationsPercent,maintenancePercent,crewPercent,administrativePercent,otherPercent
+Annual Operations 2025,operational,2025-01-01,2025-12-31,1200000.00,USD,25,35,20,15,5
+Refit Project 2025,refit,2025-06-01,2025-08-31,500000.00,EUR,10,60,10,10,10
+Mediterranean Season,charter,2025-05-01,2025-09-30,300000.00,EUR,30,20,40,5,5`;
+
+  const expensesTemplateContent = `date,description,amount,currency,categoryId,subcategoryId,paymentMethod,vendorId,status,notes
+2025-04-10,Fuel Purchase - Monaco,12500.00,EUR,501,5011,bank_account,1,paid,Regular refueling
+2025-04-11,Port Fees - Monaco,3750.00,EUR,502,5021,credit_card,2,paid,Weekly dockage
+2025-04-12,Provisions - Food & Beverage,2250.00,EUR,503,5031,bank_account,3,paid,Guest provisions
+2025-04-13,Engine Maintenance,4800.00,EUR,504,5041,bank_account,4,pending,Scheduled maintenance`;
+
+  const invoicesTemplateContent = `invoiceNumber,date,dueDate,clientName,clientEmail,clientAddress,amount,currency,status,description,termsDays
+INV-2025-001,2025-04-15,2025-05-15,Charter Client Ltd,client@example.com,123 Ocean Avenue Monaco,75000.00,EUR,draft,Charter Services Apr 15-20 2025,30
+INV-2025-002,2025-04-16,2025-05-16,Marine Services Inc,services@example.com,456 Harbor Road Antibes,12500.00,EUR,draft,Equipment Rental,15
+INV-2025-003,2025-04-17,2025-05-17,Event Company LLC,events@example.com,789 Yacht Club Dr Fort Lauderdale,32000.00,USD,draft,Corporate Event Apr 25 2025,21`;
+
+  const vendorsTemplateContent = `name,contactName,email,phone,address,category,currency,paymentTerms,taxId,notes
+Monaco Yacht Services,Jean Leclerc,info@monacoyacht.com,+37712345678,15 Quai Antoine 1er Monaco,maintenance,EUR,30,FR12345678,Preferred maintenance provider
+Antibes Chandlery,Marie Dubois,sales@antibeschandlery.com,+33493123456,10 Port Vauban Antibes,supplies,EUR,15,FR87654321,Marine supplies and parts
+Global Fuel Solutions,Robert Smith,operations@globalfuel.com,+12025550178,123 Marina Drive Fort Lauderdale,fuel,USD,immediate,US123456789,International bunkering services
+Gourmet Yacht Provisions,Sophie Laurent,orders@gourmetyacht.com,+33607123456,25 Avenue du Port Cannes,provisions,EUR,7,FR45678912,Specialty food and beverage supplier`;
+
+  const payrollTemplateContent = `payrollPeriod,employeeId,employeeName,position,baseSalary,currency,overtimeHours,overtimeRate,bonusAmount,deductionAmount,deductionReason,netAmount,paymentMethod,bankAccount,notes
+April 2025,1,John Smith,Captain,12000.00,USD,10,30.00,1000.00,500.00,Health Insurance,12800.00,bank_transfer,XXXX1234,Charter bonus included
+April 2025,2,Maria Rodriguez,Chief Stewardess,8500.00,USD,8,25.00,750.00,400.00,Health Insurance,9050.00,bank_transfer,XXXX5678,Performance bonus
+April 2025,3,James Wilson,Chief Engineer,10000.00,USD,15,27.50,0.00,450.00,Health Insurance,10162.50,bank_transfer,XXXX9012,Additional maintenance hours
+April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insurance,9230.00,bank_transfer,XXXX3456,Special event bonus`;
+  
   // Helper function to get the tab's button/action
   const getTabAction = () => {
     switch (activeTab) {
@@ -973,9 +1017,14 @@ const FinancialManagement: React.FC = () => {
         );
       case "journals":
         return (
-          <Button onClick={() => setShowNewJournalDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" /> New Journal Entry
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewJournalDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" /> New Journal Entry
+            </Button>
+            <Button variant="outline" onClick={() => setShowJournalBatchImportDialog(true)}>
+              <FileUp className="h-4 w-4 mr-2" /> Batch Import
+            </Button>
+          </div>
         );
       case "banking":
         return (
@@ -996,33 +1045,58 @@ const FinancialManagement: React.FC = () => {
         );
       case "payroll":
         return (
-          <Button onClick={() => setShowNewPayrollDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" /> New Payroll Run
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewPayrollDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" /> New Payroll Run
+            </Button>
+            <Button variant="outline" onClick={() => setShowPayrollBatchImportDialog(true)}>
+              <FileUp className="h-4 w-4 mr-2" /> Batch Import
+            </Button>
+          </div>
         );
       case "budgets":
         return (
-          <Button onClick={() => setShowNewBudgetDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" /> New Budget
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewBudgetDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" /> New Budget
+            </Button>
+            <Button variant="outline" onClick={() => setShowBudgetBatchImportDialog(true)}>
+              <FileUp className="h-4 w-4 mr-2" /> Batch Import
+            </Button>
+          </div>
         );
       case "expenses":
         return (
-          <Button onClick={() => setShowNewExpenseDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" /> New Expense
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewExpenseDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" /> New Expense
+            </Button>
+            <Button variant="outline" onClick={() => setShowExpenseBatchImportDialog(true)}>
+              <FileUp className="h-4 w-4 mr-2" /> Batch Import
+            </Button>
+          </div>
         );
       case "invoices":
         return (
-          <Button onClick={() => setShowNewInvoiceDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" /> New Invoice
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewInvoiceDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" /> New Invoice
+            </Button>
+            <Button variant="outline" onClick={() => setShowInvoiceBatchImportDialog(true)}>
+              <FileUp className="h-4 w-4 mr-2" /> Batch Import
+            </Button>
+          </div>
         );
       case "vendors":
         return (
-          <Button onClick={() => setShowNewVendorDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" /> New Vendor
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewVendorDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" /> New Vendor
+            </Button>
+            <Button variant="outline" onClick={() => setShowVendorBatchImportDialog(true)}>
+              <FileUp className="h-4 w-4 mr-2" /> Batch Import
+            </Button>
+          </div>
         );
       case "reports":
         return (
@@ -2246,18 +2320,20 @@ const FinancialManagement: React.FC = () => {
                   Vendor
                 </Label>
                 <div className="flex space-x-2 col-span-3">
-                  <Select className="flex-1">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select vendor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockVendors.map(vendor => (
-                        <SelectItem key={vendor.id} value={vendor.id.toString()}>
-                          {vendor.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex-1">
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select vendor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mockVendors.map(vendor => (
+                          <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                            {vendor.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button type="button" variant="outline" size="icon">
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -2361,6 +2437,130 @@ const FinancialManagement: React.FC = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Batch Import Dialogs */}
+        <BatchImportDialog
+          open={showJournalBatchImportDialog}
+          onOpenChange={setShowJournalBatchImportDialog}
+          title="Import Journal Entries"
+          description="Upload a CSV file with journal entries data to batch import."
+          templateFileName="journal_entries_template.csv"
+          templateContent={journalEntriesTemplateContent}
+          onImport={(data) => {
+            console.log("Importing journal entries:", data);
+            // In a real app, this would send the data to the server
+            setShowJournalBatchImportDialog(false);
+          }}
+          validateRow={(row) => {
+            if (!row.date || !row.description || !row.debitAccountId || !row.creditAccountId || !row.debitAmount || !row.creditAmount) {
+              return "All required fields must be filled out";
+            }
+            if (parseFloat(row.debitAmount) !== parseFloat(row.creditAmount)) {
+              return "Debit amount must equal credit amount for each entry";
+            }
+            return null;
+          }}
+        />
+
+        <BatchImportDialog
+          open={showBudgetBatchImportDialog}
+          onOpenChange={setShowBudgetBatchImportDialog}
+          title="Import Budgets"
+          description="Upload a CSV file with budget data to batch import."
+          templateFileName="budgets_template.csv"
+          templateContent={budgetsTemplateContent}
+          onImport={(data) => {
+            console.log("Importing budgets:", data);
+            // In a real app, this would send the data to the server
+            setShowBudgetBatchImportDialog(false);
+          }}
+          validateRow={(row) => {
+            if (!row.name || !row.type || !row.startDate || !row.endDate || !row.totalAmount || !row.currency) {
+              return "All required fields must be filled out";
+            }
+            return null;
+          }}
+        />
+
+        <BatchImportDialog
+          open={showExpenseBatchImportDialog}
+          onOpenChange={setShowExpenseBatchImportDialog}
+          title="Import Expenses"
+          description="Upload a CSV file with expense data to batch import."
+          templateFileName="expenses_template.csv"
+          templateContent={expensesTemplateContent}
+          onImport={(data) => {
+            console.log("Importing expenses:", data);
+            // In a real app, this would send the data to the server
+            setShowExpenseBatchImportDialog(false);
+          }}
+          validateRow={(row) => {
+            if (!row.date || !row.description || !row.amount || !row.currency || !row.categoryId) {
+              return "All required fields must be filled out";
+            }
+            return null;
+          }}
+        />
+
+        <BatchImportDialog
+          open={showInvoiceBatchImportDialog}
+          onOpenChange={setShowInvoiceBatchImportDialog}
+          title="Import Invoices"
+          description="Upload a CSV file with invoice data to batch import."
+          templateFileName="invoices_template.csv"
+          templateContent={invoicesTemplateContent}
+          onImport={(data) => {
+            console.log("Importing invoices:", data);
+            // In a real app, this would send the data to the server
+            setShowInvoiceBatchImportDialog(false);
+          }}
+          validateRow={(row) => {
+            if (!row.invoiceNumber || !row.date || !row.clientName || !row.amount || !row.currency) {
+              return "All required fields must be filled out";
+            }
+            return null;
+          }}
+        />
+
+        <BatchImportDialog
+          open={showVendorBatchImportDialog}
+          onOpenChange={setShowVendorBatchImportDialog}
+          title="Import Vendors"
+          description="Upload a CSV file with vendor data to batch import."
+          templateFileName="vendors_template.csv"
+          templateContent={vendorsTemplateContent}
+          onImport={(data) => {
+            console.log("Importing vendors:", data);
+            // In a real app, this would send the data to the server
+            setShowVendorBatchImportDialog(false);
+          }}
+          validateRow={(row) => {
+            if (!row.name || !row.contactName || !row.email || !row.category) {
+              return "All required fields must be filled out";
+            }
+            return null;
+          }}
+        />
+
+        <BatchImportDialog
+          open={showPayrollBatchImportDialog}
+          onOpenChange={setShowPayrollBatchImportDialog}
+          title="Import Payroll Data"
+          description="Upload a CSV file with payroll data to batch import."
+          templateFileName="payroll_template.csv"
+          templateContent={payrollTemplateContent}
+          onImport={(data) => {
+            console.log("Importing payroll data:", data);
+            // In a real app, this would send the data to the server
+            setShowPayrollBatchImportDialog(false);
+          }}
+          validateRow={(row) => {
+            if (!row.payrollPeriod || !row.employeeId || !row.employeeName || !row.position || !row.baseSalary) {
+              return "All required fields must be filled out";
+            }
+            return null;
+          }}
+        />
 
         <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
