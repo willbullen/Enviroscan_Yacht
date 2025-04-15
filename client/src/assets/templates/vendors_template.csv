@@ -1,0 +1,5 @@
+name,contactName,email,phone,address,category,currency,paymentTerms,taxId,notes
+Monaco Yacht Services,Jean Leclerc,info@monacoyacht.com,+37712345678,15 Quai Antoine 1er Monaco,maintenance,EUR,30,FR12345678,Preferred maintenance provider
+Antibes Chandlery,Marie Dubois,sales@antibeschandlery.com,+33493123456,10 Port Vauban Antibes,supplies,EUR,15,FR87654321,Marine supplies and parts
+Global Fuel Solutions,Robert Smith,operations@globalfuel.com,+12025550178,123 Marina Drive Fort Lauderdale,fuel,USD,immediate,US123456789,International bunkering services
+Gourmet Yacht Provisions,Sophie Laurent,orders@gourmetyacht.com,+33607123456,25 Avenue du Port Cannes,provisions,EUR,7,FR45678912,Specialty food and beverage supplier

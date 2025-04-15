@@ -1,0 +1,5 @@
+payrollPeriod,employeeId,employeeName,position,baseSalary,currency,overtimeHours,overtimeRate,bonusAmount,deductionAmount,deductionReason,netAmount,paymentMethod,bankAccount,notes
+April 2025,1,John Smith,Captain,12000.00,USD,10,30.00,1000.00,500.00,Health Insurance,12800.00,bank_transfer,XXXX1234,Charter bonus included
+April 2025,2,Maria Rodriguez,Chief Stewardess,8500.00,USD,8,25.00,750.00,400.00,Health Insurance,9050.00,bank_transfer,XXXX5678,Performance bonus
+April 2025,3,James Wilson,Chief Engineer,10000.00,USD,15,27.50,0.00,450.00,Health Insurance,10162.50,bank_transfer,XXXX9012,Additional maintenance hours
+April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insurance,9230.00,bank_transfer,XXXX3456,Special event bonus

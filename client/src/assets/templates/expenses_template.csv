@@ -1,0 +1,5 @@
+date,description,amount,currency,categoryId,subcategoryId,paymentMethod,vendorId,status,notes
+2025-04-10,Fuel Purchase - Monaco,12500.00,EUR,501,5011,bank_account,1,paid,Regular refueling
+2025-04-11,Port Fees - Monaco,3750.00,EUR,502,5021,credit_card,2,paid,Weekly dockage
+2025-04-12,Provisions - Food & Beverage,2250.00,EUR,503,5031,bank_account,3,paid,Guest provisions
+2025-04-13,Engine Maintenance,4800.00,EUR,504,5041,bank_account,4,pending,Scheduled maintenance

@@ -1,0 +1,4 @@
+name,type,startDate,endDate,totalAmount,currency,operationsPercent,maintenancePercent,crewPercent,administrativePercent,otherPercent
+Annual Operations 2025,operational,2025-01-01,2025-12-31,1200000.00,USD,25,35,20,15,5
+Refit Project 2025,refit,2025-06-01,2025-08-31,500000.00,EUR,10,60,10,10,10
+Mediterranean Season,charter,2025-05-01,2025-09-30,300000.00,EUR,30,20,40,5,5

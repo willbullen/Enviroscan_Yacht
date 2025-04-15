@@ -1,0 +1,4 @@
+date,description,debitAccountId,debitAmount,creditAccountId,creditAmount,currency,reference
+2025-04-15,Fuel Purchase,501,1200.00,101,1200.00,USD,INV-12345
+2025-04-15,Maintenance Service,502,850.50,101,850.50,USD,SVC-67890
+2025-04-15,Crew Salary,601,3500.00,101,3500.00,USD,PAY-54321

@@ -1,0 +1,4 @@
+invoiceNumber,date,dueDate,clientName,clientEmail,clientAddress,amount,currency,status,description,termsDays
+INV-2025-001,2025-04-15,2025-05-15,Charter Client Ltd,client@example.com,123 Ocean Avenue Monaco,75000.00,EUR,draft,Charter Services Apr 15-20 2025,30
+INV-2025-002,2025-04-16,2025-05-16,Marine Services Inc,services@example.com,456 Harbor Road Antibes,12500.00,EUR,draft,Equipment Rental,15
+INV-2025-003,2025-04-17,2025-05-17,Event Company LLC,events@example.com,789 Yacht Club Dr Fort Lauderdale,32000.00,USD,draft,Corporate Event Apr 25 2025,21
