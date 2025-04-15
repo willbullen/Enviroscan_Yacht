@@ -1,0 +1,288 @@
+Core Requirements
+1. Accounting Features
+Implement a comprehensive accounting system that includes:
+•	Chart of accounts with yacht-specific categories (fuel, docking fees, maintenance, crew expenses)
+•	Double-entry bookkeeping system
+•	Bank reconciliation functionality
+•	Multi-currency support for international operations
+•	Asset tracking for yacht components and equipment
+•	Tax management for multiple jurisdictions
+•	Financial transaction recording and categorization
+2. Invoicing Features
+Create a robust invoicing system that includes:
+•	Customizable invoice templates with yacht-specific fields (vessel name, registration number)
+•	Client/customer management for yacht owners, charterers, and service providers
+•	Recurring invoice functionality for regular services
+•	Estimate creation and conversion to invoices
+•	Online payment processing integration
+•	Accounts receivable tracking
+•	Credit memo and refund processing
+3. Payroll Features
+Develop a specialized payroll system for yacht crew that includes:
+•	Crew member management with certification tracking
+•	International payroll processing with different tax jurisdictions
+•	Support for various compensation structures (day rates, voyage pay, salary)
+•	Tax calculation and reporting for multiple countries
+•	Direct deposit functionality
+•	Contractor management for temporary crew and service providers
+•	Crew rotation scheduling and availability tracking
+4. Reporting Features
+Implement comprehensive reporting capabilities including:
+•	Financial reports (balance sheets, profit & loss, cash flow)
+•	Vessel-specific performance reports
+•	Maintenance scheduling and history reports
+•	Voyage/trip profitability analysis
+•	Fuel consumption and efficiency tracking
+•	Crew payroll and certification reports
+•	Custom report builder with save functionality
+•	Data export options (PDF, Excel, CSV)
+Database Schema
+Core Tables
+1.	Accounts
+•	account_id (PK)
+•	account_name
+•	account_type (asset, liability, equity, income, expense)
+•	account_number
+•	description
+•	is_active
+•	parent_account_id (FK, self-referential)
+•	balance
+•	created_at
+•	updated_at
+2.	Vessels
+•	vessel_id (PK)
+•	vessel_name
+•	registration_number
+•	flag_country
+•	vessel_type
+•	length
+•	beam
+•	draft
+•	build_year
+•	manufacturer
+•	owner_id (FK to Customers)
+•	status (active, maintenance, charter)
+•	created_at
+•	updated_at
+3.	Customers
+•	customer_id (PK)
+•	customer_type (owner, charterer, service provider)
+•	name
+•	company_name
+•	email
+•	phone
+•	billing_address
+•	shipping_address
+•	currency_preference
+•	payment_terms
+•	created_at
+•	updated_at
+4.	Crew
+•	crew_id (PK)
+•	first_name
+•	last_name
+•	position
+•	email
+•	phone
+•	nationality
+•	passport_number
+•	passport_expiry
+•	hire_date
+•	status (active, on leave, terminated)
+•	pay_rate
+•	pay_type (hourly, daily, salary)
+•	tax_jurisdiction
+•	created_at
+•	updated_at
+5.	Transactions
+•	transaction_id (PK)
+•	transaction_type (invoice, payment, expense, payroll, transfer)
+•	transaction_date
+•	amount
+•	currency
+•	exchange_rate
+•	description
+•	vessel_id (FK to Vessels)
+•	customer_id (FK to Customers, optional)
+•	created_at
+•	updated_at
+6.	TransactionLines
+•	line_id (PK)
+•	transaction_id (FK to Transactions)
+•	account_id (FK to Accounts)
+•	amount
+•	description
+•	tax_rate
+•	tax_amount
+•	created_at
+•	updated_at
+7.	Invoices
+•	invoice_id (PK)
+•	transaction_id (FK to Transactions)
+•	invoice_number
+•	customer_id (FK to Customers)
+•	vessel_id (FK to Vessels)
+•	issue_date
+•	due_date
+•	status (draft, sent, paid, overdue, void)
+•	subtotal
+•	tax_total
+•	total
+•	balance_due
+•	terms
+•	notes
+•	created_at
+•	updated_at
+8.	InvoiceLines
+•	line_id (PK)
+•	invoice_id (FK to Invoices)
+•	description
+•	quantity
+•	unit_price
+•	amount
+•	tax_rate
+•	tax_amount
+•	account_id (FK to Accounts)
+•	created_at
+•	updated_at
+9.	Payments
+•	payment_id (PK)
+•	transaction_id (FK to Transactions)
+•	payment_date
+•	payment_method
+•	reference_number
+•	amount
+•	currency
+•	exchange_rate
+•	customer_id (FK to Customers)
+•	created_at
+•	updated_at
+10.	PaymentApplications
+•	application_id (PK)
+•	payment_id (FK to Payments)
+•	invoice_id (FK to Invoices)
+•	amount_applied
+•	created_at
+•	updated_at
+11.	Expenses
+•	expense_id (PK)
+•	transaction_id (FK to Transactions)
+•	expense_date
+•	vendor_id (FK to Customers where type = service provider)
+•	vessel_id (FK to Vessels)
+•	payment_method
+•	reference_number
+•	total
+•	status (draft, submitted, approved, paid)
+•	created_at
+•	updated_at
+12.	ExpenseLines
+•	line_id (PK)
+•	expense_id (FK to Expenses)
+•	account_id (FK to Accounts)
+•	description
+•	amount
+•	tax_rate
+•	tax_amount
+•	created_at
+•	updated_at
+13.	PayrollRuns
+•	payroll_run_id (PK)
+•	start_date
+•	end_date
+•	payment_date
+•	status (draft, processing, completed)
+•	total_gross
+•	total_deductions
+•	total_net
+•	created_at
+•	updated_at
+14.	PayrollItems
+•	payroll_item_id (PK)
+•	payroll_run_id (FK to PayrollRuns)
+•	crew_id (FK to Crew)
+•	vessel_id (FK to Vessels)
+•	hours_worked
+•	days_worked
+•	gross_pay
+•	deductions
+•	net_pay
+•	transaction_id (FK to Transactions)
+•	created_at
+•	updated_at
+15.	MaintenanceRecords
+•	maintenance_id (PK)
+•	vessel_id (FK to Vessels)
+•	maintenance_type
+•	description
+•	scheduled_date
+•	completion_date
+•	status (scheduled, in progress, completed)
+•	vendor_id (FK to Customers where type = service provider)
+•	expense_id (FK to Expenses, optional)
+•	notes
+•	created_at
+•	updated_at
+16.	VoyageRecords
+•	voyage_id (PK)
+•	vessel_id (FK to Vessels)
+•	start_date
+•	end_date
+•	departure_location
+•	arrival_location
+•	distance
+•	fuel_consumed
+•	voyage_type (charter, repositioning, owner use)
+•	charterer_id (FK to Customers, optional)
+•	invoice_id (FK to Invoices, optional)
+•	notes
+•	created_at
+•	updated_at
+17.	FuelRecords
+•	fuel_id (PK)
+•	vessel_id (FK to Vessels)
+•	date
+•	quantity
+•	fuel_type
+•	price_per_unit
+•	total_cost
+•	location
+•	voyage_id (FK to VoyageRecords, optional)
+•	expense_id (FK to Expenses, optional)
+•	created_at
+•	updated_at
+18.	Documents
+•	document_id (PK)
+•	document_type
+•	file_name
+•	file_path
+•	upload_date
+•	expiry_date
+•	vessel_id (FK to Vessels, optional)
+•	crew_id (FK to Crew, optional)
+•	transaction_id (FK to Transactions, optional)
+•	maintenance_id (FK to MaintenanceRecords, optional)
+•	created_at
+•	updated_at
+
+Key Screens
+1.	Financial Management
+•	Chart of accounts
+•	Transaction register
+•	Bank reconciliation
+•	Financial statements
+2.	Customer Management
+•	Customer list with filtering
+•	Customer details with transaction history
+•	Invoice creation and management
+3.	Crew Management
+•	Crew list with certification status
+•	Crew details with documentation
+•	Payroll processing
+•	Rotation scheduling
+4.	Reporting
+•	Standard financial reports
+•	Vessel performance reports
+•	Custom report builder
+•	Export options
+
