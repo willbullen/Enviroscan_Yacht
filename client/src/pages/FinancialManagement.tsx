@@ -849,24 +849,36 @@ const FinancialManagement: React.FC = () => {
     }
   };
 
+  // State for managing dialogs
+  const [showNewAccountDialog, setShowNewAccountDialog] = useState(false);
+  const [showNewJournalDialog, setShowNewJournalDialog] = useState(false);
+  const [showNewBankAccountDialog, setShowNewBankAccountDialog] = useState(false);
+  const [showNewRateDialog, setShowNewRateDialog] = useState(false);
+  const [showNewPayrollDialog, setShowNewPayrollDialog] = useState(false);
+  const [showNewBudgetDialog, setShowNewBudgetDialog] = useState(false);
+  const [showNewExpenseDialog, setShowNewExpenseDialog] = useState(false);
+  const [showNewInvoiceDialog, setShowNewInvoiceDialog] = useState(false);
+  const [showNewVendorDialog, setShowNewVendorDialog] = useState(false);
+  const [showNewReportDialog, setShowNewReportDialog] = useState(false);
+  
   // Helper function to get the tab's button/action
   const getTabAction = () => {
     switch (activeTab) {
       case "accounts":
         return (
-          <Button>
+          <Button onClick={() => setShowNewAccountDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Account
           </Button>
         );
       case "journals":
         return (
-          <Button>
+          <Button onClick={() => setShowNewJournalDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Journal Entry
           </Button>
         );
       case "banking":
         return (
-          <Button>
+          <Button onClick={() => setShowNewBankAccountDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Bank Account
           </Button>
         );
@@ -876,44 +888,44 @@ const FinancialManagement: React.FC = () => {
             <Button variant="outline" onClick={() => setShowCurrencyConverter(!showCurrencyConverter)}>
               <ArrowLeftRight className="h-4 w-4 mr-2" /> Convert
             </Button>
-            <Button>
+            <Button onClick={() => setShowNewRateDialog(true)}>
               <Plus className="h-4 w-4 mr-2" /> New Rate
             </Button>
           </div>
         );
       case "payroll":
         return (
-          <Button>
+          <Button onClick={() => setShowNewPayrollDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Payroll Run
           </Button>
         );
       case "budgets":
         return (
-          <Button>
+          <Button onClick={() => setShowNewBudgetDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Budget
           </Button>
         );
       case "expenses":
         return (
-          <Button>
+          <Button onClick={() => setShowNewExpenseDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Expense
           </Button>
         );
       case "invoices":
         return (
-          <Button>
+          <Button onClick={() => setShowNewInvoiceDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Invoice
           </Button>
         );
       case "vendors":
         return (
-          <Button>
+          <Button onClick={() => setShowNewVendorDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> New Vendor
           </Button>
         );
       case "reports":
         return (
-          <Button>
+          <Button onClick={() => setShowNewReportDialog(true)}>
             <Plus className="h-4 w-4 mr-2" /> Generate Report
           </Button>
         );
@@ -1034,6 +1046,137 @@ const FinancialManagement: React.FC = () => {
     );
   };
   
+  // New Account Dialog
+  const NewAccountDialog = () => {
+    const [accountNumber, setAccountNumber] = useState("");
+    const [accountName, setAccountName] = useState("");
+    const [accountType, setAccountType] = useState("expense");
+    const [category, setCategory] = useState("");
+    
+    const handleSubmit = () => {
+      // In a real application, this would make an API call to create the account
+      // For demo purposes, we'll just log the values and close the dialog
+      console.log("Creating new account:", { accountNumber, accountName, accountType, category });
+      setShowNewAccountDialog(false);
+      
+      // Reset form values
+      setAccountNumber("");
+      setAccountName("");
+      setAccountType("expense");
+      setCategory("");
+    };
+    
+    return (
+      <Dialog open={showNewAccountDialog} onOpenChange={setShowNewAccountDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Account</DialogTitle>
+            <DialogDescription>
+              Add a new account to your chart of accounts.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="accountNumber" className="text-right">
+                Account #
+              </Label>
+              <Input
+                id="accountNumber"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="accountName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="accountName"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="accountType" className="text-right">
+                Type
+              </Label>
+              <Select value={accountType} onValueChange={setAccountType}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asset">Asset</SelectItem>
+                  <SelectItem value="liability">Liability</SelectItem>
+                  <SelectItem value="equity">Equity</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">Expense</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Category
+              </Label>
+              <Input
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewAccountDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleSubmit}>
+              Create Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  // New Journal Entry Dialog
+  const NewJournalEntryDialog = () => {
+    return (
+      <Dialog open={showNewJournalDialog} onOpenChange={setShowNewJournalDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Journal Entry</DialogTitle>
+            <DialogDescription>
+              Create a new journal entry in the general ledger.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            {/* Form fields would go here */}
+            <p className="text-center text-muted-foreground">
+              Journal entry form under development
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewJournalDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setShowNewJournalDialog(false)}>
+              Create Entry
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
   return (
     <MainLayout title="Financial Management">
       <div className="container mx-auto py-6">
@@ -1049,8 +1192,163 @@ const FinancialManagement: React.FC = () => {
           </div>
         </div>
         
-        {/* Currency converter dialog */}
+        {/* Dialogs */}
         <CurrencyConverterDialog />
+        <NewAccountDialog />
+        <NewJournalEntryDialog />
+        
+        {/* Bank Account Dialog */}
+        <Dialog open={showNewBankAccountDialog} onOpenChange={setShowNewBankAccountDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Bank Account</DialogTitle>
+              <DialogDescription>
+                Add details for a new bank account or credit card.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <p className="text-center text-muted-foreground">
+                Bank account form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewBankAccountDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewBankAccountDialog(false)}>Add Account</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Exchange Rate Dialog */}
+        <Dialog open={showNewRateDialog} onOpenChange={setShowNewRateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Exchange Rate</DialogTitle>
+              <DialogDescription>
+                Add a new currency exchange rate to the system.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <p className="text-center text-muted-foreground">
+                Exchange rate form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewRateDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewRateDialog(false)}>Add Rate</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Payroll Dialog */}
+        <Dialog open={showNewPayrollDialog} onOpenChange={setShowNewPayrollDialog}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Start New Payroll Run</DialogTitle>
+              <DialogDescription>
+                Process payroll for crew members for a specific period.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <p className="text-center text-muted-foreground">
+                Payroll processing form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewPayrollDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewPayrollDialog(false)}>Start Payroll Run</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Budget Dialog */}
+        <Dialog open={showNewBudgetDialog} onOpenChange={setShowNewBudgetDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Budget</DialogTitle>
+              <DialogDescription>
+                Create a new budget for a specific period.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <p className="text-center text-muted-foreground">
+                Budget creation form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewBudgetDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewBudgetDialog(false)}>Create Budget</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Add placeholders for other dialogs (expense, invoice, vendor, report) */}
+        <Dialog open={showNewExpenseDialog} onOpenChange={setShowNewExpenseDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Expense</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-center text-muted-foreground">
+                Expense form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewExpenseDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewExpenseDialog(false)}>Add Expense</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={showNewInvoiceDialog} onOpenChange={setShowNewInvoiceDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Invoice</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-center text-muted-foreground">
+                Invoice form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewInvoiceDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewInvoiceDialog(false)}>Create Invoice</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={showNewVendorDialog} onOpenChange={setShowNewVendorDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Vendor</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-center text-muted-foreground">
+                Vendor form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewVendorDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewVendorDialog(false)}>Add Vendor</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={showNewReportDialog} onOpenChange={setShowNewReportDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Generate New Report</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-center text-muted-foreground">
+                Report generation form under development
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewReportDialog(false)}>Cancel</Button>
+              <Button onClick={() => setShowNewReportDialog(false)}>Generate Report</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
