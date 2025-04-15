@@ -27,7 +27,8 @@ import {
   Globe, 
   ArrowLeftRight,
   Pencil,
-  ListTree
+  ListTree,
+  Trash
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -1509,28 +1510,213 @@ const FinancialManagement: React.FC = () => {
   
   // New Journal Entry Dialog
   const NewJournalEntryDialog = () => {
+    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [description, setDescription] = useState("");
+    const [debitAccount, setDebitAccount] = useState("");
+    const [creditAccount, setCreditAccount] = useState("");
+    const [amount, setAmount] = useState("");
+    const [currency, setCurrency] = useState("USD");
+    const [memo, setMemo] = useState("");
+    
+    // Generate account options for the dropdowns
+    const accountOptions = React.useMemo(() => {
+      // List of bank accounts for selection
+      const bankAccounts = [
+        { value: "Cash", label: "Cash" },
+        { value: "Operations Account", label: "Operations Account" },
+        { value: "Euro Operations", label: "Euro Operations" },
+        { value: "Credit Card", label: "Credit Card" }
+      ];
+      
+      // Get account options from mockAccounts
+      const accountOpts = mockAccounts.map(account => ({
+        value: account.accountName,
+        label: `${account.accountNumber} - ${account.accountName}`
+      }));
+      
+      // Add bank accounts to the list
+      bankAccounts.forEach(account => {
+        accountOpts.push({
+          value: account.label,
+          label: account.label
+        });
+      });
+      
+      return accountOpts;
+    }, []);
+    
+    // List of currencies
+    const currencyOptions = [
+      { value: "USD", label: "US Dollar (USD)" },
+      { value: "EUR", label: "Euro (EUR)" },
+      { value: "GBP", label: "British Pound (GBP)" },
+      { value: "JPY", label: "Japanese Yen (JPY)" }
+    ];
+    
+    const handleSubmit = () => {
+      // In a real application, this would make an API call to create the journal entry
+      console.log("Creating journal entry:", {
+        date,
+        description,
+        debitAccount,
+        creditAccount,
+        amount: parseFloat(amount),
+        currency,
+        memo
+      });
+      
+      // Reset form and close dialog
+      setDescription("");
+      setDebitAccount("");
+      setCreditAccount("");
+      setAmount("");
+      setCurrency("USD");
+      setMemo("");
+      setShowNewJournalDialog(false);
+    };
+    
     return (
       <Dialog open={showNewJournalDialog} onOpenChange={setShowNewJournalDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Create Journal Entry</DialogTitle>
             <DialogDescription>
-              Create a new journal entry in the general ledger.
+              Create a new journal entry in the general ledger using double-entry bookkeeping.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            {/* Form fields would go here */}
-            <p className="text-center text-muted-foreground">
-              Journal entry form under development
-            </p>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="date" className="text-right">
+                Date
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="date"
+                  type="date"
+                  value={date ? format(date, "yyyy-MM-dd") : ""}
+                  onChange={(e) => setDate(e.target.value ? new Date(e.target.value) : undefined)}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+                placeholder="Brief description of this transaction"
+              />
+            </div>
+            
+            <Separator className="my-2" />
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="debitAccount" className="text-right">
+                Debit Account
+              </Label>
+              <Select value={debitAccount} onValueChange={setDebitAccount}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select debit account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accountOptions.map(option => (
+                    <SelectItem key={`debit-${option.value}`} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="creditAccount" className="text-right">
+                Credit Account
+              </Label>
+              <Select value={creditAccount} onValueChange={setCreditAccount}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select credit account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accountOptions.map(option => (
+                    <SelectItem key={`credit-${option.value}`} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Amount
+              </Label>
+              <div className="col-span-3 flex gap-2">
+                <Input
+                  id="amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="flex-1"
+                />
+                <Select value={currency} onValueChange={setCurrency}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="memo" className="text-right">
+                Memo
+              </Label>
+              <Input
+                id="memo"
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
+                className="col-span-3"
+                placeholder="Additional notes (optional)"
+              />
+            </div>
+            
+            <div className="col-span-3 col-start-2 mt-2">
+              <div className="rounded-md bg-muted p-3 text-sm">
+                <div className="font-medium">Double-Entry Summary</div>
+                <div className="text-muted-foreground mt-1">
+                  {debitAccount && creditAccount ? (
+                    <>
+                      This transaction will <strong>debit {debitAccount}</strong> and <strong>credit {creditAccount}</strong>
+                      {amount ? ` for ${currency} ${parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : ""}.
+                    </>
+                  ) : (
+                    "Select accounts to see the double-entry summary."
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNewJournalDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={() => setShowNewJournalDialog(false)}>
+            <Button 
+              onClick={handleSubmit}
+              disabled={!description || !debitAccount || !creditAccount || !amount || parseFloat(amount) <= 0}
+            >
               Create Entry
             </Button>
           </DialogFooter>
