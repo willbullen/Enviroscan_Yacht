@@ -91,21 +91,57 @@ const CrewManagement = () => {
   const queryClient = useQueryClient();
   
   // Fetch crew members
-  const { data: crewMembers, isLoading: isLoadingCrew } = useQuery({
+  const { data: crewMembers, isLoading: isLoadingCrew } = useQuery<CrewMember[]>({
     queryKey: ['/api/crew'],
     refetchOnWindowFocus: false,
+    select: (data) => {
+      // Deduplicate crew members by ID
+      const crewMap = new Map<number, CrewMember>();
+      if (Array.isArray(data)) {
+        data.forEach(crew => {
+          if (crew && typeof crew === 'object' && 'id' in crew) {
+            crewMap.set(crew.id, crew as CrewMember);
+          }
+        });
+      }
+      return Array.from(crewMap.values());
+    }
   });
   
   // Fetch crew documents
-  const { data: crewDocuments, isLoading: isLoadingDocs } = useQuery({
+  const { data: crewDocuments, isLoading: isLoadingDocs } = useQuery<CrewDocument[]>({
     queryKey: ['/api/crew-documents'],
     refetchOnWindowFocus: false,
+    select: (data) => {
+      // Deduplicate documents by ID
+      const docMap = new Map<number, CrewDocument>();
+      if (Array.isArray(data)) {
+        data.forEach(doc => {
+          if (doc && typeof doc === 'object' && 'id' in doc) {
+            docMap.set(doc.id, doc as CrewDocument);
+          }
+        });
+      }
+      return Array.from(docMap.values());
+    }
   });
   
   // Fetch expiring documents (next 30 days)
-  const { data: expiringDocuments, isLoading: isLoadingExpiring } = useQuery({
+  const { data: expiringDocuments, isLoading: isLoadingExpiring } = useQuery<CrewDocument[]>({
     queryKey: ['/api/crew-documents/expiring/30'],
     refetchOnWindowFocus: false,
+    select: (data) => {
+      // Deduplicate documents by ID
+      const docMap = new Map<number, CrewDocument>();
+      if (Array.isArray(data)) {
+        data.forEach(doc => {
+          if (doc && typeof doc === 'object' && 'id' in doc) {
+            docMap.set(doc.id, doc as CrewDocument);
+          }
+        });
+      }
+      return Array.from(docMap.values());
+    }
   });
   
   // Add crew member mutation
