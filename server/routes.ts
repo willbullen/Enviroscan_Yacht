@@ -246,33 +246,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get upcoming maintenance tasks
   apiRouter.get("/tasks/upcoming", async (_req: Request, res: Response) => {
     try {
-      console.log("Requesting upcoming tasks...");
-      // Get all tasks first
-      const allTasks = await storage.getAllMaintenanceTasks();
-      console.log(`Got ${allTasks.length} total tasks`);
+      console.log("Requesting upcoming tasks - direct implementation");
       
-      // Filter to upcoming ones manually to avoid SQL issues
-      const today = new Date();
-      const thirtyDaysLater = new Date();
-      thirtyDaysLater.setDate(today.getDate() + 30);
+      // Use simple, direct approach without complex filtering
+      const tasks = await storage.getMaintenanceTasksByStatus('upcoming');
       
-      // Get tasks with upcoming or pending status with due dates in next 30 days
-      const upcomingTasks = allTasks.filter(task => {
-        // Check for status
-        if (task.status !== 'upcoming' && task.status !== 'pending') {
-          return false;
-        }
-        
-        // Check for due date in range
-        const dueDate = new Date(task.dueDate);
-        return dueDate >= today && dueDate <= thirtyDaysLater;
-      });
-      
-      console.log(`Filtered to ${upcomingTasks.length} upcoming tasks`);
-      res.json(upcomingTasks);
+      // Return them directly without additional filtering
+      console.log(`Found ${tasks.length} upcoming tasks`);
+      res.json(tasks);
     } catch (error) {
       console.error("Error getting upcoming tasks:", error);
-      console.error(error instanceof Error ? error.stack : String(error));
+      console.error("Stack trace:", error instanceof Error ? error.stack : "No stack trace");
+      console.error("Error type:", Object.prototype.toString.call(error));
+      console.error("Error stringified:", JSON.stringify(error, null, 2));
+      
+      // Send a specific error message
       res.status(500).json({ 
         message: "Failed to get maintenance task", 
         error: error instanceof Error ? error.message : String(error)
