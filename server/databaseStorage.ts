@@ -148,42 +148,28 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Starting getUpcomingMaintenanceTasks...");
       
-      // Get all tasks first regardless of status
-      const allTasks = await db
-        .select()
-        .from(maintenanceTasks);
-      
-      console.log(`Found ${allTasks.length} total tasks`);
-      
-      // Debug all tasks with their status
-      allTasks.forEach(task => {
-        console.log(`Task ${task.id}: ${task.title} - Status: ${task.status}, Due: ${task.dueDate}`);
-      });
-      
-      // Filter to only upcoming or pending tasks (not completed or in_progress)
-      const relevantTasks = allTasks.filter(task => 
-        task.status === "upcoming" || task.status === "pending"
-      );
-      
-      console.log(`Found ${relevantTasks.length} relevant tasks with status upcoming or pending`);
-      
-      // Filter in JavaScript to avoid SQL date comparison issues
+      // Get current date and date 30 days from now
       const today = new Date();
       const thirtyDaysLater = new Date();
       thirtyDaysLater.setDate(today.getDate() + 30);
       
       console.log(`Date range: ${today.toISOString()} to ${thirtyDaysLater.toISOString()}`);
       
-      // Filter tasks where dueDate is between today and 30 days from now
-      const upcomingTasks = relevantTasks.filter(task => {
-        const dueDate = new Date(task.dueDate);
-        console.log(`Checking task ${task.id} due date: ${dueDate.toISOString()}`);
-        const isUpcoming = dueDate >= today && dueDate <= thirtyDaysLater;
-        console.log(`Task ${task.id} is${isUpcoming ? '' : ' not'} upcoming`);
-        return isUpcoming;
-      });
+      // Get tasks with pending status and due date within next 30 days
+      // Use database query for better performance instead of filtering in JavaScript
+      const upcomingTasks = await db
+        .select()
+        .from(maintenanceTasks)
+        .where(
+          and(
+            eq(maintenanceTasks.status, "pending"),
+            gte(maintenanceTasks.dueDate, today),
+            lte(maintenanceTasks.dueDate, thirtyDaysLater)
+          )
+        );
       
-      console.log(`Returning ${upcomingTasks.length} upcoming tasks`);
+      console.log(`Found ${upcomingTasks.length} upcoming tasks with pending status due in next 30 days`);
+      
       return upcomingTasks;
     } catch (error) {
       console.error("Error in getUpcomingMaintenanceTasks:", error);

@@ -247,46 +247,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get upcoming maintenance tasks - FINAL EMERGENCY FIX
+  // Get upcoming maintenance tasks
   apiRouter.get("/tasks/upcoming", async (_req: Request, res: Response) => {
-    console.log("FINAL EMERGENCY FIX - Direct response for upcoming tasks");
-    
-    // Create data objects matching the actual database data from logs
-    const taskData = [
-      {
-        id: 2,
-        title: "Generator 1 Fuel Filter Replacement",
-        description: "Replace the fuel filter for Generator 1",
-        equipmentId: 2,
-        status: "upcoming",
-        priority: "medium",
-        assignedToId: 1,
-        dueDate: "2025-04-17T13:10:39.195Z",
-        createdById: 1,
-        completedById: null,
-        completedDate: null,
-        estimatedHours: 2,
-        notes: null
-      },
-      {
-        id: 5,
-        title: "Liferaft Annual Inspection",
-        description: "Annual inspection of all liferafts",
-        equipmentId: 5,
-        status: "upcoming",
-        priority: "high",
-        assignedToId: 1,
-        dueDate: "2025-05-03T13:10:39.195Z",
-        createdById: 1,
-        completedById: null,
-        completedDate: null,
-        estimatedHours: 4,
-        notes: null
-      }
-    ];
-    
-    console.log("Returning direct task data for upcoming tasks");
-    return res.status(200).json(taskData);
+    try {
+      console.log("Fetching upcoming maintenance tasks");
+      const tasks = await storage.getUpcomingMaintenanceTasks();
+      console.log(`Retrieved ${tasks.length} upcoming tasks`);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error in /tasks/upcoming endpoint:", error);
+      console.error(error instanceof Error ? error.stack : String(error));
+      res.status(500).json({ message: "Failed to get upcoming maintenance tasks" });
+    }
   });
   
   // Create new maintenance task
