@@ -62,8 +62,11 @@ const UpcomingMaintenance: React.FC = () => {
   // Group tasks by month
   const tasksByMonth: Record<string, MaintenanceTask[]> = {};
   
-  if (tasks && tasks.length > 0) {
-    tasks.forEach((task: MaintenanceTask) => {
+  // Handle tasks data safely, ensuring it's an array
+  const taskArray = Array.isArray(tasks) ? tasks : [];
+  
+  if (taskArray.length > 0) {
+    taskArray.forEach((task: MaintenanceTask) => {
       const dueDate = new Date(task.dueDate);
       const monthKey = format(dueDate, "MMMM yyyy");
       
