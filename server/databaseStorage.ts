@@ -155,22 +155,35 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`Date range: ${today.toISOString()} to ${thirtyDaysLater.toISOString()}`);
       
-      // Get tasks with pending status and due date within next 30 days
-      // Use database query for better performance instead of filtering in JavaScript
-      const upcomingTasks = await db
-        .select()
-        .from(maintenanceTasks)
-        .where(
-          and(
-            eq(maintenanceTasks.status, "pending"),
-            gte(maintenanceTasks.dueDate, today),
-            lte(maintenanceTasks.dueDate, thirtyDaysLater)
-          )
-        );
-      
-      console.log(`Found ${upcomingTasks.length} upcoming tasks with pending status due in next 30 days`);
-      
-      return upcomingTasks;
+      // Use raw SQL for troubleshooting
+      try {
+        console.log("Executing query to get upcoming tasks...");
+        // Get all upcoming tasks without date filter first for debugging
+        const allUpcomingTasks = await db
+          .select()
+          .from(maintenanceTasks)
+          .where(
+            eq(maintenanceTasks.status, "upcoming")
+          );
+        
+        console.log(`Found ${allUpcomingTasks.length} tasks with upcoming status`);
+        
+        // Now filter by date
+        const upcomingTasks = allUpcomingTasks.filter(task => {
+          const dueDate = new Date(task.dueDate);
+          const isInRange = dueDate >= today && dueDate <= thirtyDaysLater;
+          console.log(`Task ${task.id} - Due: ${dueDate.toISOString()} - In range: ${isInRange}`);
+          return isInRange;
+        });
+        
+        console.log(`Found ${upcomingTasks.length} upcoming tasks within the next 30 days`);
+        console.log("Task list:", JSON.stringify(upcomingTasks, null, 2));
+        
+        return upcomingTasks;
+      } catch (queryError) {
+        console.error("Error executing query:", queryError);
+        throw queryError; // Re-throw to be caught by outer catch
+      }
     } catch (error) {
       console.error("Error in getUpcomingMaintenanceTasks:", error);
       console.error(error instanceof Error ? error.stack : String(error));
@@ -180,7 +193,9 @@ export class DatabaseStorage implements IStorage {
       
       // Try a simple query to check connection
       try {
-        // Don't return the throw as it would hide our original error
+        console.log("Trying simple query to check database connection");
+        const [result] = await db.select({ count: sql`count(*)` }).from(maintenanceTasks);
+        console.log("Database connection working, tasks count:", result);
         return []; // Return empty array instead of throwing
       } catch (dbError) {
         console.error("Database connection test failed:", dbError);

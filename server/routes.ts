@@ -253,11 +253,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Fetching upcoming maintenance tasks");
       const tasks = await storage.getUpcomingMaintenanceTasks();
       console.log(`Retrieved ${tasks.length} upcoming tasks`);
-      res.json(tasks);
+      
+      // Log each task for debugging
+      tasks.forEach(task => {
+        console.log(`Retrieved upcoming task: ${JSON.stringify(task, null, 2)}`);
+      });
+      
+      // Return success response
+      return res.status(200).json(tasks);
     } catch (error) {
       console.error("Error in /tasks/upcoming endpoint:", error);
       console.error(error instanceof Error ? error.stack : String(error));
-      res.status(500).json({ message: "Failed to get upcoming maintenance tasks" });
+      return res.status(500).json({ message: "Failed to get upcoming maintenance tasks" });
     }
   });
   
