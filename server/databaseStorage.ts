@@ -150,31 +150,23 @@ export class DatabaseStorage implements IStorage {
       const allTasks = await db
         .select()
         .from(maintenanceTasks);
-        
-      console.log("All tasks:", JSON.stringify(allTasks, null, 2));
       
-      // First filter to only pending tasks
-      const pendingTasks = allTasks.filter(task => task.status === "pending");
-      console.log("Pending tasks:", JSON.stringify(pendingTasks, null, 2));
+      // Filter to only upcoming or pending tasks (not completed or in_progress)
+      const relevantTasks = allTasks.filter(task => 
+        task.status === "upcoming" || task.status === "pending"
+      );
       
       // Filter in JavaScript to avoid SQL date comparison issues
       const today = new Date();
       const thirtyDaysLater = new Date();
       thirtyDaysLater.setDate(today.getDate() + 30);
       
-      console.log("Today:", today);
-      console.log("30 days later:", thirtyDaysLater);
-      
       // Filter tasks where dueDate is between today and 30 days from now
-      const upcomingTasks = pendingTasks.filter(task => {
+      const upcomingTasks = relevantTasks.filter(task => {
         const dueDate = new Date(task.dueDate);
-        console.log(`Task ${task.id} due date:`, dueDate);
-        const isUpcoming = dueDate >= today && dueDate <= thirtyDaysLater;
-        console.log(`Task ${task.id} is upcoming:`, isUpcoming);
-        return isUpcoming;
+        return dueDate >= today && dueDate <= thirtyDaysLater;
       });
       
-      console.log("Upcoming tasks:", JSON.stringify(upcomingTasks, null, 2));
       return upcomingTasks;
     } catch (error) {
       console.error("Error in getUpcomingMaintenanceTasks:", error);
