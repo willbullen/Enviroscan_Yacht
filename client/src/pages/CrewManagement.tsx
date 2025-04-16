@@ -95,16 +95,29 @@ const CrewManagement = () => {
     queryKey: ['/api/crew'],
     refetchOnWindowFocus: false,
     select: (data) => {
-      // Deduplicate crew members by ID
-      const crewMap = new Map<number, CrewMember>();
+      // First deduplicate by ID
+      const idMap = new Map<number, CrewMember>();
       if (Array.isArray(data)) {
         data.forEach(crew => {
           if (crew && typeof crew === 'object' && 'id' in crew) {
-            crewMap.set(crew.id, crew as CrewMember);
+            idMap.set(crew.id, crew as CrewMember);
           }
         });
       }
-      return Array.from(crewMap.values());
+      
+      // Then deduplicate by fullName + position (for cases where duplicates have different IDs)
+      const namePositionMap = new Map<string, CrewMember>();
+      Array.from(idMap.values()).forEach(crew => {
+        const key = `${crew.fullName.toLowerCase()}-${crew.position.toLowerCase()}`;
+        // If there's a conflict, keep the record with the higher ID (likely more recent)
+        if (!namePositionMap.has(key) || namePositionMap.get(key)!.id < crew.id) {
+          namePositionMap.set(key, crew);
+        }
+      });
+      
+      return Array.from(namePositionMap.values()).sort((a, b) => 
+        a.fullName.localeCompare(b.fullName) || a.position.localeCompare(b.position)
+      );
     }
   });
   
@@ -122,7 +135,18 @@ const CrewManagement = () => {
           }
         });
       }
-      return Array.from(docMap.values());
+      
+      // Further deduplicate based on document number and type
+      const uniqueDocMap = new Map<string, CrewDocument>();
+      Array.from(docMap.values()).forEach(doc => {
+        const key = `${doc.documentNumber}-${doc.documentType}-${doc.crewMemberId}`;
+        // If there's a conflict, keep the record with the higher ID (likely more recent)
+        if (!uniqueDocMap.has(key) || uniqueDocMap.get(key)!.id < doc.id) {
+          uniqueDocMap.set(key, doc);
+        }
+      });
+      
+      return Array.from(uniqueDocMap.values());
     }
   });
   
@@ -140,7 +164,18 @@ const CrewManagement = () => {
           }
         });
       }
-      return Array.from(docMap.values());
+      
+      // Further deduplicate based on document number and type
+      const uniqueDocMap = new Map<string, CrewDocument>();
+      Array.from(docMap.values()).forEach(doc => {
+        const key = `${doc.documentNumber}-${doc.documentType}-${doc.crewMemberId}`;
+        // If there's a conflict, keep the record with the higher ID (likely more recent)
+        if (!uniqueDocMap.has(key) || uniqueDocMap.get(key)!.id < doc.id) {
+          uniqueDocMap.set(key, doc);
+        }
+      });
+      
+      return Array.from(uniqueDocMap.values());
     }
   });
   
