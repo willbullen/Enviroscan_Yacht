@@ -278,7 +278,7 @@ const CrewManagement = () => {
     resolver: zodResolver(crewMemberFormSchema),
     defaultValues: {
       fullName: "",
-      position: "",
+      position: "Captain", // Default to the first position
       email: "",
       phone: "",
       nationality: "",
@@ -294,14 +294,14 @@ const CrewManagement = () => {
     resolver: zodResolver(crewDocumentFormSchema),
     defaultValues: {
       title: "",
-      documentType: "",
+      documentType: "Passport", // Default to the first document type
       documentNumber: "",
       issuingAuthority: "",
       issueDate: new Date(),
       expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
       verificationStatus: "Pending",
       fileUrl: null,
-      crewMemberId: 0,
+      crewMemberId: 0, 
       notes: null,
     },
   });
