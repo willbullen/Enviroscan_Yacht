@@ -1564,7 +1564,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "ISM incident not found" });
       }
       
-      await storage.deleteIsmIncident(id);
+      const deleted = await storage.deleteIsmIncident(id);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete ISM incident" });
+      }
       
       // Log activity
       await storage.createActivityLog({
@@ -1697,7 +1701,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Crew member not found" });
       }
       
-      await storage.deleteCrewMember(id);
+      const deleted = await storage.deleteCrewMember(id);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete crew member" });
+      }
       
       // Log activity
       await storage.createActivityLog({
@@ -1863,7 +1871,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Crew document not found" });
       }
       
-      await storage.deleteCrewDocument(id);
+      const deleted = await storage.deleteCrewDocument(id);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete crew document" });
+      }
       
       // Log activity
       await storage.createActivityLog({
