@@ -18,7 +18,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   }, [isMobile]);
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Mobile Header - Fixed */}
       {isMobile && (
         <div className="bg-navy-dark text-white p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-30">
@@ -54,20 +54,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         </div>
       )}
 
-      <div className="flex flex-1 h-screen bg-background">
-        {/* Sidebar is already fixed by design */}
+      <div className="flex flex-1 h-screen">
+        {/* Sidebar - Fixed position */}
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
-          {/* Header is already sticky in Header.tsx */}
-          <Header title={title} />
+        {/* Content area */}
+        <div 
+          className={cn(
+            "flex-1 flex flex-col relative",
+            isMobile ? "ml-0" : "ml-64", // Account for sidebar width on desktop
+            "transition-all duration-300"
+          )}
+        >
+          {/* Header - Fixed at top of content area */}
+          <Header title={title} isMobile={isMobile} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-          {/* Main Content - Scrollable */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-background">
-            {/* Add padding-top for mobile to account for fixed header */}
-            <div className={isMobile ? "pt-16" : ""}>
-              {children}
-            </div>
+          {/* Main content - Scrollable */}
+          <main 
+            className={cn(
+              "flex-1 overflow-y-auto bg-background",
+              isMobile ? "pt-16" : "", // Add padding for mobile header
+              "p-4 md:p-6"
+            )}
+          >
+            {children}
           </main>
         </div>
       </div>
@@ -82,5 +92,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
     </div>
   );
 };
+
+// Import cn utility
+import { cn } from "@/lib/utils";
 
 export default MainLayout;

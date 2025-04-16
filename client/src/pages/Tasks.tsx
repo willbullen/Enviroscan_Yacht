@@ -225,7 +225,7 @@ const Tasks = () => {
   return (
     <MainLayout title="Maintenance Tasks">
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Maintenance Tasks</h1>
+        <h1 className="text-2xl font-bold tracking-tight"></h1>
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
