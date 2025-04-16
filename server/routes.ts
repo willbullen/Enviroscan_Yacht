@@ -250,7 +250,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(tasks);
     } catch (error) {
       console.error("Error getting upcoming tasks:", error);
-      res.status(500).json({ message: "Failed to get upcoming maintenance tasks", error: error instanceof Error ? error.message : String(error) });
+      res.status(500).json({ 
+        message: "Failed to get upcoming maintenance tasks", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   

@@ -146,22 +146,39 @@ export class DatabaseStorage implements IStorage {
 
   async getUpcomingMaintenanceTasks(): Promise<MaintenanceTask[]> {
     try {
+      // Get all tasks first regardless of status
+      const allTasks = await db
+        .select()
+        .from(maintenanceTasks);
+        
+      console.log("All tasks:", JSON.stringify(allTasks, null, 2));
+      
+      // First filter to only pending tasks
+      const pendingTasks = allTasks.filter(task => task.status === "pending");
+      console.log("Pending tasks:", JSON.stringify(pendingTasks, null, 2));
+      
+      // Filter in JavaScript to avoid SQL date comparison issues
       const today = new Date();
       const thirtyDaysLater = new Date();
       thirtyDaysLater.setDate(today.getDate() + 30);
       
-      return await db
-        .select()
-        .from(maintenanceTasks)
-        .where(
-          and(
-            gte(maintenanceTasks.dueDate, today),
-            lte(maintenanceTasks.dueDate, thirtyDaysLater),
-            eq(maintenanceTasks.status, "pending")
-          )
-        );
+      console.log("Today:", today);
+      console.log("30 days later:", thirtyDaysLater);
+      
+      // Filter tasks where dueDate is between today and 30 days from now
+      const upcomingTasks = pendingTasks.filter(task => {
+        const dueDate = new Date(task.dueDate);
+        console.log(`Task ${task.id} due date:`, dueDate);
+        const isUpcoming = dueDate >= today && dueDate <= thirtyDaysLater;
+        console.log(`Task ${task.id} is upcoming:`, isUpcoming);
+        return isUpcoming;
+      });
+      
+      console.log("Upcoming tasks:", JSON.stringify(upcomingTasks, null, 2));
+      return upcomingTasks;
     } catch (error) {
       console.error("Error in getUpcomingMaintenanceTasks:", error);
+      console.error(error instanceof Error ? error.stack : String(error));
       return []; // Return empty array instead of throwing
     }
   }
