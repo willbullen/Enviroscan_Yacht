@@ -41,7 +41,7 @@ import {
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
-import { and, eq, lte, gte } from "drizzle-orm";
+import { and, eq, lte, gte, sql } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   // =========== User Methods =============
