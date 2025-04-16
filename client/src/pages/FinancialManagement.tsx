@@ -1802,10 +1802,10 @@ April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insuran
   
   return (
     <MainLayout title="Financial Management">
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="w-full py-3">
+        <div className="flex justify-between items-center mb-3">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Financial Management</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Financial Management</h1>
             <p className="text-muted-foreground">Manage yacht finances, budgets, expenses, and reporting</p>
           </div>
           

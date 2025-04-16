@@ -64,7 +64,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
           className={cn(
             "flex-1 flex flex-col relative",
             isMobile ? "ml-0" : "ml-0", // Remove margin completely
-            "transition-all duration-300 pl-0"
+            "transition-all duration-300 pl-0 border-l border-gray-200"
           )}
         >
           {/* Desktop Header */}
