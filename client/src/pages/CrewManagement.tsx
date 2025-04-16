@@ -317,13 +317,11 @@ const CrewManagement = () => {
   
   // Calculate document status for visual indicators
   const getDocumentStatus = (expiryDate: string) => {
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const daysUntilExpiry = getDaysUntil(expiryDate);
     
-    if (expiry < today) {
+    if (isDateInPast(expiryDate)) {
       return { status: 'expired', label: 'Expired', color: 'destructive' };
-    } else if (daysUntilExpiry <= 30) {
+    } else if (daysUntilExpiry !== null && daysUntilExpiry <= 30) {
       return { status: 'expiring', label: `Expires in ${daysUntilExpiry} days`, color: 'warning' };
     } else {
       return { status: 'valid', label: 'Valid', color: 'success' };
@@ -395,7 +393,7 @@ const CrewManagement = () => {
                           <span className="font-medium">Nationality:</span> {crew.nationality}
                         </div>
                         <div className="text-sm">
-                          <span className="font-medium">Join Date:</span> {new Date(crew.joinDate).toLocaleDateString()}
+                          <span className="font-medium">Join Date:</span> {formatDate(crew.joinDate)}
                         </div>
                       </div>
                     </CardContent>
@@ -474,10 +472,10 @@ const CrewManagement = () => {
                               <span className="font-medium">Issuing Authority:</span> {doc.issuingAuthority}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Issue Date:</span> {new Date(doc.issueDate).toLocaleDateString()}
+                              <span className="font-medium">Issue Date:</span> {formatDate(doc.issueDate)}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Expiry Date:</span> {new Date(doc.expiryDate).toLocaleDateString()}
+                              <span className="font-medium">Expiry Date:</span> {formatDate(doc.expiryDate)}
                             </div>
                             <div className="text-sm">
                               <span className="font-medium">Verification:</span> {' '}
@@ -557,7 +555,7 @@ const CrewManagement = () => {
                               <span className="font-medium">Issuing Authority:</span> {doc.issuingAuthority}
                             </div>
                             <div className="text-sm font-medium text-warning">
-                              Expires on: {new Date(doc.expiryDate).toLocaleDateString()}
+                              Expires on: {formatDate(doc.expiryDate)}
                             </div>
                           </div>
                         </CardContent>
