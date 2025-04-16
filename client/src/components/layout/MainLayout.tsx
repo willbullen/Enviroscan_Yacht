@@ -59,11 +59,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         {/* Sidebar - Fixed position */}
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-        {/* Content area */}
+        {/* Content area - No margin/padding between sidebar and content */}
         <div 
           className={cn(
             "flex-1 flex flex-col relative",
-            isMobile ? "ml-0" : "ml-64", // Account for sidebar width on desktop
+            isMobile ? "ml-0" : "ml-0", // Remove margin completely
             "transition-all duration-300"
           )}
         >
@@ -72,12 +72,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
             <Header title={title} />
           </div>
 
-          {/* Main content - Scrollable */}
+          {/* Main content - Scrollable with reduced padding */}
           <main 
             className={cn(
               "flex-1 overflow-y-auto bg-background",
               isMobile ? "pt-16" : "", // Add padding for mobile header
-              "p-4 md:p-6"
+              "p-3 md:p-4" // Reduced padding
             )}
           >
             {children}

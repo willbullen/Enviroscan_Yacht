@@ -50,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   return (
     <div
       className={cn(
-        "bg-navy-dark text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform transition-transform duration-200 ease-in-out z-30",
+        "bg-navy-dark text-white w-56 flex-shrink-0 fixed inset-y-0 left-0 transform transition-transform duration-200 ease-in-out z-30",
         "md:sticky md:top-0 md:h-screen",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}
