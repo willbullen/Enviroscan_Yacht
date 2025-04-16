@@ -145,23 +145,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUpcomingMaintenanceTasks(): Promise<MaintenanceTask[]> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const thirtyDaysLater = new Date();
-    thirtyDaysLater.setDate(today.getDate() + 30);
-    thirtyDaysLater.setHours(23, 59, 59, 999);
-    
-    return db
-      .select()
-      .from(maintenanceTasks)
-      .where(
-        and(
-          gte(maintenanceTasks.dueDate, today),
-          lte(maintenanceTasks.dueDate, thirtyDaysLater),
-          eq(maintenanceTasks.status, "pending")
-        )
-      );
+    try {
+      const today = new Date();
+      const thirtyDaysLater = new Date();
+      thirtyDaysLater.setDate(today.getDate() + 30);
+      
+      return await db
+        .select()
+        .from(maintenanceTasks)
+        .where(
+          and(
+            gte(maintenanceTasks.dueDate, today),
+            lte(maintenanceTasks.dueDate, thirtyDaysLater),
+            eq(maintenanceTasks.status, "pending")
+          )
+        );
+    } catch (error) {
+      console.error("Error in getUpcomingMaintenanceTasks:", error);
+      return []; // Return empty array instead of throwing
+    }
   }
 
   async createMaintenanceTask(insertTask: InsertMaintenanceTask): Promise<MaintenanceTask> {
