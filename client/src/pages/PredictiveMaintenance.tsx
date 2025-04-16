@@ -250,15 +250,17 @@ const PredictiveMaintenance = () => {
                 All Equipment
               </Button>
               
-              {equipmentData && (equipmentData as Equipment[]).map((equip) => (
-                <Button 
-                  key={equip.id}
-                  variant={selectedEquipment === equip.id ? "default" : "outline"}
-                  onClick={() => setSelectedEquipment(equip.id)}
-                >
-                  {equip.name}
-                </Button>
-              ))}
+              {equipmentData && Array.isArray(equipmentData) && 
+                equipmentData.map((equip: Equipment) => (
+                  <Button 
+                    key={equip.id}
+                    variant={selectedEquipment === equip.id ? "default" : "outline"}
+                    onClick={() => setSelectedEquipment(equip.id)}
+                  >
+                    {equip.name}
+                  </Button>
+                ))
+              }
             </div>
           </CardContent>
           <CardFooter>

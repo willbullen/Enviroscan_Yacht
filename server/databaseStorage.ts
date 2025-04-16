@@ -105,8 +105,14 @@ export class DatabaseStorage implements IStorage {
     return updatedItem;
   }
 
-  async deleteEquipment(id: number): Promise<void> {
-    await db.delete(equipment).where(eq(equipment.id, id));
+  async deleteEquipment(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(equipment).where(eq(equipment.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting equipment:", error);
+      return false;
+    }
   }
 
   // =========== Maintenance Task Methods =============
@@ -218,8 +224,14 @@ export class DatabaseStorage implements IStorage {
     return updatedTask;
   }
 
-  async deleteMaintenanceTask(id: number): Promise<void> {
-    await db.delete(maintenanceTasks).where(eq(maintenanceTasks.id, id));
+  async deleteMaintenanceTask(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(maintenanceTasks).where(eq(maintenanceTasks.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting maintenance task:", error);
+      return false;
+    }
   }
 
   // =========== Inventory Methods =============
@@ -253,8 +265,14 @@ export class DatabaseStorage implements IStorage {
     return updatedItem;
   }
 
-  async deleteInventoryItem(id: number): Promise<void> {
-    await db.delete(inventoryItems).where(eq(inventoryItems.id, id));
+  async deleteInventoryItem(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(inventoryItems).where(eq(inventoryItems.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting inventory item:", error);
+      return false;
+    }
   }
 
   // =========== Activity Log Methods =============
