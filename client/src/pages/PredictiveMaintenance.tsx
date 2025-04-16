@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle2, CalendarClock, BarChart4, RefreshCcw, Wrench, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, ApiError } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import MainLayout from "@/components/layout/MainLayout";
 
@@ -92,7 +92,9 @@ const PredictiveMaintenance = () => {
   // Regenerate predictions mutation
   const generatePredictionsMutation = useMutation({
     mutationFn: async (equipmentId: number) => {
-      return apiRequest(`/api/predictive-maintenance/generate/${equipmentId}`, 'POST');
+      return apiRequest<any>(`/api/predictive-maintenance/generate/${equipmentId}`, {
+        method: 'POST'
+      });
     },
     onSuccess: (_, equipmentId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/predictive-maintenance'] });
@@ -103,13 +105,12 @@ const PredictiveMaintenance = () => {
         variant: 'default',
       });
     },
-    onError: (error) => {
+    onError: (error: ApiError) => {
       toast({
         title: 'Error',
-        description: 'Failed to generate predictions. Please try again.',
+        description: `Failed to generate predictions: ${error.message || 'Please try again.'}`,
         variant: 'destructive',
       });
-      console.error('Failed to generate predictions:', error);
     }
   });
 

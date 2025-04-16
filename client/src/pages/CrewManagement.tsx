@@ -147,7 +147,7 @@ const CrewManagement = () => {
   // Add crew member mutation
   const addCrewMutation = useMutation({
     mutationFn: (data: z.infer<typeof crewMemberFormSchema>) => {
-      return apiRequest('/api/crew', {
+      return apiRequest<CrewMember>('/api/crew', {
         method: 'POST',
         data,
       });
@@ -160,10 +160,10 @@ const CrewManagement = () => {
         description: "Crew member added successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: ApiError) => {
       toast({
         title: "Error",
-        description: "Failed to add crew member",
+        description: `Failed to add crew member: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
     }
@@ -172,7 +172,7 @@ const CrewManagement = () => {
   // Add document mutation
   const addDocumentMutation = useMutation({
     mutationFn: (data: z.infer<typeof crewDocumentFormSchema>) => {
-      return apiRequest('/api/crew-documents', {
+      return apiRequest<CrewDocument>('/api/crew-documents', {
         method: 'POST',
         data,
       });
@@ -185,10 +185,10 @@ const CrewManagement = () => {
         description: "Document added successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: ApiError) => {
       toast({
         title: "Error",
-        description: "Failed to add document",
+        description: `Failed to add document: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
     }

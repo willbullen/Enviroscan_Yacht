@@ -1,26 +1,107 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-async function throwIfResNotOk(res: Response) {
+// Enhanced error type for API errors
+export interface ApiError extends Error {
+  status: number;
+  data?: any;
+  url: string;
+  method: string;
+}
+
+// Logger for API errors
+export function logApiError(error: ApiError) {
+  console.error(`API Error: ${error.method} ${error.url} (${error.status})`, error.message, error.data);
+  
+  // In a production app, you might want to send this to your error tracking service
+  // Example: Sentry.captureException(error);
+}
+
+async function parseErrorResponse(res: Response): Promise<ApiError> {
+  let errorData: any;
+  let errorMessage: string;
+  
+  try {
+    // Try to parse as JSON first
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      errorData = await res.clone().json();
+      errorMessage = errorData.message || `${res.status}: ${res.statusText}`;
+    } else {
+      // Fall back to text
+      errorMessage = await res.text() || res.statusText;
+    }
+  } catch (e) {
+    // If all else fails, use the status text
+    errorMessage = res.statusText;
+  }
+  
+  const error = new Error(errorMessage) as ApiError;
+  error.status = res.status;
+  error.data = errorData;
+  error.url = res.url;
+  error.method = 'GET'; // Will be overridden in apiRequest
+  
+  return error;
+}
+
+async function throwIfResNotOk(res: Response, method: string = 'GET') {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const error = await parseErrorResponse(res);
+    error.method = method;
+    logApiError(error);
+    throw error;
   }
 }
 
-export async function apiRequest(
-  method: string,
+export async function apiRequest<T = any>(
   url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  options: {
+    method: string;
+    data?: unknown;
+    headers?: Record<string, string>;
+    validateStatus?: (status: number) => boolean;
+  }
+): Promise<T> {
+  const { method, data, headers = {}, validateStatus } = options;
+  
+  try {
+    // Set default headers and add custom headers
+    const requestHeaders = {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      ...headers
+    };
+    
+    const res = await fetch(url, {
+      method,
+      headers: requestHeaders,
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    // Allow custom status validation if provided
+    if (validateStatus && !validateStatus(res.status)) {
+      await throwIfResNotOk(res, method);
+    } else if (!res.ok) {
+      await throwIfResNotOk(res, method);
+    }
+    
+    // Only try to parse JSON if there's content
+    if (res.status !== 204) { // No content
+      return await res.json();
+    }
+    
+    return {} as T;
+  } catch (error) {
+    // Enhance errors that aren't already ApiErrors (like network errors)
+    if (!(error as ApiError).status) {
+      const apiError = error as ApiError;
+      apiError.status = 0;
+      apiError.url = url;
+      apiError.method = method;
+      logApiError(apiError);
+    }
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -29,16 +110,36 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
+    try {
+      const url = queryKey[0] as string;
+      const res = await fetch(url, {
+        credentials: "include",
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res, 'GET');
+      
+      // Only try to parse JSON if there's content
+      if (res.status !== 204) { // No content
+        const data = await res.json();
+        return data;
+      }
+      
+      return {} as any;
+    } catch (error) {
+      // Enhance errors that aren't already ApiErrors (like network errors)
+      if (!(error as ApiError).status) {
+        const apiError = error as ApiError;
+        apiError.status = 0;
+        apiError.url = queryKey[0] as string;
+        apiError.method = 'GET';
+        logApiError(apiError);
+      }
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({
