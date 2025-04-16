@@ -204,9 +204,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/tasks/status/:status", async (req: Request, res: Response) => {
     try {
       const { status } = req.params;
+      console.log(`Fetching tasks with status: ${status}`);
       const tasks = await storage.getMaintenanceTasksByStatus(status);
+      console.log(`Found ${tasks.length} tasks with status ${status}`);
       res.json(tasks);
     } catch (error) {
+      console.error(`Error getting tasks with status ${req.params.status}:`, error);
+      console.error(error instanceof Error ? error.stack : String(error));
       res.status(500).json({ message: "Failed to get maintenance tasks by status" });
     }
   });
@@ -246,19 +250,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get upcoming maintenance tasks
   apiRouter.get("/tasks/upcoming", async (_req: Request, res: Response) => {
     try {
-      console.log("Requesting upcoming tasks - direct implementation");
+      console.log("Requesting upcoming tasks - redirect implementation");
       
-      // Use simple, direct approach without complex filtering
-      const tasks = await storage.getMaintenanceTasksByStatus('upcoming');
+      // Fetch upcoming tasks from our working /tasks/status/:status endpoint
+      const response = await fetch('http://localhost:5000/api/tasks/status/upcoming');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch from status endpoint: ${response.statusText}`);
+      }
+      
+      const tasks = await response.json();
       
       // Return them directly without additional filtering
-      console.log(`Found ${tasks.length} upcoming tasks`);
+      console.log(`Found ${tasks.length} upcoming tasks via redirect`);
       res.json(tasks);
     } catch (error) {
       console.error("Error getting upcoming tasks:", error);
       console.error("Stack trace:", error instanceof Error ? error.stack : "No stack trace");
-      console.error("Error type:", Object.prototype.toString.call(error));
-      console.error("Error stringified:", JSON.stringify(error, null, 2));
       
       // Send a specific error message
       res.status(500).json({ 
