@@ -14,6 +14,7 @@ import {
   Users,
   DollarSign
 } from "lucide-react";
+import eastwindLogo from '@/assets/eastwind_logo.svg';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -33,9 +34,12 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       style={{ padding: 0, margin: 0 }}
     >
       {/* Logo */}
-      <div className={cn("py-4 flex items-center justify-center border-b border-navy", isOpen ? "px-4" : "")}>
+      <div className={cn("py-4 flex flex-col items-center justify-center border-b border-navy", isOpen ? "px-4" : "")}>
         {isOpen ? (
-          <div className="text-white text-xl font-bold">Eastwind Management</div>
+          <>
+            <img src={eastwindLogo} alt="Eastwind Management" className="h-8" />
+            <div className="text-white text-xs mt-1">Eastwind Management</div>
+          </>
         ) : (
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
             <span className="text-xs font-bold text-white">EM</span>
