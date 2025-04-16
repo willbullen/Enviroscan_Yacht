@@ -17,6 +17,7 @@ import { FiUser, FiFile, FiCalendar, FiAlertTriangle, FiCheck, FiX } from "react
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DatePicker } from "@/components/ui/date-picker";
 import MainLayout from "../components/layout/MainLayout";
+import { formatDate, getDaysUntil, isDateInPast } from "@/lib/dateUtils";
 
 // Types
 type CrewMember = {
@@ -95,27 +96,42 @@ const CrewManagement = () => {
     queryKey: ['/api/crew'],
     refetchOnWindowFocus: false,
     select: (data) => {
-      // First deduplicate by ID
-      const idMap = new Map<number, CrewMember>();
-      if (Array.isArray(data)) {
-        data.forEach(crew => {
-          if (crew && typeof crew === 'object' && 'id' in crew) {
-            idMap.set(crew.id, crew as CrewMember);
-          }
-        });
-      }
+      if (!Array.isArray(data)) return [];
       
-      // Then deduplicate by fullName + position (for cases where duplicates have different IDs)
-      const namePositionMap = new Map<string, CrewMember>();
+      // Ensure we're only processing valid crew members
+      const validMembers = data.filter(crew => 
+        crew && typeof crew === 'object' && 
+        'id' in crew && 
+        'fullName' in crew && 
+        'position' in crew &&
+        'email' in crew
+      ) as CrewMember[];
+      
+      // First deduplicate by ID (handles duplicates with the same ID)
+      const idMap = new Map<number, CrewMember>();
+      validMembers.forEach(crew => {
+        idMap.set(crew.id, crew);
+      });
+      
+      // Then deduplicate by more comprehensive criteria
+      // Use multiple fields to ensure uniqueness, not just name and position
+      const uniqueMap = new Map<string, CrewMember>();
       Array.from(idMap.values()).forEach(crew => {
-        const key = `${crew.fullName.toLowerCase()}-${crew.position.toLowerCase()}`;
+        // Create a composite key from multiple fields
+        const key = [
+          crew.fullName.toLowerCase().trim(),
+          crew.position.toLowerCase().trim(),
+          crew.email.toLowerCase().trim(),
+          crew.nationality.toLowerCase().trim()
+        ].join('|');
+        
         // If there's a conflict, keep the record with the higher ID (likely more recent)
-        if (!namePositionMap.has(key) || namePositionMap.get(key)!.id < crew.id) {
-          namePositionMap.set(key, crew);
+        if (!uniqueMap.has(key) || uniqueMap.get(key)!.id < crew.id) {
+          uniqueMap.set(key, crew);
         }
       });
       
-      return Array.from(namePositionMap.values()).sort((a, b) => 
+      return Array.from(uniqueMap.values()).sort((a, b) => 
         a.fullName.localeCompare(b.fullName) || a.position.localeCompare(b.position)
       );
     }
@@ -126,20 +142,34 @@ const CrewManagement = () => {
     queryKey: ['/api/crew-documents'],
     refetchOnWindowFocus: false,
     select: (data) => {
-      // Deduplicate documents by ID
-      const docMap = new Map<number, CrewDocument>();
-      if (Array.isArray(data)) {
-        data.forEach(doc => {
-          if (doc && typeof doc === 'object' && 'id' in doc) {
-            docMap.set(doc.id, doc as CrewDocument);
-          }
-        });
-      }
+      if (!Array.isArray(data)) return [];
       
-      // Further deduplicate based on document number and type
+      // Ensure we're only processing valid documents
+      const validDocs = data.filter(doc => 
+        doc && typeof doc === 'object' &&
+        'id' in doc &&
+        'documentNumber' in doc &&
+        'documentType' in doc &&
+        'crewMemberId' in doc
+      ) as CrewDocument[];
+      
+      // First deduplicate by ID (handles duplicates with the same ID)
+      const docMap = new Map<number, CrewDocument>();
+      validDocs.forEach(doc => {
+        docMap.set(doc.id, doc);
+      });
+      
+      // Then deduplicate based on more comprehensive criteria
       const uniqueDocMap = new Map<string, CrewDocument>();
       Array.from(docMap.values()).forEach(doc => {
-        const key = `${doc.documentNumber}-${doc.documentType}-${doc.crewMemberId}`;
+        // Create a composite key from document-identifying fields
+        const key = [
+          doc.documentNumber.trim(),
+          doc.documentType.toLowerCase().trim(),
+          doc.crewMemberId.toString(),
+          doc.issuingAuthority.toLowerCase().trim()
+        ].join('|');
+        
         // If there's a conflict, keep the record with the higher ID (likely more recent)
         if (!uniqueDocMap.has(key) || uniqueDocMap.get(key)!.id < doc.id) {
           uniqueDocMap.set(key, doc);
@@ -155,20 +185,34 @@ const CrewManagement = () => {
     queryKey: ['/api/crew-documents/expiring/30'],
     refetchOnWindowFocus: false,
     select: (data) => {
-      // Deduplicate documents by ID
-      const docMap = new Map<number, CrewDocument>();
-      if (Array.isArray(data)) {
-        data.forEach(doc => {
-          if (doc && typeof doc === 'object' && 'id' in doc) {
-            docMap.set(doc.id, doc as CrewDocument);
-          }
-        });
-      }
+      if (!Array.isArray(data)) return [];
       
-      // Further deduplicate based on document number and type
+      // Ensure we're only processing valid documents
+      const validDocs = data.filter(doc => 
+        doc && typeof doc === 'object' &&
+        'id' in doc &&
+        'documentNumber' in doc &&
+        'documentType' in doc &&
+        'crewMemberId' in doc
+      ) as CrewDocument[];
+      
+      // First deduplicate by ID (handles duplicates with the same ID)
+      const docMap = new Map<number, CrewDocument>();
+      validDocs.forEach(doc => {
+        docMap.set(doc.id, doc);
+      });
+      
+      // Then deduplicate based on more comprehensive criteria
       const uniqueDocMap = new Map<string, CrewDocument>();
       Array.from(docMap.values()).forEach(doc => {
-        const key = `${doc.documentNumber}-${doc.documentType}-${doc.crewMemberId}`;
+        // Create a composite key from document-identifying fields
+        const key = [
+          doc.documentNumber.trim(),
+          doc.documentType.toLowerCase().trim(),
+          doc.crewMemberId.toString(),
+          doc.issuingAuthority.toLowerCase().trim()
+        ].join('|');
+        
         // If there's a conflict, keep the record with the higher ID (likely more recent)
         if (!uniqueDocMap.has(key) || uniqueDocMap.get(key)!.id < doc.id) {
           uniqueDocMap.set(key, doc);
