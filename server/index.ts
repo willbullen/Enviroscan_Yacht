@@ -1,11 +1,19 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { errorHandler } from "./middleware/errorHandler";
+import { requestLogger } from "./middleware/requestLogger";
+import { logger } from "./services/logger";
 
+// Initialize Express app
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add request logger middleware
+app.use(requestLogger);
+
+// Keep existing logger for compatibility
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -36,16 +44,34 @@ app.use((req, res, next) => {
   next();
 });
 
+// Set up global error handlers
+process.on('uncaughtException', (error) => {
+  logger.error(error, { 
+    type: 'uncaughtException',
+    processId: process.pid
+  });
+  
+  // Log fatal errors
+  console.error('UNCAUGHT EXCEPTION - Application will continue running, but may be in unstable state:');
+  console.error(error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  const error = reason instanceof Error ? reason : new Error(String(reason));
+  logger.error(error, { 
+    type: 'unhandledRejection',
+    processId: process.pid
+  });
+  
+  console.error('UNHANDLED REJECTION - Application will continue running, but may be in unstable state:');
+  console.error(reason);
+});
+
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  // Add enhanced error handler middleware
+  app.use(errorHandler);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -65,6 +91,7 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
+    logger.performance('server_start', { port, environment: app.get("env") });
     log(`serving on port ${port}`);
   });
 })();
