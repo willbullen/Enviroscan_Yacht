@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -66,8 +67,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
             "transition-all duration-300"
           )}
         >
-          {/* Header - Fixed at top of content area */}
-          <Header title={title} isMobile={isMobile} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          {/* Desktop Header */}
+          <div className={isMobile ? "hidden" : "block"}>
+            <Header title={title} />
+          </div>
 
           {/* Main content - Scrollable */}
           <main 
@@ -92,8 +95,5 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
     </div>
   );
 };
-
-// Import cn utility
-import { cn } from "@/lib/utils";
 
 export default MainLayout;
