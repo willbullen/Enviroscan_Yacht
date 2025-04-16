@@ -222,9 +222,9 @@ const CrewManagement = () => {
   
   return (
     <MainLayout title="Crew Management">
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Crew Management</h1>
+      <div className="container mx-auto py-3">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Crew Management</h1>
           <div className="flex gap-2">
             <Button onClick={() => setIsCrewDialogOpen(true)}>Add Crew Member</Button>
             <Button onClick={() => setIsDocDialogOpen(true)}>Add Document</Button>
@@ -242,10 +242,10 @@ const CrewManagement = () => {
         )}
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="crew">Crew Members</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="expiring">Expiring Documents</TabsTrigger>
+          <TabsList className="mb-2 bg-transparent h-auto border-b rounded-none">
+            <TabsTrigger value="crew" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Crew Members</TabsTrigger>
+            <TabsTrigger value="documents" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Documents</TabsTrigger>
+            <TabsTrigger value="expiring" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Expiring Documents</TabsTrigger>
           </TabsList>
           
           <TabsContent value="crew" className="space-y-4">

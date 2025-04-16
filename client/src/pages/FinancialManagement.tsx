@@ -2766,9 +2766,9 @@ April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insuran
           }}
         />
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="mb-4 overflow-x-auto">
+            <div className="mb-2 overflow-x-auto">
               <TabsList className="flex w-max px-0 bg-transparent h-auto border-b">
                 <TabsTrigger value="accounts" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
                   <Wallet className="h-4 w-4" /> Accounts

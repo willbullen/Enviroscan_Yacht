@@ -64,7 +64,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
           className={cn(
             "flex-1 flex flex-col relative",
             isMobile ? "ml-0" : "ml-0", // Remove margin completely
-            "transition-all duration-300"
+            "transition-all duration-300 pl-0"
           )}
         >
           {/* Desktop Header */}
@@ -77,7 +77,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
             className={cn(
               "flex-1 overflow-y-auto bg-background",
               isMobile ? "pt-16" : "", // Add padding for mobile header
-              "p-3 md:p-4" // Reduced padding
+              "p-2 md:p-3" // Further reduced padding
             )}
           >
             {children}
