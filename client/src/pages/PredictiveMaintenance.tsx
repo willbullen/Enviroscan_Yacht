@@ -140,8 +140,17 @@ const PredictiveMaintenance = () => {
     if (!date) return null;
     const today = new Date();
     const predictedDate = new Date(date);
+    
+    // Fix for old dates in the database
+    // If the date is in the past, assume it should be for the future by adding the necessary years
+    if (predictedDate < today) {
+      // Calculate how many years to add to make the date in the future
+      const yearsToAdd = Math.ceil((today.getTime() - predictedDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+      predictedDate.setFullYear(predictedDate.getFullYear() + yearsToAdd);
+    }
+    
     const diffTime = predictedDate.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
 
   // Get status badge for prediction
@@ -150,8 +159,8 @@ const PredictiveMaintenance = () => {
     
     if (daysUntil === null) return <Badge variant="outline">Unknown</Badge>;
     
-    if (daysUntil < 0) {
-      return <Badge variant="destructive">Overdue</Badge>;
+    if (daysUntil === 0) {
+      return <Badge variant="destructive">Due Today</Badge>;
     } else if (daysUntil <= prediction.alertThreshold) {
       return <Badge variant="destructive">Critical</Badge>;
     } else if (daysUntil <= prediction.warningThreshold) {
