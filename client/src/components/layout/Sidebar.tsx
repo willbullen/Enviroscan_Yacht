@@ -32,6 +32,17 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       )}
       style={{ padding: 0, margin: 0 }}
     >
+      {/* Logo */}
+      <div className={cn("py-4 flex items-center justify-center border-b border-navy", isOpen ? "px-4" : "")}>
+        {isOpen ? (
+          <div className="text-white text-xl font-bold">Eastwind Management</div>
+        ) : (
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+            <span className="text-xs font-bold text-white">EM</span>
+          </div>
+        )}
+      </div>
+      
       {/* User Profile */}
       <div className={cn("py-2 border-b border-navy flex items-center", isOpen ? "px-4" : "justify-center")}>
         <div className="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
