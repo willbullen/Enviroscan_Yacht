@@ -250,19 +250,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get upcoming maintenance tasks
   apiRouter.get("/tasks/upcoming", async (_req: Request, res: Response) => {
     try {
-      console.log("Requesting upcoming tasks - redirect implementation");
+      console.log("Requesting upcoming tasks - direct implementation");
       
-      // Fetch upcoming tasks from our working /tasks/status/:status endpoint
-      const response = await fetch('http://localhost:5000/api/tasks/status/upcoming');
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch from status endpoint: ${response.statusText}`);
-      }
-      
-      const tasks = await response.json();
+      // Use the dedicated getUpcomingMaintenanceTasks method which is already implemented correctly
+      const tasks = await storage.getUpcomingMaintenanceTasks();
       
       // Return them directly without additional filtering
-      console.log(`Found ${tasks.length} upcoming tasks via redirect`);
+      console.log(`Found ${tasks.length} upcoming tasks via getUpcomingMaintenanceTasks`);
       res.json(tasks);
     } catch (error) {
       console.error("Error getting upcoming tasks:", error);

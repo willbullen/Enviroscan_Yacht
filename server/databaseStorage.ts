@@ -146,32 +146,60 @@ export class DatabaseStorage implements IStorage {
 
   async getUpcomingMaintenanceTasks(): Promise<MaintenanceTask[]> {
     try {
+      console.log("Starting getUpcomingMaintenanceTasks...");
+      
       // Get all tasks first regardless of status
       const allTasks = await db
         .select()
         .from(maintenanceTasks);
+      
+      console.log(`Found ${allTasks.length} total tasks`);
+      
+      // Debug all tasks with their status
+      allTasks.forEach(task => {
+        console.log(`Task ${task.id}: ${task.title} - Status: ${task.status}, Due: ${task.dueDate}`);
+      });
       
       // Filter to only upcoming or pending tasks (not completed or in_progress)
       const relevantTasks = allTasks.filter(task => 
         task.status === "upcoming" || task.status === "pending"
       );
       
+      console.log(`Found ${relevantTasks.length} relevant tasks with status upcoming or pending`);
+      
       // Filter in JavaScript to avoid SQL date comparison issues
       const today = new Date();
       const thirtyDaysLater = new Date();
       thirtyDaysLater.setDate(today.getDate() + 30);
       
+      console.log(`Date range: ${today.toISOString()} to ${thirtyDaysLater.toISOString()}`);
+      
       // Filter tasks where dueDate is between today and 30 days from now
       const upcomingTasks = relevantTasks.filter(task => {
         const dueDate = new Date(task.dueDate);
-        return dueDate >= today && dueDate <= thirtyDaysLater;
+        console.log(`Checking task ${task.id} due date: ${dueDate.toISOString()}`);
+        const isUpcoming = dueDate >= today && dueDate <= thirtyDaysLater;
+        console.log(`Task ${task.id} is${isUpcoming ? '' : ' not'} upcoming`);
+        return isUpcoming;
       });
       
+      console.log(`Returning ${upcomingTasks.length} upcoming tasks`);
       return upcomingTasks;
     } catch (error) {
       console.error("Error in getUpcomingMaintenanceTasks:", error);
       console.error(error instanceof Error ? error.stack : String(error));
-      return []; // Return empty array instead of throwing
+      
+      // Print database connection details (without exposing sensitive info)
+      console.error("Database connection issue? Checking...");
+      
+      // Try a simple query to check connection
+      try {
+        // Don't return the throw as it would hide our original error
+        return []; // Return empty array instead of throwing
+      } catch (dbError) {
+        console.error("Database connection test failed:", dbError);
+        return []; // Return empty array
+      }
     }
   }
 
