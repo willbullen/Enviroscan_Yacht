@@ -146,17 +146,20 @@ export class DatabaseStorage implements IStorage {
 
   async getUpcomingMaintenanceTasks(): Promise<MaintenanceTask[]> {
     const today = new Date();
-    const nextWeek = new Date();
-    nextWeek.setDate(today.getDate() + 7);
+    today.setHours(0, 0, 0, 0);
+    
+    const thirtyDaysLater = new Date();
+    thirtyDaysLater.setDate(today.getDate() + 30);
+    thirtyDaysLater.setHours(23, 59, 59, 999);
     
     return db
       .select()
       .from(maintenanceTasks)
       .where(
         and(
-          eq(maintenanceTasks.status, "upcoming"),
           gte(maintenanceTasks.dueDate, today),
-          lte(maintenanceTasks.dueDate, nextWeek)
+          lte(maintenanceTasks.dueDate, thirtyDaysLater),
+          eq(maintenanceTasks.status, "pending")
         )
       );
   }
