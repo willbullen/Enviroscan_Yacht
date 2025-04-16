@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../services/logger';
+import fs from 'fs';
+import path from 'path';
 
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
   // Skip logging for static assets
