@@ -34,25 +34,25 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       style={{ padding: 0, margin: 0 }}
     >
       {/* Logo */}
-      <div className={cn("py-4 flex flex-col items-center justify-center border-b border-navy", isOpen ? "px-4" : "")}>
+      <div className={cn("py-3 flex flex-col items-center justify-center border-b border-navy", isOpen ? "px-4" : "")}>
         {isOpen ? (
           <>
-            <img src={eastwindLogo} alt="Eastwind Management" className="h-8" />
-            <div className="text-white text-xs mt-1">Eastwind Management</div>
+            <img src={eastwindLogo} alt="Eastwind Management" className="h-6" />
+            <div className="text-white text-[10px] mt-0.5">Eastwind Management</div>
           </>
         ) : (
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-white">EM</span>
+          <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+            <span className="text-[9px] font-bold text-white">EM</span>
           </div>
         )}
       </div>
       
       {/* User Profile */}
       <div className={cn("py-2 border-b border-navy flex items-center", isOpen ? "px-4" : "justify-center")}>
-        <div className="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
-          <span className="text-xs font-bold">CS</span>
+        <div className="h-6 w-6 bg-green-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
+          <span className="text-[9px] font-bold">CS</span>
         </div>
-        {isOpen && <span className="ml-3 font-medium">Capt. Smith</span>}
+        {isOpen && <span className="ml-2 text-sm">Capt. Smith</span>}
       </div>
 
       {/* Navigation Items - Main */}
