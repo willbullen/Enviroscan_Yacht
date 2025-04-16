@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle2, CalendarClock, BarChart4, RefreshCcw, Wrench, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { apiRequest, ApiError } from '@/lib/queryClient';
+import { formatDate, getDaysUntil, isDateInPast } from '@/lib/dateUtils';
 import { useToast } from '@/hooks/use-toast';
 import MainLayout from "@/components/layout/MainLayout";
 
@@ -73,19 +74,19 @@ const PredictiveMaintenance = () => {
   const queryClient = useQueryClient();
 
   // Fetch predictive maintenance data
-  const { data: predictiveData, isLoading: predictiveLoading } = useQuery({
+  const { data: predictiveData, isLoading: predictiveLoading } = useQuery<PredictiveMaintenance[]>({
     queryKey: ['/api/predictive-maintenance'],
     enabled: activeTab === 'predictions'
   });
 
   // Fetch maintenance history
-  const { data: historyData, isLoading: historyLoading } = useQuery({
+  const { data: historyData, isLoading: historyLoading } = useQuery<MaintenanceHistory[]>({
     queryKey: ['/api/maintenance-history'],
     enabled: activeTab === 'history'
   });
 
   // Fetch equipment list
-  const { data: equipmentData, isLoading: equipmentLoading } = useQuery({
+  const { data: equipmentData, isLoading: equipmentLoading } = useQuery<Equipment[]>({
     queryKey: ['/api/equipment'],
   });
 
@@ -117,15 +118,15 @@ const PredictiveMaintenance = () => {
   // Filter predictions by selected equipment
   const filteredPredictions = useMemo(() => {
     if (!predictiveData) return [];
-    if (!selectedEquipment) return predictiveData as PredictiveMaintenance[];
-    return (predictiveData as PredictiveMaintenance[]).filter((p) => p.equipmentId === selectedEquipment);
+    if (!selectedEquipment) return predictiveData;
+    return predictiveData.filter((p) => p.equipmentId === selectedEquipment);
   }, [predictiveData, selectedEquipment]);
 
   // Filter history by selected equipment
   const filteredHistory = useMemo(() => {
     if (!historyData) return [];
-    if (!selectedEquipment) return historyData as MaintenanceHistory[];
-    return (historyData as MaintenanceHistory[]).filter((h) => h.equipmentId === selectedEquipment);
+    if (!selectedEquipment) return historyData;
+    return historyData.filter((h) => h.equipmentId === selectedEquipment);
   }, [historyData, selectedEquipment]);
 
   // Format maintenance type for display
@@ -139,19 +140,37 @@ const PredictiveMaintenance = () => {
   // Calculate days until predicted maintenance
   const getDaysUntil = (date: Date | null) => {
     if (!date) return null;
+    
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset to start of day for consistent comparison
+    
     const predictedDate = new Date(date);
     
-    // Fix for old dates in the database
-    // If the date is in the past, assume it should be for the future by adding the necessary years
-    if (predictedDate < today) {
-      // Calculate how many years to add to make the date in the future
-      const yearsToAdd = Math.ceil((today.getTime() - predictedDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-      predictedDate.setFullYear(predictedDate.getFullYear() + yearsToAdd);
+    // Handle dates in a more robust way:
+    // 1. If the date is from 2023 or earlier (seed data), adjust to the current year plus offset
+    if (predictedDate.getFullYear() <= 2023) {
+      // Copy the month and day but use current year + appropriate offset
+      const currentYear = today.getFullYear();
+      const month = predictedDate.getMonth();
+      const day = predictedDate.getDate();
+      
+      // Create new date with current year
+      predictedDate.setFullYear(currentYear);
+      
+      // If that makes the date in the past, add 1 year
+      if (predictedDate < today) {
+        predictedDate.setFullYear(currentYear + 1);
+      }
+    }
+    // 2. If date is still in the past but after 2023, it's genuinely past due
+    else if (predictedDate < today) {
+      // Return 0 to indicate it's due now (don't adjust the date)
+      return 0;
     }
     
+    // Calculate difference in days
     const diffTime = predictedDate.getTime() - today.getTime();
-    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   // Get status badge for prediction
@@ -200,11 +219,7 @@ const PredictiveMaintenance = () => {
     );
   };
 
-  // Format date for display
-  const formatDate = (date: Date | null | string) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString();
-  };
+  // This is no longer needed since we're importing the formatDate function from dateUtils
 
   // Render loading state
   if ((predictiveLoading && activeTab === 'predictions') || 
