@@ -368,8 +368,14 @@ export class DatabaseStorage implements IStorage {
     return updatedRecord;
   }
 
-  async deleteMaintenanceHistory(id: number): Promise<void> {
-    await db.delete(maintenanceHistory).where(eq(maintenanceHistory.id, id));
+  async deleteMaintenanceHistory(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(maintenanceHistory).where(eq(maintenanceHistory.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting maintenance history:", error);
+      return false;
+    }
   }
 
   // =========== Predictive Maintenance Methods =============
@@ -390,16 +396,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPredictiveMaintenance(insertPM: InsertPredictiveMaintenance): Promise<PredictiveMaintenance> {
-    const [record] = await db.insert(predictiveMaintenance).values({
-      ...insertPM,
-      lastUpdated: new Date(),
-      reasoningFactors: insertPM.reasoningFactors || {},
+    const now = new Date();
+    const pmToInsert = {
+      equipmentId: insertPM.equipmentId,
+      maintenanceType: insertPM.maintenanceType,
       predictedDate: insertPM.predictedDate || null,
       predictedRuntime: insertPM.predictedRuntime || null,
       confidence: insertPM.confidence || null,
-      recommendations: insertPM.recommendations || null,
-      historyDataPoints: insertPM.historyDataPoints || null
-    }).returning();
+      reasoningFactors: insertPM.reasoningFactors || {},
+      recommendedAction: insertPM.recommendedAction,
+      warningThreshold: insertPM.warningThreshold,
+      alertThreshold: insertPM.alertThreshold,
+      historyDataPoints: insertPM.historyDataPoints || null,
+      lastUpdated: now,
+      createdAt: now
+    };
+    
+    const [record] = await db.insert(predictiveMaintenance).values(pmToInsert).returning();
     return record;
   }
 
@@ -417,8 +430,14 @@ export class DatabaseStorage implements IStorage {
     return updatedRecord;
   }
 
-  async deletePredictiveMaintenance(id: number): Promise<void> {
-    await db.delete(predictiveMaintenance).where(eq(predictiveMaintenance.id, id));
+  async deletePredictiveMaintenance(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(predictiveMaintenance).where(eq(predictiveMaintenance.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting predictive maintenance:", error);
+      return false;
+    }
   }
 
   // =========== ISM Document Methods =============
@@ -477,8 +496,14 @@ export class DatabaseStorage implements IStorage {
     return updatedDocument;
   }
 
-  async deleteIsmDocument(id: number): Promise<void> {
-    await db.delete(ismDocuments).where(eq(ismDocuments.id, id));
+  async deleteIsmDocument(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(ismDocuments).where(eq(ismDocuments.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting ISM document:", error);
+      return false;
+    }
   }
 
   // =========== ISM Audit Methods =============
@@ -539,8 +564,14 @@ export class DatabaseStorage implements IStorage {
     return updatedAudit;
   }
 
-  async deleteIsmAudit(id: number): Promise<void> {
-    await db.delete(ismAudits).where(eq(ismAudits.id, id));
+  async deleteIsmAudit(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(ismAudits).where(eq(ismAudits.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting ISM audit:", error);
+      return false;
+    }
   }
 
   // =========== ISM Training Methods =============
@@ -602,8 +633,14 @@ export class DatabaseStorage implements IStorage {
     return updatedTraining;
   }
 
-  async deleteIsmTraining(id: number): Promise<void> {
-    await db.delete(ismTraining).where(eq(ismTraining.id, id));
+  async deleteIsmTraining(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(ismTraining).where(eq(ismTraining.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting ISM training:", error);
+      return false;
+    }
   }
 
   // =========== ISM Incident Methods =============
@@ -665,8 +702,14 @@ export class DatabaseStorage implements IStorage {
     return updatedIncident;
   }
 
-  async deleteIsmIncident(id: number): Promise<void> {
-    await db.delete(ismIncidents).where(eq(ismIncidents.id, id));
+  async deleteIsmIncident(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(ismIncidents).where(eq(ismIncidents.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting ISM incident:", error);
+      return false;
+    }
   }
 
   // =========== Crew Member Methods =============
@@ -715,8 +758,14 @@ export class DatabaseStorage implements IStorage {
     return updatedCrewMember;
   }
 
-  async deleteCrewMember(id: number): Promise<void> {
-    await db.delete(crewMembers).where(eq(crewMembers.id, id));
+  async deleteCrewMember(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crewMembers).where(eq(crewMembers.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting crew member:", error);
+      return false;
+    }
   }
 
   // =========== Crew Document Methods =============
@@ -788,7 +837,13 @@ export class DatabaseStorage implements IStorage {
     return updatedDocument;
   }
 
-  async deleteCrewDocument(id: number): Promise<void> {
-    await db.delete(crewDocuments).where(eq(crewDocuments.id, id));
+  async deleteCrewDocument(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crewDocuments).where(eq(crewDocuments.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting crew document:", error);
+      return false;
+    }
   }
 }
