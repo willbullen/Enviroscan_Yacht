@@ -24,6 +24,30 @@ export class Logger {
     if (!fs.existsSync(this.logsDir)) {
       fs.mkdirSync(this.logsDir, { recursive: true });
     }
+    
+    // Ensure all log files exist and are writable
+    this.ensureLogFile(this.errorLogPath);
+    this.ensureLogFile(this.accessLogPath);
+    this.ensureLogFile(this.performanceLogPath);
+    
+    // Log initialization
+    this.performance('logger_initialized', { 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  }
+  
+  /**
+   * Helper method to ensure log files exist and are writable
+   */
+  private ensureLogFile(filePath: string): void {
+    try {
+      if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, '', { encoding: 'utf8', flag: 'w' });
+      }
+    } catch (error) {
+      console.error(`Failed to create or access log file: ${filePath}`, error);
+    }
   }
   
   public static getInstance(): Logger {
