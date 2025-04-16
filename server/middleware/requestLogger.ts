@@ -11,7 +11,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const originalEnd = res.end;
   
   // Override end method to capture response time
-  res.end = function (...args: any[]) {
+  res.end = function (chunk: any, encoding?: BufferEncoding, callback?: () => void) {
     const duration = Date.now() - startTime;
     
     // Log API access
@@ -27,7 +27,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
     
     // Restore original end method and call it
     res.end = originalEnd;
-    return originalEnd.apply(res, args);
+    return originalEnd.call(res, chunk, encoding, callback);
   };
   
   next();

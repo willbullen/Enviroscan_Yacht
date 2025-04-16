@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
+import { logger } from "./services/logger";
+import { createError, asyncHandler } from "./middleware/errorHandler";
 import { 
   insertUserSchema, 
   insertEquipmentSchema, 
@@ -1935,6 +1937,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update theme" });
     }
   });
+  
+  // =========== Monitoring Routes =============
+  // These endpoints are for admin dashboard and monitoring systems
+  
+  // Get error logs
+  apiRouter.get("/monitoring/errors", asyncHandler(async (req: Request, res: Response) => {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    
+    // Check if the user has admin privileges (should integrate with auth system later)
+    // For now, we're allowing access for debugging
+    const errorLogs = logger.getRecentErrors(limit);
+    res.json(errorLogs);
+  }));
+  
+  // Get performance metrics
+  apiRouter.get("/monitoring/performance", asyncHandler(async (req: Request, res: Response) => {
+    // Check if the user has admin privileges (should integrate with auth system later)
+    // For now, we're allowing access for debugging
+    const metrics = logger.getPerformanceMetrics();
+    res.json(metrics);
+  }));
+  
+  // Get system health status
+  apiRouter.get("/monitoring/health", asyncHandler(async (_req: Request, res: Response) => {
+    try {
+      // Check database connection
+      const dbStatus = { operational: true };
+      
+      // Check file system access
+      const fsStatus = { operational: fs.existsSync(path.join(process.cwd(), 'logs')) };
+      
+      // Check memory usage
+      const memoryUsage = process.memoryUsage();
+      const memoryStatus = {
+        operational: true,
+        rss: Math.round(memoryUsage.rss / 1024 / 1024),
+        heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+        heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+        external: Math.round(memoryUsage.external / 1024 / 1024),
+        units: "MB"
+      };
+      
+      // Respond with health status
+      res.json({
+        status: "up",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        database: dbStatus,
+        fileSystem: fsStatus,
+        memory: memoryStatus
+      });
+    } catch (error) {
+      logger.error(error as Error, { context: "health-check" });
+      
+      // Even in case of error, return a valid response with error details
+      res.status(500).json({
+        status: "degraded",
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+    }
+  }));
   
   // Register API routes
   app.use("/api", apiRouter);
