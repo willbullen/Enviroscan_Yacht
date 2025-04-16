@@ -10,8 +10,9 @@ interface MaintenanceTask {
 }
 
 const UpcomingMaintenance: React.FC = () => {
+  // TEMPORARY FIX: Using alternative API endpoint until the original is fixed
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ["/api/tasks/upcoming"],
+    queryKey: ["/api/tasks-upcoming"],
   });
 
   if (isLoading) {
