@@ -46,71 +46,111 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       {/* Navigation Items - Main */}
       <nav className="flex flex-col items-center p-0">
         <Link href="/">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/" ? "bg-navy" : "hover:bg-navy")} title="Dashboard">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/" ? "bg-navy" : "hover:bg-navy")} 
+            title="Dashboard"
+            onClick={() => setIsOpen(true)}
+          >
             <Home className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/tasks">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/tasks" ? "bg-navy" : "hover:bg-navy")} title="Tasks">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/tasks" ? "bg-navy" : "hover:bg-navy")} 
+            title="Tasks"
+            onClick={() => setIsOpen(true)}
+          >
             <CheckSquare className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/equipment">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/equipment" ? "bg-navy" : "hover:bg-navy")} title="Equipment">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/equipment" ? "bg-navy" : "hover:bg-navy")} 
+            title="Equipment"
+            onClick={() => setIsOpen(true)}
+          >
             <Wrench className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/inventory">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/inventory" ? "bg-navy" : "hover:bg-navy")} title="Inventory">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/inventory" ? "bg-navy" : "hover:bg-navy")} 
+            title="Inventory"
+            onClick={() => setIsOpen(true)}
+          >
             <Package className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/predictive-maintenance">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/predictive-maintenance" ? "bg-navy" : "hover:bg-navy")} title="Predictive Maintenance">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/predictive-maintenance" ? "bg-navy" : "hover:bg-navy")} 
+            title="Predictive Maintenance"
+            onClick={() => setIsOpen(true)}
+          >
             <BarChart4 className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/ism-management">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/ism-management" ? "bg-navy" : "hover:bg-navy")} title="ISM Management">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/ism-management" ? "bg-navy" : "hover:bg-navy")} 
+            title="ISM Management"
+            onClick={() => setIsOpen(true)}
+          >
             <ClipboardCheck className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/crew-management">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/crew-management" ? "bg-navy" : "hover:bg-navy")} title="Crew Management">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/crew-management" ? "bg-navy" : "hover:bg-navy")} 
+            title="Crew Management"
+            onClick={() => setIsOpen(true)}
+          >
             <Users className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/financial-management">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/financial-management" ? "bg-navy" : "hover:bg-navy")} title="Financial Management">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/financial-management" ? "bg-navy" : "hover:bg-navy")} 
+            title="Financial Management"
+            onClick={() => setIsOpen(true)}
+          >
             <DollarSign className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/reports">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/reports" ? "bg-navy" : "hover:bg-navy")} title="Reports">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/reports" ? "bg-navy" : "hover:bg-navy")} 
+            title="Reports"
+            onClick={() => setIsOpen(true)}
+          >
             <FileText className="h-5 w-5" />
           </div>
         </Link>
         
         <Link href="/calendar">
-          <div className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
-            location === "/calendar" ? "bg-navy" : "hover:bg-navy")} title="Calendar">
+          <div 
+            className={cn("flex items-center justify-center p-2 cursor-pointer w-10 h-10", 
+            location === "/calendar" ? "bg-navy" : "hover:bg-navy")} 
+            title="Calendar"
+            onClick={() => setIsOpen(true)}
+          >
             <CalendarIcon className="h-5 w-5" />
           </div>
         </Link>
@@ -119,12 +159,20 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       {/* Sidebar Footer */}
       <div className="mt-auto py-2 border-t border-navy flex flex-col items-center">
         <Link href="/settings">
-          <div className="flex items-center justify-center p-2 hover:bg-navy cursor-pointer w-10 h-10" title="Settings">
+          <div 
+            className="flex items-center justify-center p-2 hover:bg-navy cursor-pointer w-10 h-10" 
+            title="Settings"
+            onClick={() => setIsOpen(true)}
+          >
             <Settings className="h-5 w-5" />
           </div>
         </Link>
         <Link href="/logout">
-          <div className="flex items-center justify-center p-2 hover:bg-navy cursor-pointer w-10 h-10" title="Logout">
+          <div 
+            className="flex items-center justify-center p-2 hover:bg-navy cursor-pointer w-10 h-10" 
+            title="Logout"
+            onClick={() => setIsOpen(true)}
+          >
             <LogOut className="h-5 w-5" />
           </div>
         </Link>

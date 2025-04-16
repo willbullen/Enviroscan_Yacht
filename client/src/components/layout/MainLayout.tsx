@@ -70,7 +70,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         >
           {/* Desktop Header */}
           <div className={isMobile ? "hidden" : "block"}>
-            <Header title={title} />
+            <Header title={title} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
           </div>
 
           {/* Main content - Scrollable with reduced padding */}
