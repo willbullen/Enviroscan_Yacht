@@ -1,3 +1,4 @@
+import React from "react";
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { 
@@ -50,10 +51,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   return (
     <div
       className={cn(
-        "bg-navy-dark text-white w-48 flex-shrink-0 fixed inset-y-0 left-0 transform transition-transform duration-200 ease-in-out z-30",
-        "md:sticky md:top-0 md:h-screen",
+        "bg-navy-dark text-white flex-shrink-0 fixed inset-y-0 left-0 transform transition-transform duration-200 ease-in-out z-30",
+        "md:sticky md:top-0 md:h-screen md:w-12 w-12",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}
+      style={{ padding: 0, margin: 0 }}
     >
       {/* Sidebar Header - Desktop */}
       <div className="hidden md:flex items-center p-4 border-b border-navy">
@@ -67,62 +69,52 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         <span className="font-semibold text-white">Eastwind Management</span>
       </div>
 
-      <div className="flex flex-col h-full overflow-y-auto">
+      <div className="flex flex-col h-full overflow-y-auto p-0">
         {/* User Profile */}
-        <div className="p-4 border-b border-navy flex items-center">
-          <div className="h-10 w-10 bg-green-500 rounded-full flex items-center justify-center text-white mr-3">
+        <div className="py-2 border-b border-navy flex items-center justify-center">
+          <div className="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center text-white">
             <span className="text-xs font-bold">CS</span>
-          </div>
-          <div>
-            <p className="font-semibold">Captain Smith</p>
-            <p className="text-xs text-gray-300">Chief Engineer</p>
           </div>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="p-2">
-          <div className="mb-4">
-            <p className="px-4 text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-              Main
-            </p>
+        {/* Navigation Items - Icons Only */}
+        <nav className="flex flex-col items-center p-0">
+          <div className="w-full">
             {navItems.map((item) => (
-              <div key={item.href} className="mb-1">
+              <div key={item.href} className="mb-1 w-full flex justify-center">
                 <Link href={item.href}>
                   <div
                     className={cn(
-                      "flex items-center px-4 py-2 text-sm rounded-md cursor-pointer",
+                      "flex items-center justify-center p-2 rounded-md cursor-pointer w-10 h-10",
                       location === item.href
                         ? "bg-navy"
                         : "hover:bg-navy"
                     )}
                     onClick={() => setIsOpen(true)}
+                    title={item.label}
                   >
-                    {item.icon}
-                    {item.label}
+                    {React.cloneElement(item.icon, { className: "h-5 w-5" })}
                   </div>
                 </Link>
               </div>
             ))}
           </div>
-
-          <div className="mb-4">
-            <p className="px-4 text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-              Yacht Systems
-            </p>
+          
+          <div className="w-full mt-2 pt-2 border-t border-navy">
             {systemItems.map((item) => (
-              <div key={item.href} className="mb-1">
+              <div key={item.href} className="mb-1 w-full flex justify-center">
                 <Link href={item.href}>
                   <div
                     className={cn(
-                      "flex items-center px-4 py-2 text-sm rounded-md cursor-pointer",
+                      "flex items-center justify-center p-2 rounded-md cursor-pointer w-10 h-10",
                       location === item.href
                         ? "bg-navy"
                         : "hover:bg-navy"
                     )}
                     onClick={() => setIsOpen(true)}
+                    title={item.label}
                   >
-                    {item.icon}
-                    {item.label}
+                    {React.cloneElement(item.icon, { className: "h-5 w-5" })}
                   </div>
                 </Link>
               </div>
@@ -130,18 +122,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           </div>
         </nav>
 
-        {/* Sidebar Footer */}
-        <div className="mt-auto p-4 border-t border-navy">
+        {/* Sidebar Footer - Icons Only */}
+        <div className="mt-auto py-2 border-t border-navy flex flex-col items-center">
           <Link href="/settings">
-            <div className="flex items-center text-sm hover:text-gray-300 cursor-pointer">
-              <Settings className="h-5 w-5 mr-2" />
-              Settings
+            <div className="flex items-center justify-center p-2 rounded-md hover:bg-navy cursor-pointer w-10 h-10" title="Settings">
+              <Settings className="h-5 w-5" />
             </div>
           </Link>
           <Link href="/logout">
-            <div className="flex items-center text-sm hover:text-gray-300 mt-3 cursor-pointer">
-              <LogOut className="h-5 w-5 mr-2" />
-              Logout
+            <div className="flex items-center justify-center p-2 rounded-md hover:bg-navy cursor-pointer w-10 h-10" title="Logout">
+              <LogOut className="h-5 w-5" />
             </div>
           </Link>
         </div>

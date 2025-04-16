@@ -222,8 +222,8 @@ const CrewManagement = () => {
   
   return (
     <MainLayout title="Crew Management">
-      <div className="container mx-auto py-3">
-        <div className="flex justify-between items-center mb-4">
+      <div className="w-full py-2">
+        <div className="flex justify-between items-center mb-3">
           <h1 className="text-2xl font-bold">Crew Management</h1>
           <div className="flex gap-2">
             <Button onClick={() => setIsCrewDialogOpen(true)}>Add Crew Member</Button>

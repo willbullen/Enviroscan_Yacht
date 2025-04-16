@@ -55,7 +55,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         </div>
       )}
 
-      <div className="flex flex-1 h-screen">
+      <div className="flex flex-1 h-screen overflow-hidden">
         {/* Sidebar - Fixed position */}
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
@@ -64,8 +64,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
           className={cn(
             "flex-1 flex flex-col relative",
             isMobile ? "ml-0" : "ml-0", // Remove margin completely
-            "transition-all duration-300 pl-0 border-l border-gray-200"
+            "transition-all duration-300 pl-0 border-l-0" // Removed border
           )}
+          style={{ marginLeft: "-1px" }} /* Negative margin to eliminate any gaps */
         >
           {/* Desktop Header */}
           <div className={isMobile ? "hidden" : "block"}>
