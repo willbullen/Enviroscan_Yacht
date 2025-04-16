@@ -463,7 +463,7 @@ const PredictiveMaintenance = () => {
                             {history.partsReplaced.map((part, index) => (
                               <Badge key={index} variant="outline" className="flex items-center">
                                 <Wrench className="h-3 w-3 mr-1" />
-                                {part.split('_').join(' ')}
+                                {typeof part === 'string' ? part.split('_').join(' ') : String(part)}
                               </Badge>
                             ))}
                           </div>
