@@ -115,7 +115,7 @@ export function VoyageCalculator({ voyageId }: VoyageCalculatorProps) {
 
         <Separator className="my-4" />
         
-        <h3 className="text-lg font-semibold mb-2">Waypoint Details</h3>
+        <h3 className="text-lg font-semibold mb-2">Leg Details</h3>
         <div className="space-y-4">
           {data.waypoints.map((waypoint, index) => {
             // Skip the first waypoint when displaying legs (it's the starting point)
@@ -132,32 +132,80 @@ export function VoyageCalculator({ voyageId }: VoyageCalculatorProps) {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm">
+                    <p className="text-sm font-medium">
                       {index > 0 ? `Leg ${index}` : 'Starting Point'}
                     </p>
-                    {waypoint.orderIndex > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Engine RPM: {waypoint.engineRpm || 'N/A'}
-                      </p>
-                    )}
                   </div>
                 </div>
                 
                 {!isFirstWaypoint && (
-                  <div className="grid grid-cols-3 gap-2 mt-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Distance: </span>
-                      {waypoint.distance ? `${waypoint.distance} NM` : 'N/A'}
+                  <>
+                    <div className="flex justify-between items-center mt-2 mb-3">
+                      <span className="text-sm font-medium text-muted-foreground">Engine RPM:</span>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          className="w-24 h-8 px-2 text-sm rounded border border-input bg-background"
+                          value={waypoint.engineRpm || ''}
+                          placeholder="RPM"
+                          onChange={async (e) => {
+                            // Update the engine RPM for this waypoint
+                            const rpm = e.target.value ? parseInt(e.target.value) : null;
+                            
+                            try {
+                              const response = await fetch(`/api/waypoints/${waypoint.id}`, {
+                                method: 'PATCH',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  engineRpm: rpm
+                                }),
+                              });
+                              
+                              if (response.ok) {
+                                // If the update was successful, refresh the calculation
+                                refetch();
+                                
+                                toast({
+                                  title: 'Updated',
+                                  description: `Engine RPM updated for ${waypoint.name || `Waypoint ${index + 1}`}`,
+                                });
+                              } else {
+                                toast({
+                                  title: 'Error',
+                                  description: 'Failed to update engine RPM',
+                                  variant: 'destructive',
+                                });
+                              }
+                            } catch (error) {
+                              toast({
+                                title: 'Error',
+                                description: 'Failed to update engine RPM',
+                                variant: 'destructive',
+                              });
+                            }
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">RPM</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Est. Duration: </span>
-                      {formatDuration(waypoint.estimatedDuration)}
+                  
+                    <div className="grid grid-cols-3 gap-2 mt-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Distance: </span>
+                        {waypoint.distance ? `${waypoint.distance} NM` : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Est. Duration: </span>
+                        {formatDuration(waypoint.estimatedDuration)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Fuel: </span>
+                        {formatFuel(waypoint.estimatedFuelConsumption)}
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Fuel: </span>
-                      {formatFuel(waypoint.estimatedFuelConsumption)}
-                    </div>
-                  </div>
+                  </>
                 )}
                 
                 {!isLastWaypoint && (
