@@ -2732,6 +2732,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(201).json(dataPoint);
   }));
   
+  // Calculate voyage fuel consumption and duration
+  apiRouter.get("/voyages/:id/calculate", asyncHandler(async (req: Request, res: Response) => {
+    const voyageId = parseInt(req.params.id);
+    if (isNaN(voyageId)) {
+      return res.status(400).json({ error: "Invalid voyage ID" });
+    }
+    
+    try {
+      const calculations = await storage.calculateVoyageFuelConsumption(voyageId);
+      return res.json(calculations);
+    } catch (error) {
+      console.error("Error calculating voyage metrics:", error);
+      return res.status(500).json({ 
+        error: "Failed to calculate voyage metrics", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  }));
+  
   // Register API routes
   app.use("/api", apiRouter);
 
