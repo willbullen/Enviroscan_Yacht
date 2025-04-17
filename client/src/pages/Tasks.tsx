@@ -141,8 +141,11 @@ const Tasks = () => {
     mutationFn: async (updatedTask: Partial<Task> & { id: number }) => {
       const { id, ...taskData } = updatedTask;
       const vesselId = currentVessel.id;
-      // Pass vesselId as query parameter
-      await apiRequest("PATCH", `/api/tasks/${id}?vesselId=${vesselId}`, taskData);
+      // Use proper apiRequest with correct parameters
+      await apiRequest(`/api/tasks/${id}?vesselId=${vesselId}`, { 
+        method: "PATCH", 
+        data: taskData 
+      });
     },
     onSuccess: () => {
       // Invalidate the vessel-specific queries
