@@ -274,25 +274,42 @@ export class DatabaseStorage implements IStorage {
   async updateMaintenanceTask(id: number, updates: Partial<InsertMaintenanceTask>): Promise<MaintenanceTask> {
     console.log("DatabaseStorage: updating task", id, "with data:", updates);
     
+    // Create a copy of updates to avoid mutating the original object
+    const processedUpdates = { ...updates };
+    
     // Ensure procedure is handled correctly (might be a string in the input)
-    if (updates.procedure && typeof updates.procedure === 'string') {
+    if (processedUpdates.procedure && typeof processedUpdates.procedure === 'string') {
       try {
-        updates.procedure = JSON.parse(updates.procedure as unknown as string);
+        processedUpdates.procedure = JSON.parse(processedUpdates.procedure as unknown as string);
       } catch (error) {
         console.error("Failed to parse procedure as JSON:", error);
         // If it can't be parsed as JSON, treat it as a single item array
-        updates.procedure = [updates.procedure];
+        processedUpdates.procedure = [processedUpdates.procedure];
       }
     }
     
-    const [updatedTask] = await db
-      .update(maintenanceTasks)
-      .set(updates)
-      .where(eq(maintenanceTasks.id, id))
-      .returning();
-      
-    console.log("DatabaseStorage: task updated successfully:", updatedTask);
-    return updatedTask;
+    // Handle date fields - convert string dates to Date objects
+    if (processedUpdates.dueDate && typeof processedUpdates.dueDate === 'string') {
+      processedUpdates.dueDate = new Date(processedUpdates.dueDate);
+    }
+    
+    if (processedUpdates.completedAt && typeof processedUpdates.completedAt === 'string') {
+      processedUpdates.completedAt = new Date(processedUpdates.completedAt);
+    }
+    
+    try {
+      const [updatedTask] = await db
+        .update(maintenanceTasks)
+        .set(processedUpdates)
+        .where(eq(maintenanceTasks.id, id))
+        .returning();
+        
+      console.log("DatabaseStorage: task updated successfully:", updatedTask);
+      return updatedTask;
+    } catch (error) {
+      console.error("Error in updateMaintenanceTask:", error);
+      throw error;
+    }
   }
 
   async deleteMaintenanceTask(id: number): Promise<boolean> {

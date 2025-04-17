@@ -160,9 +160,26 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
     // Convert string IDs to numbers for database
     const formattedData = {
       ...data,
-      equipmentId: data.equipmentId === "none" ? null : parseInt(data.equipmentId as string),
-      assignedToId: data.assignedToId === "unassigned" ? null : parseInt(data.assignedToId as string),
-      estimatedDuration: data.estimatedDuration ? parseInt(data.estimatedDuration as string) : null
+      // Handle equipment ID
+      equipmentId: data.equipmentId === "none" 
+        ? null 
+        : typeof data.equipmentId === "string" 
+          ? parseInt(data.equipmentId) 
+          : data.equipmentId,
+      
+      // Handle assigned user ID
+      assignedToId: data.assignedToId === "unassigned" 
+        ? null 
+        : typeof data.assignedToId === "string" 
+          ? parseInt(data.assignedToId) 
+          : data.assignedToId,
+      
+      // Handle estimated duration
+      estimatedDuration: data.estimatedDuration 
+        ? typeof data.estimatedDuration === "string" 
+          ? parseInt(data.estimatedDuration) 
+          : data.estimatedDuration 
+        : null
     };
     
     console.log("Formatted task data:", formattedData);
