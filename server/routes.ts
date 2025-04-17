@@ -2439,6 +2439,260 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // =========== Voyage Planner Routes =============
+  
+  // Get all voyages for a vessel
+  apiRouter.get("/voyages/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+
+    const voyages = await storage.getVoyagesByVessel(vesselId);
+    return res.json(voyages);
+  }));
+
+  // Get a specific voyage
+  apiRouter.get("/voyage/:id", asyncHandler(async (req: Request, res: Response) => {
+    const voyageId = parseInt(req.params.id);
+    if (isNaN(voyageId)) {
+      return res.status(400).json({ error: "Invalid voyage ID" });
+    }
+
+    const voyage = await storage.getVoyage(voyageId);
+    if (!voyage) {
+      return res.status(404).json({ error: "Voyage not found" });
+    }
+
+    return res.json(voyage);
+  }));
+
+  // Create a new voyage
+  apiRouter.post("/voyage", asyncHandler(async (req: Request, res: Response) => {
+    const validationResult = insertVoyageSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid voyage data", 
+        details: validationResult.error.format() 
+      });
+    }
+
+    const voyage = await storage.createVoyage(validationResult.data);
+    
+    // Log activity
+    await storage.createActivityLog({
+      activityType: 'voyage_created',
+      description: `New voyage created: ${voyage.name}`,
+      userId: req.body.createdById || null,
+      relatedEntityType: 'voyage',
+      relatedEntityId: voyage.id,
+      metadata: { vesselId: voyage.vesselId }
+    });
+    
+    return res.status(201).json(voyage);
+  }));
+
+  // Update a voyage
+  apiRouter.put("/voyage/:id", asyncHandler(async (req: Request, res: Response) => {
+    const voyageId = parseInt(req.params.id);
+    if (isNaN(voyageId)) {
+      return res.status(400).json({ error: "Invalid voyage ID" });
+    }
+
+    const voyageUpdate = req.body;
+    
+    const updatedVoyage = await storage.updateVoyage(voyageId, voyageUpdate);
+    if (!updatedVoyage) {
+      return res.status(404).json({ error: "Voyage not found" });
+    }
+
+    // Log activity
+    await storage.createActivityLog({
+      activityType: 'voyage_updated',
+      description: `Voyage updated: ${updatedVoyage.name}`,
+      userId: req.body.userId || null,
+      relatedEntityType: 'voyage',
+      relatedEntityId: voyageId,
+      metadata: { updated: Object.keys(voyageUpdate) }
+    });
+
+    return res.json(updatedVoyage);
+  }));
+
+  // Delete a voyage
+  apiRouter.delete("/voyage/:id", asyncHandler(async (req: Request, res: Response) => {
+    const voyageId = parseInt(req.params.id);
+    if (isNaN(voyageId)) {
+      return res.status(400).json({ error: "Invalid voyage ID" });
+    }
+
+    const voyage = await storage.getVoyage(voyageId);
+    if (!voyage) {
+      return res.status(404).json({ error: "Voyage not found" });
+    }
+
+    const success = await storage.deleteVoyage(voyageId);
+    
+    // Log activity
+    await storage.createActivityLog({
+      activityType: 'voyage_deleted',
+      description: `Voyage deleted: ${voyage.name}`,
+      userId: req.body.userId || null,
+      relatedEntityType: 'voyage',
+      relatedEntityId: voyageId,
+      metadata: { vesselId: voyage.vesselId }
+    });
+
+    return res.json({ success });
+  }));
+
+  // Get waypoints for a specific voyage
+  apiRouter.get("/waypoints/:voyageId", asyncHandler(async (req: Request, res: Response) => {
+    const voyageId = parseInt(req.params.voyageId);
+    if (isNaN(voyageId)) {
+      return res.status(400).json({ error: "Invalid voyage ID" });
+    }
+
+    const waypoints = await storage.getWaypointsByVoyage(voyageId);
+    return res.json(waypoints);
+  }));
+
+  // Create a new waypoint
+  apiRouter.post("/waypoint", asyncHandler(async (req: Request, res: Response) => {
+    const validationResult = insertWaypointSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid waypoint data", 
+        details: validationResult.error.format() 
+      });
+    }
+
+    const waypoint = await storage.createWaypoint(validationResult.data);
+    
+    // Log activity
+    await storage.createActivityLog({
+      activityType: 'waypoint_created',
+      description: `New waypoint created${waypoint.name ? ': ' + waypoint.name : ''}`,
+      userId: req.body.userId || null,
+      relatedEntityType: 'waypoint',
+      relatedEntityId: waypoint.id,
+      metadata: { 
+        voyageId: waypoint.voyageId,
+        position: `${waypoint.latitude}, ${waypoint.longitude}`,
+        orderIndex: waypoint.orderIndex
+      }
+    });
+    
+    return res.status(201).json(waypoint);
+  }));
+
+  // Update a waypoint
+  apiRouter.put("/waypoint/:id", asyncHandler(async (req: Request, res: Response) => {
+    const waypointId = parseInt(req.params.id);
+    if (isNaN(waypointId)) {
+      return res.status(400).json({ error: "Invalid waypoint ID" });
+    }
+
+    const waypointUpdate = req.body;
+    
+    const updatedWaypoint = await storage.updateWaypoint(waypointId, waypointUpdate);
+    if (!updatedWaypoint) {
+      return res.status(404).json({ error: "Waypoint not found" });
+    }
+
+    // Log activity
+    await storage.createActivityLog({
+      activityType: 'waypoint_updated',
+      description: `Waypoint updated${updatedWaypoint.name ? ': ' + updatedWaypoint.name : ''}`,
+      userId: req.body.userId || null,
+      relatedEntityType: 'waypoint',
+      relatedEntityId: waypointId,
+      metadata: { 
+        voyageId: updatedWaypoint.voyageId,
+        updated: Object.keys(waypointUpdate)
+      }
+    });
+
+    return res.json(updatedWaypoint);
+  }));
+
+  // Delete a waypoint
+  apiRouter.delete("/waypoint/:id", asyncHandler(async (req: Request, res: Response) => {
+    const waypointId = parseInt(req.params.id);
+    if (isNaN(waypointId)) {
+      return res.status(400).json({ error: "Invalid waypoint ID" });
+    }
+
+    const waypoint = await storage.getWaypoint(waypointId);
+    if (!waypoint) {
+      return res.status(404).json({ error: "Waypoint not found" });
+    }
+
+    const success = await storage.deleteWaypoint(waypointId);
+    
+    // Log activity
+    await storage.createActivityLog({
+      activityType: 'waypoint_deleted',
+      description: `Waypoint deleted${waypoint.name ? ': ' + waypoint.name : ''}`,
+      userId: req.body.userId || null,
+      relatedEntityType: 'waypoint',
+      relatedEntityId: waypointId,
+      metadata: { voyageId: waypoint.voyageId }
+    });
+
+    return res.json({ success });
+  }));
+
+  // Get fuel consumption data for a vessel
+  apiRouter.get("/fuel-consumption/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+
+    const data = await storage.getFuelConsumptionData(vesselId);
+    return res.json(data);
+  }));
+
+  // Add a fuel consumption data point
+  apiRouter.post("/fuel-consumption", asyncHandler(async (req: Request, res: Response) => {
+    const validationResult = insertFuelConsumptionChartSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid fuel consumption data", 
+        details: validationResult.error.format() 
+      });
+    }
+
+    const dataPoint = await storage.addFuelConsumptionDataPoint(validationResult.data);
+    return res.status(201).json(dataPoint);
+  }));
+
+  // Get speed data for a vessel
+  apiRouter.get("/speed-data/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+
+    const data = await storage.getSpeedData(vesselId);
+    return res.json(data);
+  }));
+
+  // Add a speed data point
+  apiRouter.post("/speed-data", asyncHandler(async (req: Request, res: Response) => {
+    const validationResult = insertSpeedChartSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid speed data", 
+        details: validationResult.error.format() 
+      });
+    }
+
+    const dataPoint = await storage.addSpeedDataPoint(validationResult.data);
+    return res.status(201).json(dataPoint);
+  }));
+  
   // Register API routes
   app.use("/api", apiRouter);
 
