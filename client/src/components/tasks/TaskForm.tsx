@@ -82,7 +82,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
   const { toast } = useToast();
   const isEditMode = Boolean(task);
 
-  const defaultValues: TaskFormValues = {
+  // Cast the partial object to TaskFormValues to work around TypeScript type issues
+  // The zod schema will handle proper conversion during form submission
+  const defaultValues = {
     title: task?.title || "",
     description: task?.description || "",
     equipmentId: task?.equipmentId ? String(task.equipmentId) : "none",
@@ -92,7 +94,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
     assignedToId: task?.assignedToId ? String(task.assignedToId) : "unassigned",
     estimatedDuration: task?.estimatedDuration ? String(task.estimatedDuration) : null,
     notes: task?.notes || "",
-  };
+  } as unknown as TaskFormValues;
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -204,8 +206,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
               <FormItem>
                 <FormLabel>Equipment</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
-                  value={field.value ? field.value.toString() : undefined}
+                  onValueChange={(value) => field.onChange(value)}
+                  value={field.value ? field.value.toString() : "none"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -328,8 +330,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
               <FormItem>
                 <FormLabel>Assign To</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
-                  value={field.value ? field.value.toString() : undefined}
+                  onValueChange={(value) => field.onChange(value)}
+                  value={field.value ? field.value.toString() : "unassigned"}
                 >
                   <FormControl>
                     <SelectTrigger>
