@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Fuel, Gauge, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { apiRequest } from '@/lib/queryClient';
-import { LineChart, Card as TremorCard } from "@tremor/react";
 
 // Data types for fuel consumption and speed data
 type FuelConsumptionDataPoint = {
@@ -193,22 +193,39 @@ export function PerformanceCurves({ vesselId }: PerformanceCurvesProps) {
         {activeTab === 'fuel' && (
           <div className="px-4 pb-2">
             <div className="h-[250px] w-full">
-              <LineChart
-                className="h-[250px] mt-2"
-                data={fuelData}
-                index="rpm"
-                categories={["consumption"]}
-                colors={["indigo"]}
-                showLegend={false}
-                yAxisWidth={40}
-                showXAxis={true}
-                showYAxis={true}
-                showGridLines={true}
-                showAnimation={true}
-                curveType="monotone"
-                valueFormatter={(value) => `${value} L/h`}
-                connectNulls={true}
-              />
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={fuelData}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                  <XAxis 
+                    dataKey="rpm" 
+                    label={{ value: 'Engine RPM', position: 'insideBottom', offset: 0, fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <YAxis 
+                    label={{ value: 'L/h', angle: -90, position: 'insideLeft', fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value} L/h`, 'Consumption']} 
+                    contentStyle={{ fontSize: '11px', backgroundColor: 'rgba(50, 50, 70, 0.9)', borderRadius: '4px', border: 'none' }}
+                    labelStyle={{ color: '#EEE' }}
+                    itemStyle={{ color: '#AAF' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="consumption" 
+                    name="Fuel Consumption" 
+                    stroke="#8884d8" 
+                    activeDot={{ r: 6 }} 
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
             {isFuelEstimated && (
               <div className="text-xs text-amber-500 flex items-center mt-1">
@@ -223,22 +240,39 @@ export function PerformanceCurves({ vesselId }: PerformanceCurvesProps) {
         {activeTab === 'speed' && (
           <div className="px-4 pb-2">
             <div className="h-[250px] w-full">
-              <LineChart
-                className="h-[250px] mt-2"
-                data={speedData}
-                index="rpm"
-                categories={["speed"]}
-                colors={["green"]}
-                showLegend={false}
-                yAxisWidth={40}
-                showXAxis={true}
-                showYAxis={true}
-                showGridLines={true}
-                showAnimation={true}
-                curveType="monotone"
-                valueFormatter={(value) => `${value} knots`}
-                connectNulls={true}
-              />
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={speedData}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                  <XAxis 
+                    dataKey="rpm" 
+                    label={{ value: 'Engine RPM', position: 'insideBottom', offset: 0, fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <YAxis 
+                    label={{ value: 'knots', angle: -90, position: 'insideLeft', fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value} knots`, 'Speed']} 
+                    contentStyle={{ fontSize: '11px', backgroundColor: 'rgba(50, 50, 70, 0.9)', borderRadius: '4px', border: 'none' }}
+                    labelStyle={{ color: '#EEE' }}
+                    itemStyle={{ color: '#8F8' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="speed" 
+                    name="Speed Through Water" 
+                    stroke="#2a9d8f" 
+                    activeDot={{ r: 6 }} 
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
             {isSpeedEstimated && (
               <div className="text-xs text-amber-500 flex items-center mt-1">
