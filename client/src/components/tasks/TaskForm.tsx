@@ -132,6 +132,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
   const updateTaskMutation = useMutation({
     mutationFn: async (data: TaskFormValues) => {
       if (!task) throw new Error("Task not found");
+      console.log("Updating task with data:", data);
       return apiRequest(`/api/tasks/${task.id}`, {
         method: "PATCH",
         data: data

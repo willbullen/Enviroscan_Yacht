@@ -627,12 +627,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update maintenance task
   apiRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
     try {
+      console.log("Updating task with request body:", req.body);
       const id = parseInt(req.params.id);
+      console.log("Task ID:", id);
       const existingTask = await storage.getMaintenanceTask(id);
       
       if (!existingTask) {
+        console.log("Task not found with ID:", id);
         return res.status(404).json({ message: "Maintenance task not found" });
       }
+      console.log("Existing task:", existingTask);
       
       const updatedTask = await storage.updateMaintenanceTask(id, req.body);
       
@@ -660,6 +664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedTask);
     } catch (error) {
+      console.error("Error updating task:", error);
       res.status(500).json({ message: "Failed to update maintenance task" });
     }
   });

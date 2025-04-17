@@ -272,11 +272,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMaintenanceTask(id: number, updates: Partial<InsertMaintenanceTask>): Promise<MaintenanceTask> {
+    console.log("DatabaseStorage: updating task", id, "with data:", updates);
+    
+    // Ensure procedure is handled correctly (might be a string in the input)
+    if (updates.procedure && typeof updates.procedure === 'string') {
+      try {
+        updates.procedure = JSON.parse(updates.procedure as unknown as string);
+      } catch (error) {
+        console.error("Failed to parse procedure as JSON:", error);
+        // If it can't be parsed as JSON, treat it as a single item array
+        updates.procedure = [updates.procedure];
+      }
+    }
+    
     const [updatedTask] = await db
       .update(maintenanceTasks)
       .set(updates)
       .where(eq(maintenanceTasks.id, id))
       .returning();
+      
+    console.log("DatabaseStorage: task updated successfully:", updatedTask);
     return updatedTask;
   }
 
