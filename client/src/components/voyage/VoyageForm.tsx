@@ -140,10 +140,19 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
       const endpoint = voyageId ? `/api/voyages/${voyageId}` : '/api/voyages';
       const method = voyageId ? 'PATCH' : 'POST';
 
-      const response = await apiRequest(endpoint, {
+      const fetchResponse = await fetch(endpoint, {
         method,
-        data,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+
+      if (!fetchResponse.ok) {
+        throw new Error(`API request failed with status ${fetchResponse.status}`);
+      }
+
+      const response = await fetchResponse.json();
 
       // If creating a new voyage, navigate to its details page
       if (!voyageId && response.id) {
@@ -208,20 +217,34 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
                 waypoint.name !== existingWp.name || 
                 waypoint.orderIndex !== existingWp.orderIndex)) {
               
-              await apiRequest(`/api/waypoints/${waypoint.id}`, {
+              const updateResponse = await fetch(`/api/waypoints/${waypoint.id}`, {
                 method: 'PATCH',
-                data: waypoint
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(waypoint)
               });
+              
+              if (!updateResponse.ok) {
+                throw new Error(`Failed to update waypoint with status ${updateResponse.status}`);
+              }
             }
           } else {
             // Create new waypoint
-            await apiRequest('/api/waypoints', {
+            const createResponse = await fetch('/api/waypoints', {
               method: 'POST',
-              data: {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
                 ...waypoint,
                 voyageId
-              }
+              })
             });
+            
+            if (!createResponse.ok) {
+              throw new Error(`Failed to create waypoint with status ${createResponse.status}`);
+            }
           }
         }
         
@@ -229,9 +252,13 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
         for (const existingWp of existingWaypoints) {
           if (!newWaypoints.some(wp => wp.id === existingWp.id)) {
             // Delete this waypoint
-            await apiRequest(`/api/waypoints/${existingWp.id}`, {
+            const deleteResponse = await fetch(`/api/waypoints/${existingWp.id}`, {
               method: 'DELETE'
             });
+            
+            if (!deleteResponse.ok) {
+              throw new Error(`Failed to delete waypoint with status ${deleteResponse.status}`);
+            }
           }
         }
         
@@ -260,14 +287,23 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
     setIsSubmitting(true);
 
     try {
-      // First, create or update the voyage
+      // First, create or update the voyage using fetch directly to avoid potential issues with apiRequest
       const endpoint = voyageId ? `/api/voyages/${voyageId}` : '/api/voyages';
       const method = voyageId ? 'PATCH' : 'POST';
 
-      const response = await apiRequest(endpoint, {
+      const fetchResponse = await fetch(endpoint, {
         method,
-        data,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+
+      if (!fetchResponse.ok) {
+        throw new Error(`API request failed with status ${fetchResponse.status}`);
+      }
+
+      const response = await fetchResponse.json();
 
       // If creating a new voyage, handle waypoints
       if (!voyageId && response.id) {
@@ -277,13 +313,20 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
         if (waypoints.length > 0) {
           try {
             for (const waypoint of waypoints) {
-              await apiRequest('/api/waypoints', {
+              const waypointResponse = await fetch('/api/waypoints', {
                 method: 'POST',
-                data: {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                   ...waypoint,
                   voyageId: newVoyageId
-                }
+                }),
               });
+              
+              if (!waypointResponse.ok) {
+                throw new Error(`Failed to save waypoint with status ${waypointResponse.status}`);
+              }
             }
           } catch (error) {
             console.error('Error saving waypoints:', error);
