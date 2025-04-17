@@ -1216,9 +1216,12 @@ export class DatabaseStorage implements IStorage {
     })[]
   }> {
     try {
+      console.log(`Calculating voyage fuel consumption for voyage ID: ${voyageId}`);
+      
       // Get all waypoints for the voyage
       const waypoints = await this.getWaypointsByVoyage(voyageId);
       if (!waypoints.length) {
+        console.log(`No waypoints found for voyage ID: ${voyageId}`);
         return { 
           totalFuelConsumption: 0, 
           totalDistance: 0, 
@@ -1226,6 +1229,8 @@ export class DatabaseStorage implements IStorage {
           waypoints: []
         };
       }
+      
+      console.log(`Found ${waypoints.length} waypoints for voyage ID: ${voyageId}`);
       
       // Get the vessel ID from the voyage
       const voyage = await this.getVoyage(voyageId);
@@ -1235,9 +1240,11 @@ export class DatabaseStorage implements IStorage {
       
       // Get fuel consumption data for this vessel
       const fuelData = await this.getFuelConsumptionData(voyage.vesselId);
+      console.log(`Found ${fuelData.length} fuel consumption data points for vessel ID: ${voyage.vesselId}`);
       
       // Get speed data for this vessel
       const speedData = await this.getSpeedData(voyage.vesselId);
+      console.log(`Found ${speedData.length} speed data points for vessel ID: ${voyage.vesselId}`);
       
       // Sort waypoints by order index
       waypoints.sort((a, b) => a.orderIndex - b.orderIndex);
@@ -1245,6 +1252,25 @@ export class DatabaseStorage implements IStorage {
       let totalFuelConsumption = 0;
       let totalDistance = 0;
       let totalDuration = 0;
+      
+      // Helper function to calculate distance between two coordinates in nautical miles
+      const calculateDistanceNM = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+        const R = 6371; // Radius of the earth in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distanceKm = R * c; // Distance in km
+        return distanceKm * 0.539957; // Convert to nautical miles
+      };
+      
+      // Default RPM when not provided (use middle value from fuel data if available)
+      const defaultRPM = fuelData.length > 0 
+        ? fuelData[Math.floor(fuelData.length / 2)].engineRpm 
+        : 1600; // Fallback default
       
       // Calculate for each waypoint leg
       const enrichedWaypoints = waypoints.map((waypoint, index) => {
@@ -1257,48 +1283,113 @@ export class DatabaseStorage implements IStorage {
           };
         }
         
-        // Get the distance to this waypoint (from the previous one)
-        const distance = parseFloat(waypoint.distance || '0');
+        // Get the previous waypoint to calculate distance
+        const prevWaypoint = waypoints[index - 1];
+        
+        // Calculate distance in nautical miles if not provided
+        let distance = 0;
+        if (waypoint.distance) {
+          distance = parseFloat(waypoint.distance);
+        } else {
+          const lat1 = parseFloat(prevWaypoint.latitude);
+          const lon1 = parseFloat(prevWaypoint.longitude);
+          const lat2 = parseFloat(waypoint.latitude);
+          const lon2 = parseFloat(waypoint.longitude);
+          
+          distance = calculateDistanceNM(lat1, lon1, lat2, lon2);
+          // Update the waypoint with the calculated distance
+          this.updateWaypoint(waypoint.id, { 
+            ...waypoint, 
+            distance: distance.toFixed(1)
+          }).catch(err => console.error(`Failed to update waypoint distance: ${err}`));
+        }
+        
+        console.log(`Waypoint ${index} distance: ${distance} NM`);
         totalDistance += distance;
         
+        // Determine engine RPM - use provided value or default
+        let engineRpm = waypoint.engineRpm || defaultRPM;
+        
+        // If the waypoint doesn't have an engine RPM, update it with the default
+        if (!waypoint.engineRpm) {
+          this.updateWaypoint(waypoint.id, { 
+            ...waypoint, 
+            engineRpm
+          }).catch(err => console.error(`Failed to update waypoint engine RPM: ${err}`));
+        }
+        
+        console.log(`Waypoint ${index} engine RPM: ${engineRpm}`);
+        
         // Find the speed based on the engine RPM
-        const engineRpm = waypoint.engineRpm || 0;
         let speed = 0;
         
-        if (engineRpm > 0) {
+        if (speedData.length > 0) {
           // Find the closest RPM in the speed data
           const closestSpeedData = speedData
             .sort((a, b) => Math.abs(a.engineRpm - engineRpm) - Math.abs(b.engineRpm - engineRpm))
             [0];
           
           if (closestSpeedData) {
-            speed = parseFloat(closestSpeedData.speed || '0');
+            speed = parseFloat(closestSpeedData.speed);
+            console.log(`Found speed ${speed} knots for engine RPM ${engineRpm}`);
           }
-        } else if (waypoint.plannedSpeed) {
-          // If RPM not provided but planned speed is
+        }
+        
+        // If speed couldn't be determined from RPM but planned speed is available
+        if (speed === 0 && waypoint.plannedSpeed) {
           speed = parseFloat(waypoint.plannedSpeed);
+        }
+        
+        // If still no speed, use a reasonable default based on the RPM
+        if (speed === 0) {
+          // Simple linear approximation if no speed data available
+          speed = engineRpm / 100; // Very rough estimate
+          console.log(`Using estimated speed ${speed} knots for RPM ${engineRpm}`);
+        }
+        
+        // Update the waypoint with planned speed if it's not set
+        if (!waypoint.plannedSpeed) {
+          this.updateWaypoint(waypoint.id, { 
+            ...waypoint, 
+            plannedSpeed: speed.toFixed(1)
+          }).catch(err => console.error(`Failed to update waypoint planned speed: ${err}`));
         }
         
         // Calculate duration in hours (distance / speed)
         const duration = speed > 0 ? distance / speed : 0;
         totalDuration += duration;
         
+        console.log(`Waypoint ${index} estimated duration: ${duration.toFixed(2)} hours`);
+        
         // Calculate fuel consumption based on engine RPM and duration
         let fuelConsumption = 0;
         
-        if (engineRpm > 0) {
+        if (fuelData.length > 0) {
           // Find the closest RPM in the fuel consumption data
           const closestFuelData = fuelData
             .sort((a, b) => Math.abs(a.engineRpm - engineRpm) - Math.abs(b.engineRpm - engineRpm))
             [0];
           
           if (closestFuelData) {
-            const hourlyRate = parseFloat(closestFuelData.fuelConsumptionRate || '0');
+            const hourlyRate = parseFloat(closestFuelData.fuelConsumptionRate);
             fuelConsumption = hourlyRate * duration;
+            console.log(`Fuel consumption rate: ${hourlyRate} L/h, estimated consumption: ${fuelConsumption.toFixed(2)} L`);
           }
         } else if (waypoint.fuelConsumption) {
           // If provided directly
           fuelConsumption = parseFloat(waypoint.fuelConsumption);
+        } else {
+          // Rough estimate if no fuel data: 0.08 * RPM * duration
+          fuelConsumption = 0.08 * engineRpm * duration;
+          console.log(`Using estimated fuel consumption: ${fuelConsumption.toFixed(2)} L`);
+        }
+        
+        // Update the waypoint with fuel consumption if it's not set
+        if (!waypoint.fuelConsumption) {
+          this.updateWaypoint(waypoint.id, { 
+            ...waypoint, 
+            fuelConsumption: fuelConsumption.toFixed(1)
+          }).catch(err => console.error(`Failed to update waypoint fuel consumption: ${err}`));
         }
         
         totalFuelConsumption += fuelConsumption;
@@ -1309,6 +1400,21 @@ export class DatabaseStorage implements IStorage {
           estimatedDuration: duration
         };
       });
+      
+      // Update the voyage with totals
+      if (voyage) {
+        this.updateVoyage(voyageId, {
+          ...voyage,
+          distance: totalDistance.toFixed(1),
+          fuelConsumption: totalFuelConsumption.toFixed(1)
+        }).catch(err => console.error(`Failed to update voyage with calculations: ${err}`));
+      }
+      
+      console.log(`Voyage ${voyageId} calculation results:
+        Total distance: ${totalDistance.toFixed(1)} NM
+        Total duration: ${totalDuration.toFixed(2)} hours
+        Total fuel consumption: ${totalFuelConsumption.toFixed(1)} L
+      `);
       
       return {
         totalFuelConsumption,
