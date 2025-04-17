@@ -178,155 +178,140 @@ export function VoyageCalculator({ voyageId }: VoyageCalculatorProps) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Gauge className="h-5 w-5 mr-2 text-primary" />
-          Voyage Calculations
-        </CardTitle>
-        <CardDescription>Estimated fuel consumption, duration, and distances</CardDescription>
+      <CardHeader className="pb-3 pt-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg flex items-center">
+              <Gauge className="h-4 w-4 mr-2 text-primary" />
+              Voyage Calculations
+            </CardTitle>
+            <CardDescription className="text-xs">Fuel, duration, and distances</CardDescription>
+          </div>
+          <Button onClick={() => refetch()} variant="ghost" size="sm" className="h-7">
+            <RefreshCw className="h-3 w-3 mr-1" />
+            <span className="text-xs">Refresh</span>
+          </Button>
+        </div>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        {/* Summary metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-primary/5 rounded-lg p-4 border">
-            <div className="flex items-start justify-between mb-2">
+      <CardContent className="space-y-4 px-4">
+        {/* Summary metrics - more compact */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-muted/30 rounded p-2 border">
+            <div className="flex items-start justify-between">
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Total Distance</h4>
-                <p className="text-2xl font-bold">{formatDistance(data.totalDistance)}</p>
+                <h4 className="text-xs text-muted-foreground">Distance</h4>
+                <p className="text-base font-semibold">{formatDistance(data.totalDistance)}</p>
               </div>
-              <div className="rounded-full bg-primary/10 p-2">
-                <LocateFixed className="h-5 w-5 text-primary" />
-              </div>
+              <LocateFixed className="h-4 w-4 text-primary" />
             </div>
-            <Progress value={100} className="h-1.5 mb-1" />
-            <p className="text-xs text-muted-foreground">Total nautical miles traveled</p>
           </div>
           
-          <div className="bg-primary/5 rounded-lg p-4 border">
-            <div className="flex items-start justify-between mb-2">
+          <div className="bg-muted/30 rounded p-2 border">
+            <div className="flex items-start justify-between">
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Estimated Duration</h4>
-                <p className="text-2xl font-bold">{formatDuration(data.durationHours)}</p>
+                <h4 className="text-xs text-muted-foreground">Duration</h4>
+                <p className="text-base font-semibold">{formatDuration(data.durationHours)}</p>
               </div>
-              <div className="rounded-full bg-primary/10 p-2">
-                <Clock className="h-5 w-5 text-primary" />
-              </div>
+              <Clock className="h-4 w-4 text-primary" />
             </div>
-            <Progress value={100} className="h-1.5 mb-1" />
-            <p className="text-xs text-muted-foreground">Total travel time at configured speeds</p>
           </div>
           
-          <div className="bg-primary/5 rounded-lg p-4 border">
-            <div className="flex items-start justify-between mb-2">
+          <div className="bg-muted/30 rounded p-2 border">
+            <div className="flex items-start justify-between">
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Fuel Consumption</h4>
-                <p className="text-2xl font-bold">{formatFuel(data.totalFuelConsumption)}</p>
+                <h4 className="text-xs text-muted-foreground">Fuel</h4>
+                <p className="text-base font-semibold">{formatFuel(data.totalFuelConsumption)}</p>
               </div>
-              <div className="rounded-full bg-primary/10 p-2">
-                <Fuel className="h-5 w-5 text-primary" />
-              </div>
+              <Fuel className="h-4 w-4 text-primary" />
             </div>
-            <Progress value={100} className="h-1.5 mb-1" />
-            <p className="text-xs text-muted-foreground">Estimated total fuel usage</p>
           </div>
         </div>
         
-        <Separator className="my-6" />
+        <Separator className="my-2" />
         
-        {/* Leg details section */}
+        {/* Leg details section - more compact */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Route Leg Details</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium">Route Leg Details</h3>
             <Badge variant="outline" className="text-xs">
               {data.waypoints.length} Waypoints
             </Badge>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-3">
             {data.waypoints.map((waypoint, index) => {
               // Skip the first waypoint when displaying legs (it's the starting point)
               const isFirstWaypoint = index === 0;
               const isLastWaypoint = index === data.waypoints.length - 1;
               
               return (
-                <div key={waypoint.id} className={`border rounded-lg ${isFirstWaypoint ? 'bg-muted/5' : ''}`}>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-3">
+                <div key={waypoint.id} className={`border rounded ${isFirstWaypoint ? 'bg-muted/10' : ''} text-sm overflow-hidden`}>
+                  <div className="p-2">
+                    <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <div className="flex h-8 w-8 rounded-full bg-primary/10 items-center justify-center mr-3">
+                        <div className="flex h-6 w-6 rounded-full bg-primary/10 items-center justify-center mr-2">
                           {isFirstWaypoint ? (
-                            <Anchor className="h-4 w-4 text-primary" />
+                            <Anchor className="h-3 w-3 text-primary" />
                           ) : (
-                            <LocateFixed className="h-4 w-4 text-primary" />
+                            <LocateFixed className="h-3 w-3 text-primary" />
                           )}
                         </div>
                         <div>
-                          <h4 className="font-medium">{waypoint.name || `Waypoint ${index + 1}`}</h4>
-                          <p className="text-sm text-muted-foreground flex items-center">
-                            <Navigation className="h-3 w-3 mr-1" />
-                            {waypoint.latitude}, {waypoint.longitude}
+                          <h4 className="font-medium text-xs">{waypoint.name || `Waypoint ${index + 1}`}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {waypoint.latitude.substring(0, 8)}, {waypoint.longitude.substring(0, 8)}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge variant={isFirstWaypoint ? 'outline' : 'secondary'} className="mb-1">
-                          {isFirstWaypoint ? 'Departure Point' : `Leg ${index}`}
+                        <Badge variant={isFirstWaypoint ? 'outline' : 'secondary'} className="text-xs">
+                          {isFirstWaypoint ? 'Start' : `Leg ${index}`}
                         </Badge>
-                        {!isFirstWaypoint && waypoint.distance && (
-                          <p className="text-xs text-muted-foreground">
-                            {waypoint.distance} NM from previous
-                          </p>
-                        )}
                       </div>
                     </div>
                     
                     {!isFirstWaypoint && (
-                      <div className="bg-muted/20 rounded-md p-3 mt-2">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                          <div className="grid grid-cols-3 gap-2 w-full">
-                            <div className="p-2 rounded bg-background/50 border flex flex-col items-center justify-center text-center">
-                              <span className="text-xs text-muted-foreground mb-1">Distance</span>
-                              <span className="font-semibold text-sm">{waypoint.distance ? `${waypoint.distance} NM` : 'N/A'}</span>
-                            </div>
-                            <div className="p-2 rounded bg-background/50 border flex flex-col items-center justify-center text-center">
-                              <span className="text-xs text-muted-foreground mb-1">Duration</span>
-                              <span className="font-semibold text-sm">{formatDuration(waypoint.estimatedDuration)}</span>
-                            </div>
-                            <div className="p-2 rounded bg-background/50 border flex flex-col items-center justify-center text-center">
-                              <span className="text-xs text-muted-foreground mb-1">Fuel</span>
-                              <span className="font-semibold text-sm">{formatFuel(waypoint.estimatedFuelConsumption)}</span>
-                            </div>
+                      <div className="bg-muted/10 rounded mt-2 p-2 flex items-center justify-between text-xs">
+                        <div className="flex space-x-3">
+                          <div className="flex items-center">
+                            <LocateFixed className="h-3 w-3 text-muted-foreground mr-1" />
+                            <span>{waypoint.distance ? `${waypoint.distance} NM` : 'N/A'}</span>
                           </div>
-                          
-                          <div className="flex items-center space-x-3 md:min-w-[200px]">
-                            <span className="text-sm whitespace-nowrap">Engine RPM:</span>
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="number"
-                                className="w-24 h-8 px-2 text-sm rounded border border-input bg-background"
-                                value={waypoint.engineRpm || ''}
-                                placeholder="RPM"
-                                disabled={isUpdating[waypoint.id]}
-                                onChange={(e) => {
-                                  const rpm = e.target.value ? parseInt(e.target.value) : null;
-                                  updateWaypointRpm(waypoint.id, rpm);
-                                }}
-                              />
-                              <span className="text-xs text-muted-foreground">RPM</span>
-                              {isUpdating[waypoint.id] && (
-                                <Loader2 className="h-4 w-4 animate-spin text-muted" />
-                              )}
-                            </div>
+                          <div className="flex items-center">
+                            <Clock className="h-3 w-3 text-muted-foreground mr-1" />
+                            <span>{formatDuration(waypoint.estimatedDuration)}</span>
                           </div>
+                          <div className="flex items-center">
+                            <Fuel className="h-3 w-3 text-muted-foreground mr-1" />
+                            <span>{formatFuel(waypoint.estimatedFuelConsumption)}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-1">
+                          <span className="text-xs">RPM:</span>
+                          <input
+                            type="number"
+                            className="w-16 h-6 px-1 text-xs rounded border border-input bg-background"
+                            value={waypoint.engineRpm || ''}
+                            placeholder="RPM"
+                            disabled={isUpdating[waypoint.id]}
+                            onChange={(e) => {
+                              const rpm = e.target.value ? parseInt(e.target.value) : null;
+                              updateWaypointRpm(waypoint.id, rpm);
+                            }}
+                          />
+                          {isUpdating[waypoint.id] && (
+                            <Loader2 className="h-3 w-3 animate-spin text-muted" />
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                   
                   {!isLastWaypoint && (
-                    <div className="flex justify-center my-1">
-                      <div className="h-6 border-l-2 border-dashed" />
+                    <div className="flex justify-center">
+                      <div className="h-3 border-l border-dashed opacity-50" />
                     </div>
                   )}
                 </div>
@@ -336,15 +321,11 @@ export function VoyageCalculator({ voyageId }: VoyageCalculatorProps) {
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between">
+      <CardFooter className="pt-0 px-4 pb-3">
         <p className="text-xs text-muted-foreground">
           <AlertCircle className="h-3 w-3 inline mr-1" />
-          Calculations are estimates based on engine performance data and may vary.
+          Calculations are estimates based on engine performance data.
         </p>
-        <Button onClick={() => refetch()} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh Calculation
-        </Button>
       </CardFooter>
     </Card>
   );
