@@ -101,9 +101,12 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: TaskFormValues) => {
-      return apiRequest("POST", "/api/tasks", {
-        ...data,
-        createdById: 1, // Assuming current user is id: 1
+      return apiRequest("/api/tasks", {
+        method: "POST",
+        data: {
+          ...data,
+          createdById: 1, // Assuming current user is id: 1
+        }
       });
     },
     onSuccess: () => {
@@ -127,7 +130,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
   const updateTaskMutation = useMutation({
     mutationFn: async (data: TaskFormValues) => {
       if (!task) throw new Error("Task not found");
-      return apiRequest("PATCH", `/api/tasks/${task.id}`, data);
+      return apiRequest(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        data: data
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
@@ -199,7 +205,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
                 <FormLabel>Equipment</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value || undefined}
+                  value={field.value ? field.value.toString() : undefined}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -323,7 +329,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
                 <FormLabel>Assign To</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value || undefined}
+                  value={field.value ? field.value.toString() : undefined}
                 >
                   <FormControl>
                     <SelectTrigger>
