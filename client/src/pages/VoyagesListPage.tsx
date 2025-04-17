@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
+import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -118,7 +119,7 @@ export function VoyagesListPage() {
   const voyages = data || [];
 
   return (
-    <div className="max-w-6xl mx-auto mt-6 px-4 pb-12">
+    <MainLayout title="Voyage Planner">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Voyages</h1>
@@ -201,6 +202,6 @@ export function VoyagesListPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </MainLayout>
   );
 }

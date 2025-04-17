@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'wouter';
+import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { VoyageCalculator } from '@/components/voyage/VoyageCalculator';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
+import MainLayout from '@/components/layout/MainLayout';
 
 type Voyage = {
   id: number;
@@ -116,7 +117,7 @@ export function VoyageDetailsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto mt-6 px-4 pb-12">
+    <MainLayout title={voyage.name}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">{voyage.name}</h1>
@@ -126,7 +127,12 @@ export function VoyageDetailsPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">Edit</Button>
-          <Button variant="default" size="sm">Back to List</Button>
+          <Button variant="default" size="sm" asChild>
+            <Link to="/voyages">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to List
+            </Link>
+          </Button>
         </div>
       </div>
       
@@ -196,6 +202,6 @@ export function VoyageDetailsPage() {
       <div className="mt-6">
         <VoyageCalculator voyageId={voyageId} />
       </div>
-    </div>
+    </MainLayout>
   );
 }
