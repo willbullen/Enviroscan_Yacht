@@ -157,10 +157,20 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
   });
 
   const onSubmit = (data: TaskFormValues) => {
+    // Convert string IDs to numbers for database
+    const formattedData = {
+      ...data,
+      equipmentId: data.equipmentId === "none" ? null : parseInt(data.equipmentId as string),
+      assignedToId: data.assignedToId === "unassigned" ? null : parseInt(data.assignedToId as string),
+      estimatedDuration: data.estimatedDuration ? parseInt(data.estimatedDuration as string) : null
+    };
+    
+    console.log("Formatted task data:", formattedData);
+    
     if (isEditMode) {
-      updateTaskMutation.mutate(data);
+      updateTaskMutation.mutate(formattedData);
     } else {
-      createTaskMutation.mutate(data);
+      createTaskMutation.mutate(formattedData);
     }
   };
 
