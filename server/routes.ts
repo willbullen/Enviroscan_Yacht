@@ -2469,27 +2469,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create a new voyage
   apiRouter.post("/voyages", asyncHandler(async (req: Request, res: Response) => {
-    const validationResult = insertVoyageSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ 
-        error: "Invalid voyage data", 
-        details: validationResult.error.format() 
-      });
-    }
+    try {
+      // Parse dates before validation
+      const data = {
+        ...req.body,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : null
+      };
+      
+      const validationResult = insertVoyageSchema.safeParse(data);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid voyage data", 
+          details: validationResult.error.format() 
+        });
+      }
 
-    const voyage = await storage.createVoyage(validationResult.data);
-    
-    // Log activity
-    await storage.createActivityLog({
-      activityType: 'voyage_created',
-      description: `New voyage created: ${voyage.name}`,
-      userId: req.body.createdById || null,
-      relatedEntityType: 'voyage',
-      relatedEntityId: voyage.id,
-      metadata: { vesselId: voyage.vesselId }
-    });
-    
-    return res.status(201).json(voyage);
+      const voyage = await storage.createVoyage(validationResult.data);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'voyage_created',
+        description: `New voyage created: ${voyage.name}`,
+        userId: req.body.createdById || null,
+        relatedEntityType: 'voyage',
+        relatedEntityId: voyage.id,
+        metadata: { vesselId: voyage.vesselId }
+      });
+      
+      return res.status(201).json(voyage);
+    } catch (error) {
+      console.error("Error creating voyage:", error);
+      return res.status(500).json({ error: "Failed to create voyage" });
+    }
   }));
 
   // Update a voyage
