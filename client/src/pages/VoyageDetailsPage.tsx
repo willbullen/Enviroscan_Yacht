@@ -29,6 +29,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Separator } from '@/components/ui/separator';
 import { VoyageCalculator } from '@/components/voyage/VoyageCalculator';
 import { VoyageMap } from '@/components/voyage/VoyageMap';
+import { PerformanceCurves } from '@/components/voyage/PerformanceCurves';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
 import MainLayout from '@/components/layout/MainLayout';
 
@@ -133,7 +134,7 @@ export function VoyageDetailsPage() {
 
   if (isLoading) {
     return (
-      <MainLayout>
+      <MainLayout title="Loading Voyage...">
         <div className="flex flex-col items-center justify-center h-[60vh]">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
           <p className="text-muted-foreground">Loading voyage details...</p>
@@ -144,7 +145,7 @@ export function VoyageDetailsPage() {
 
   if (isError) {
     return (
-      <MainLayout>
+      <MainLayout title="Error">
         <div className="max-w-3xl mx-auto mt-8 px-4">
           <Card className="border-destructive">
             <CardHeader>
@@ -172,7 +173,7 @@ export function VoyageDetailsPage() {
   
   if (!voyage) {
     return (
-      <MainLayout>
+      <MainLayout title="Not Found">
         <div className="max-w-3xl mx-auto mt-8 px-4">
           <Card>
             <CardHeader>
@@ -192,7 +193,7 @@ export function VoyageDetailsPage() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout title={`Voyage: ${voyage.name}`}>
       {/* Header section with title, status, and actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
@@ -514,7 +515,11 @@ export function VoyageDetailsPage() {
         </TabsContent>
         
         {/* Calculations Tab Content */}
-        <TabsContent value="calculations" className="space-y-6">
+        <TabsContent value="calculations" className="space-y-4">
+          {/* Performance curves showing RPM to fuel and RPM to speed */}
+          <PerformanceCurves vesselId={voyage.vesselId} />
+          
+          {/* Calculator with more compact layout */}
           <VoyageCalculator voyageId={voyageId} />
         </TabsContent>
       </Tabs>

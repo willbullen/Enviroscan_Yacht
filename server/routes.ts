@@ -2751,6 +2751,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // Get vessel fuel consumption data
+  apiRouter.get("/vessels/:vesselId/fuel-consumption-data", asyncHandler(async (req: Request, res: Response) => {
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    try {
+      const fuelData = await storage.getFuelConsumptionData(vesselId);
+      return res.json(fuelData);
+    } catch (error) {
+      console.error("Error fetching fuel consumption data:", error);
+      return res.status(500).json({ 
+        error: "Failed to fetch fuel consumption data", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  }));
+  
+  // Get vessel speed data
+  apiRouter.get("/vessels/:vesselId/speed-data", asyncHandler(async (req: Request, res: Response) => {
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    try {
+      const speedData = await storage.getSpeedData(vesselId);
+      return res.json(speedData);
+    } catch (error) {
+      console.error("Error fetching speed data:", error);
+      return res.status(500).json({ 
+        error: "Failed to fetch speed data", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  }));
+  
   // Register API routes
   app.use("/api", apiRouter);
 
