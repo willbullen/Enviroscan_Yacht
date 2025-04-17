@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Calendar, Map, Info } from 'lucide-react';
+import { Loader2, Calendar, Map, Info, AlertCircle, CheckCircle2, CircleDot, FileText, Ship, Navigation, AnchorIcon, ChevronRight } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
