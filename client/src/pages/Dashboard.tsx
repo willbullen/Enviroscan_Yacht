@@ -1,5 +1,25 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, Package, CheckCircle, AlertTriangle, ArrowUp, ArrowDown, ChevronDown, CircleEllipsis, TrendingUp, Users, Settings2, LineChart } from "lucide-react";
+
+// Define the dashboard data interface to match the server response
+interface DashboardData {
+  stats: {
+    dueTasks: number;
+    upcomingTasks: number;
+    completedTasks: number;
+    lowStockItems: number;
+    predictiveAlerts: number;
+    revenue: number;
+    completionRate: number;
+    totalInventory: number;
+  };
+  dueTasks: any[];
+  upcomingTasks: any[];
+  recentActivity: any[];
+  equipmentOverview: any[];
+  inventoryStatus: any[];
+  predictiveAlerts: any[];
+}
 import MainLayout from "@/components/layout/MainLayout";
 import TasksTable from "@/components/dashboard/TasksTable";
 import EquipmentOverview from "@/components/dashboard/EquipmentCard";
@@ -80,8 +100,16 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { currentVessel, vesselChanged, resetVesselChanged } = useVessel();
   
-  const { data: dashboardData, isLoading } = useQuery({
+  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
     queryKey: ["/api/dashboard", currentVessel.id],
+    queryFn: async ({ queryKey }) => {
+      const [url, vesselId] = queryKey;
+      const response = await fetch(`${url}?vesselId=${vesselId}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json() as Promise<DashboardData>;
+    },
   });
   
   // When vessel changes, invalidate all queries to reload data for the new vessel
