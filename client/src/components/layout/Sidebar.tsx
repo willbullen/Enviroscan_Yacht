@@ -1,4 +1,4 @@
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
 import { 
@@ -34,6 +34,22 @@ interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
+
+// Custom NavLink component that prevents default behavior and uses client-side navigation
+const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
+  const [, navigate] = useLocation();
+  
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    navigate(href);
+  };
+  
+  return (
+    <a href={href} onClick={handleClick}>
+      {children}
+    </a>
+  );
+};
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const [location] = useLocation();
@@ -72,7 +88,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
       {/* Navigation Items - Main */}
       <nav className="space-y-1 px-2">
-        <Link href="/">
+        <NavLink href="/">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -85,9 +101,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <LayoutDashboard className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Dashboard</span>}
           </div>
-        </Link>
+        </NavLink>
 
-        <Link href="/vessels">
+        <NavLink href="/vessels">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -100,9 +116,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <Ship className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Vessels</span>}
           </div>
-        </Link>
+        </NavLink>
 
-        <Link href="/tasks">
+        <NavLink href="/tasks">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -115,9 +131,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <CheckSquare className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Tasks</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/equipment">
+        <NavLink href="/equipment">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -130,9 +146,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <Wrench className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Equipment</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/inventory">
+        <NavLink href="/inventory">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -145,9 +161,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <Boxes className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Inventory</span>}
           </div>
-        </Link>
+        </NavLink>
 
-        <Link href="/calendar">
+        <NavLink href="/calendar">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -160,9 +176,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <CalendarIcon className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Calendar</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/crew-management">
+        <NavLink href="/crew-management">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -175,9 +191,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <Users className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Crew Management</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/ism-management">
+        <NavLink href="/ism-management">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -190,9 +206,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <Shield className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>ISM Management</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/voyages">
+        <NavLink href="/voyages">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -205,9 +221,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <Map className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Voyage Planner</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/predictive-maintenance">
+        <NavLink href="/predictive-maintenance">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -220,9 +236,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <BarChart4 className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Predictive Maintenance</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/financial-management">
+        <NavLink href="/financial-management">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -235,9 +251,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <DollarSign className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Finances</span>}
           </div>
-        </Link>
+        </NavLink>
         
-        <Link href="/reports">
+        <NavLink href="/reports">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -250,7 +266,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             <FileText className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Reports</span>}
           </div>
-        </Link>
+        </NavLink>
       </nav>
 
       {/* Sidebar Footer */}
@@ -270,7 +286,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         )}
         
         <nav className="space-y-1 px-2 py-2">
-          <Link href="/settings">
+          <NavLink href="/settings">
             <div 
               className={cn(
                 "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -283,8 +299,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               <Settings className={cn("h-5 w-5", isOpen && "mr-2")} />
               {isOpen && <span>Settings</span>}
             </div>
-          </Link>
-          <Link href="/help">
+          </NavLink>
+          <NavLink href="/help">
             <div 
               className={cn(
                 "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
@@ -297,7 +313,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               <LifeBuoy className={cn("h-5 w-5", isOpen && "mr-2")} />
               {isOpen && <span>Help</span>}
             </div>
-          </Link>
+          </NavLink>
         </nav>
       </div>
     </div>
