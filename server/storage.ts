@@ -137,6 +137,33 @@ export interface IStorage {
   createCrewDocument(document: InsertCrewDocument): Promise<CrewDocument>;
   updateCrewDocument(id: number, document: Partial<CrewDocument>): Promise<CrewDocument | undefined>;
   deleteCrewDocument(id: number): Promise<boolean>;
+  
+  // Voyage Planning operations
+  getVoyage(id: number): Promise<Voyage | undefined>;
+  getVoyagesByVessel(vesselId: number): Promise<Voyage[]>;
+  getVoyagesByStatus(status: string): Promise<Voyage[]>;
+  createVoyage(voyage: InsertVoyage): Promise<Voyage>;
+  updateVoyage(id: number, voyage: Partial<Voyage>): Promise<Voyage | undefined>;
+  deleteVoyage(id: number): Promise<boolean>;
+  
+  // Waypoint operations
+  getWaypoint(id: number): Promise<Waypoint | undefined>;
+  getWaypointsByVoyage(voyageId: number): Promise<Waypoint[]>;
+  createWaypoint(waypoint: InsertWaypoint): Promise<Waypoint>;
+  updateWaypoint(id: number, waypoint: Partial<Waypoint>): Promise<Waypoint | undefined>;
+  deleteWaypoint(id: number): Promise<boolean>;
+  
+  // Fuel Consumption Chart operations
+  getFuelConsumptionData(vesselId: number): Promise<FuelConsumptionChart[]>;
+  addFuelConsumptionDataPoint(dataPoint: InsertFuelConsumptionChart): Promise<FuelConsumptionChart>;
+  updateFuelConsumptionDataPoint(id: number, dataPoint: Partial<FuelConsumptionChart>): Promise<FuelConsumptionChart | undefined>;
+  deleteFuelConsumptionDataPoint(id: number): Promise<boolean>;
+  
+  // Speed Chart operations
+  getSpeedData(vesselId: number): Promise<SpeedChart[]>;
+  addSpeedDataPoint(dataPoint: InsertSpeedChart): Promise<SpeedChart>;
+  updateSpeedDataPoint(id: number, dataPoint: Partial<SpeedChart>): Promise<SpeedChart | undefined>;
+  deleteSpeedDataPoint(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -154,6 +181,12 @@ export class MemStorage implements IStorage {
   private ismTraining: Map<number, IsmTraining>;
   private ismIncidents: Map<number, IsmIncident>;
   
+  // Voyage Planning maps
+  private voyages: Map<number, Voyage>;
+  private waypoints: Map<number, Waypoint>;
+  private fuelConsumptionCharts: Map<number, FuelConsumptionChart>;
+  private speedCharts: Map<number, SpeedChart>;
+  
   private userCurrentId: number;
   private equipmentCurrentId: number;
   private taskCurrentId: number;
@@ -165,6 +198,10 @@ export class MemStorage implements IStorage {
   private ismAuditCurrentId: number;
   private ismTrainingCurrentId: number;
   private ismIncidentCurrentId: number;
+  private voyageCurrentId: number;
+  private waypointCurrentId: number;
+  private fuelChartCurrentId: number;
+  private speedChartCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -181,6 +218,12 @@ export class MemStorage implements IStorage {
     this.ismTraining = new Map();
     this.ismIncidents = new Map();
     
+    // Initialize Voyage Planning maps
+    this.voyages = new Map();
+    this.waypoints = new Map();
+    this.fuelConsumptionCharts = new Map();
+    this.speedCharts = new Map();
+    
     this.userCurrentId = 1;
     this.equipmentCurrentId = 1;
     this.taskCurrentId = 1;
@@ -192,6 +235,10 @@ export class MemStorage implements IStorage {
     this.ismAuditCurrentId = 1;
     this.ismTrainingCurrentId = 1;
     this.ismIncidentCurrentId = 1;
+    this.voyageCurrentId = 1;
+    this.waypointCurrentId = 1;
+    this.fuelChartCurrentId = 1;
+    this.speedChartCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeData();
