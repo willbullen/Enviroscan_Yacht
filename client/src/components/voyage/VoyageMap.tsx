@@ -3,12 +3,13 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap,
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Plus, Map, Navigation, Anchor, AlertTriangle, Info } from 'lucide-react';
+import { Trash2, Plus, Map, Navigation, Anchor, AlertTriangle, Info, Compass } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import * as L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import { MarineChartMarkers } from './MarineChartMarkers';
+import { CompassRose } from './CompassRose';
 
 // Custom nautical waypoint marker icons
 const WaypointIcon = L.icon({
@@ -450,6 +451,9 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
             <MarineChartMarkers />
           </LayersControl.Overlay>
           
+          {/* Add compass rose for nautical navigation */}
+          <CompassRose position="bottomleft" size={100} />
+          
           {/* Center map on all waypoints */}
           {waypoints.length > 0 && <MapCenterAdjuster waypoints={waypoints} />}
           
@@ -474,16 +478,17 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
           <button 
             className="text-xs flex items-center bg-card px-2 py-1 rounded hover:bg-accent transition-colors"
             onClick={() => {
-              // Open marine chart legend in a small popup or modal
-              // For now, just show a toast with info
+              // Show chart legend information
               toast({
                 title: "Maritime Chart Legend",
-                description: "Navigation aids and symbols information available on marine chart",
+                description: "Marine markers show cardinal directions, isolated dangers, and safe water passages",
+                variant: "default",
+                duration: 5000,
               });
             }}
           >
-            <Info className="h-3 w-3 mr-1" />
-            Chart Legend
+            <Compass className="h-3 w-3 mr-1" />
+            Navigation Chart
           </button>
           
           <div className="flex items-center gap-1">
@@ -500,6 +505,27 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
             <div className="w-3 h-3 rounded-full bg-blue-600"></div>
             <span>Course</span>
           </div>
+          
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-black border border-white"></div>
+            <span>Cardinal</span>
+          </div>
+          
+          <button
+            className="text-xs flex items-center bg-primary/10 text-primary px-2 py-1 rounded"
+            onClick={() => {
+              // Toggle the navigational markers layer
+              toast({
+                title: "Marine Navigational Markers",
+                description: "Displays standard maritime navigation aids including cardinal marks, isolated dangers, and safe water markers for proper navigation",
+                variant: "default",
+                duration: 5000,
+              });
+            }}
+          >
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Nav Aids
+          </button>
         </div>
       </div>
     </div>
