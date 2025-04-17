@@ -24,7 +24,8 @@ import {
   Anchor,
   AlertTriangle,
   Clock,
-  Shield
+  Shield,
+  Map
 } from "lucide-react";
 import eastwindLogo from '@/assets/eastwind_logo.svg';
 import { Button } from "@/components/ui/button";
@@ -188,6 +189,21 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           >
             <Shield className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>ISM Management</span>}
+          </div>
+        </Link>
+        
+        <Link href="/voyages">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/voyages" || location.startsWith("/voyages/")
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <Map className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Voyage Planner</span>}
           </div>
         </Link>
         

@@ -39,7 +39,7 @@ export function VoyageCalculator({ voyageId }: VoyageCalculatorProps) {
   const { toast } = useToast();
   
   const { data, isLoading, isError, error, refetch } = useQuery<VoyageCalculation>({
-    queryKey: ['/api/voyages', voyageId, 'calculate'],
+    queryKey: [`/api/voyages/${voyageId}/calculate`],
     enabled: !!voyageId,
   });
 
