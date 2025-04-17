@@ -19,7 +19,11 @@ import {
   LifeBuoy,
   Boxes,
   PlusCircle,
-  PanelRightOpen
+  PanelRightOpen,
+  Ship,
+  Anchor,
+  AlertTriangle,
+  Clock
 } from "lucide-react";
 import eastwindLogo from '@/assets/eastwind_logo.svg';
 import { Button } from "@/components/ui/button";
@@ -46,7 +50,6 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         {isOpen ? (
           <>
             <img src={eastwindLogo} alt="Eastwind Management" className="h-8" />
-            <span className="text-lg font-semibold ml-2">Yacht Management</span>
           </>
         ) : (
           <div className="flex items-center justify-center w-full">
@@ -79,6 +82,21 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           >
             <LayoutDashboard className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Dashboard</span>}
+          </div>
+        </Link>
+
+        <Link href="/vessels">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/vessels" 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <Ship className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Vessels</span>}
           </div>
         </Link>
 
@@ -124,6 +142,36 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           >
             <Boxes className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Inventory</span>}
+          </div>
+        </Link>
+
+        <Link href="/schedule">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/schedule" 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <Clock className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Schedule</span>}
+          </div>
+        </Link>
+        
+        <Link href="/incidents">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/incidents" 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <AlertTriangle className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Incidents</span>}
           </div>
         </Link>
         
