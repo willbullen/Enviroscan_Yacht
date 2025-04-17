@@ -17,6 +17,7 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const { currentVessel, setCurrentVessel } = useVessel();
 
   useEffect(() => {
     // Close sidebar on mobile, open on desktop
@@ -33,34 +34,49 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         {/* Top header navigation - Fixed */}
         <header className="h-14 border-b flex items-center px-4 bg-background/95 backdrop-blur z-10 sticky top-0">
           <div className="flex items-center gap-4 w-full">
-            {/* Mobile menu button */}
-            {isMobile && (
-              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                <Menu className="h-5 w-5" />
-              </Button>
-            )}
+            {/* Left section */}
+            <div className="flex items-center gap-2">
+              {/* Mobile menu button */}
+              {isMobile && (
+                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
+              
+              {/* Desktop toggle sidebar button */}
+              {!isMobile && (
+                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                  {sidebarOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
+                </Button>
+              )}
+              
+              {/* Page title */}
+              <div className="font-medium hidden md:block">{title}</div>
+              
+              {/* Search bar */}
+              <div className="hidden md:flex mx-4 relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search..." 
+                  className="pl-8 bg-background border-none shadow-none focus-visible:ring-0 w-[180px]" 
+                />
+              </div>
+            </div>
             
-            {/* Desktop toggle sidebar button */}
-            {!isMobile && (
-              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                {sidebarOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
-              </Button>
-            )}
-            
-            {/* Page title */}
-            <div className="font-medium hidden md:block">{title}</div>
-            
-            {/* Search bar */}
-            <div className="hidden md:flex mx-4 flex-1 max-w-sm relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search..." 
-                className="pl-8 bg-background border-none shadow-none focus-visible:ring-0" 
-              />
+            {/* Center section - Current Vessel Name */}
+            <div className="hidden md:flex flex-1 justify-center items-center">
+              <div className="flex items-center gap-2">
+                <Ship className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-lg">{currentVessel.name}</span>
+              </div>
             </div>
             
             {/* Right side actions */}
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-3">
+              <VesselSelector 
+                currentVesselId={currentVessel.id} 
+                onVesselChange={setCurrentVessel} 
+              />
               <ThemeToggle />
               <Button variant="ghost" size="icon">
                 <Bell className="h-5 w-5" />

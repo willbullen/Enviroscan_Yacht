@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { ChevronDown, Ship, PlusCircle, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +26,7 @@ interface VesselSelectorProps {
 
 const VesselSelector = ({ currentVesselId = 1, onVesselChange }: VesselSelectorProps) => {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   const currentVessel = mockVessels.find(v => v.id === currentVesselId) || mockVessels[0];
   
@@ -36,7 +36,7 @@ const VesselSelector = ({ currentVesselId = 1, onVesselChange }: VesselSelectorP
   };
   
   const goToVesselAdmin = () => {
-    navigate('/vessels/admin');
+    setLocation('/vessels/admin');
     setOpen(false);
   };
   
