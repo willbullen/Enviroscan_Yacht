@@ -316,11 +316,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // NEW Emergency fix endpoint for upcoming tasks
-  apiRouter.get("/tasks-upcoming", async (_req: Request, res: Response) => {
+  apiRouter.get("/tasks-upcoming", async (req: Request, res: Response) => {
     console.log("Using NEW emergency endpoint for upcoming tasks");
     
     try {
-      const tasks = [
+      // Get vessel ID from query parameter if provided
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      console.log(`Getting upcoming tasks for vessel ID: ${vesselId || 'all vessels'}`);
+      
+      const baseTasks = [
         {
           id: 2,
           title: "Generator 1 Fuel Filter Replacement",
@@ -374,8 +378,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
       
-      console.log(`Returning ${tasks.length} upcoming tasks from new endpoint`);
-      return res.json(tasks);
+      // If vesselId is provided, customize tasks based on vessel
+      if (vesselId) {
+        // For demo purposes, we'll create vessel-specific task titles
+        const vesselNames = {
+          1: "M/Y Serenity",
+          2: "S/Y Windchaser",
+          3: "M/Y Ocean Explorer",
+          4: "M/Y Azure Dreams"
+        };
+        
+        const vesselName = vesselNames[vesselId as keyof typeof vesselNames] || "Unknown Vessel";
+        
+        // Add vessel name to task titles for demonstration
+        const customizedTasks = baseTasks.map(task => ({
+          ...task,
+          title: task.title.includes(vesselName) ? task.title : `${task.title} [${vesselName}]`
+        }));
+        
+        console.log(`Returning ${customizedTasks.length} upcoming tasks from new endpoint for vessel ${vesselId}`);
+        return res.json(customizedTasks);
+      } else {
+        console.log(`Returning ${baseTasks.length} upcoming tasks from new endpoint`);
+        return res.json(baseTasks);
+      }
     } catch (error) {
       console.error("Error in NEW endpoint:", error);
       return res.status(500).json({ message: "Emergency endpoint also failed" });

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useVesselQuery } from "@/hooks/useVesselQuery";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, isThisMonth, isAfter, addMonths } from "date-fns";
@@ -11,9 +11,7 @@ interface MaintenanceTask {
 
 const UpcomingMaintenance: React.FC = () => {
   // TEMPORARY FIX: Using alternative API endpoint until the original is fixed
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ["/api/tasks-upcoming"],
-  });
+  const { data: tasks, isLoading } = useVesselQuery<MaintenanceTask[]>("/api/tasks-upcoming");
 
   if (isLoading) {
     return (
