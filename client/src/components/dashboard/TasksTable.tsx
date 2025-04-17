@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useVesselQuery } from "@/hooks/useVesselQuery";
 import { 
   Eye, 
   Edit, 
@@ -51,17 +51,12 @@ const TasksTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const tasksPerPage = 4;
 
-  const { data: tasks, isLoading: tasksLoading } = useQuery({
-    queryKey: ["/api/tasks"],
-  });
+  // Use our custom vessel-specific query hook for vessel-specific data
+  const { data: tasks, isLoading: tasksLoading } = useVesselQuery<Task[]>("/api/tasks");
 
-  const { data: equipment, isLoading: equipmentLoading } = useQuery({
-    queryKey: ["/api/equipment"],
-  });
+  const { data: equipment, isLoading: equipmentLoading } = useVesselQuery<Equipment[]>("/api/equipment");
 
-  const { data: users, isLoading: usersLoading } = useQuery({
-    queryKey: ["/api/users"],
-  });
+  const { data: users, isLoading: usersLoading } = useVesselQuery<User[]>("/api/users");
 
   const isLoading = tasksLoading || equipmentLoading || usersLoading;
 

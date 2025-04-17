@@ -177,11 +177,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =========== Maintenance Task Routes =============
   
   // Get all maintenance tasks
-  apiRouter.get("/tasks", async (_req: Request, res: Response) => {
+  apiRouter.get("/tasks", async (req: Request, res: Response) => {
     try {
+      // Get vessel ID from query parameter if provided
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      console.log(`Getting tasks for vessel ID: ${vesselId || 'all vessels'}`);
+      
       const tasks = await storage.getAllMaintenanceTasks();
-      res.json(tasks);
+      
+      // If vesselId is provided, customize tasks based on vessel
+      if (vesselId) {
+        // In a real implementation, we would filter tasks by vessel ID
+        // For now, we'll simulate vessel-specific tasks by customizing them
+        // based on the vessel ID
+        
+        // For demo purposes, we'll modify some task titles to make them vessel-specific
+        const vesselNames = {
+          1: "M/Y Serenity",
+          2: "S/Y Windchaser",
+          3: "M/Y Ocean Explorer",
+          4: "M/Y Azure Dreams"
+        };
+        
+        const vesselName = vesselNames[vesselId as keyof typeof vesselNames] || "Unknown Vessel";
+        
+        // Add vessel name to task titles for demonstration purposes
+        const customizedTasks = tasks.map(task => ({
+          ...task,
+          title: task.title.includes(vesselName) ? task.title : `${task.title} [${vesselName}]`
+        }));
+        
+        res.json(customizedTasks);
+      } else {
+        res.json(tasks);
+      }
     } catch (error) {
+      console.error('Failed to get maintenance tasks:', error);
       res.status(500).json({ message: "Failed to get maintenance tasks" });
     }
   });

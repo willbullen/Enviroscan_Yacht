@@ -1,5 +1,6 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Package, CheckCircle, AlertTriangle, ArrowUp, ArrowDown, ChevronDown, CircleEllipsis, TrendingUp, Users, Settings2, LineChart } from "lucide-react";
+import { useVesselQuery } from "@/hooks/useVesselQuery";
 
 // Define the dashboard data interface to match the server response
 interface DashboardData {
@@ -100,17 +101,8 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { currentVessel, vesselChanged, resetVesselChanged } = useVessel();
   
-  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
-    queryKey: ["/api/dashboard", currentVessel.id],
-    queryFn: async ({ queryKey }) => {
-      const [url, vesselId] = queryKey;
-      const response = await fetch(`${url}?vesselId=${vesselId}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json() as Promise<DashboardData>;
-    },
-  });
+  // Use our custom vessel-specific query hook
+  const { data: dashboardData, isLoading } = useVesselQuery<DashboardData>("/api/dashboard");
   
   // When vessel changes, invalidate all queries to reload data for the new vessel
   useEffect(() => {
