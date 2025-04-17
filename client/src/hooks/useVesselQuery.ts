@@ -1,4 +1,4 @@
-import { useQuery, QueryKey, UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
+import { useQuery, UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useVessel } from "@/contexts/VesselContext";
 
 /**
@@ -9,11 +9,12 @@ import { useVessel } from "@/contexts/VesselContext";
  */
 export function useVesselQuery<TData = unknown>(
   endpoint: string,
-  options?: Omit<UseQueryOptions<TData>, 'queryKey' | 'queryFn'>
-): UseQueryResult<TData> {
-  const { currentVessel, vesselChanged, resetVesselChanged } = useVessel();
+  options?: Omit<UseQueryOptions<TData, Error, TData, [string, number]>, 'queryKey' | 'queryFn'>
+): UseQueryResult<TData, Error> {
+  const { currentVessel } = useVessel();
   
-  return useQuery<TData>({
+  // Create a query with vessel-specific parameters
+  return useQuery<TData, Error, TData, [string, number]>({
     queryKey: [endpoint, currentVessel.id],
     queryFn: async ({ queryKey }) => {
       const [url, vesselId] = queryKey;
@@ -25,15 +26,7 @@ export function useVesselQuery<TData = unknown>(
       
       return response.json() as Promise<TData>;
     },
-    // Refetch when vessel changes
     refetchOnWindowFocus: false,
-    refetchInterval: vesselChanged ? 0 : false,
-    onSuccess: () => {
-      // Reset the vesselChanged flag after successful data fetch
-      if (vesselChanged) {
-        resetVesselChanged();
-      }
-    },
     ...options
   });
 }
