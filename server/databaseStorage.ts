@@ -1204,4 +1204,121 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingIsmTraining(): Promise<IsmTraining[]> { return []; }
   async getIsmIncidentsByReporter(userId: number): Promise<IsmIncident[]> { return []; }
   async getOpenIsmIncidents(): Promise<IsmIncident[]> { return []; }
+  
+  // Voyage Planning Calculations
+  async calculateVoyageFuelConsumption(voyageId: number): Promise<{ 
+    totalFuelConsumption: number, 
+    totalDistance: number,
+    durationHours: number,
+    waypoints: (Waypoint & { 
+      estimatedFuelConsumption: number,
+      estimatedDuration: number 
+    })[]
+  }> {
+    try {
+      // Get all waypoints for the voyage
+      const waypoints = await this.getWaypointsByVoyage(voyageId);
+      if (!waypoints.length) {
+        return { 
+          totalFuelConsumption: 0, 
+          totalDistance: 0, 
+          durationHours: 0,
+          waypoints: []
+        };
+      }
+      
+      // Get the vessel ID from the voyage
+      const voyage = await this.getVoyage(voyageId);
+      if (!voyage) {
+        throw new Error('Voyage not found');
+      }
+      
+      // Get fuel consumption data for this vessel
+      const fuelData = await this.getFuelConsumptionData(voyage.vesselId);
+      
+      // Get speed data for this vessel
+      const speedData = await this.getSpeedData(voyage.vesselId);
+      
+      // Sort waypoints by order index
+      waypoints.sort((a, b) => a.orderIndex - b.orderIndex);
+      
+      let totalFuelConsumption = 0;
+      let totalDistance = 0;
+      let totalDuration = 0;
+      
+      // Calculate for each waypoint leg
+      const enrichedWaypoints = waypoints.map((waypoint, index) => {
+        // Skip the first waypoint when calculating legs (it's the starting point)
+        if (index === 0) {
+          return { 
+            ...waypoint, 
+            estimatedFuelConsumption: 0,
+            estimatedDuration: 0
+          };
+        }
+        
+        // Get the distance to this waypoint (from the previous one)
+        const distance = parseFloat(waypoint.distance || '0');
+        totalDistance += distance;
+        
+        // Find the speed based on the engine RPM
+        const engineRpm = waypoint.engineRpm || 0;
+        let speed = 0;
+        
+        if (engineRpm > 0) {
+          // Find the closest RPM in the speed data
+          const closestSpeedData = speedData
+            .sort((a, b) => Math.abs(a.engineRpm - engineRpm) - Math.abs(b.engineRpm - engineRpm))
+            [0];
+          
+          if (closestSpeedData) {
+            speed = parseFloat(closestSpeedData.speed || '0');
+          }
+        } else if (waypoint.plannedSpeed) {
+          // If RPM not provided but planned speed is
+          speed = parseFloat(waypoint.plannedSpeed);
+        }
+        
+        // Calculate duration in hours (distance / speed)
+        const duration = speed > 0 ? distance / speed : 0;
+        totalDuration += duration;
+        
+        // Calculate fuel consumption based on engine RPM and duration
+        let fuelConsumption = 0;
+        
+        if (engineRpm > 0) {
+          // Find the closest RPM in the fuel consumption data
+          const closestFuelData = fuelData
+            .sort((a, b) => Math.abs(a.engineRpm - engineRpm) - Math.abs(b.engineRpm - engineRpm))
+            [0];
+          
+          if (closestFuelData) {
+            const hourlyRate = parseFloat(closestFuelData.fuelConsumptionRate || '0');
+            fuelConsumption = hourlyRate * duration;
+          }
+        } else if (waypoint.fuelConsumption) {
+          // If provided directly
+          fuelConsumption = parseFloat(waypoint.fuelConsumption);
+        }
+        
+        totalFuelConsumption += fuelConsumption;
+        
+        return {
+          ...waypoint,
+          estimatedFuelConsumption: fuelConsumption,
+          estimatedDuration: duration
+        };
+      });
+      
+      return {
+        totalFuelConsumption,
+        totalDistance,
+        durationHours: totalDuration,
+        waypoints: enrichedWaypoints
+      };
+    } catch (error) {
+      console.error("Error calculating voyage fuel consumption:", error);
+      throw error;
+    }
+  }
 }
