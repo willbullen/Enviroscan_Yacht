@@ -139,30 +139,30 @@ export interface IStorage {
   deleteCrewDocument(id: number): Promise<boolean>;
   
   // Voyage Planning operations
-  getVoyage(id: number): Promise<Voyage | undefined>;
+  getVoyage(id: number): Promise<Voyage | null>;
   getVoyagesByVessel(vesselId: number): Promise<Voyage[]>;
   getVoyagesByStatus(status: string): Promise<Voyage[]>;
   createVoyage(voyage: InsertVoyage): Promise<Voyage>;
-  updateVoyage(id: number, voyage: Partial<Voyage>): Promise<Voyage | undefined>;
+  updateVoyage(id: number, voyage: Partial<Voyage>): Promise<Voyage | null>;
   deleteVoyage(id: number): Promise<boolean>;
   
   // Waypoint operations
-  getWaypoint(id: number): Promise<Waypoint | undefined>;
+  getWaypoint(id: number): Promise<Waypoint | null>;
   getWaypointsByVoyage(voyageId: number): Promise<Waypoint[]>;
   createWaypoint(waypoint: InsertWaypoint): Promise<Waypoint>;
-  updateWaypoint(id: number, waypoint: Partial<Waypoint>): Promise<Waypoint | undefined>;
+  updateWaypoint(id: number, waypoint: Partial<Waypoint>): Promise<Waypoint | null>;
   deleteWaypoint(id: number): Promise<boolean>;
   
   // Fuel Consumption Chart operations
   getFuelConsumptionData(vesselId: number): Promise<FuelConsumptionChart[]>;
   addFuelConsumptionDataPoint(dataPoint: InsertFuelConsumptionChart): Promise<FuelConsumptionChart>;
-  updateFuelConsumptionDataPoint(id: number, dataPoint: Partial<FuelConsumptionChart>): Promise<FuelConsumptionChart | undefined>;
+  updateFuelConsumptionDataPoint(id: number, dataPoint: Partial<FuelConsumptionChart>): Promise<FuelConsumptionChart | null>;
   deleteFuelConsumptionDataPoint(id: number): Promise<boolean>;
   
   // Speed Chart operations
   getSpeedData(vesselId: number): Promise<SpeedChart[]>;
   addSpeedDataPoint(dataPoint: InsertSpeedChart): Promise<SpeedChart>;
-  updateSpeedDataPoint(id: number, dataPoint: Partial<SpeedChart>): Promise<SpeedChart | undefined>;
+  updateSpeedDataPoint(id: number, dataPoint: Partial<SpeedChart>): Promise<SpeedChart | null>;
   deleteSpeedDataPoint(id: number): Promise<boolean>;
 }
 
@@ -880,8 +880,9 @@ export class MemStorage implements IStorage {
   }
   
   // Voyage Planning methods
-  async getVoyage(id: number): Promise<Voyage | undefined> {
-    return this.voyages.get(id);
+  async getVoyage(id: number): Promise<Voyage | null> {
+    const voyage = this.voyages.get(id);
+    return voyage || null;
   }
 
   async getVoyagesByVessel(vesselId: number): Promise<Voyage[]> {
@@ -905,9 +906,9 @@ export class MemStorage implements IStorage {
     return voyage;
   }
 
-  async updateVoyage(id: number, voyageUpdate: Partial<Voyage>): Promise<Voyage | undefined> {
+  async updateVoyage(id: number, voyageUpdate: Partial<Voyage>): Promise<Voyage | null> {
     const existingVoyage = this.voyages.get(id);
-    if (!existingVoyage) return undefined;
+    if (!existingVoyage) return null;
     
     const updatedVoyage = { 
       ...existingVoyage, 
@@ -928,8 +929,9 @@ export class MemStorage implements IStorage {
   }
 
   // Waypoint methods
-  async getWaypoint(id: number): Promise<Waypoint | undefined> {
-    return this.waypoints.get(id);
+  async getWaypoint(id: number): Promise<Waypoint | null> {
+    const waypoint = this.waypoints.get(id);
+    return waypoint || null;
   }
 
   async getWaypointsByVoyage(voyageId: number): Promise<Waypoint[]> {
@@ -945,9 +947,9 @@ export class MemStorage implements IStorage {
     return waypoint;
   }
 
-  async updateWaypoint(id: number, waypointUpdate: Partial<Waypoint>): Promise<Waypoint | undefined> {
+  async updateWaypoint(id: number, waypointUpdate: Partial<Waypoint>): Promise<Waypoint | null> {
     const existingWaypoint = this.waypoints.get(id);
-    if (!existingWaypoint) return undefined;
+    if (!existingWaypoint) return null;
     
     const updatedWaypoint = { ...existingWaypoint, ...waypointUpdate };
     this.waypoints.set(id, updatedWaypoint);
@@ -974,9 +976,9 @@ export class MemStorage implements IStorage {
     return dataPoint;
   }
 
-  async updateFuelConsumptionDataPoint(id: number, dataPointUpdate: Partial<FuelConsumptionChart>): Promise<FuelConsumptionChart | undefined> {
+  async updateFuelConsumptionDataPoint(id: number, dataPointUpdate: Partial<FuelConsumptionChart>): Promise<FuelConsumptionChart | null> {
     const existingDataPoint = this.fuelConsumptionCharts.get(id);
-    if (!existingDataPoint) return undefined;
+    if (!existingDataPoint) return null;
     
     const updatedDataPoint = { 
       ...existingDataPoint, 
@@ -1007,9 +1009,9 @@ export class MemStorage implements IStorage {
     return dataPoint;
   }
 
-  async updateSpeedDataPoint(id: number, dataPointUpdate: Partial<SpeedChart>): Promise<SpeedChart | undefined> {
+  async updateSpeedDataPoint(id: number, dataPointUpdate: Partial<SpeedChart>): Promise<SpeedChart | null> {
     const existingDataPoint = this.speedCharts.get(id);
-    if (!existingDataPoint) return undefined;
+    if (!existingDataPoint) return null;
     
     const updatedDataPoint = { 
       ...existingDataPoint, 

@@ -12,6 +12,10 @@ import {
   ismIncidents,
   crewMembers,
   crewDocuments,
+  voyages,
+  waypoints,
+  fuelConsumptionChart,
+  speedChart,
   type User,
   type InsertUser,
   type Equipment,
@@ -37,7 +41,15 @@ import {
   type CrewMember,
   type InsertCrewMember,
   type CrewDocument,
-  type InsertCrewDocument
+  type InsertCrewDocument,
+  type Voyage,
+  type InsertVoyage,
+  type Waypoint,
+  type InsertWaypoint,
+  type FuelConsumptionChart,
+  type InsertFuelConsumptionChart,
+  type SpeedChart,
+  type InsertSpeedChart
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
