@@ -45,8 +45,8 @@ interface Task {
   title: string;
   description: string;
   equipmentId: number | null;
-  priority: string;
-  status: string;
+  priority: "high" | "medium" | "low";
+  status: "due" | "upcoming" | "in_progress" | "completed";
   dueDate: string;
   assignedToId: number | null;
   estimatedDuration: number | null;
@@ -65,13 +65,13 @@ interface TaskFormProps {
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  equipmentId: z.string().nullable().transform(val => val ? parseInt(val) : null),
+  equipmentId: z.string().transform(val => val === "none" ? null : parseInt(val)),
   priority: z.enum(["high", "medium", "low"]),
   status: z.enum(["due", "upcoming", "in_progress", "completed"]),
   dueDate: z.date({
     required_error: "Due date is required",
   }),
-  assignedToId: z.string().nullable().transform(val => val ? parseInt(val) : null),
+  assignedToId: z.string().transform(val => val === "unassigned" ? null : parseInt(val)),
   estimatedDuration: z.string().nullable().transform(val => val ? parseInt(val) : null),
   notes: z.string().nullable(),
 });
@@ -85,11 +85,11 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
   const defaultValues: TaskFormValues = {
     title: task?.title || "",
     description: task?.description || "",
-    equipmentId: task?.equipmentId ? String(task.equipmentId) : null,
+    equipmentId: task?.equipmentId ? String(task.equipmentId) : "none",
     priority: task?.priority || "medium",
     status: task?.status || "upcoming",
     dueDate: task ? new Date(task.dueDate) : initialDate || new Date(),
-    assignedToId: task?.assignedToId ? String(task.assignedToId) : null,
+    assignedToId: task?.assignedToId ? String(task.assignedToId) : "unassigned",
     estimatedDuration: task?.estimatedDuration ? String(task.estimatedDuration) : null,
     notes: task?.notes || "",
   };
@@ -207,7 +207,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {equipment.map((item) => (
                       <SelectItem key={item.id} value={item.id.toString()}>
                         {item.name} - {item.model}
@@ -331,7 +331,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, initialDate, onClose, equipme
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.fullName}

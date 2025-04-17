@@ -33,6 +33,10 @@ interface User {
   avatarUrl: string | null;
 }
 
+interface TasksTableProps {
+  filter?: string;
+}
+
 const priorityBadgeClasses = {
   high: "bg-red-100 text-red-800",
   medium: "bg-yellow-100 text-yellow-800",
@@ -46,8 +50,8 @@ const statusBadgeClasses = {
   in_progress: "bg-blue-100 text-blue-800",
 };
 
-const TasksTable: React.FC = () => {
-  const [currentFilter, setCurrentFilter] = useState<string>("all");
+const TasksTable: React.FC<TasksTableProps> = ({ filter }) => {
+  const [currentFilter, setCurrentFilter] = useState<string>(filter || "all");
   const [currentPage, setCurrentPage] = useState(1);
   const tasksPerPage = 4;
 
