@@ -3,9 +3,11 @@ import Sidebar from "./Sidebar";
 import { useMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Bell, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { Menu, Search, Bell, PanelRightOpen, PanelRightClose, Ship } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import VesselSelector from "../vessel/VesselSelector";
+import { useVessel } from "@/contexts/VesselContext";
 
 interface MainLayoutProps {
   children: React.ReactNode;
