@@ -127,9 +127,11 @@ export function VoyagesListPage() {
             Plan and manage vessel voyages
           </p>
         </div>
-        <Button>
-          <PlusIcon className="w-4 h-4 mr-2" />
-          New Voyage
+        <Button asChild>
+          <Link to="/voyages/new">
+            <PlusIcon className="w-4 h-4 mr-2" />
+            New Voyage
+          </Link>
         </Button>
       </div>
       
@@ -148,9 +150,11 @@ export function VoyagesListPage() {
             </p>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button>
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Create Voyage
+            <Button asChild>
+              <Link to="/voyages/new">
+                <PlusIcon className="w-4 h-4 mr-2" />
+                Create Voyage
+              </Link>
             </Button>
           </CardFooter>
         </Card>

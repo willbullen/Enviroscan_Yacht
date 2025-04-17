@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, PencilIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,7 +126,12 @@ export function VoyageDetailsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">Edit</Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/voyages/${id}/edit`}>
+              <PencilIcon className="w-4 h-4 mr-1" />
+              Edit
+            </Link>
+          </Button>
           <Button variant="default" size="sm" asChild>
             <Link to="/voyages">
               <ArrowLeft className="w-4 h-4 mr-1" />

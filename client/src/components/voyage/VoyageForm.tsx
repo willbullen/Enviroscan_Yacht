@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useVessel } from '@/contexts/VesselContext';
 import { useToast } from '@/hooks/use-toast';
@@ -42,7 +42,7 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [navigate, setLocation] = useNavigate();
+  const [location, navigate] = useLocation();
   const { currentVessel } = useVessel();
 
   // Initialize the form with default values

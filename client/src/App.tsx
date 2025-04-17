@@ -37,6 +37,8 @@ function App() {
       
       {/* Voyage Planner Routes */}
       <Route path="/voyages" component={VoyagesListPage} />
+      <Route path="/voyages/new" component={VoyageCreatePage} />
+      <Route path="/voyages/:id/edit" component={VoyageEditPage} />
       <Route path="/voyages/:id" component={VoyageDetailsPage} />
       
       {/* Yacht System Routes */}
