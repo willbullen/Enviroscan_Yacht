@@ -1893,7 +1893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.post("/update-theme", async (req: Request, res: Response) => {
+  apiRouter.post("/api/update-theme", async (req: Request, res: Response) => {
     try {
       const themeData = req.body;
       const themeFilePath = path.resolve('./theme.json');
