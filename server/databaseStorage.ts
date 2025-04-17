@@ -946,4 +946,262 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // =========== Voyage Planning Methods =============
+  async getVoyage(id: number): Promise<Voyage | null> {
+    try {
+      const [voyage] = await db.select().from(voyages).where(eq(voyages.id, id));
+      return voyage || null;
+    } catch (error) {
+      console.error("Error fetching voyage:", error);
+      return null;
+    }
+  }
+
+  async getVoyagesByVessel(vesselId: number): Promise<Voyage[]> {
+    try {
+      return await db.select().from(voyages).where(eq(voyages.vesselId, vesselId));
+    } catch (error) {
+      console.error("Error fetching voyages by vessel:", error);
+      return [];
+    }
+  }
+
+  async getVoyagesByStatus(status: string): Promise<Voyage[]> {
+    try {
+      return await db.select().from(voyages).where(eq(voyages.status, status));
+    } catch (error) {
+      console.error("Error fetching voyages by status:", error);
+      return [];
+    }
+  }
+
+  async createVoyage(voyage: InsertVoyage): Promise<Voyage> {
+    try {
+      const [newVoyage] = await db.insert(voyages).values({
+        ...voyage,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      return newVoyage;
+    } catch (error) {
+      console.error("Error creating voyage:", error);
+      throw error;
+    }
+  }
+
+  async updateVoyage(id: number, voyageUpdate: Partial<Voyage>): Promise<Voyage | null> {
+    try {
+      const [updatedVoyage] = await db
+        .update(voyages)
+        .set({
+          ...voyageUpdate,
+          updatedAt: new Date()
+        })
+        .where(eq(voyages.id, id))
+        .returning();
+      return updatedVoyage || null;
+    } catch (error) {
+      console.error("Error updating voyage:", error);
+      return null;
+    }
+  }
+
+  async deleteVoyage(id: number): Promise<boolean> {
+    try {
+      // First delete all waypoints associated with this voyage
+      await db.delete(waypoints).where(eq(waypoints.voyageId, id));
+      
+      // Then delete the voyage
+      const result = await db.delete(voyages).where(eq(voyages.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting voyage:", error);
+      return false;
+    }
+  }
+
+  // =========== Waypoint Methods =============
+  async getWaypoint(id: number): Promise<Waypoint | null> {
+    try {
+      const [waypoint] = await db.select().from(waypoints).where(eq(waypoints.id, id));
+      return waypoint || null;
+    } catch (error) {
+      console.error("Error fetching waypoint:", error);
+      return null;
+    }
+  }
+
+  async getWaypointsByVoyage(voyageId: number): Promise<Waypoint[]> {
+    try {
+      return await db
+        .select()
+        .from(waypoints)
+        .where(eq(waypoints.voyageId, voyageId))
+        .orderBy(waypoints.orderIndex);
+    } catch (error) {
+      console.error("Error fetching waypoints by voyage:", error);
+      return [];
+    }
+  }
+
+  async createWaypoint(waypoint: InsertWaypoint): Promise<Waypoint> {
+    try {
+      const [newWaypoint] = await db.insert(waypoints).values(waypoint).returning();
+      return newWaypoint;
+    } catch (error) {
+      console.error("Error creating waypoint:", error);
+      throw error;
+    }
+  }
+
+  async updateWaypoint(id: number, waypointUpdate: Partial<Waypoint>): Promise<Waypoint | null> {
+    try {
+      const [updatedWaypoint] = await db
+        .update(waypoints)
+        .set(waypointUpdate)
+        .where(eq(waypoints.id, id))
+        .returning();
+      return updatedWaypoint || null;
+    } catch (error) {
+      console.error("Error updating waypoint:", error);
+      return null;
+    }
+  }
+
+  async deleteWaypoint(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(waypoints).where(eq(waypoints.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting waypoint:", error);
+      return false;
+    }
+  }
+
+  // =========== Fuel Consumption Chart Methods =============
+  async getFuelConsumptionData(vesselId: number): Promise<FuelConsumptionChart[]> {
+    try {
+      return await db
+        .select()
+        .from(fuelConsumptionChart)
+        .where(eq(fuelConsumptionChart.vesselId, vesselId))
+        .orderBy(fuelConsumptionChart.engineRpm);
+    } catch (error) {
+      console.error("Error fetching fuel consumption data:", error);
+      return [];
+    }
+  }
+
+  async addFuelConsumptionDataPoint(dataPoint: InsertFuelConsumptionChart): Promise<FuelConsumptionChart> {
+    try {
+      const [newDataPoint] = await db.insert(fuelConsumptionChart).values({
+        ...dataPoint,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      return newDataPoint;
+    } catch (error) {
+      console.error("Error adding fuel consumption data point:", error);
+      throw error;
+    }
+  }
+
+  async updateFuelConsumptionDataPoint(id: number, dataPointUpdate: Partial<FuelConsumptionChart>): Promise<FuelConsumptionChart | null> {
+    try {
+      const [updatedDataPoint] = await db
+        .update(fuelConsumptionChart)
+        .set({
+          ...dataPointUpdate,
+          updatedAt: new Date()
+        })
+        .where(eq(fuelConsumptionChart.id, id))
+        .returning();
+      return updatedDataPoint || null;
+    } catch (error) {
+      console.error("Error updating fuel consumption data point:", error);
+      return null;
+    }
+  }
+
+  async deleteFuelConsumptionDataPoint(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(fuelConsumptionChart).where(eq(fuelConsumptionChart.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting fuel consumption data point:", error);
+      return false;
+    }
+  }
+
+  // =========== Speed Chart Methods =============
+  async getSpeedData(vesselId: number): Promise<SpeedChart[]> {
+    try {
+      return await db
+        .select()
+        .from(speedChart)
+        .where(eq(speedChart.vesselId, vesselId))
+        .orderBy(speedChart.engineRpm);
+    } catch (error) {
+      console.error("Error fetching speed data:", error);
+      return [];
+    }
+  }
+
+  async addSpeedDataPoint(dataPoint: InsertSpeedChart): Promise<SpeedChart> {
+    try {
+      const [newDataPoint] = await db.insert(speedChart).values({
+        ...dataPoint,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      return newDataPoint;
+    } catch (error) {
+      console.error("Error adding speed data point:", error);
+      throw error;
+    }
+  }
+
+  async updateSpeedDataPoint(id: number, dataPointUpdate: Partial<SpeedChart>): Promise<SpeedChart | null> {
+    try {
+      const [updatedDataPoint] = await db
+        .update(speedChart)
+        .set({
+          ...dataPointUpdate,
+          updatedAt: new Date()
+        })
+        .where(eq(speedChart.id, id))
+        .returning();
+      return updatedDataPoint || null;
+    } catch (error) {
+      console.error("Error updating speed data point:", error);
+      return null;
+    }
+  }
+
+  async deleteSpeedDataPoint(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(speedChart).where(eq(speedChart.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting speed data point:", error);
+      return false;
+    }
+  }
+
+  // This is a placeholder for a method that is currently only implemented in MemStorage
+  async generatePredictiveMaintenanceForEquipment(equipmentId: number): Promise<PredictiveMaintenance[]> {
+    // In the future, this would implement the actual algorithm for generating predictions
+    // based on past maintenance records
+    console.log(`Would generate predictions for equipment ${equipmentId} in database storage`);
+    return [];
+  }
+
+  // These methods are placeholders for methods that are currently only implemented in MemStorage
+  async getIsmDocumentsForReview(): Promise<IsmDocument[]> { return []; }
+  async getUpcomingIsmAudits(): Promise<IsmAudit[]> { return []; }
+  async getIsmTrainingByParticipant(userId: number): Promise<IsmTraining[]> { return []; }
+  async getUpcomingIsmTraining(): Promise<IsmTraining[]> { return []; }
+  async getIsmIncidentsByReporter(userId: number): Promise<IsmIncident[]> { return []; }
+  async getOpenIsmIncidents(): Promise<IsmIncident[]> { return []; }
 }
