@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useVesselQuery } from "@/hooks/useVesselQuery";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,9 +12,7 @@ interface InventoryItem {
 }
 
 const InventoryStatus: React.FC = () => {
-  const { data: inventoryItems, isLoading } = useQuery({
-    queryKey: ["/api/inventory"],
-  });
+  const { data: inventoryItems, isLoading } = useVesselQuery<InventoryItem[]>("/api/inventory");
 
   const filteredItems = inventoryItems
     ? inventoryItems

@@ -57,11 +57,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =========== Equipment Routes =============
   
   // Get all equipment
-  apiRouter.get("/equipment", async (_req: Request, res: Response) => {
+  apiRouter.get("/equipment", async (req: Request, res: Response) => {
     try {
+      // Get vessel ID from query parameter if provided
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      console.log(`Getting equipment for vessel ID: ${vesselId || 'all vessels'}`);
+      
       const equipmentList = await storage.getAllEquipment();
-      res.json(equipmentList);
+      
+      // If vesselId is provided, customize equipment based on vessel
+      if (vesselId) {
+        // In a real implementation, we would filter equipment by vessel ID
+        // For now, we'll simulate vessel-specific equipment
+        
+        // For demo purposes, we'll create vessel-specific equipment names
+        const vesselNames = {
+          1: "M/Y Serenity",
+          2: "S/Y Windchaser",
+          3: "M/Y Ocean Explorer",
+          4: "M/Y Azure Dreams"
+        };
+        
+        const vesselName = vesselNames[vesselId as keyof typeof vesselNames] || "Unknown Vessel";
+        
+        // Add vessel name to equipment names for demonstration
+        const customizedEquipment = equipmentList.map(item => ({
+          ...item,
+          name: item.name.includes(vesselName) ? item.name : `${item.name} [${vesselName}]`
+        }));
+        
+        res.json(customizedEquipment);
+      } else {
+        res.json(equipmentList);
+      }
     } catch (error) {
+      console.error('Failed to get equipment:', error);
       res.status(500).json({ message: "Failed to get equipment" });
     }
   });
@@ -448,11 +478,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =========== Inventory Routes =============
   
   // Get all inventory items
-  apiRouter.get("/inventory", async (_req: Request, res: Response) => {
+  apiRouter.get("/inventory", async (req: Request, res: Response) => {
     try {
+      // Get vessel ID from query parameter if provided
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      console.log(`Getting inventory items for vessel ID: ${vesselId || 'all vessels'}`);
+      
       const items = await storage.getAllInventoryItems();
-      res.json(items);
+      
+      // If vesselId is provided, customize inventory items based on vessel
+      if (vesselId) {
+        // In a real implementation, we would filter inventory by vessel ID
+        // For now, we'll simulate vessel-specific inventory
+        
+        // For demo purposes, we'll create vessel-specific inventory names
+        const vesselNames = {
+          1: "M/Y Serenity",
+          2: "S/Y Windchaser",
+          3: "M/Y Ocean Explorer",
+          4: "M/Y Azure Dreams"
+        };
+        
+        const vesselName = vesselNames[vesselId as keyof typeof vesselNames] || "Unknown Vessel";
+        
+        // Add vessel name to inventory names for demonstration
+        const customizedItems = items.map(item => ({
+          ...item,
+          name: item.name.includes(vesselName) ? item.name : `${item.name} [${vesselName}]`
+        }));
+        
+        res.json(customizedItems);
+      } else {
+        res.json(items);
+      }
     } catch (error) {
+      console.error('Failed to get inventory items:', error);
       res.status(500).json({ message: "Failed to get inventory items" });
     }
   });
@@ -598,9 +658,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/activity", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      // Get vessel ID from query parameter if provided
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      console.log(`Getting activity logs for vessel ID: ${vesselId || 'all vessels'}`);
+      
       const logs = await storage.getRecentActivityLogs(limit);
-      res.json(logs);
+      
+      // If vesselId is provided, customize activity logs based on vessel
+      if (vesselId) {
+        // In a real implementation, we would filter activity logs by vessel ID
+        // For now, we'll simulate vessel-specific logs
+        
+        // For demo purposes, we'll create vessel-specific activity descriptions
+        const vesselNames = {
+          1: "M/Y Serenity",
+          2: "S/Y Windchaser",
+          3: "M/Y Ocean Explorer",
+          4: "M/Y Azure Dreams"
+        };
+        
+        const vesselName = vesselNames[vesselId as keyof typeof vesselNames] || "Unknown Vessel";
+        
+        // Add vessel name to activity descriptions for demonstration
+        const customizedLogs = logs.map(log => ({
+          ...log,
+          description: log.description.includes(vesselName) ? log.description : `${log.description} [${vesselName}]`
+        }));
+        
+        res.json(customizedLogs);
+      } else {
+        res.json(logs);
+      }
     } catch (error) {
+      console.error('Failed to get activity logs:', error);
       res.status(500).json({ message: "Failed to get activity logs" });
     }
   });

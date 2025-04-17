@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useVesselQuery } from "@/hooks/useVesselQuery";
 import { 
   Activity, 
   Zap, 
@@ -86,9 +86,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ equipment }) => {
 };
 
 const EquipmentOverview: React.FC = () => {
-  const { data: equipment, isLoading } = useQuery({ 
-    queryKey: ["/api/equipment"],
-  });
+  const { data: equipment, isLoading } = useVesselQuery<Equipment[]>("/api/equipment");
 
   return (
     <div className="bg-white rounded-lg shadow">

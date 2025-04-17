@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useVesselQuery } from "@/hooks/useVesselQuery";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check, Plus, AlertTriangle, Settings } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
@@ -33,9 +33,7 @@ const activityIcons = {
 };
 
 const ActivityFeed: React.FC = () => {
-  const { data: activities, isLoading } = useQuery({
-    queryKey: ["/api/activity"],
-  });
+  const { data: activities, isLoading } = useVesselQuery<ActivityLog[]>("/api/activity");
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
