@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useVesselQuery } from "@/hooks/useVesselQuery";
+import { useVessel } from "@/contexts/VesselContext";
 import { 
   PlusCircle, 
   FilterX, 
@@ -109,30 +111,43 @@ const Tasks = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const { toast } = useToast();
 
-  // Fetch all tasks
-  const { data: tasks, isLoading: tasksLoading } = useQuery<Task[]>({
-    queryKey: ["/api/tasks"],
-  });
-
-  // Fetch equipment for task form
-  const { data: equipment } = useQuery<Equipment[]>({
-    queryKey: ["/api/equipment"],
-  });
-
+  const queryClient = useQueryClient();
+  const { currentVessel, vesselChanged, resetVesselChanged } = useVessel();
+  
+  // Use vessel-specific query hooks
+  const { data: tasks, isLoading: tasksLoading } = useVesselQuery<Task[]>("/api/tasks");
+  
+  // Fetch equipment for task form - vessel specific
+  const { data: equipment } = useVesselQuery<Equipment[]>("/api/equipment");
+  
   // Fetch users for task assignment
-  const { data: users } = useQuery<User[]>({
-    queryKey: ["/api/users"],
-  });
+  const { data: users } = useVesselQuery<User[]>("/api/users");
+  
+  // When vessel changes, invalidate all queries to reload data for the new vessel
+  useEffect(() => {
+    if (vesselChanged) {
+      console.log(`Tasks page: Vessel changed to ${currentVessel.name} (ID: ${currentVessel.id}). Reloading data...`);
+      
+      // Invalidate all queries to force refetching with new vessel context
+      queryClient.invalidateQueries();
+      
+      // Reset the vessel changed flag
+      resetVesselChanged();
+    }
+  }, [vesselChanged, currentVessel, queryClient, resetVesselChanged]);
 
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async (updatedTask: Partial<Task> & { id: number }) => {
       const { id, ...taskData } = updatedTask;
-      await apiRequest("PATCH", `/api/tasks/${id}`, taskData);
+      const vesselId = currentVessel.id;
+      // Pass vesselId as query parameter
+      await apiRequest("PATCH", `/api/tasks/${id}?vesselId=${vesselId}`, taskData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      // Invalidate the vessel-specific queries
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", currentVessel.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard", currentVessel.id] });
       toast({
         title: "Task updated",
         description: "The task has been successfully updated.",
