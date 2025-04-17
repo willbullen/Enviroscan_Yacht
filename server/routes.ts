@@ -2442,8 +2442,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =========== Voyage Planner Routes =============
   
   // Get all voyages for a vessel
-  apiRouter.get("/voyages/:vesselId", asyncHandler(async (req: Request, res: Response) => {
-    const vesselId = parseInt(req.params.vesselId);
+  apiRouter.get("/voyages", asyncHandler(async (req: Request, res: Response) => {
+    const vesselId = parseInt(req.query.vesselId as string);
     if (isNaN(vesselId)) {
       return res.status(400).json({ error: "Invalid vessel ID" });
     }
@@ -2453,7 +2453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Get a specific voyage
-  apiRouter.get("/voyage/:id", asyncHandler(async (req: Request, res: Response) => {
+  apiRouter.get("/voyages/:id", asyncHandler(async (req: Request, res: Response) => {
     const voyageId = parseInt(req.params.id);
     if (isNaN(voyageId)) {
       return res.status(400).json({ error: "Invalid voyage ID" });
@@ -2468,7 +2468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Create a new voyage
-  apiRouter.post("/voyage", asyncHandler(async (req: Request, res: Response) => {
+  apiRouter.post("/voyages", asyncHandler(async (req: Request, res: Response) => {
     const validationResult = insertVoyageSchema.safeParse(req.body);
     if (!validationResult.success) {
       return res.status(400).json({ 
@@ -2493,7 +2493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Update a voyage
-  apiRouter.put("/voyage/:id", asyncHandler(async (req: Request, res: Response) => {
+  apiRouter.put("/voyages/:id", asyncHandler(async (req: Request, res: Response) => {
     const voyageId = parseInt(req.params.id);
     if (isNaN(voyageId)) {
       return res.status(400).json({ error: "Invalid voyage ID" });
@@ -2520,7 +2520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Delete a voyage
-  apiRouter.delete("/voyage/:id", asyncHandler(async (req: Request, res: Response) => {
+  apiRouter.delete("/voyages/:id", asyncHandler(async (req: Request, res: Response) => {
     const voyageId = parseInt(req.params.id);
     if (isNaN(voyageId)) {
       return res.status(400).json({ error: "Invalid voyage ID" });
@@ -2547,8 +2547,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Get waypoints for a specific voyage
-  apiRouter.get("/waypoints/:voyageId", asyncHandler(async (req: Request, res: Response) => {
-    const voyageId = parseInt(req.params.voyageId);
+  apiRouter.get("/waypoints", asyncHandler(async (req: Request, res: Response) => {
+    const voyageId = parseInt(req.query.voyageId as string);
     if (isNaN(voyageId)) {
       return res.status(400).json({ error: "Invalid voyage ID" });
     }
@@ -2557,8 +2557,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(waypoints);
   }));
 
+  // Get a specific waypoint
+  apiRouter.get("/waypoints/:id", asyncHandler(async (req: Request, res: Response) => {
+    const waypointId = parseInt(req.params.id);
+    if (isNaN(waypointId)) {
+      return res.status(400).json({ error: "Invalid waypoint ID" });
+    }
+
+    const waypoint = await storage.getWaypoint(waypointId);
+    if (!waypoint) {
+      return res.status(404).json({ error: "Waypoint not found" });
+    }
+
+    return res.json(waypoint);
+  }));
+
   // Create a new waypoint
-  apiRouter.post("/waypoint", asyncHandler(async (req: Request, res: Response) => {
+  apiRouter.post("/waypoints", asyncHandler(async (req: Request, res: Response) => {
     const validationResult = insertWaypointSchema.safeParse(req.body);
     if (!validationResult.success) {
       return res.status(400).json({ 
@@ -2587,7 +2602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Update a waypoint
-  apiRouter.put("/waypoint/:id", asyncHandler(async (req: Request, res: Response) => {
+  apiRouter.put("/waypoints/:id", asyncHandler(async (req: Request, res: Response) => {
     const waypointId = parseInt(req.params.id);
     if (isNaN(waypointId)) {
       return res.status(400).json({ error: "Invalid waypoint ID" });
@@ -2617,7 +2632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Delete a waypoint
-  apiRouter.delete("/waypoint/:id", asyncHandler(async (req: Request, res: Response) => {
+  apiRouter.delete("/waypoints/:id", asyncHandler(async (req: Request, res: Response) => {
     const waypointId = parseInt(req.params.id);
     if (isNaN(waypointId)) {
       return res.status(400).json({ error: "Invalid waypoint ID" });
