@@ -15,6 +15,8 @@ import NotFound from "@/pages/not-found";
 import VesselAdmin from "@/pages/VesselAdmin";
 import { VoyagesListPage } from "@/pages/VoyagesListPage";
 import { VoyageDetailsPage } from "@/pages/VoyageDetailsPage";
+import { VoyageCreatePage } from "@/pages/VoyageCreatePage";
+import { VoyageEditPage } from "@/pages/VoyageEditPage";
 
 function App() {
   return (
