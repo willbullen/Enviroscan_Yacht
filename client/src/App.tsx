@@ -13,6 +13,8 @@ import FinancialManagement from "@/pages/FinancialManagement";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 import VesselAdmin from "@/pages/VesselAdmin";
+import { VoyagesListPage } from "@/pages/VoyagesListPage";
+import { VoyageDetailsPage } from "@/pages/VoyageDetailsPage";
 
 function App() {
   return (
@@ -30,6 +32,10 @@ function App() {
       
       {/* Vessel Management Routes */}
       <Route path="/vessels/admin" component={VesselAdmin} />
+      
+      {/* Voyage Planner Routes */}
+      <Route path="/voyages" component={VoyagesListPage} />
+      <Route path="/voyages/:id" component={VoyageDetailsPage} />
       
       {/* Yacht System Routes */}
       <Route path="/mechanical" component={YachtSystem} />
