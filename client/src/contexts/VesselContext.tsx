@@ -19,6 +19,8 @@ interface VesselContextType {
   vessels: Vessel[];
   currentVessel: Vessel;
   setCurrentVessel: (vesselId: number) => void;
+  vesselChanged: boolean;
+  resetVesselChanged: () => void;
   // We would add more functions here in a real implementation 
   // such as addVessel, updateVessel, etc.
 }
@@ -28,11 +30,19 @@ const VesselContext = createContext<VesselContextType | undefined>(undefined);
 export const VesselProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [vessels] = useState<Vessel[]>(mockVessels);
   const [currentVesselId, setCurrentVesselId] = useState<number>(1);
+  const [vesselChanged, setVesselChanged] = useState<boolean>(false);
 
   const currentVessel = vessels.find(v => v.id === currentVesselId) || vessels[0];
 
   const setCurrentVessel = (vesselId: number) => {
-    setCurrentVesselId(vesselId);
+    if (vesselId !== currentVesselId) {
+      setCurrentVesselId(vesselId);
+      setVesselChanged(true);
+    }
+  };
+  
+  const resetVesselChanged = () => {
+    setVesselChanged(false);
   };
 
   return (
@@ -41,6 +51,8 @@ export const VesselProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         vessels,
         currentVessel,
         setCurrentVessel,
+        vesselChanged,
+        resetVesselChanged,
       }}
     >
       {children}

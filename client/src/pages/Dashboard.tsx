@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, Package, CheckCircle, AlertTriangle, ArrowUp, ArrowDown, ChevronDown, CircleEllipsis, TrendingUp, Users, Settings2, LineChart } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import TasksTable from "@/components/dashboard/TasksTable";
@@ -12,6 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useVessel } from "@/contexts/VesselContext";
+import { useEffect } from "react";
 
 /**
  * New statistics card component with modern design
@@ -75,9 +77,25 @@ const StatCard = ({
 };
 
 const Dashboard = () => {
+  const queryClient = useQueryClient();
+  const { currentVessel, vesselChanged, resetVesselChanged } = useVessel();
+  
   const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ["/api/dashboard"],
+    queryKey: ["/api/dashboard", currentVessel.id],
   });
+  
+  // When vessel changes, invalidate all queries to reload data for the new vessel
+  useEffect(() => {
+    if (vesselChanged) {
+      console.log(`Vessel changed to ${currentVessel.name} (ID: ${currentVessel.id}). Reloading data...`);
+      
+      // Invalidate all queries to force refetching with new vessel context
+      queryClient.invalidateQueries();
+      
+      // Reset the vessel changed flag
+      resetVesselChanged();
+    }
+  }, [vesselChanged, currentVessel, queryClient, resetVesselChanged]);
 
   return (
     <MainLayout title="Dashboard">
