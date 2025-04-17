@@ -36,8 +36,9 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   return (
     <div
       className={cn(
-        "bg-background/95 backdrop-blur border-r text-foreground h-screen overflow-y-auto flex-shrink-0 transition-all duration-200 ease-in-out z-30",
-        isOpen ? "md:w-64 w-64" : "md:w-14 w-0 md:w-14"
+        "bg-background/95 backdrop-blur border-r text-foreground h-screen overflow-y-auto flex-shrink-0 transition-all duration-200 ease-in-out z-30 sticky top-0",
+        isOpen ? "md:w-64 w-64" : "md:w-14 w-0 md:w-14",
+        isMobile ? "fixed left-0" : ""
       )}
     >
       {/* Logo */}

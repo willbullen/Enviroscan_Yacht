@@ -22,14 +22,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   }, [isMobile]);
 
   return (
-    <div className="h-screen bg-background flex overflow-hidden">
+    <div className="h-screen w-full bg-background flex overflow-hidden">
       {/* Sidebar - Fixed position */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main content area with fixed header and scrollable content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top header navigation - Fixed */}
-        <header className="h-14 border-b flex items-center px-4 bg-background/95 backdrop-blur z-10">
+        <header className="h-14 border-b flex items-center px-4 bg-background/95 backdrop-blur z-10 sticky top-0">
           <div className="flex items-center gap-4 w-full">
             {/* Mobile menu button */}
             {isMobile && (
@@ -71,7 +71,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         </header>
 
         {/* Main content area - Scrollable */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
       </div>

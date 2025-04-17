@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  /* Fixed layout styles for the application */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  
   /* Base transition for all theme changes */
   :root {
     --transition-duration: 300ms;
