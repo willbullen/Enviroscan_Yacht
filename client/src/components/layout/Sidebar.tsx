@@ -23,7 +23,8 @@ import {
   Ship,
   Anchor,
   AlertTriangle,
-  Clock
+  Clock,
+  Shield
 } from "lucide-react";
 import eastwindLogo from '@/assets/eastwind_logo.svg';
 import { Button } from "@/components/ui/button";
@@ -145,63 +146,18 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           </div>
         </Link>
 
-        <Link href="/schedule">
+        <Link href="/calendar">
           <div 
             className={cn(
               "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/schedule" 
+              location === "/calendar" 
                 ? "bg-accent text-accent-foreground" 
                 : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
               !isOpen && "justify-center p-2"
             )} 
           >
-            <Clock className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Schedule</span>}
-          </div>
-        </Link>
-        
-        <Link href="/incidents">
-          <div 
-            className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/incidents" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-              !isOpen && "justify-center p-2"
-            )} 
-          >
-            <AlertTriangle className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Incidents</span>}
-          </div>
-        </Link>
-        
-        <Link href="/predictive-maintenance">
-          <div 
-            className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/predictive-maintenance" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-              !isOpen && "justify-center p-2"
-            )} 
-          >
-            <BarChart4 className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Analytics</span>}
-          </div>
-        </Link>
-        
-        <Link href="/ism-management">
-          <div 
-            className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/ism-management" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-              !isOpen && "justify-center p-2"
-            )} 
-          >
-            <ClipboardCheck className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Documents</span>}
+            <CalendarIcon className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Calendar</span>}
           </div>
         </Link>
         
@@ -216,7 +172,37 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             )} 
           >
             <Users className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Team</span>}
+            {isOpen && <span>Crew Management</span>}
+          </div>
+        </Link>
+        
+        <Link href="/ism-management">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/ism-management" 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <Shield className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>ISM Management</span>}
+          </div>
+        </Link>
+        
+        <Link href="/predictive-maintenance">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/predictive-maintenance" 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <BarChart4 className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Predictive Maintenance</span>}
           </div>
         </Link>
         
