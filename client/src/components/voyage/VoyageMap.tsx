@@ -1,25 +1,44 @@
-import { useState, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Plus, Map } from 'lucide-react';
+import { Trash2, Plus, Map, Navigation, Anchor } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix Leaflet marker icons
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
+// Fix Leaflet marker icons - this is necessary because Leaflet's assets are not properly handled by bundlers
+// We need to manually specify the icon URLs
 const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
 });
 
+// This ensures the default Leaflet marker has our specified icon
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// Component to recenter map when waypoints change
+function MapCenterAdjuster({ waypoints }: { waypoints: Waypoint[] }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (waypoints.length > 0) {
+      // Create bounds that include all waypoints
+      const bounds = L.latLngBounds(waypoints.map(wp => [
+        parseFloat(wp.latitude), 
+        parseFloat(wp.longitude)
+      ]));
+      
+      // Add some padding around the bounds
+      map.fitBounds(bounds.pad(0.2));
+    }
+  }, [map, waypoints]);
+  
+  return null;
+}
 
 // Define types for waypoints
 type Waypoint = {
@@ -159,6 +178,7 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
           center={defaultCenter}
           zoom={defaultZoom}
           style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -211,11 +231,12 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
           {polylinePositions.length > 1 && (
             <Polyline 
               positions={polylinePositions} 
-              color="#3b82f6" 
-              weight={3} 
-              opacity={0.7} 
+              pathOptions={{ color: "#3b82f6", weight: 3, opacity: 0.7 }}
             />
           )}
+          
+          {/* Center map on all waypoints */}
+          {waypoints.length > 0 && <MapCenterAdjuster waypoints={waypoints} />}
           
           {/* Add click handler for adding new waypoints */}
           {!readOnly && <MapClickHandler onMapClick={handleMapClick} />}
