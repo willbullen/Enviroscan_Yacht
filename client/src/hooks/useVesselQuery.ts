@@ -11,7 +11,7 @@ export function useVesselQuery<TData = unknown>(
   endpoint: string,
   options?: Omit<UseQueryOptions<TData>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<TData> {
-  const { currentVessel } = useVessel();
+  const { currentVessel, vesselChanged, resetVesselChanged } = useVessel();
   
   return useQuery<TData>({
     queryKey: [endpoint, currentVessel.id],
@@ -24,6 +24,15 @@ export function useVesselQuery<TData = unknown>(
       }
       
       return response.json() as Promise<TData>;
+    },
+    // Refetch when vessel changes
+    refetchOnWindowFocus: false,
+    refetchInterval: vesselChanged ? 0 : false,
+    onSuccess: () => {
+      // Reset the vesselChanged flag after successful data fetch
+      if (vesselChanged) {
+        resetVesselChanged();
+      }
     },
     ...options
   });

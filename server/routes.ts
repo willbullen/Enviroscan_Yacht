@@ -324,6 +324,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
       console.log(`Getting upcoming tasks for vessel ID: ${vesselId || 'all vessels'}`);
       
+      // Vessel-specific task data
+      const vesselTasks = {
+        1: [
+          {
+            id: 2,
+            title: "Generator 1 Fuel Filter Replacement [M/Y Serenity]",
+            description: "Replace primary and secondary fuel filters on Generator 1",
+            equipmentId: 3,
+            priority: "medium",
+            status: "upcoming",
+            dueDate: "2025-04-18T13:10:39.195Z",
+            assignedToId: 2,
+            completedById: null,
+            completedAt: null,
+            procedure: [
+              "Shut down generator and allow to cool",
+              "Close fuel supply valve",
+              "Remove and replace primary fuel filter",
+              "Remove and replace secondary fuel filter",
+              "Open fuel supply valve",
+              "Prime fuel system",
+              "Start generator and check for leaks",
+              "Run for 10 minutes and verify operation"
+            ],
+            estimatedDuration: 90,
+            actualDuration: null,
+            notes: "Keep spare filters in stock",
+            createdById: 1,
+            createdAt: "2025-04-03T13:10:39.243Z"
+          },
+          {
+            id: 5,
+            title: "Liferaft Annual Inspection [M/Y Serenity]",
+            description: "Send liferaft to certified facility for annual inspection",
+            equipmentId: 6,
+            priority: "high",
+            status: "upcoming",
+            dueDate: "2025-05-03T13:10:39.195Z",
+            assignedToId: 3,
+            completedById: null,
+            completedAt: null,
+            procedure: [
+              "Contact certified liferaft service center",
+              "Schedule pickup/delivery",
+              "Ensure replacement liferaft is installed temporarily",
+              "Update documentation with new inspection date",
+              "Check certifications are valid"
+            ],
+            estimatedDuration: 480,
+            actualDuration: null,
+            notes: "Regulatory requirement, must be completed before expiry",
+            createdById: 1,
+            createdAt: "2025-04-03T13:10:39.311Z"
+          }
+        ],
+        2: [
+          {
+            id: 12,
+            title: "Main Sail Inspection [S/Y Windchaser]",
+            description: "Inspect main sail for damage and wear",
+            equipmentId: 7,
+            priority: "high",
+            status: "upcoming",
+            dueDate: "2025-04-25T10:30:00.000Z",
+            assignedToId: 2,
+            completedById: null,
+            completedAt: null,
+            procedure: [
+              "Lower sail completely",
+              "Lay out on deck for full inspection",
+              "Check all stitching and reinforcements",
+              "Inspect for UV damage, especially at leech",
+              "Document any findings with photos"
+            ],
+            estimatedDuration: 120,
+            actualDuration: null,
+            notes: "Pay special attention to areas that were repaired last season",
+            createdById: 1,
+            createdAt: "2025-04-01T09:45:00.000Z"
+          },
+          {
+            id: 13,
+            title: "Rigging Tension Check [S/Y Windchaser]",
+            description: "Verify and adjust standing rigging tension",
+            equipmentId: 8,
+            priority: "medium",
+            status: "upcoming",
+            dueDate: "2025-04-22T14:00:00.000Z",
+            assignedToId: 3,
+            completedById: null,
+            completedAt: null,
+            procedure: [
+              "Use tension gauge to check all shrouds and stays",
+              "Record measurements in log",
+              "Compare to manufacturer specifications",
+              "Make adjustments as needed",
+              "Check mast alignment"
+            ],
+            estimatedDuration: 90,
+            actualDuration: null,
+            notes: "Refer to tune guide in documentation folder",
+            createdById: 1,
+            createdAt: "2025-04-02T11:30:00.000Z"
+          }
+        ],
+        3: [
+          {
+            id: 24,
+            title: "ROV System Inspection [M/Y Ocean Explorer]",
+            description: "Complete inspection of underwater ROV system",
+            equipmentId: 15,
+            priority: "medium",
+            status: "upcoming",
+            dueDate: "2025-04-29T09:00:00.000Z",
+            assignedToId: 4,
+            completedById: null,
+            completedAt: null,
+            procedure: [
+              "Inspect tether for damage",
+              "Check all seals and O-rings",
+              "Test thrusters in maintenance mode",
+              "Calibrate depth sensors",
+              "Run full system diagnostic"
+            ],
+            estimatedDuration: 180,
+            actualDuration: null,
+            notes: "System required for upcoming scientific mission",
+            createdById: 2,
+            createdAt: "2025-04-05T16:20:00.000Z"
+          }
+        ],
+        4: [
+          {
+            id: 35,
+            title: "Jacuzzi Pump Maintenance [M/Y Azure Dreams]",
+            description: "Service main circulation pump for jacuzzi system",
+            equipmentId: 22,
+            priority: "low",
+            status: "upcoming",
+            dueDate: "2025-05-06T11:00:00.000Z",
+            assignedToId: 2,
+            completedById: null,
+            completedAt: null,
+            procedure: [
+              "Drain jacuzzi completely",
+              "Turn off all power to system",
+              "Access pump housing in technical area",
+              "Inspect impeller and replace if worn",
+              "Replace seals and gaskets",
+              "Lubricate bearings",
+              "Reassemble and test"
+            ],
+            estimatedDuration: 150,
+            actualDuration: null,
+            notes: "Replacement parts located in equipment locker B",
+            createdById: 1,
+            createdAt: "2025-04-10T08:15:00.000Z"
+          },
+          {
+            id: 36,
+            title: "Tender Engine 100hr Service [M/Y Azure Dreams]",
+            description: "Perform 100 hour service on Williams tender engine",
+            equipmentId: 23,
+            priority: "medium",
+            status: "upcoming",
+            dueDate: "2025-04-27T13:30:00.000Z",
+            assignedToId: 3,
+            completedById: null,
+            completedAt: null,
+            procedure: [
+              "Change engine oil and filter",
+              "Change fuel filters",
+              "Inspect cooling system",
+              "Check and adjust valve clearance",
+              "Test all electronics",
+              "Run engine and check for proper operation"
+            ],
+            estimatedDuration: 120,
+            actualDuration: null,
+            notes: "Use only OEM parts as per warranty requirements",
+            createdById: 1,
+            createdAt: "2025-04-08T14:45:00.000Z"
+          }
+        ]
+      };
+      
+      // Default task list for when no vessel is specified
       const baseTasks = [
         {
           id: 2,
@@ -378,9 +565,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
       
-      // If vesselId is provided, customize tasks based on vessel
-      if (vesselId) {
-        // For demo purposes, we'll create vessel-specific task titles
+      // If vesselId is provided, return vessel-specific tasks
+      if (vesselId && vesselId in vesselTasks) {
+        const tasks = vesselTasks[vesselId as keyof typeof vesselTasks];
+        console.log(`Returning ${tasks.length} vessel-specific upcoming tasks for vessel ${vesselId}`);
+        return res.json(tasks);
+      } else if (vesselId) {
+        // Fallback for vessels not in our mock data
         const vesselNames = {
           1: "M/Y Serenity",
           2: "S/Y Windchaser",
@@ -396,10 +587,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: task.title.includes(vesselName) ? task.title : `${task.title} [${vesselName}]`
         }));
         
-        console.log(`Returning ${customizedTasks.length} upcoming tasks from new endpoint for vessel ${vesselId}`);
+        console.log(`Returning ${customizedTasks.length} fallback tasks for vessel ${vesselId}`);
         return res.json(customizedTasks);
       } else {
-        console.log(`Returning ${baseTasks.length} upcoming tasks from new endpoint`);
+        console.log(`Returning ${baseTasks.length} generic tasks (no vessel specified)`);
         return res.json(baseTasks);
       }
     } catch (error) {

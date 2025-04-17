@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { ChevronDown, Ship, PlusCircle, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-// Mock data for vessels - would come from API in real implementation
-const mockVessels = [
-  { id: 1, name: 'M/Y Serenity', type: 'Motor Yacht', length: '45m' },
-  { id: 2, name: 'S/Y Windchaser', type: 'Sailing Yacht', length: '38m' },
-  { id: 3, name: 'M/Y Ocean Explorer', type: 'Expedition Yacht', length: '65m' },
-  { id: 4, name: 'M/Y Azure Dreams', type: 'Motor Yacht', length: '52m' },
-];
+import { useVessel, Vessel } from '@/contexts/VesselContext';
 
 interface VesselSelectorProps {
   currentVesselId?: number;
@@ -27,10 +20,13 @@ interface VesselSelectorProps {
 const VesselSelector = ({ currentVesselId = 1, onVesselChange }: VesselSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const { vessels } = useVessel();
   
-  const currentVessel = mockVessels.find(v => v.id === currentVesselId) || mockVessels[0];
+  // Find the current vessel from the context's vessel array
+  const currentVessel = vessels.find(v => v.id === currentVesselId) || vessels[0];
   
   const handleVesselSelect = (vesselId: number) => {
+    console.log(`Vessel changed to ${vessels.find(v => v.id === vesselId)?.name} (ID: ${vesselId}). Reloading data...`);
     onVesselChange(vesselId);
     setOpen(false);
   };
@@ -52,7 +48,7 @@ const VesselSelector = ({ currentVesselId = 1, onVesselChange }: VesselSelectorP
       <DropdownMenuContent align="end" className="w-[240px]">
         <DropdownMenuLabel>Select Vessel</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {mockVessels.map((vessel) => (
+        {vessels.map((vessel) => (
           <DropdownMenuItem 
             key={vessel.id}
             className={`flex items-center gap-2 ${vessel.id === currentVesselId ? 'bg-accent/50' : ''}`}
