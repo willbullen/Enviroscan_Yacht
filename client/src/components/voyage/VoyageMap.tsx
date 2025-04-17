@@ -3,11 +3,12 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap,
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Plus, Map, Navigation, Anchor, AlertTriangle } from 'lucide-react';
+import { Trash2, Plus, Map, Navigation, Anchor, AlertTriangle, Info } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import * as L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
+import { MarineChartMarkers } from './MarineChartMarkers';
 
 // Custom nautical waypoint marker icons
 const WaypointIcon = L.icon({
@@ -274,12 +275,21 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
               />
             </LayersControl.Overlay>
             
-            <LayersControl.Overlay name="Wind Forecast" checked>
+            <LayersControl.Overlay name="NOAA Nautical Charts">
               <TileLayer
-                attribution='&copy; <a href="https://openweathermap.org/">OpenWeatherMap</a>'
-                url="https://tile.openweathermap.org/map/wind/{z}/{x}/{y}.png?appid=YOUR_API_KEY"
+                attribution='&copy; <a href="https://seamlessrnc.nauticalcharts.noaa.gov/">NOAA Nautical Charts</a>'
+                url="https://tileservice.charts.noaa.gov/tiles/servlet/tiles/NAUTICAL_SMALL/{z}/{x}/{y}.png"
                 zIndex={300}
-                opacity={0.5}
+                opacity={0.6}
+              />
+            </LayersControl.Overlay>
+            
+            <LayersControl.Overlay name="Port and Harbor Info">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openseamap.org/">OpenSeaMap</a> contributors'
+                url="https://t1.openseamap.org/harbours/{z}/{x}/{y}.png"
+                zIndex={450}
+                opacity={0.8}
               />
             </LayersControl.Overlay>
           </LayersControl>
@@ -306,8 +316,11 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
                 icon={waypointIcon}
               >
                 <Popup>
-                  <div className="p-1">
-                    <div className="font-bold mb-1">
+                  <div className="p-1 min-w-[220px]">
+                    <div className="font-bold mb-1 flex items-center">
+                      {index === 0 && <span className="bg-green-600 text-white text-[8px] px-1 py-0.5 rounded mr-1">START</span>}
+                      {index === waypoints.length - 1 && <span className="bg-red-600 text-white text-[8px] px-1 py-0.5 rounded mr-1">END</span>}
+                      
                       {readOnly ? (
                         waypoint.name || `Waypoint ${index + 1}`
                       ) : (
@@ -319,12 +332,53 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
                         />
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      {waypoint.latitude}, {waypoint.longitude}
+                    
+                    <div className="text-xs text-muted-foreground mb-1 border-b pb-1">
+                      <div className="grid grid-cols-2 gap-1">
+                        <span className="flex items-center">
+                          <Map className="h-3 w-3 mr-1 opacity-70" />
+                          {waypoint.latitude}° N
+                        </span>
+                        <span>
+                          {waypoint.longitude}° E
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-xs mb-1">
-                      Order: {index + 1} of {waypoints.length}
+                    
+                    <div className="text-xs mb-2 grid grid-cols-2 gap-x-2 gap-y-1">
+                      <div className="col-span-2 flex justify-between items-center">
+                        <span className="flex items-center">
+                          <Anchor className="h-3 w-3 mr-1 opacity-70" /> 
+                          Waypoint {index + 1} of {waypoints.length}
+                        </span>
+                        
+                        {waypoint.engineRpm && (
+                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 px-1 py-0.5 rounded">
+                            {waypoint.engineRpm} RPM
+                          </span>
+                        )}
+                      </div>
+                      
+                      {index > 0 && waypoints[index - 1] && (
+                        <div className="col-span-2 mt-1 flex items-center">
+                          <div className="bg-muted rounded px-1 py-0.5 text-[10px] w-full">
+                            <div className="flex justify-between">
+                              <span>Previous: {waypoints[index - 1].name || `Waypoint ${index}`}</span>
+                              {waypoint.distance && (
+                                <span className="font-medium">{waypoint.distance} NM</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
+                    
+                    {waypoint.notes && (
+                      <div className="text-xs italic text-muted-foreground mb-1 border-t pt-1">
+                        "{waypoint.notes}"
+                      </div>
+                    )}
+                    
                     {!readOnly && (
                       <Button
                         variant="destructive"
@@ -391,6 +445,11 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
             </>
           )}
           
+          {/* Add marine navigational aids and cardinal markers */}
+          <LayersControl.Overlay name="Navigational Markers" checked>
+            <MarineChartMarkers />
+          </LayersControl.Overlay>
+          
           {/* Center map on all waypoints */}
           {waypoints.length > 0 && <MapCenterAdjuster waypoints={waypoints} />}
           
@@ -405,11 +464,44 @@ export function VoyageMap({ voyageId, waypoints, onWaypointsChange, readOnly = f
         )}
       </div>
       
-      {waypoints.length > 0 && (
-        <div className="p-2 bg-muted/30 text-xs text-muted-foreground">
+      {/* Marine symbols legend and waypoint count footer */}
+      <div className="p-2 bg-muted/30 text-xs text-muted-foreground flex justify-between items-center">
+        <div>
           {waypoints.length} waypoint{waypoints.length !== 1 ? 's' : ''} defined
         </div>
-      )}
+        
+        <div className="flex items-center gap-2">
+          <button 
+            className="text-xs flex items-center bg-card px-2 py-1 rounded hover:bg-accent transition-colors"
+            onClick={() => {
+              // Open marine chart legend in a small popup or modal
+              // For now, just show a toast with info
+              toast({
+                title: "Maritime Chart Legend",
+                description: "Navigation aids and symbols information available on marine chart",
+              });
+            }}
+          >
+            <Info className="h-3 w-3 mr-1" />
+            Chart Legend
+          </button>
+          
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-green-600"></div>
+            <span>Start</span>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-red-600"></div>
+            <span>End</span>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+            <span>Course</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
