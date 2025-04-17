@@ -372,28 +372,56 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{voyageId ? 'Edit Voyage' : 'Create New Voyage'}</CardTitle>
-        <CardDescription>
-          {voyageId 
-            ? 'Update voyage details and settings' 
-            : 'Enter details to create a new voyage plan'
-          }
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>{voyageId ? 'Edit Voyage' : 'Create New Voyage'}</CardTitle>
+            <CardDescription>
+              {voyageId 
+                ? 'Update voyage details and settings' 
+                : 'Enter details to create a new voyage plan'
+              }
+            </CardDescription>
+          </div>
+          
+          {/* Progress indicator */}
+          <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${activeTab === 'details' ? 'bg-primary text-primary-foreground' : 'border'}`}>
+              <span>1</span>
+            </div>
+            <ChevronRight className="h-4 w-4" />
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${activeTab === 'waypoints' ? 'bg-primary text-primary-foreground' : 'border'}`}>
+              <span>2</span>
+            </div>
+          </div>
+        </div>
       </CardHeader>
+      
       <CardContent>
         <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="details" className="flex items-center">
-              <Info className="mr-2 h-4 w-4" />
+              <Ship className="mr-2 h-4 w-4" />
               Voyage Details
             </TabsTrigger>
             <TabsTrigger value="waypoints" className="flex items-center">
-              <Map className="mr-2 h-4 w-4" />
-              Waypoints
+              <Navigation className="mr-2 h-4 w-4" />
+              Route Planning
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="details" className="space-y-4 mt-4">
+            <div className="p-4 bg-muted/30 rounded-lg border border-muted mb-6">
+              <div className="flex items-start space-x-3">
+                <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Step 1: Enter Basic Voyage Information</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Start by providing a name for your voyage, status, and dates. After completing this step, you'll define waypoints in the next step.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmitWithWaypoints)} className="space-y-6">
                 <FormField
@@ -585,18 +613,100 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="p-2 bg-muted/30 rounded flex items-center space-x-2">
-                  <Info className="h-5 w-5 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Click the "Add Waypoint" button and then click on the map to add waypoints to your voyage plan.
-                  </p>
+                <div className="p-4 bg-muted/30 rounded-lg border border-muted mb-6">
+                  <div className="flex items-start space-x-3">
+                    <Navigation className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">Step 2: Plan Your Voyage Route</h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Define your voyage route by adding waypoints on the map. These will be used to calculate distances, fuel consumption, and estimated arrival times.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex items-center space-x-2 text-xs">
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white">1</div>
+                          <span>Click "Add Waypoint" button</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-xs">
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white">2</div>
+                          <span>Click on the map to place waypoints</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-xs">
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white">3</div>
+                          <span>Click on a waypoint to edit or remove it</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
-                <VoyageMap 
-                  voyageId={voyageId} 
-                  waypoints={waypoints} 
-                  onWaypointsChange={handleWaypointsChange} 
-                />
+                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
+                  <div>
+                    <div className="mb-3">
+                      <h3 className="text-lg font-medium mb-1">Marine Chart</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Interactive map for adding and managing waypoints
+                      </p>
+                    </div>
+                    <VoyageMap 
+                      voyageId={voyageId} 
+                      waypoints={waypoints} 
+                      onWaypointsChange={handleWaypointsChange} 
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="mb-3">
+                      <h3 className="text-lg font-medium mb-1">Waypoint List</h3>
+                      <p className="text-sm text-muted-foreground">
+                        All defined waypoints for this voyage
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-md overflow-hidden">
+                      {waypoints.length === 0 ? (
+                        <div className="p-6 text-center">
+                          <Map className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-muted-foreground">No waypoints added yet</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Use the map to add waypoints to your voyage
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="divide-y">
+                          {waypoints.map((waypoint, index) => (
+                            <div key={index} className="p-3 hover:bg-muted/50">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium">{waypoint.name || `Waypoint ${index + 1}`}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {waypoint.latitude}, {waypoint.longitude}
+                                  </p>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => {
+                                    // Remove this waypoint
+                                    const updatedWaypoints = waypoints.filter((_, i) => i !== index);
+                                    // Update orderIndex values
+                                    const reindexedWaypoints = updatedWaypoints.map((wp, i) => ({
+                                      ...wp,
+                                      orderIndex: i,
+                                    }));
+                                    handleWaypointsChange(reindexedWaypoints);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="flex justify-between space-x-2 pt-4">
                   <Button 
@@ -604,7 +714,7 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
                     variant="secondary"
                     onClick={() => setActiveTab('details')}
                   >
-                    Back to Details
+                    <span className="mr-2">Back to Details</span>
                   </Button>
                   
                   <div className="flex space-x-2">
