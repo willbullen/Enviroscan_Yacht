@@ -1,5 +1,6 @@
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useMobile } from "@/hooks/use-mobile";
 import { 
   Home, 
   CheckSquare, 
@@ -30,13 +31,13 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const [location] = useLocation();
+  const isMobile = useMobile();
 
   return (
     <div
       className={cn(
-        "bg-background/95 backdrop-blur border-r text-foreground flex-shrink-0 fixed inset-y-0 left-0 transform transition-all duration-200 ease-in-out z-30",
-        "md:sticky md:top-0 md:h-screen",
-        isOpen ? "md:w-64 w-64 translate-x-0" : "md:w-14 w-14 -translate-x-full md:translate-x-0"
+        "bg-background/95 backdrop-blur border-r text-foreground h-screen overflow-y-auto flex-shrink-0 transition-all duration-200 ease-in-out z-30",
+        isOpen ? "md:w-64 w-64" : "md:w-14 w-0 md:w-14"
       )}
     >
       {/* Logo */}
@@ -44,7 +45,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         {isOpen ? (
           <>
             <img src={eastwindLogo} alt="Eastwind Management" className="h-8" />
-            <span className="text-lg font-semibold ml-2">Eastwind Inc.</span>
+            <span className="text-lg font-semibold ml-2">Yacht Management</span>
           </>
         ) : (
           <div className="flex items-center justify-center w-full">
