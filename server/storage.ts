@@ -182,10 +182,10 @@ export class MemStorage implements IStorage {
   private ismIncidents: Map<number, IsmIncident>;
   
   // Voyage Planning maps
-  private voyages: Map<number, Voyage>;
-  private waypoints: Map<number, Waypoint>;
-  private fuelConsumptionCharts: Map<number, FuelConsumptionChart>;
-  private speedCharts: Map<number, SpeedChart>;
+  private voyages: Map<number, Voyage> = new Map<number, Voyage>();
+  private waypoints: Map<number, Waypoint> = new Map<number, Waypoint>();
+  private fuelConsumptionCharts: Map<number, FuelConsumptionChart> = new Map<number, FuelConsumptionChart>();
+  private speedCharts: Map<number, SpeedChart> = new Map<number, SpeedChart>();
   
   private userCurrentId: number;
   private equipmentCurrentId: number;
@@ -198,10 +198,10 @@ export class MemStorage implements IStorage {
   private ismAuditCurrentId: number;
   private ismTrainingCurrentId: number;
   private ismIncidentCurrentId: number;
-  private voyageCurrentId: number;
-  private waypointCurrentId: number;
-  private fuelChartCurrentId: number;
-  private speedChartCurrentId: number;
+  private voyageCurrentId: number = 1;
+  private waypointCurrentId: number = 1;
+  private fuelChartCurrentId: number = 1;
+  private speedChartCurrentId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -877,6 +877,151 @@ export class MemStorage implements IStorage {
 
   async deleteIsmIncident(id: number): Promise<boolean> {
     return this.ismIncidents.delete(id);
+  }
+  
+  // Voyage Planning methods
+  async getVoyage(id: number): Promise<Voyage | undefined> {
+    return this.voyages.get(id);
+  }
+
+  async getVoyagesByVessel(vesselId: number): Promise<Voyage[]> {
+    return Array.from(this.voyages.values()).filter(
+      (voyage) => voyage.vesselId === vesselId
+    );
+  }
+
+  async getVoyagesByStatus(status: string): Promise<Voyage[]> {
+    return Array.from(this.voyages.values()).filter(
+      (voyage) => voyage.status === status
+    );
+  }
+
+  async createVoyage(insertVoyage: InsertVoyage): Promise<Voyage> {
+    const id = this.voyageCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const voyage: Voyage = { ...insertVoyage, id, createdAt, updatedAt };
+    this.voyages.set(id, voyage);
+    return voyage;
+  }
+
+  async updateVoyage(id: number, voyageUpdate: Partial<Voyage>): Promise<Voyage | undefined> {
+    const existingVoyage = this.voyages.get(id);
+    if (!existingVoyage) return undefined;
+    
+    const updatedVoyage = { 
+      ...existingVoyage, 
+      ...voyageUpdate,
+      updatedAt: new Date()
+    };
+    this.voyages.set(id, updatedVoyage);
+    return updatedVoyage;
+  }
+
+  async deleteVoyage(id: number): Promise<boolean> {
+    // First delete all waypoints associated with this voyage
+    const waypointsToDelete = await this.getWaypointsByVoyage(id);
+    for (const waypoint of waypointsToDelete) {
+      await this.deleteWaypoint(waypoint.id);
+    }
+    return this.voyages.delete(id);
+  }
+
+  // Waypoint methods
+  async getWaypoint(id: number): Promise<Waypoint | undefined> {
+    return this.waypoints.get(id);
+  }
+
+  async getWaypointsByVoyage(voyageId: number): Promise<Waypoint[]> {
+    return Array.from(this.waypoints.values())
+      .filter(waypoint => waypoint.voyageId === voyageId)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+  }
+
+  async createWaypoint(insertWaypoint: InsertWaypoint): Promise<Waypoint> {
+    const id = this.waypointCurrentId++;
+    const waypoint: Waypoint = { ...insertWaypoint, id };
+    this.waypoints.set(id, waypoint);
+    return waypoint;
+  }
+
+  async updateWaypoint(id: number, waypointUpdate: Partial<Waypoint>): Promise<Waypoint | undefined> {
+    const existingWaypoint = this.waypoints.get(id);
+    if (!existingWaypoint) return undefined;
+    
+    const updatedWaypoint = { ...existingWaypoint, ...waypointUpdate };
+    this.waypoints.set(id, updatedWaypoint);
+    return updatedWaypoint;
+  }
+
+  async deleteWaypoint(id: number): Promise<boolean> {
+    return this.waypoints.delete(id);
+  }
+
+  // Fuel Consumption Chart methods
+  async getFuelConsumptionData(vesselId: number): Promise<FuelConsumptionChart[]> {
+    return Array.from(this.fuelConsumptionCharts.values())
+      .filter(dataPoint => dataPoint.vesselId === vesselId)
+      .sort((a, b) => a.engineRpm - b.engineRpm);
+  }
+
+  async addFuelConsumptionDataPoint(insertDataPoint: InsertFuelConsumptionChart): Promise<FuelConsumptionChart> {
+    const id = this.fuelChartCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const dataPoint: FuelConsumptionChart = { ...insertDataPoint, id, createdAt, updatedAt };
+    this.fuelConsumptionCharts.set(id, dataPoint);
+    return dataPoint;
+  }
+
+  async updateFuelConsumptionDataPoint(id: number, dataPointUpdate: Partial<FuelConsumptionChart>): Promise<FuelConsumptionChart | undefined> {
+    const existingDataPoint = this.fuelConsumptionCharts.get(id);
+    if (!existingDataPoint) return undefined;
+    
+    const updatedDataPoint = { 
+      ...existingDataPoint, 
+      ...dataPointUpdate,
+      updatedAt: new Date()
+    };
+    this.fuelConsumptionCharts.set(id, updatedDataPoint);
+    return updatedDataPoint;
+  }
+
+  async deleteFuelConsumptionDataPoint(id: number): Promise<boolean> {
+    return this.fuelConsumptionCharts.delete(id);
+  }
+
+  // Speed Chart methods
+  async getSpeedData(vesselId: number): Promise<SpeedChart[]> {
+    return Array.from(this.speedCharts.values())
+      .filter(dataPoint => dataPoint.vesselId === vesselId)
+      .sort((a, b) => a.engineRpm - b.engineRpm);
+  }
+
+  async addSpeedDataPoint(insertDataPoint: InsertSpeedChart): Promise<SpeedChart> {
+    const id = this.speedChartCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const dataPoint: SpeedChart = { ...insertDataPoint, id, createdAt, updatedAt };
+    this.speedCharts.set(id, dataPoint);
+    return dataPoint;
+  }
+
+  async updateSpeedDataPoint(id: number, dataPointUpdate: Partial<SpeedChart>): Promise<SpeedChart | undefined> {
+    const existingDataPoint = this.speedCharts.get(id);
+    if (!existingDataPoint) return undefined;
+    
+    const updatedDataPoint = { 
+      ...existingDataPoint, 
+      ...dataPointUpdate,
+      updatedAt: new Date()
+    };
+    this.speedCharts.set(id, updatedDataPoint);
+    return updatedDataPoint;
+  }
+
+  async deleteSpeedDataPoint(id: number): Promise<boolean> {
+    return this.speedCharts.delete(id);
   }
 
   // Initialize demo data

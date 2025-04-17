@@ -18,7 +18,11 @@ import {
   insertIsmIncidentSchema,
   insertCrewMemberSchema,
   insertCrewDocumentSchema,
-  crewDocuments
+  crewDocuments,
+  insertVoyageSchema,
+  insertWaypointSchema,
+  insertFuelConsumptionChartSchema,
+  insertSpeedChartSchema
 } from "@shared/schema";
 import { db } from "./db";
 
