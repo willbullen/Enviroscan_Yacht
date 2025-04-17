@@ -183,11 +183,14 @@ const Settings = () => {
 
   const onAppearanceSubmit = async (data: z.infer<typeof appearanceFormSchema>) => {
     try {
-      await apiRequest("POST", "/api/update-theme", {
-        primary: data.colorScheme,
-        radius: data.radius,
-        appearance: data.theme,
-        variant: "tint" // Default to tint variant
+      await apiRequest("/api/update-theme", {
+        method: "POST",
+        data: {
+          primary: data.colorScheme,
+          radius: data.radius,
+          appearance: data.theme,
+          variant: "tint" // Default to tint variant
+        }
       });
       
       toast({
@@ -195,7 +198,19 @@ const Settings = () => {
         description: "Your appearance settings have been updated.",
       });
       
-      // Reload the page to apply theme changes
+      // Save theme to localStorage too for immediate effect
+      const themeData = {
+        primary: data.colorScheme,
+        radius: data.radius,
+        appearance: data.theme,
+        variant: "tint"
+      };
+      localStorage.setItem('theme', JSON.stringify(themeData));
+      
+      // Apply the theme immediately
+      document.documentElement.setAttribute("data-theme", data.theme);
+      
+      // Reload the page to fully apply theme changes
       setTimeout(() => {
         window.location.reload();
       }, 1000);
