@@ -423,7 +423,7 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
             </div>
             
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmitWithWaypoints)} className="space-y-6">
+              <div className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"
@@ -590,7 +590,18 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button 
+                      type="button" 
+                      onClick={() => {
+                        const data = form.getValues();
+                        form.trigger().then(isValid => {
+                          if (isValid) {
+                            onSubmitWithWaypoints(data);
+                          }
+                        });
+                      }}
+                      disabled={isSubmitting}
+                    >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -602,7 +613,7 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
                     </Button>
                   </div>
                 </div>
-              </form>
+              </div>
             </Form>
           </TabsContent>
           
@@ -726,7 +737,27 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
                       Cancel
                     </Button>
                     <Button 
-                      onClick={() => form.handleSubmit(onSubmitWithWaypoints)()}
+                      type="button"
+                      onClick={() => {
+                        // Get the current data from the form
+                        const data = form.getValues();
+                        // Manually trigger validation
+                        form.trigger().then(isValid => {
+                          if (isValid) {
+                            // If form is valid, submit it
+                            onSubmitWithWaypoints(data);
+                          } else {
+                            // If not valid, show an error toast
+                            toast({
+                              title: "Validation Error",
+                              description: "Please check the form for errors",
+                              variant: "destructive",
+                            });
+                            // Switch to details tab to show errors
+                            setActiveTab("details");
+                          }
+                        });
+                      }}
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
