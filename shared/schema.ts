@@ -329,6 +329,75 @@ export const insertCrewDocumentSchema = createInsertSchema(crewDocuments).omit({
 export type InsertCrewDocument = z.infer<typeof insertCrewDocumentSchema>;
 export type CrewDocument = typeof crewDocuments.$inferSelect;
 
+// Voyage Planning Schema
+export const voyages = pgTable('voyages', {
+  id: serial('id').primaryKey(),
+  vesselId: integer('vessel_id').notNull(),
+  name: text('name').notNull(),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  status: text('status').default('planned').notNull(), // planned, active, completed, canceled
+  fuelConsumption: decimal('fuel_consumption'), // Total estimated fuel consumption
+  distance: decimal('distance'), // Total distance in nautical miles
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  notes: text('notes'),
+  createdById: integer('created_by_id')
+});
+
+export const waypoints = pgTable('waypoints', {
+  id: serial('id').primaryKey(),
+  voyageId: integer('voyage_id').notNull().references(() => voyages.id, { onDelete: 'cascade' }),
+  orderIndex: integer('order_index').notNull(), // Sequence of the waypoint in the voyage
+  latitude: decimal('latitude').notNull(),
+  longitude: decimal('longitude').notNull(),
+  name: text('name'),
+  estimatedArrival: timestamp('estimated_arrival'),
+  estimatedDeparture: timestamp('estimated_departure'),
+  plannedSpeed: decimal('planned_speed'), // Speed in knots
+  engineRpm: integer('engine_rpm'),
+  fuelConsumption: decimal('fuel_consumption'), // Fuel consumption for leg to this waypoint
+  distance: decimal('distance'), // Distance from previous waypoint in nautical miles
+  notes: text('notes')
+});
+
+export const fuelConsumptionChart = pgTable('fuel_consumption_chart', {
+  id: serial('id').primaryKey(),
+  vesselId: integer('vessel_id').notNull(),
+  engineRpm: integer('engine_rpm').notNull(),
+  fuelConsumptionRate: decimal('fuel_consumption_rate').notNull(), // L/h
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+export const speedChart = pgTable('speed_chart', {
+  id: serial('id').primaryKey(),
+  vesselId: integer('vessel_id').notNull(),
+  engineRpm: integer('engine_rpm').notNull(),
+  speed: decimal('speed').notNull(), // Speed in knots
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Types
+export type Voyage = typeof voyages.$inferSelect;
+export type InsertVoyage = typeof voyages.$inferInsert;
+
+export type Waypoint = typeof waypoints.$inferSelect;
+export type InsertWaypoint = typeof waypoints.$inferInsert;
+
+export type FuelConsumptionChart = typeof fuelConsumptionChart.$inferSelect;
+export type InsertFuelConsumptionChart = typeof fuelConsumptionChart.$inferInsert;
+
+export type SpeedChart = typeof speedChart.$inferSelect;
+export type InsertSpeedChart = typeof speedChart.$inferInsert;
+
+// Zod Schemas
+export const insertVoyageSchema = createInsertSchema(voyages).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertWaypointSchema = createInsertSchema(waypoints).omit({ id: true });
+export const insertFuelConsumptionChartSchema = createInsertSchema(fuelConsumptionChart).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSpeedChartSchema = createInsertSchema(speedChart).omit({ id: true, createdAt: true, updatedAt: true });
+
 // Financial Management Schema
 
 // Vessels schema

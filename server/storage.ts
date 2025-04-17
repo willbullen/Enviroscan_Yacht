@@ -11,7 +11,11 @@ import {
   ismTraining, type IsmTraining, type InsertIsmTraining,
   ismIncidents, type IsmIncident, type InsertIsmIncident,
   crewMembers, type CrewMember, type InsertCrewMember,
-  crewDocuments, type CrewDocument, type InsertCrewDocument
+  crewDocuments, type CrewDocument, type InsertCrewDocument,
+  voyages, type Voyage, type InsertVoyage,
+  waypoints, type Waypoint, type InsertWaypoint,
+  fuelConsumptionChart, type FuelConsumptionChart, type InsertFuelConsumptionChart,
+  speedChart, type SpeedChart, type InsertSpeedChart
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
