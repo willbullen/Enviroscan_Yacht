@@ -2586,31 +2586,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create a new waypoint
   apiRouter.post("/waypoints", asyncHandler(async (req: Request, res: Response) => {
-    const validationResult = insertWaypointSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ 
-        error: "Invalid waypoint data", 
-        details: validationResult.error.format() 
-      });
-    }
-
-    const waypoint = await storage.createWaypoint(validationResult.data);
-    
-    // Log activity
-    await storage.createActivityLog({
-      activityType: 'waypoint_created',
-      description: `New waypoint created${waypoint.name ? ': ' + waypoint.name : ''}`,
-      userId: req.body.userId || null,
-      relatedEntityType: 'waypoint',
-      relatedEntityId: waypoint.id,
-      metadata: { 
-        voyageId: waypoint.voyageId,
-        position: `${waypoint.latitude}, ${waypoint.longitude}`,
-        orderIndex: waypoint.orderIndex
+    try {
+      // Parse dates before validation
+      const data = {
+        ...req.body,
+        estimatedArrival: req.body.estimatedArrival ? new Date(req.body.estimatedArrival) : null,
+        estimatedDeparture: req.body.estimatedDeparture ? new Date(req.body.estimatedDeparture) : null
+      };
+      
+      const validationResult = insertWaypointSchema.safeParse(data);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid waypoint data", 
+          details: validationResult.error.format() 
+        });
       }
-    });
-    
-    return res.status(201).json(waypoint);
+
+      const waypoint = await storage.createWaypoint(validationResult.data);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'waypoint_created',
+        description: `New waypoint created${waypoint.name ? ': ' + waypoint.name : ''}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'waypoint',
+        relatedEntityId: waypoint.id,
+        metadata: { 
+          voyageId: waypoint.voyageId,
+          position: `${waypoint.latitude}, ${waypoint.longitude}`,
+          orderIndex: waypoint.orderIndex
+        }
+      });
+      
+      return res.status(201).json(waypoint);
+    } catch (error) {
+      console.error("Error creating waypoint:", error);
+      return res.status(500).json({ error: "Failed to create waypoint" });
+    }
   }));
 
   // Update a waypoint
