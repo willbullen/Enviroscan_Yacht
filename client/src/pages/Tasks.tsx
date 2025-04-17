@@ -295,7 +295,7 @@ const Tasks = () => {
                 </DialogDescription>
               </DialogHeader>
               <TaskForm
-                task={selectedTask}
+                task={selectedTask as any} /* Type casting to resolve differing Task interfaces */
                 onClose={() => {
                   setTaskFormOpen(false);
                   setSelectedTask(null);
