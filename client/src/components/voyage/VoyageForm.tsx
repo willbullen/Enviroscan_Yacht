@@ -7,17 +7,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Calendar } from 'lucide-react';
+import { Loader2, Calendar, Map, Info } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VoyageMap } from './VoyageMap';
 
 // Define the form schema with validation
 const voyageFormSchema = z.object({
@@ -37,9 +39,29 @@ interface VoyageFormProps {
   onSuccess?: () => void;
 }
 
+// Define waypoint type for the form
+type Waypoint = {
+  id?: number;
+  voyageId?: number;
+  orderIndex: number;
+  latitude: string;
+  longitude: string;
+  name: string | null;
+  estimatedArrival?: string | null;
+  estimatedDeparture?: string | null;
+  plannedSpeed?: string | null;
+  engineRpm?: number | null;
+  fuelConsumption?: string | null;
+  distance?: string | null;
+  notes?: string | null;
+};
+
 export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
+  const [isLoadingWaypoints, setIsLoadingWaypoints] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, navigate] = useLocation();
@@ -86,6 +108,29 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
         });
     }
   }, [voyageId, defaultValues, form, toast]);
+  
+  // Load waypoints if editing a voyage
+  useEffect(() => {
+    if (voyageId) {
+      setIsLoadingWaypoints(true);
+      fetch(`/api/waypoints?voyageId=${voyageId}`)
+        .then(response => response.json())
+        .then(data => {
+          setWaypoints(data);
+        })
+        .catch(error => {
+          toast({
+            title: 'Error',
+            description: 'Failed to load waypoints',
+            variant: 'destructive',
+          });
+          console.error('Failed to load waypoints:', error);
+        })
+        .finally(() => {
+          setIsLoadingWaypoints(false);
+        });
+    }
+  }, [voyageId, toast]);
 
   // Handle form submission
   const onSubmit = async (data: VoyageFormValues) => {
@@ -141,6 +186,146 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
     );
   }
 
+  // Handle changes to the waypoints array
+  const handleWaypointsChange = async (newWaypoints: Waypoint[]) => {
+    setWaypoints(newWaypoints);
+    
+    // If we have a voyage ID, we need to sync the waypoints with the server
+    if (voyageId) {
+      try {
+        // First, get the current waypoints from the server
+        const response = await fetch(`/api/waypoints?voyageId=${voyageId}`);
+        const existingWaypoints = await response.json();
+        
+        // Process each updated waypoint
+        for (const waypoint of newWaypoints) {
+          if (waypoint.id) {
+            // Update existing waypoint
+            const existingWp = existingWaypoints.find((wp: Waypoint) => wp.id === waypoint.id);
+            if (existingWp && 
+                (waypoint.latitude !== existingWp.latitude || 
+                waypoint.longitude !== existingWp.longitude || 
+                waypoint.name !== existingWp.name || 
+                waypoint.orderIndex !== existingWp.orderIndex)) {
+              
+              await apiRequest(`/api/waypoints/${waypoint.id}`, {
+                method: 'PATCH',
+                data: waypoint
+              });
+            }
+          } else {
+            // Create new waypoint
+            await apiRequest('/api/waypoints', {
+              method: 'POST',
+              data: {
+                ...waypoint,
+                voyageId
+              }
+            });
+          }
+        }
+        
+        // Find deleted waypoints (those in existingWaypoints but not in newWaypoints)
+        for (const existingWp of existingWaypoints) {
+          if (!newWaypoints.some(wp => wp.id === existingWp.id)) {
+            // Delete this waypoint
+            await apiRequest(`/api/waypoints/${existingWp.id}`, {
+              method: 'DELETE'
+            });
+          }
+        }
+        
+        // Reload the waypoints after changes
+        const updatedResponse = await fetch(`/api/waypoints?voyageId=${voyageId}`);
+        const updatedWaypoints = await updatedResponse.json();
+        setWaypoints(updatedWaypoints);
+        
+        toast({
+          title: 'Success',
+          description: 'Waypoints updated successfully',
+        });
+      } catch (error) {
+        console.error('Error updating waypoints:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update waypoints',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  // Create a new voyage with waypoints
+  const onSubmitWithWaypoints = async (data: VoyageFormValues) => {
+    setIsSubmitting(true);
+
+    try {
+      // First, create or update the voyage
+      const endpoint = voyageId ? `/api/voyages/${voyageId}` : '/api/voyages';
+      const method = voyageId ? 'PATCH' : 'POST';
+
+      const response = await apiRequest(endpoint, {
+        method,
+        data,
+      });
+
+      // If creating a new voyage, handle waypoints
+      if (!voyageId && response.id) {
+        const newVoyageId = response.id;
+        
+        // Save any waypoints that were added before the voyage was created
+        if (waypoints.length > 0) {
+          try {
+            for (const waypoint of waypoints) {
+              await apiRequest('/api/waypoints', {
+                method: 'POST',
+                data: {
+                  ...waypoint,
+                  voyageId: newVoyageId
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Error saving waypoints:', error);
+            toast({
+              title: 'Warning',
+              description: 'Created voyage but failed to save some waypoints',
+              variant: 'destructive',
+            });
+          }
+        }
+
+        toast({
+          title: 'Success',
+          description: 'Voyage created successfully',
+        });
+        navigate(`/voyages/${newVoyageId}`);
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Voyage updated successfully',
+        });
+        // Update the query cache to reflect changes
+        queryClient.invalidateQueries({ queryKey: ['/api/voyages'] });
+        if (voyageId) {
+          queryClient.invalidateQueries({ queryKey: [`/api/voyages/${voyageId}`] });
+        }
+        if (onSuccess) {
+          onSuccess();
+        }
+      }
+    } catch (error) {
+      console.error('Error saving voyage:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save voyage',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -153,177 +338,259 @@ export function VoyageForm({ voyageId, defaultValues, onSuccess }: VoyageFormPro
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Voyage Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter voyage name" 
-                      {...field} 
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="details" className="flex items-center">
+              <Info className="mr-2 h-4 w-4" />
+              Voyage Details
+            </TabsTrigger>
+            <TabsTrigger value="waypoints" className="flex items-center">
+              <Map className="mr-2 h-4 w-4" />
+              Waypoints
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details" className="space-y-4 mt-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitWithWaypoints)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Voyage Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter voyage name" 
+                          {...field} 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="planned">Planned</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="canceled">Canceled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Start Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Select date</span>
+                                )}
+                                <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value || undefined}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>End Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Select date</span>
+                                )}
+                                <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value || undefined}
+                              onSelect={field.onChange}
+                              disabled={(date) => {
+                                const startDate = form.getValues("startDate");
+                                return startDate ? date < startDate : false;
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter any additional information about this voyage"
+                          className="min-h-[120px]"
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-between space-x-2 pt-4">
+                  <Button 
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setActiveTab('waypoints')}
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="planned">Planned</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="canceled">Canceled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Start Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Select date</span>
-                            )}
-                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={field.value || undefined}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>End Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Select date</span>
-                            )}
-                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={field.value || undefined}
-                          onSelect={field.onChange}
-                          disabled={(date) => {
-                            const startDate = form.getValues("startDate");
-                            return startDate ? date < startDate : false;
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter any additional information about this voyage"
-                      className="min-h-[120px]"
-                      {...field}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => voyageId ? onSuccess?.() : navigate('/voyages')}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  voyageId ? 'Update Voyage' : 'Create Voyage'
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
+                    Next: Set Waypoints
+                    <Map className="ml-2 h-4 w-4" />
+                  </Button>
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => voyageId ? onSuccess?.() : navigate('/voyages')}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        voyageId ? 'Update Voyage' : 'Create Voyage'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </Form>
+          </TabsContent>
+          
+          <TabsContent value="waypoints" className="space-y-4 mt-4">
+            {isLoadingWaypoints ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="p-2 bg-muted/30 rounded flex items-center space-x-2">
+                  <Info className="h-5 w-5 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Click the "Add Waypoint" button and then click on the map to add waypoints to your voyage plan.
+                  </p>
+                </div>
+                
+                <VoyageMap 
+                  voyageId={voyageId} 
+                  waypoints={waypoints} 
+                  onWaypointsChange={handleWaypointsChange} 
+                />
+                
+                <div className="flex justify-between space-x-2 pt-4">
+                  <Button 
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setActiveTab('details')}
+                  >
+                    Back to Details
+                  </Button>
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => voyageId ? onSuccess?.() : navigate('/voyages')}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={() => form.handleSubmit(onSubmitWithWaypoints)()}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        voyageId ? 'Update Voyage' : 'Create Voyage'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

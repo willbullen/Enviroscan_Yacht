@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { VoyageCalculator } from '@/components/voyage/VoyageCalculator';
+import { VoyageMap } from '@/components/voyage/VoyageMap';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
 import MainLayout from '@/components/layout/MainLayout';
 
@@ -203,6 +204,28 @@ export function VoyageDetailsPage() {
           </CardContent>
         </Card>
       </div>
+      
+      {waypoints.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Route Map</CardTitle>
+            <CardDescription>
+              Visual representation of the voyage route
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[500px] w-full">
+              {/* Import VoyageMap component dynamically to avoid SSR issues with Leaflet */}
+              <VoyageMap 
+                voyageId={voyageId} 
+                waypoints={waypoints} 
+                onWaypointsChange={() => {}} 
+                readOnly={true} 
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="mt-6">
         <VoyageCalculator voyageId={voyageId} />
