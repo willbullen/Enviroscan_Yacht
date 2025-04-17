@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Menu, Search, Bell, PanelRightOpen, PanelRightClose } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -59,6 +60,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
               
               {/* Right side actions */}
               <div className="ml-auto flex items-center gap-2">
+                <ThemeToggle />
                 <Button variant="ghost" size="icon">
                   <Bell className="h-5 w-5" />
                 </Button>
