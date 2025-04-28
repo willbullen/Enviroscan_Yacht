@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
 import {
   Tabs,
@@ -26,6 +27,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -39,6 +49,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, format } from 'date-fns';
 import { 
   Clipboard, 
@@ -115,7 +136,19 @@ const statusColors = {
 };
 
 const ISMManagement: React.FC = () => {
+  const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState("documents");
+  const [isNewDocumentDialogOpen, setIsNewDocumentDialogOpen] = useState(false);
+  const [newDocument, setNewDocument] = useState({
+    title: '',
+    documentType: 'procedure',
+    documentNumber: '',
+    version: '1.0',
+    status: 'draft',
+    content: '',
+    tags: ['safety', 'ism'],
+    createdBy: 1 // Assuming user ID 1 (Captain) is creating this
+  });
 
   // Queries for different ISM entities
   const documentsQuery = useQuery({
@@ -137,6 +170,54 @@ const ISMManagement: React.FC = () => {
     queryKey: ['/api/ism/incidents'],
     enabled: selectedTab === "incidents",
   });
+  
+  const handleDocumentSubmit = async () => {
+    try {
+      // Validate form
+      if (!newDocument.title || !newDocument.documentNumber) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create the document using apiRequest
+      await apiRequest('/api/ism/documents', {
+        method: 'POST',
+        data: newDocument,
+      });
+      
+      // Success handling
+      queryClient.invalidateQueries({queryKey: ['/api/ism/documents']});
+      setIsNewDocumentDialogOpen(false);
+      
+      // Reset form
+      setNewDocument({
+        title: '',
+        documentType: 'procedure',
+        documentNumber: '',
+        version: '1.0',
+        status: 'draft',
+        content: '',
+        tags: ['safety', 'ism'],
+        createdBy: 1
+      });
+      
+      toast({
+        title: "Success",
+        description: "Document created successfully",
+      });
+    } catch (error: any) {
+      console.error('Error creating document:', error);
+      toast({
+        title: "Error",
+        description: `Failed to create document: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   const renderStatus = (status: string) => {
     const colorClass = statusColors[status as keyof typeof statusColors] || "bg-gray-500";
@@ -175,7 +256,7 @@ const ISMManagement: React.FC = () => {
               <Search className="w-4 h-4" /> Search
             </Button>
           </div>
-          <Button className="flex items-center gap-1">
+          <Button className="flex items-center gap-1" onClick={() => setIsNewDocumentDialogOpen(true)}>
             <Plus className="w-4 h-4" /> New Document
           </Button>
         </div>
@@ -418,7 +499,104 @@ const ISMManagement: React.FC = () => {
   };
 
   return (
-    <MainLayout>
+    <MainLayout title="ISM Management">
+      {/* New Document Dialog */}
+      <Dialog open={isNewDocumentDialogOpen} onOpenChange={setIsNewDocumentDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New ISM Document</DialogTitle>
+            <DialogDescription>
+              Fill in the details to create a new ISM document. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={newDocument.title}
+                onChange={(e) => setNewDocument({...newDocument, title: e.target.value})}
+                placeholder="Document Title"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="documentType">Document Type</Label>
+              <Select 
+                value={newDocument.documentType}
+                onValueChange={(value) => setNewDocument({...newDocument, documentType: value})}
+              >
+                <SelectTrigger id="documentType">
+                  <SelectValue placeholder="Select Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="procedure">Procedure</SelectItem>
+                  <SelectItem value="policy">Policy</SelectItem>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="checklist">Checklist</SelectItem>
+                  <SelectItem value="form">Form</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="documentNumber">Document Number *</Label>
+              <Input
+                id="documentNumber"
+                value={newDocument.documentNumber}
+                onChange={(e) => setNewDocument({...newDocument, documentNumber: e.target.value})}
+                placeholder="ISM-XXX-000"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="version">Version</Label>
+              <Input
+                id="version"
+                value={newDocument.version}
+                onChange={(e) => setNewDocument({...newDocument, version: e.target.value})}
+                placeholder="1.0"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="status">Status</Label>
+              <Select 
+                value={newDocument.status}
+                onValueChange={(value) => setNewDocument({...newDocument, status: value})}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="pending">Pending Approval</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="outdated">Outdated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="content">Content</Label>
+              <Textarea
+                id="content"
+                value={newDocument.content}
+                onChange={(e) => setNewDocument({...newDocument, content: e.target.value})}
+                placeholder="Document content or description"
+                className="min-h-[120px]"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewDocumentDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleDocumentSubmit}>Create Document</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <div className="p-4 space-y-4">
         <div className="flex justify-between items-center">
           <div>
