@@ -108,14 +108,15 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         <NavLink href="/vessels">
           <div 
             className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
               location === "/vessels" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+                ? "bg-primary/15 text-primary" 
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
               !isOpen && "justify-center p-2"
             )} 
           >
-            <Ship className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {location === "/vessels" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+            <Ship className={cn("h-5 w-5", isOpen && "mr-3")} />
             {isOpen && <span>Vessels</span>}
           </div>
         </NavLink>
@@ -273,8 +274,43 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
       {/* Sidebar Footer */}
       <div className="mt-auto">
+        <nav className="space-y-1 px-2 py-2">
+          {isOpen && <div className="px-3 py-1 text-xs uppercase font-semibold text-muted-foreground/70">Preferences</div>}
+          <NavLink href="/settings">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/settings" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/settings" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <Settings className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>Settings</span>}
+            </div>
+          </NavLink>
+          <NavLink href="/help">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/help" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/help" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <LifeBuoy className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>Help</span>}
+            </div>
+          </NavLink>
+        </nav>
+        
+        {/* User Profile - At the very bottom */}
         {isOpen && (
-          <div className="px-4 py-4 border-t">
+          <div className="px-4 py-4 mt-2 border-t">
             <div className="flex items-center space-x-3">
               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="font-medium text-primary">CS</span>
@@ -286,38 +322,6 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             </div>
           </div>
         )}
-        
-        <nav className="space-y-1 px-2 py-2">
-          {isOpen && <div className="px-3 py-1 text-xs uppercase font-semibold text-muted-foreground/70">Preferences</div>}
-          <NavLink href="/settings">
-            <div 
-              className={cn(
-                "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-                location === "/settings" 
-                  ? "bg-accent text-accent-foreground" 
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-                !isOpen && "justify-center p-2"
-              )} 
-            >
-              <Settings className={cn("h-5 w-5", isOpen && "mr-2")} />
-              {isOpen && <span>Settings</span>}
-            </div>
-          </NavLink>
-          <NavLink href="/help">
-            <div 
-              className={cn(
-                "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-                location === "/help" 
-                  ? "bg-accent text-accent-foreground" 
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-                !isOpen && "justify-center p-2"
-              )} 
-            >
-              <LifeBuoy className={cn("h-5 w-5", isOpen && "mr-2")} />
-              {isOpen && <span>Help</span>}
-            </div>
-          </NavLink>
-        </nav>
       </div>
     </div>
   );
