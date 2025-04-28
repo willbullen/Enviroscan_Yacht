@@ -32,7 +32,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
       {/* Main content area with fixed header and scrollable content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[hsl(var(--sidebar-background))]">
         {/* Dark bezel around the top */}
-        <div className="h-2 bg-black rounded-t-lg z-20"></div>
+        <div className="h-2 bg-[hsl(var(--sidebar-background))] rounded-t-lg z-20"></div>
         
         {/* Top header navigation - Fixed */}
         <header className="h-14 border-b flex items-center px-4 bg-background/95 backdrop-blur z-10 sticky top-0 rounded-t-lg">
