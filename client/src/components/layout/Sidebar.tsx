@@ -58,7 +58,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   return (
     <div
       className={cn(
-        "bg-[hsl(var(--sidebar-background))] text-foreground h-screen overflow-y-auto flex-shrink-0 transition-all duration-200 ease-in-out z-30 sticky top-0",
+        "bg-[hsl(var(--sidebar-background))] text-foreground h-screen overflow-y-auto flex-shrink-0 transition-all duration-300 ease-in-out z-30 sticky top-0 shadow-xl",
         isOpen ? "md:w-64 w-64" : "md:w-14 w-0 md:w-14",
         isMobile ? "fixed left-0" : ""
       )}
@@ -87,18 +87,20 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       )}
 
       {/* Navigation Items - Main */}
-      <nav className="space-y-1 px-2">
+      <nav className="space-y-1 px-2 py-1">
+        {isOpen && <div className="px-3 py-1 text-xs uppercase font-semibold text-muted-foreground/70">Main</div>}
         <NavLink href="/">
           <div 
             className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
               location === "/" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+                ? "bg-primary/15 text-primary" 
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
               !isOpen && "justify-center p-2"
             )} 
           >
-            <LayoutDashboard className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {location === "/" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+            <LayoutDashboard className={cn("h-5 w-5", isOpen && "mr-3")} />
             {isOpen && <span>Dashboard</span>}
           </div>
         </NavLink>
@@ -286,6 +288,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         )}
         
         <nav className="space-y-1 px-2 py-2">
+          {isOpen && <div className="px-3 py-1 text-xs uppercase font-semibold text-muted-foreground/70">Preferences</div>}
           <NavLink href="/settings">
             <div 
               className={cn(

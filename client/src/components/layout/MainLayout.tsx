@@ -48,8 +48,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
               
               {/* Desktop toggle sidebar button */}
               {!isMobile && (
-                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                  {sidebarOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="hover:bg-primary/10 transition-all duration-200"
+                  title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                >
+                  {sidebarOpen ? 
+                    <PanelRightClose className="h-5 w-5 text-muted-foreground hover:text-primary transition-all" /> : 
+                    <PanelRightOpen className="h-5 w-5 text-muted-foreground hover:text-primary transition-all" />
+                  }
                 </Button>
               )}
               
