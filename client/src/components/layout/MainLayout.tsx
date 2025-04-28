@@ -30,7 +30,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main content area with fixed header and scrollable content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[hsl(var(--sidebar-background))]">
         {/* Dark bezel around the top */}
         <div className="h-2 bg-black rounded-t-lg z-20"></div>
         
