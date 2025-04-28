@@ -71,7 +71,10 @@ import {
   Search, 
   Plus, 
   Filter, 
-  Book
+  Book,
+  Upload,
+  File,
+  X
 } from 'lucide-react';
 
 interface ISMDocument {
@@ -147,8 +150,11 @@ const ISMManagement: React.FC = () => {
     status: 'draft',
     content: '',
     tags: ['safety', 'ism'],
+    attachmentPath: '',
     createdBy: 1 // Assuming user ID 1 (Captain) is creating this
   });
+  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Queries for different ISM entities
   const documentsQuery = useQuery({
@@ -171,6 +177,25 @@ const ISMManagement: React.FC = () => {
     enabled: selectedTab === "incidents",
   });
   
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      // Store just the filename in the document data
+      setNewDocument({
+        ...newDocument,
+        attachmentPath: e.target.files[0].name
+      });
+    }
+  };
+  
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+    setNewDocument({
+      ...newDocument,
+      attachmentPath: ''
+    });
+  };
+  
   const handleDocumentSubmit = async () => {
     try {
       // Validate form
@@ -183,10 +208,27 @@ const ISMManagement: React.FC = () => {
         return;
       }
       
+      // If a file is selected, we would first upload it to the server
+      // In a real implementation, we would use FormData to upload the file
+      let documentData = {...newDocument};
+      
+      if (selectedFile) {
+        // In a production environment, you would implement file upload here
+        // This is a simplified example:
+        // const formData = new FormData();
+        // formData.append('file', selectedFile);
+        // const uploadResponse = await fetch('/api/upload', { method: 'POST', body: formData });
+        // const uploadResult = await uploadResponse.json();
+        // documentData.attachmentPath = uploadResult.filePath;
+        
+        // For now, we'll just store the filename
+        documentData.attachmentPath = selectedFile.name;
+      }
+      
       // Create the document using apiRequest
       await apiRequest('/api/ism/documents', {
         method: 'POST',
-        data: newDocument,
+        data: documentData,
       });
       
       // Success handling
@@ -202,8 +244,10 @@ const ISMManagement: React.FC = () => {
         status: 'draft',
         content: '',
         tags: ['safety', 'ism'],
+        attachmentPath: '',
         createdBy: 1
       });
+      setSelectedFile(null);
       
       toast({
         title: "Success",
@@ -587,6 +631,48 @@ const ISMManagement: React.FC = () => {
                 placeholder="Document content or description"
                 className="min-h-[120px]"
               />
+            </div>
+            
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="documentFile">Attach Document</Label>
+              {!selectedFile ? (
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-md p-6 text-center cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => document.getElementById('documentFile')?.click()}>
+                  <Upload className="w-10 h-10 mx-auto mb-2 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload a document, or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF, DOCX, XLSX, or other document formats
+                  </p>
+                  <input 
+                    type="file" 
+                    id="documentFile" 
+                    className="hidden" 
+                    onChange={handleFileChange}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.rtf"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-between border rounded-md p-3">
+                  <div className="flex items-center gap-2">
+                    <File className="w-6 h-6 text-blue-500" />
+                    <div>
+                      <p className="text-sm font-medium">{selectedFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(selectedFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={removeSelectedFile}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           
