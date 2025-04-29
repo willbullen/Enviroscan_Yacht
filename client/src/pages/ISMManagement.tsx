@@ -260,6 +260,11 @@ const ISMManagement: React.FC = () => {
     enabled: selectedTab === "tasks",
   });
   
+  const usersQuery = useQuery({
+    queryKey: ['/api/users'],
+    enabled: selectedTab === "tasks",
+  });
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -642,9 +647,8 @@ const ISMManagement: React.FC = () => {
     
     // For the demo, we'll create a simple lookup by ID
     const userMap = new Map();
-    const usersData = useQuery({ queryKey: ['/api/users'] });
-    if (usersData.data) {
-      (usersData.data as any[]).forEach(user => {
+    if (usersQuery.data) {
+      (usersQuery.data as any[]).forEach(user => {
         userMap.set(user.id, user.fullName);
       });
     }
