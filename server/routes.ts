@@ -2389,14 +2389,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create ISM task
   apiRouter.post("/ism/tasks", async (req: Request, res: Response) => {
     try {
+      console.log("Received ISM task create request with body:", req.body);
+      
+      // If dueDate is a string but looks like a date, convert it to a Date object
+      if (req.body.dueDate && typeof req.body.dueDate === 'string') {
+        try {
+          req.body.dueDate = new Date(req.body.dueDate);
+          console.log("Converted dueDate string to Date object:", req.body.dueDate);
+        } catch (error) {
+          console.error("Failed to parse dueDate string:", error);
+        }
+      }
+      
       const validatedData = insertIsmTaskSchema.parse(req.body);
+      console.log("Validated ISM task data:", validatedData);
       const task = await storage.createIsmTask(validatedData);
       
       // Log activity
       await storage.createActivityLog({
         activityType: 'ism_task_created',
         description: `New ISM task created: ${task.title}`,
-        userId: task.createdBy || null,
+        userId: task.createdById || null,
         relatedEntityType: 'ism_task',
         relatedEntityId: task.id
       });

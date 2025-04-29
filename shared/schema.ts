@@ -1035,10 +1035,19 @@ export const ismTasks = pgTable("ism_tasks", {
   createdById: integer("created_by_id").references(() => users.id),
 });
 
-export const insertIsmTaskSchema = createInsertSchema(ismTasks).omit({
+// Create a base schema then customize the dueDate field to handle string dates too
+const baseIsmTaskSchema = createInsertSchema(ismTasks).omit({
   id: true,
   createdAt: true,
   updatedAt: true
+});
+
+export const insertIsmTaskSchema = baseIsmTaskSchema.extend({
+  dueDate: z.union([
+    z.date(),
+    z.string().transform((val) => new Date(val)),
+    z.null()
+  ]).optional()
 });
 export type InsertIsmTask = z.infer<typeof insertIsmTaskSchema>;
 export type IsmTask = typeof ismTasks.$inferSelect;
