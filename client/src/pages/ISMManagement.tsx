@@ -169,6 +169,19 @@ const ISMManagement: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("documents");
   const [isNewDocumentDialogOpen, setIsNewDocumentDialogOpen] = useState(false);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
+  const [isViewTaskDialogOpen, setIsViewTaskDialogOpen] = useState(false);
+  const [isCompleteTaskDialogOpen, setIsCompleteTaskDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [taskSubmission, setTaskSubmission] = useState({
+    taskId: 0,
+    submittedBy: 1, // Default to user ID 1
+    status: 'submitted',
+    responses: {},
+    duration: 0,
+    location: '',
+    comments: ''
+  });
+  
   const [newDocument, setNewDocument] = useState({
     title: '',
     documentType: 'procedure',
@@ -366,6 +379,88 @@ const ISMManagement: React.FC = () => {
       toast({
         title: "Error",
         description: `Failed to create task: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleTaskCompletionSubmit = async () => {
+    try {
+      // Check if we have a task selected
+      if (!selectedTask) {
+        toast({
+          title: "Error",
+          description: "No task selected for completion",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate required fields
+      const hasAllRequiredFields = selectedTask.items && selectedTask.items.every((item: any, index: number) => {
+        if (!item.required) return true;
+        
+        const itemKey = `item-${index}`;
+        const response = taskSubmission.responses[itemKey];
+        
+        if (item.type === 'checkbox') {
+          return response === true;
+        } else {
+          return response && response.toString().trim() !== '';
+        }
+      });
+      
+      if (!hasAllRequiredFields) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields in the checklist",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Format submission data
+      const submissionData = {
+        taskId: selectedTask.id,
+        submittedBy: taskSubmission.submittedBy,
+        status: 'submitted',
+        responses: taskSubmission.responses,
+        duration: taskSubmission.duration || 0,
+        location: taskSubmission.location || null,
+        comments: taskSubmission.comments || null,
+        submissionDate: new Date().toISOString()
+      };
+      
+      // Submit the task completion using apiRequest
+      await apiRequest('/api/ism/task-submissions', {
+        method: 'POST',
+        data: submissionData,
+      });
+      
+      // Success handling
+      queryClient.invalidateQueries({queryKey: ['/api/ism/task-submissions/recent']});
+      setIsCompleteTaskDialogOpen(false);
+      
+      // Reset form
+      setTaskSubmission({
+        taskId: 0,
+        submittedBy: 1,
+        status: 'submitted',
+        responses: {},
+        duration: 0,
+        location: '',
+        comments: ''
+      });
+      
+      toast({
+        title: "Success",
+        description: "Task completed and submitted successfully",
+      });
+    } catch (error: any) {
+      console.error('Error submitting task completion:', error);
+      toast({
+        title: "Error",
+        description: `Failed to submit task completion: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -746,8 +841,30 @@ const ISMManagement: React.FC = () => {
                 <TableCell>{task.version}</TableCell>
                 <TableCell>{renderStatus(task.status)}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">View</Button>
-                  <Button variant="ghost" size="sm">Complete</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTask(task);
+                      setIsViewTaskDialogOpen(true);
+                    }}
+                  >
+                    View
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTask(task);
+                      setTaskSubmission({
+                        ...taskSubmission,
+                        taskId: task.id
+                      });
+                      setIsCompleteTaskDialogOpen(true);
+                    }}
+                  >
+                    Complete
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
