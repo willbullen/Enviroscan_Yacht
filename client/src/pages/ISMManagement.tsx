@@ -168,7 +168,7 @@ interface ISMTask {
   status: string;
   priority: string;
   assignedTo: number;
-  formTemplateVersionId: number; // Using consistent field names
+  templateVersionId: number; // Field name as it appears in the API response
   dueDate: string | null;
   vesselId: number;
   createdBy: number | null;
@@ -668,13 +668,13 @@ const ISMManagement: React.FC = () => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    formTemplateVersionId: 1,  // Default to the first form template version
-    assignedToId: 1,           // Default to the captain (user ID 1)
+    form_template_version_id: 1,  // Default to the first form template version, matching the db column name
+    assigned_to_id: 1,            // Default to the captain (user ID 1), matching the db column name
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to one week from now
     priority: 'medium',
     status: 'pending',
-    vesselId: 1,               // Default vessel ID
-    createdById: 1             // Default to current user (captain)
+    vessel_id: 1,                // Default vessel ID, matching the db column name
+    created_by_id: 1              // Default to current user (captain), matching the db column name
   });
 
   // Function to handle task creation
@@ -695,7 +695,8 @@ const ISMManagement: React.FC = () => {
         method: 'POST',
         data: {
           ...newTask,
-          dueDate: newTask.dueDate?.toISOString()
+          // The server expects a Date object, not an ISO string
+          dueDate: newTask.dueDate
         },
       });
       
@@ -707,13 +708,13 @@ const ISMManagement: React.FC = () => {
       setNewTask({
         title: '',
         description: '',
-        formTemplateVersionId: 1,
-        assignedToId: 1,
+        form_template_version_id: 1,
+        assigned_to_id: 1,
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         priority: 'medium',
         status: 'pending',
-        vesselId: 1,
-        createdById: 1
+        vessel_id: 1,
+        created_by_id: 1
       });
       
       toast({
@@ -912,8 +913,8 @@ const ISMManagement: React.FC = () => {
             <div className="space-y-1.5">
               <Label htmlFor="task-template">Form Template *</Label>
               <Select 
-                value={newTask.formTemplateVersionId.toString()}
-                onValueChange={(value) => setNewTask({...newTask, formTemplateVersionId: parseInt(value)})}
+                value={newTask.form_template_version_id.toString()}
+                onValueChange={(value) => setNewTask({...newTask, form_template_version_id: parseInt(value)})}
               >
                 <SelectTrigger id="task-template">
                   <SelectValue placeholder="Select Template" />
@@ -931,8 +932,8 @@ const ISMManagement: React.FC = () => {
             <div className="space-y-1.5">
               <Label htmlFor="task-assigned">Assign To *</Label>
               <Select 
-                value={newTask.assignedToId.toString()}
-                onValueChange={(value) => setNewTask({...newTask, assignedToId: parseInt(value)})}
+                value={newTask.assigned_to_id.toString()}
+                onValueChange={(value) => setNewTask({...newTask, assigned_to_id: parseInt(value)})}
               >
                 <SelectTrigger id="task-assigned">
                   <SelectValue placeholder="Select Crew Member" />
