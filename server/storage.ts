@@ -8,8 +8,6 @@ import {
   predictiveMaintenance, type PredictiveMaintenance, type InsertPredictiveMaintenance,
   ismDocuments, type IsmDocument, type InsertIsmDocument,
   ismAudits, type IsmAudit, type InsertIsmAudit,
-  ismTasks, type IsmTask, type InsertIsmTask,
-  ismTaskSubmissions, type IsmTaskSubmission, type InsertIsmTaskSubmission,
   ismTraining, type IsmTraining, type InsertIsmTraining,
   ismIncidents, type IsmIncident, type InsertIsmIncident,
   crewMembers, type CrewMember, type InsertCrewMember,
@@ -121,28 +119,6 @@ export interface IStorage {
   updateIsmIncident(id: number, incident: Partial<IsmIncident>): Promise<IsmIncident | undefined>;
   deleteIsmIncident(id: number): Promise<boolean>;
   
-  // ISM Task operations
-  getIsmTask(id: number): Promise<IsmTask | undefined>;
-  getAllIsmTasks(): Promise<IsmTask[]>;
-  getIsmTasksByCategory(category: string): Promise<IsmTask[]>;
-  getIsmTasksByType(taskType: string): Promise<IsmTask[]>;
-  getIsmTasksByStatus(status: string): Promise<IsmTask[]>;
-  getActiveIsmTasks(): Promise<IsmTask[]>;
-  createIsmTask(task: InsertIsmTask): Promise<IsmTask>;
-  updateIsmTask(id: number, task: Partial<InsertIsmTask>): Promise<IsmTask>;
-  deleteIsmTask(id: number): Promise<boolean>;
-  
-  // ISM Task Submission operations
-  getIsmTaskSubmission(id: number): Promise<IsmTaskSubmission | undefined>;
-  getAllIsmTaskSubmissions(): Promise<IsmTaskSubmission[]>;
-  getIsmTaskSubmissionsByTask(taskId: number): Promise<IsmTaskSubmission[]>;
-  getIsmTaskSubmissionsByStatus(status: string): Promise<IsmTaskSubmission[]>;
-  getIsmTaskSubmissionsByUser(userId: number): Promise<IsmTaskSubmission[]>;
-  getRecentIsmTaskSubmissions(limit?: number): Promise<IsmTaskSubmission[]>;
-  createIsmTaskSubmission(submission: InsertIsmTaskSubmission): Promise<IsmTaskSubmission>;
-  updateIsmTaskSubmission(id: number, submission: Partial<InsertIsmTaskSubmission>): Promise<IsmTaskSubmission>;
-  deleteIsmTaskSubmission(id: number): Promise<boolean>;
-  
   // Crew operations
   getCrewMember(id: number): Promise<CrewMember | undefined>;
   getAllCrewMembers(): Promise<CrewMember[]>;
@@ -204,8 +180,6 @@ export class MemStorage implements IStorage {
   private ismAudits: Map<number, IsmAudit>;
   private ismTraining: Map<number, IsmTraining>;
   private ismIncidents: Map<number, IsmIncident>;
-  private ismTasks: Map<number, IsmTask>;
-  private ismTaskSubmissions: Map<number, IsmTaskSubmission>;
   
   // Voyage Planning maps
   private voyages: Map<number, Voyage> = new Map<number, Voyage>();
@@ -224,8 +198,6 @@ export class MemStorage implements IStorage {
   private ismAuditCurrentId: number;
   private ismTrainingCurrentId: number;
   private ismIncidentCurrentId: number;
-  private ismTaskCurrentId: number;
-  private ismTaskSubmissionCurrentId: number;
   private voyageCurrentId: number = 1;
   private waypointCurrentId: number = 1;
   private fuelChartCurrentId: number = 1;
@@ -245,8 +217,6 @@ export class MemStorage implements IStorage {
     this.ismAudits = new Map();
     this.ismTraining = new Map();
     this.ismIncidents = new Map();
-    this.ismTasks = new Map();
-    this.ismTaskSubmissions = new Map();
     
     // Initialize Voyage Planning maps
     this.voyages = new Map();
@@ -265,8 +235,6 @@ export class MemStorage implements IStorage {
     this.ismAuditCurrentId = 1;
     this.ismTrainingCurrentId = 1;
     this.ismIncidentCurrentId = 1;
-    this.ismTaskCurrentId = 1;
-    this.ismTaskSubmissionCurrentId = 1;
     this.voyageCurrentId = 1;
     this.waypointCurrentId = 1;
     this.fuelChartCurrentId = 1;
@@ -909,156 +877,6 @@ export class MemStorage implements IStorage {
 
   async deleteIsmIncident(id: number): Promise<boolean> {
     return this.ismIncidents.delete(id);
-  }
-  
-  // ISM Task operations
-  async getIsmTask(id: number): Promise<IsmTask | undefined> {
-    return this.ismTasks.get(id);
-  }
-  
-  async getAllIsmTasks(): Promise<IsmTask[]> {
-    return Array.from(this.ismTasks.values());
-  }
-  
-  async getIsmTasksByCategory(category: string): Promise<IsmTask[]> {
-    return Array.from(this.ismTasks.values()).filter(
-      (task) => task.category === category
-    );
-  }
-  
-  async getIsmTasksByType(taskType: string): Promise<IsmTask[]> {
-    return Array.from(this.ismTasks.values()).filter(
-      (task) => task.taskType === taskType
-    );
-  }
-  
-  async getIsmTasksByStatus(status: string): Promise<IsmTask[]> {
-    return Array.from(this.ismTasks.values()).filter(
-      (task) => task.status === status
-    );
-  }
-  
-  async getActiveIsmTasks(): Promise<IsmTask[]> {
-    return Array.from(this.ismTasks.values()).filter(
-      (task) => task.status === 'active'
-    );
-  }
-  
-  async createIsmTask(insertTask: InsertIsmTask): Promise<IsmTask> {
-    const id = this.ismTaskCurrentId++;
-    const createdAt = new Date();
-    const updatedAt = new Date();
-    
-    // Ensure required fields
-    if (!insertTask.status) {
-      insertTask.status = 'active';
-    }
-    
-    const task: IsmTask = { 
-      ...insertTask, 
-      id, 
-      createdAt,
-      updatedAt
-    };
-    
-    this.ismTasks.set(id, task);
-    return task;
-  }
-  
-  async updateIsmTask(id: number, taskUpdate: Partial<InsertIsmTask>): Promise<IsmTask> {
-    const existingTask = this.ismTasks.get(id);
-    if (!existingTask) {
-      throw new Error(`Task with ID ${id} not found`);
-    }
-    
-    const updatedTask = { 
-      ...existingTask, 
-      ...taskUpdate,
-      updatedAt: new Date()
-    };
-    
-    this.ismTasks.set(id, updatedTask);
-    return updatedTask;
-  }
-  
-  async deleteIsmTask(id: number): Promise<boolean> {
-    return this.ismTasks.delete(id);
-  }
-  
-  // ISM Task Submission operations
-  async getIsmTaskSubmission(id: number): Promise<IsmTaskSubmission | undefined> {
-    return this.ismTaskSubmissions.get(id);
-  }
-  
-  async getAllIsmTaskSubmissions(): Promise<IsmTaskSubmission[]> {
-    return Array.from(this.ismTaskSubmissions.values());
-  }
-  
-  async getIsmTaskSubmissionsByTask(taskId: number): Promise<IsmTaskSubmission[]> {
-    return Array.from(this.ismTaskSubmissions.values()).filter(
-      (submission) => submission.taskId === taskId
-    );
-  }
-  
-  async getIsmTaskSubmissionsByStatus(status: string): Promise<IsmTaskSubmission[]> {
-    return Array.from(this.ismTaskSubmissions.values()).filter(
-      (submission) => submission.status === status
-    );
-  }
-  
-  async getIsmTaskSubmissionsByUser(userId: number): Promise<IsmTaskSubmission[]> {
-    return Array.from(this.ismTaskSubmissions.values()).filter(
-      (submission) => submission.submittedBy === userId
-    );
-  }
-  
-  async getRecentIsmTaskSubmissions(limit: number = 10): Promise<IsmTaskSubmission[]> {
-    return Array.from(this.ismTaskSubmissions.values())
-      .sort((a, b) => b.submissionDate.getTime() - a.submissionDate.getTime())
-      .slice(0, limit);
-  }
-  
-  async createIsmTaskSubmission(insertSubmission: InsertIsmTaskSubmission): Promise<IsmTaskSubmission> {
-    const id = this.ismTaskSubmissionCurrentId++;
-    const createdAt = new Date();
-    const submissionDate = new Date();
-    const updatedAt = new Date();
-    
-    // Ensure required fields
-    if (!insertSubmission.status) {
-      insertSubmission.status = 'submitted';
-    }
-    
-    const submission: IsmTaskSubmission = { 
-      ...insertSubmission, 
-      id, 
-      createdAt,
-      submissionDate,
-      updatedAt
-    };
-    
-    this.ismTaskSubmissions.set(id, submission);
-    return submission;
-  }
-  
-  async updateIsmTaskSubmission(id: number, submissionUpdate: Partial<InsertIsmTaskSubmission>): Promise<IsmTaskSubmission> {
-    const existingSubmission = this.ismTaskSubmissions.get(id);
-    if (!existingSubmission) {
-      throw new Error(`Task submission with ID ${id} not found`);
-    }
-    
-    const updatedSubmission = { 
-      ...existingSubmission, 
-      ...submissionUpdate,
-      updatedAt: new Date()
-    };
-    
-    this.ismTaskSubmissions.set(id, updatedSubmission);
-    return updatedSubmission;
-  }
-  
-  async deleteIsmTaskSubmission(id: number): Promise<boolean> {
-    return this.ismTaskSubmissions.delete(id);
   }
   
   // Voyage Planning methods
@@ -2171,122 +1989,6 @@ export class MemStorage implements IStorage {
     
     ismIncidents.forEach(incident => {
       this.createIsmIncident(incident as InsertIsmIncident);
-    });
-    
-    // Initialize ISM Tasks
-    const ismTasks = [
-      {
-        title: "Collision Report",
-        category: "Safety Reports",
-        taskType: "form",
-        documentNumber: "ISM-SR-001",
-        version: "1.0",
-        status: "active",
-        description: "Form to document collision incidents",
-        attachmentPath: "Collision Report.docx",
-        createdBy: 1,
-        tags: ["safety", "collision", "reporting"],
-        estimatedDuration: 30,
-        instructions: "Complete all sections thoroughly. Attach photos if available.",
-        items: [
-          { id: "1", type: "text", label: "Vessel Name", required: true },
-          { id: "2", type: "date", label: "Date of Collision", required: true },
-          { id: "3", type: "time", label: "Time of Collision", required: true },
-          { id: "4", type: "text", label: "Location", required: true },
-          { id: "5", type: "textarea", label: "Description of Incident", required: true },
-          { id: "6", type: "select", label: "Weather Conditions", options: ["Clear", "Cloudy", "Rain", "Fog", "Snow", "Other"], required: true },
-          { id: "7", type: "textarea", label: "Damage Assessment", required: true },
-          { id: "8", type: "text", label: "Other Vessel/Object Involved", required: false },
-          { id: "9", type: "textarea", label: "Actions Taken", required: true },
-          { id: "10", type: "checkbox", label: "Were there any injuries?", required: true },
-          { id: "11", type: "textarea", label: "Injury Details", required: false },
-          { id: "12", type: "text", label: "Reported By", required: true }
-        ]
-      },
-      {
-        title: "EM01 - Drugs Stowaways and Contraband Checklist",
-        category: "Emergency Checklists",
-        taskType: "checklist",
-        documentNumber: "ISM-EC-001",
-        version: "1.0",
-        status: "active",
-        description: "Checklist for handling drug, stowaway, and contraband incidents",
-        attachmentPath: "EM01 - Drugs Stowaways and Contraband Checklist.docx",
-        createdBy: 1,
-        tags: ["emergency", "security", "checklist"],
-        estimatedDuration: 20,
-        instructions: "Follow checklist steps in order. Mark each step as completed once performed.",
-        items: [
-          { id: "1", type: "checkbox", label: "Inform Master immediately", required: true },
-          { id: "2", type: "checkbox", label: "Secure the area", required: true },
-          { id: "3", type: "checkbox", label: "Document evidence and take photographs", required: true },
-          { id: "4", type: "checkbox", label: "Inform relevant authorities", required: true },
-          { id: "5", type: "checkbox", label: "Complete incident log", required: true },
-          { id: "6", type: "checkbox", label: "Gather statements from witnesses", required: true },
-          { id: "7", type: "checkbox", label: "Implement security measures", required: true },
-          { id: "8", type: "textarea", label: "Additional Notes", required: false }
-        ]
-      }
-    ];
-    
-    ismTasks.forEach(task => {
-      this.createIsmTask(task as InsertIsmTask);
-    });
-    
-    // Initialize ISM Task Submissions
-    const ismTaskSubmissions = [
-      {
-        taskId: 1,
-        submittedBy: 2,
-        submissionDate: new Date('2023-09-10'),
-        status: 'submitted',
-        responses: {
-          "1": "M/Y Serene Voyager",
-          "2": "2023-09-08",
-          "3": "14:30",
-          "4": "Port of Monaco, Berth 12",
-          "5": "Light contact between vessel stern and dock during mooring procedure. Wind gust contributed to unexpected movement.",
-          "6": "Clear",
-          "7": "Minor scuff marks on stern cap rail, no structural damage.",
-          "8": "Concrete dock",
-          "9": "Immediately halted maneuver, assessed damage, informed port authority.",
-          "10": true,
-          "11": "Deckhand received minor bruise to right hand when grabbing rail during contact.",
-          "12": "Chief Officer James Wilson"
-        },
-        duration: 25,
-        location: "Bridge",
-        attachments: ["collision_photo_stern.jpg", "collision_photo_dock.jpg"],
-        reviewedBy: null,
-        reviewedAt: null,
-        reviewComments: null
-      },
-      {
-        taskId: 2,
-        submittedBy: 3,
-        submissionDate: new Date('2023-08-15'),
-        status: 'reviewed',
-        responses: {
-          "1": true,
-          "2": true,
-          "3": true,
-          "4": true,
-          "5": true,
-          "6": true,
-          "7": true,
-          "8": "Suspicious package discovered in port side locker during routine inspection. All protocols followed and authorities notified."
-        },
-        duration: 45,
-        location: "Main Deck",
-        attachments: ["em01_incident_report.pdf"],
-        reviewedBy: 1,
-        reviewedAt: new Date('2023-08-16'),
-        reviewComments: "Excellent response, all procedures followed correctly. Recommend additional security briefing for crew."
-      }
-    ];
-    
-    ismTaskSubmissions.forEach(submission => {
-      this.createIsmTaskSubmission(submission as InsertIsmTaskSubmission);
     });
   }
 }
