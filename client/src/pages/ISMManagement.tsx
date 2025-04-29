@@ -368,9 +368,35 @@ const ISMManagement: React.FC = () => {
   // Function to open the form submission dialog
   const handleCompleteTask = (taskId: number) => {
     const task = (tasksQuery.data as ISMTask[]).find(t => t.id === taskId);
+    
     if (task) {
-      setSelectedTask(task);
-      setIsFormSubmissionOpen(true);
+      console.log("Selected task for completion:", task);
+      
+      // Load the task details via API call to ensure we have the most recent data
+      apiRequest(`/api/ism/tasks/${taskId}`, {
+        method: 'GET'
+      }).then(response => {
+        console.log("Retrieved task details:", response);
+        
+        // Determine the form template version ID from the response
+        // The database has form_template_version_id (snake_case)
+        // But the API code might return it as formTemplateVersionId (camelCase)
+        const enhancedTask = {
+          ...task,
+          templateVersionId: response.formTemplateVersionId || response.form_template_version_id
+        };
+        
+        console.log("Enhanced task with templateVersionId:", enhancedTask);
+        setSelectedTask(enhancedTask);
+        setIsFormSubmissionOpen(true);
+      }).catch(error => {
+        console.error('Error loading task details:', error);
+        toast({
+          title: "Error",
+          description: `Failed to load task details: ${error.message || 'Unknown error'}`,
+          variant: "destructive",
+        });
+      });
     } else {
       toast({
         title: "Error",

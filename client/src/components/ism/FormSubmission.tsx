@@ -64,6 +64,7 @@ const FormSubmission: React.FC<FormSubmissionProps> = ({
   // Load form definition when dialog opens
   React.useEffect(() => {
     if (isOpen && formTemplateVersionId) {
+      console.log("Loading form definition for template version ID:", formTemplateVersionId);
       loadFormDefinition();
     }
   }, [isOpen, formTemplateVersionId]);
