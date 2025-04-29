@@ -82,10 +82,9 @@ process.on('unhandledRejection', (reason, promise) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // We need to use a different port as 5000 is already in use
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  const port = 5001;
   server.listen({
     port,
     host: "0.0.0.0",

@@ -274,6 +274,63 @@ export const insertIsmIncidentSchema = createInsertSchema(ismIncidents).omit({
 export type InsertIsmIncident = z.infer<typeof insertIsmIncidentSchema>;
 export type IsmIncident = typeof ismIncidents.$inferSelect;
 
+// ISM Tasks/Checklists Schema
+export const ismTasks = pgTable("ism_tasks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  category: text("category").notNull(), // emergency, safety, maintenance, environmental, etc.
+  taskType: text("task_type").notNull(), // checklist, form, inspection
+  documentNumber: text("document_number").notNull(), // ISM reference code
+  version: text("version").notNull(),
+  status: text("status").notNull(), // active, archived, draft
+  description: text("description"),
+  instructions: text("instructions"),
+  items: json("items").notNull(), // Array of checklist/form items
+  attachmentPath: text("attachment_path"), // Path to attached file if any
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvalDate: timestamp("approval_date"),
+  tags: json("tags"), // For categorization
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertIsmTaskSchema = createInsertSchema(ismTasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertIsmTask = z.infer<typeof insertIsmTaskSchema>;
+export type IsmTask = typeof ismTasks.$inferSelect;
+
+// ISM Task Submissions Schema
+export const ismTaskSubmissions = pgTable("ism_task_submissions", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").references(() => ismTasks.id).notNull(),
+  submittedBy: integer("submitted_by").references(() => users.id).notNull(),
+  submissionDate: timestamp("submission_date").defaultNow().notNull(),
+  status: text("status").notNull(), // completed, incomplete, needs-review
+  responses: json("responses").notNull(), // Array of responses to checklist/form items
+  comments: text("comments"),
+  duration: integer("duration"), // actual time taken in minutes
+  location: text("location"), // where the task was performed
+  attachments: json("attachments"), // Array of attachment paths
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewDate: timestamp("review_date"),
+  reviewComments: text("review_comments"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertIsmTaskSubmissionSchema = createInsertSchema(ismTaskSubmissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertIsmTaskSubmission = z.infer<typeof insertIsmTaskSubmissionSchema>;
+export type IsmTaskSubmission = typeof ismTaskSubmissions.$inferSelect;
+
 // Crew members schema
 export const crewMembers = pgTable("crew_members", {
   id: serial("id").primaryKey(),

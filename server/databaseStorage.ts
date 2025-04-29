@@ -10,6 +10,8 @@ import {
   ismAudits,
   ismTraining,
   ismIncidents,
+  ismTasks,
+  ismTaskSubmissions,
   crewMembers,
   crewDocuments,
   voyages,
@@ -49,11 +51,15 @@ import {
   type FuelConsumptionChart,
   type InsertFuelConsumptionChart,
   type SpeedChart,
-  type InsertSpeedChart
+  type InsertSpeedChart,
+  type IsmTask,
+  type InsertIsmTask,
+  type IsmTaskSubmission,
+  type InsertIsmTaskSubmission
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
-import { and, eq, lte, gte, sql } from "drizzle-orm";
+import { and, eq, lte, gte, sql, desc } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   // =========== User Methods =============
@@ -812,6 +818,151 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // =========== ISM Task Methods =============
+  async getIsmTask(id: number): Promise<IsmTask | undefined> {
+    const [task] = await db.select().from(ismTasks).where(eq(ismTasks.id, id));
+    return task || undefined;
+  }
+  
+  async getAllIsmTasks(): Promise<IsmTask[]> {
+    return db.select().from(ismTasks);
+  }
+  
+  async getIsmTasksByCategory(category: string): Promise<IsmTask[]> {
+    return db.select().from(ismTasks).where(eq(ismTasks.category, category));
+  }
+  
+  async getIsmTasksByType(taskType: string): Promise<IsmTask[]> {
+    return db.select().from(ismTasks).where(eq(ismTasks.taskType, taskType));
+  }
+  
+  async getIsmTasksByStatus(status: string): Promise<IsmTask[]> {
+    return db.select().from(ismTasks).where(eq(ismTasks.status, status));
+  }
+  
+  async getActiveIsmTasks(): Promise<IsmTask[]> {
+    return db.select().from(ismTasks).where(eq(ismTasks.status, 'active'));
+  }
+  
+  async createIsmTask(insertTask: InsertIsmTask): Promise<IsmTask> {
+    const now = new Date();
+    const taskToInsert = {
+      ...insertTask,
+      createdAt: now,
+      updatedAt: now,
+      status: insertTask.status || 'active',
+      description: insertTask.description || null,
+      estimatedDuration: insertTask.estimatedDuration || null,
+      createdBy: insertTask.createdBy || null
+    };
+    
+    const [task] = await db.insert(ismTasks).values(taskToInsert).returning();
+    return task;
+  }
+  
+  async updateIsmTask(id: number, updates: Partial<InsertIsmTask>): Promise<IsmTask> {
+    const updatesWithTimestamp = {
+      ...updates,
+      updatedAt: new Date()
+    };
+    
+    const [updatedTask] = await db
+      .update(ismTasks)
+      .set(updatesWithTimestamp)
+      .where(eq(ismTasks.id, id))
+      .returning();
+    return updatedTask;
+  }
+  
+  async deleteIsmTask(id: number): Promise<boolean> {
+    try {
+      // First delete any submissions associated with this task
+      await db.delete(ismTaskSubmissions).where(eq(ismTaskSubmissions.taskId, id));
+      
+      // Then delete the task
+      const result = await db.delete(ismTasks).where(eq(ismTasks.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting ISM task:", error);
+      return false;
+    }
+  }
+  
+  // =========== ISM Task Submission Methods =============
+  async getIsmTaskSubmission(id: number): Promise<IsmTaskSubmission | undefined> {
+    const [submission] = await db.select().from(ismTaskSubmissions).where(eq(ismTaskSubmissions.id, id));
+    return submission || undefined;
+  }
+  
+  async getAllIsmTaskSubmissions(): Promise<IsmTaskSubmission[]> {
+    return db.select().from(ismTaskSubmissions);
+  }
+  
+  async getIsmTaskSubmissionsByTask(taskId: number): Promise<IsmTaskSubmission[]> {
+    return db.select().from(ismTaskSubmissions).where(eq(ismTaskSubmissions.taskId, taskId));
+  }
+  
+  async getIsmTaskSubmissionsByStatus(status: string): Promise<IsmTaskSubmission[]> {
+    return db.select().from(ismTaskSubmissions).where(eq(ismTaskSubmissions.status, status));
+  }
+  
+  async getIsmTaskSubmissionsByUser(userId: number): Promise<IsmTaskSubmission[]> {
+    return db.select().from(ismTaskSubmissions).where(eq(ismTaskSubmissions.submittedBy, userId));
+  }
+  
+  async getRecentIsmTaskSubmissions(limit: number = 10): Promise<IsmTaskSubmission[]> {
+    return db
+      .select()
+      .from(ismTaskSubmissions)
+      .orderBy(desc(ismTaskSubmissions.submissionDate))
+      .limit(limit);
+  }
+  
+  async createIsmTaskSubmission(insertSubmission: InsertIsmTaskSubmission): Promise<IsmTaskSubmission> {
+    const now = new Date();
+    const submissionToInsert = {
+      ...insertSubmission,
+      createdAt: now,
+      updatedAt: now,
+      submissionDate: now,
+      status: insertSubmission.status || 'submitted',
+      location: insertSubmission.location || null,
+      duration: insertSubmission.duration || null,
+      responses: insertSubmission.responses || {},
+      reviewedBy: insertSubmission.reviewedBy || null,
+      reviewDate: insertSubmission.reviewDate || null,
+      reviewComments: insertSubmission.reviewComments || null,
+      attachments: insertSubmission.attachments || {}
+    };
+    
+    const [submission] = await db.insert(ismTaskSubmissions).values(submissionToInsert).returning();
+    return submission;
+  }
+  
+  async updateIsmTaskSubmission(id: number, updates: Partial<InsertIsmTaskSubmission>): Promise<IsmTaskSubmission> {
+    const updatesWithTimestamp = {
+      ...updates,
+      updatedAt: new Date()
+    };
+    
+    const [updatedSubmission] = await db
+      .update(ismTaskSubmissions)
+      .set(updatesWithTimestamp)
+      .where(eq(ismTaskSubmissions.id, id))
+      .returning();
+    return updatedSubmission;
+  }
+  
+  async deleteIsmTaskSubmission(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(ismTaskSubmissions).where(eq(ismTaskSubmissions.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting ISM task submission:", error);
+      return false;
+    }
+  }
+
   // =========== Crew Member Methods =============
   async getCrewMember(id: number): Promise<CrewMember | undefined> {
     const [crewMember] = await db.select().from(crewMembers).where(eq(crewMembers.id, id));
@@ -1427,4 +1578,6 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+
 }

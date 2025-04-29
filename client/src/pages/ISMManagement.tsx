@@ -120,6 +120,32 @@ interface ISMIncident {
   createdAt: string;
 }
 
+interface ISMTask {
+  id: number;
+  title: string;
+  category: string;
+  taskType: string;
+  status: string;
+  version: string;
+  documentNumber: string;
+  createdAt: string;
+  updatedAt: string;
+  estimatedDuration: number | null;
+}
+
+interface ISMTaskSubmission {
+  id: number;
+  taskId: number;
+  status: string;
+  submittedBy: number;
+  submissionDate: string;
+  responses: any; // Form responses
+  reviewedBy: number | null;
+  reviewedAt: string | null;
+  reviewComments: string | null;
+  createdAt: string;
+}
+
 const statusColors = {
   draft: "bg-yellow-500",
   pending: "bg-blue-500",
@@ -175,6 +201,16 @@ const ISMManagement: React.FC = () => {
   const incidentsQuery = useQuery({
     queryKey: ['/api/ism/incidents'],
     enabled: selectedTab === "incidents",
+  });
+  
+  const tasksQuery = useQuery({
+    queryKey: ['/api/ism/tasks'],
+    enabled: selectedTab === "tasks",
+  });
+  
+  const taskSubmissionsQuery = useQuery({
+    queryKey: ['/api/ism/task-submissions/recent'],
+    enabled: selectedTab === "tasks",
   });
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -542,6 +578,113 @@ const ISMManagement: React.FC = () => {
     );
   };
 
+  const renderTasksList = () => {
+    if (tasksQuery.isLoading) return <div className="p-8 text-center">Loading tasks...</div>;
+    if (tasksQuery.isError) return <div className="p-8 text-center text-red-500">Error loading tasks</div>;
+    
+    const tasks = tasksQuery.data as ISMTask[] || [];
+    const submissions = taskSubmissionsQuery.data as ISMTaskSubmission[] || [];
+    
+    if (tasks.length === 0) {
+      return (
+        <div className="p-8 text-center text-gray-500">
+          <Clipboard className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p>No ISM tasks found</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Filter className="w-4 h-4" /> Filter
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Search className="w-4 h-4" /> Search
+            </Button>
+          </div>
+          <Button className="flex items-center gap-1">
+            <Plus className="w-4 h-4" /> New Task
+          </Button>
+        </div>
+        
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle>Task Submissions</CardTitle>
+            <CardDescription>Recent submissions for ISM tasks and checklists</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {taskSubmissionsQuery.isLoading ? (
+              <div className="text-center py-4">Loading submissions...</div>
+            ) : submissions.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">No recent submissions found</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Task</TableHead>
+                    <TableHead>Submitted By</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {submissions.map(submission => (
+                    <TableRow key={submission.id}>
+                      <TableCell className="font-medium">
+                        {tasks.find(t => t.id === submission.taskId)?.title || `Task #${submission.taskId}`}
+                      </TableCell>
+                      <TableCell>User #{submission.submittedBy}</TableCell>
+                      <TableCell>{renderStatus(submission.status)}</TableCell>
+                      <TableCell>{format(new Date(submission.submissionDate), 'MMM d, yyyy')}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm">View</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Table>
+          <TableCaption>List of ISM Tasks and Checklists</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Doc Number</TableHead>
+              <TableHead>Version</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tasks.map(task => (
+              <TableRow key={task.id}>
+                <TableCell className="font-medium">{task.title}</TableCell>
+                <TableCell>{task.category}</TableCell>
+                <TableCell>{task.taskType}</TableCell>
+                <TableCell>{task.documentNumber}</TableCell>
+                <TableCell>{task.version}</TableCell>
+                <TableCell>{renderStatus(task.status)}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm">View</Button>
+                  <Button variant="ghost" size="sm">Complete</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
   return (
     <MainLayout title="ISM Management">
       {/* New Document Dialog */}
@@ -706,7 +849,7 @@ const ISMManagement: React.FC = () => {
         <Separator />
         
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="documents" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Documents
@@ -722,6 +865,10 @@ const ISMManagement: React.FC = () => {
             <TabsTrigger value="incidents" className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               Incidents
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="flex items-center gap-2">
+              <Clipboard className="w-4 h-4" />
+              Tasks & Checklists
             </TabsTrigger>
           </TabsList>
           
@@ -741,6 +888,10 @@ const ISMManagement: React.FC = () => {
               
               <TabsContent value="incidents" className="m-0">
                 {renderIncidentsList()}
+              </TabsContent>
+              
+              <TabsContent value="tasks" className="m-0">
+                {renderTasksList()}
               </TabsContent>
             </ScrollArea>
           </Card>
