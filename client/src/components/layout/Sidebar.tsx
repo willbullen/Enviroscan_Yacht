@@ -206,8 +206,23 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               !isOpen && "justify-center p-2"
             )} 
           >
-            <Map className={cn("h-5 w-5", isOpen && "mr-2")} />
+            <Anchor className={cn("h-5 w-5", isOpen && "mr-2")} />
             {isOpen && <span>Voyage Planner</span>}
+          </div>
+        </NavLink>
+        
+        <NavLink href="/marine-tracker">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/marine-tracker"
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <Map className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Marine Tracker</span>}
           </div>
         </NavLink>
         

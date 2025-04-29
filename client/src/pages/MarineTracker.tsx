@@ -27,20 +27,22 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Custom ship icon for vessels
-const shipIcon = L.divIcon({
-  className: 'custom-ship-icon',
-  html: `<div style="color: #0055FF; transform: rotate(0deg);" class="ship-marker">
-           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
-               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-               <path d="M2 20a6 6 0 0 0 12 0c0-4-3-6-6-8-3 2-6 4-6 8Z"></path>
-               <path d="M12 12a6 6 0 0 0 12 0c0-4-3-6-6-8-3 2-6 4-6 8Z"></path>
-           </svg>
-         </div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-  popupAnchor: [0, -12]
-});
+// Function to create custom ship icon that rotates based on heading
+const createShipIcon = (heading = 0) => {
+  return L.divIcon({
+    className: 'custom-ship-icon',
+    html: `<div style="color: #0055FF; transform: rotate(${heading}deg);" class="ship-marker">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                 <path d="M18 15l-6-6l-6 6"></path>
+                 <path d="M12 9v6"></path>
+             </svg>
+           </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12]
+  });
+};
 
 // Custom component to handle map updates
 const MapUpdater = ({ vessels, selectedVesselId }: { vessels: any[], selectedVesselId: number | null }) => {
@@ -311,11 +313,14 @@ const MarineTracker = () => {
                       <Marker 
                         key={vessel.id}
                         position={[vessel.latitude, vessel.longitude]}
-                        icon={shipIcon}
+                        icon={createShipIcon(vessel.heading)}
+                        eventHandlers={{
+                          click: () => setSelectedVesselId(vessel.id)
+                        }}
                       >
                         <Popup>
                           <div className="text-sm font-medium">{vessel.name}</div>
-                          <div className="text-xs text-muted-foreground">{vessel.type} • {vessel.length}m</div>
+                          <div className="text-xs text-muted-foreground">{vessel.type} • {vessel.length}</div>
                           <div className="text-xs mt-1">
                             <div>Speed: {vessel.speed} knots</div>
                             <div>Heading: {vessel.heading}°</div>

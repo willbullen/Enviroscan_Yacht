@@ -2,10 +2,10 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // Mock data for vessels - would come from API in real implementation
 const mockVessels = [
-  { id: 1, name: 'M/Y Serenity', type: 'Motor Yacht', length: '45m' },
-  { id: 2, name: 'S/Y Windchaser', type: 'Sailing Yacht', length: '38m' },
-  { id: 3, name: 'M/Y Ocean Explorer', type: 'Expedition Yacht', length: '65m' },
-  { id: 4, name: 'M/Y Azure Dreams', type: 'Motor Yacht', length: '52m' },
+  { id: 1, name: 'M/Y Serenity', type: 'Motor Yacht', length: '45m', mmsi: '366998410' },
+  { id: 2, name: 'S/Y Windchaser', type: 'Sailing Yacht', length: '38m', mmsi: '366759530' },
+  { id: 3, name: 'M/Y Ocean Explorer', type: 'Expedition Yacht', length: '65m', mmsi: '367671640' },
+  { id: 4, name: 'M/Y Azure Dreams', type: 'Motor Yacht', length: '52m', mmsi: '367124560' },
 ];
 
 export interface Vessel {
@@ -13,6 +13,7 @@ export interface Vessel {
   name: string;
   type: string;
   length: string;
+  mmsi?: string;
 }
 
 interface VesselContextType {
