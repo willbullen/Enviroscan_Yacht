@@ -168,6 +168,7 @@ const ISMManagement: React.FC = () => {
   const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState("documents");
   const [isNewDocumentDialogOpen, setIsNewDocumentDialogOpen] = useState(false);
+  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [newDocument, setNewDocument] = useState({
     title: '',
     documentType: 'procedure',
@@ -177,6 +178,20 @@ const ISMManagement: React.FC = () => {
     content: '',
     tags: ['safety', 'ism'],
     attachmentPath: '',
+    createdBy: 1 // Assuming user ID 1 (Captain) is creating this
+  });
+  
+  const [newTask, setNewTask] = useState({
+    title: '',
+    category: 'emergency',
+    taskType: 'checklist',
+    documentNumber: 'EM-',
+    version: '1.0',
+    status: 'active',
+    description: '',
+    instructions: '',
+    items: [], // Will be populated with form items
+    estimatedDuration: 30,
     createdBy: 1 // Assuming user ID 1 (Captain) is creating this
   });
   
@@ -294,6 +309,63 @@ const ISMManagement: React.FC = () => {
       toast({
         title: "Error",
         description: `Failed to create document: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleTaskSubmit = async () => {
+    try {
+      // Validate form
+      if (!newTask.title || !newTask.documentNumber) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Ensure we have at least one checklist item
+      if (newTask.items.length === 0) {
+        // Add a default empty item if none exist
+        newTask.items = [{ type: "checkbox", label: "Complete task", required: true, value: null }];
+      }
+      
+      // Create the task using apiRequest
+      await apiRequest('/api/ism/tasks', {
+        method: 'POST',
+        data: newTask,
+      });
+      
+      // Success handling
+      queryClient.invalidateQueries({queryKey: ['/api/ism/tasks']});
+      setIsNewTaskDialogOpen(false);
+      
+      // Reset form
+      setNewTask({
+        title: '',
+        category: 'emergency',
+        taskType: 'checklist',
+        documentNumber: 'EM-',
+        version: '1.0',
+        status: 'active',
+        description: '',
+        instructions: '',
+        items: [],
+        estimatedDuration: 30,
+        createdBy: 1
+      });
+      
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+      toast({
+        title: "Error",
+        description: `Failed to create task: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -605,7 +677,7 @@ const ISMManagement: React.FC = () => {
               <Search className="w-4 h-4" /> Search
             </Button>
           </div>
-          <Button className="flex items-center gap-1">
+          <Button className="flex items-center gap-1" onClick={() => setIsNewTaskDialogOpen(true)}>
             <Plus className="w-4 h-4" /> New Task
           </Button>
         </div>
@@ -687,6 +759,143 @@ const ISMManagement: React.FC = () => {
 
   return (
     <MainLayout title="ISM Management">
+      {/* New Task Dialog */}
+      <Dialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New ISM Task/Checklist</DialogTitle>
+            <DialogDescription>
+              Fill in the details to create a new ISM task or checklist. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="taskTitle">Title *</Label>
+              <Input
+                id="taskTitle"
+                value={newTask.title}
+                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                placeholder="Task or Checklist Title"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="taskCategory">Category</Label>
+              <Select 
+                value={newTask.category}
+                onValueChange={(value) => setNewTask({...newTask, category: value})}
+              >
+                <SelectTrigger id="taskCategory">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="emergency">Emergency</SelectItem>
+                  <SelectItem value="safety">Safety</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="environmental">Environmental</SelectItem>
+                  <SelectItem value="security">Security</SelectItem>
+                  <SelectItem value="operational">Operational</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="taskType">Task Type</Label>
+              <Select 
+                value={newTask.taskType}
+                onValueChange={(value) => setNewTask({...newTask, taskType: value})}
+              >
+                <SelectTrigger id="taskType">
+                  <SelectValue placeholder="Select Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="checklist">Checklist</SelectItem>
+                  <SelectItem value="form">Form</SelectItem>
+                  <SelectItem value="inspection">Inspection</SelectItem>
+                  <SelectItem value="procedure">Procedure</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="taskDocNumber">Document Number *</Label>
+              <Input
+                id="taskDocNumber"
+                value={newTask.documentNumber}
+                onChange={(e) => setNewTask({...newTask, documentNumber: e.target.value})}
+                placeholder="EM-001"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="taskVersion">Version</Label>
+              <Input
+                id="taskVersion"
+                value={newTask.version}
+                onChange={(e) => setNewTask({...newTask, version: e.target.value})}
+                placeholder="1.0"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="taskStatus">Status</Label>
+              <Select 
+                value={newTask.status}
+                onValueChange={(value) => setNewTask({...newTask, status: value})}
+              >
+                <SelectTrigger id="taskStatus">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="taskDuration">Estimated Duration (minutes)</Label>
+              <Input
+                id="taskDuration"
+                type="number"
+                value={newTask.estimatedDuration.toString()}
+                onChange={(e) => setNewTask({...newTask, estimatedDuration: parseInt(e.target.value) || 0})}
+                placeholder="30"
+              />
+            </div>
+            
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="taskDescription">Description</Label>
+              <Textarea
+                id="taskDescription"
+                value={newTask.description}
+                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                placeholder="Task or checklist description"
+                className="min-h-[80px]"
+              />
+            </div>
+            
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="taskInstructions">Instructions</Label>
+              <Textarea
+                id="taskInstructions"
+                value={newTask.instructions}
+                onChange={(e) => setNewTask({...newTask, instructions: e.target.value})}
+                placeholder="Instructions for completing this task or checklist"
+                className="min-h-[80px]"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewTaskDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleTaskSubmit}>Create Task</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {/* New Document Dialog */}
       <Dialog open={isNewDocumentDialogOpen} onOpenChange={setIsNewDocumentDialogOpen}>
         <DialogContent className="max-w-2xl">

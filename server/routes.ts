@@ -2257,6 +2257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reviewedBy: ismTaskSubmissions.reviewedBy,
           reviewDate: ismTaskSubmissions.reviewDate,
           createdAt: ismTaskSubmissions.createdAt,
+          responses: ismTaskSubmissions.responses
         })
         .from(ismTaskSubmissions)
         .orderBy(desc(ismTaskSubmissions.submissionDate))
@@ -2266,13 +2267,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(submissions);
       } catch (sqlError) {
         console.error("Direct query failed:", sqlError);
+        console.error(sqlError);
         // Return empty array instead of error
-        res.json([]);
+        res.status(200).json([]);
       }
     } catch (error) {
       console.error("Error in task submissions endpoint:", error);
-      // Return empty array instead of error
-      res.json([]);
+      // Return empty array instead of error - status 200 to prevent client errors
+      res.status(200).json([]);
     }
   });
   
