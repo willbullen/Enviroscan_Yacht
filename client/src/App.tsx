@@ -14,6 +14,7 @@ import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 import VesselAdmin from "@/pages/VesselAdmin";
 import FormsAdministration from "@/pages/FormsAdministration";
+import MarineTracker from "@/pages/MarineTracker";
 import { VoyagesListPage } from "@/pages/VoyagesListPage";
 import { VoyageDetailsPage } from "@/pages/VoyageDetailsPage";
 import { VoyageCreatePage } from "@/pages/VoyageCreatePage";
@@ -42,6 +43,9 @@ function App() {
       <Route path="/voyages/new" component={VoyageCreatePage} />
       <Route path="/voyages/:id/edit" component={VoyageEditPage} />
       <Route path="/voyages/:id" component={VoyageDetailsPage} />
+      
+      {/* Marine Tracking Routes */}
+      <Route path="/marine-tracker" component={MarineTracker} />
       
       {/* Yacht System Routes */}
       <Route path="/mechanical" component={YachtSystem} />

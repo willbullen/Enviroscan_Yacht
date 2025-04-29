@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import { logger } from "./services/logger";
 import { createError, asyncHandler } from "./middleware/errorHandler";
+import marineRouter from "./routes/marine";
 import { 
   insertUserSchema, 
   insertEquipmentSchema, 
@@ -3481,6 +3482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register API routes
   app.use("/api", apiRouter);
+  
+  // Register marine tracking router
+  app.use("/api/marine", marineRouter);
 
   const httpServer = createServer(app);
 
