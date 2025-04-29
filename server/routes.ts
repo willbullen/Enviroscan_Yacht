@@ -2,7 +2,7 @@ import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { desc, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
@@ -29,7 +29,6 @@ import {
   insertSpeedChartSchema,
   ismTaskSubmissions
 } from "@shared/schema";
-import { db } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create API router
