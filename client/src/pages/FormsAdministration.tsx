@@ -72,7 +72,8 @@ import {
   Edit,
   Trash2,
   Download,
-  Eye
+  Eye,
+  ArrowUpDown
 } from 'lucide-react';
 
 // Define interfaces for our form data models
@@ -125,6 +126,18 @@ const FormTemplate_DEFAULT = {
 const FormsAdministration: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("categories");
+  
+  // Filter and sort state
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categoryStatusFilter, setCategoryStatusFilter] = useState('all');
+  const [categorySortField, setCategorySortField] = useState('name');
+  const [categorySortDirection, setCategorySortDirection] = useState('asc');
+  
+  const [templateFilter, setTemplateFilter] = useState('');
+  const [templateStatusFilter, setTemplateStatusFilter] = useState('all');
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState(0);
+  const [templateSortField, setTemplateSortField] = useState('title');
+  const [templateSortDirection, setTemplateSortDirection] = useState('asc');
   
   // Form categories state
   const [editingCategory, setEditingCategory] = useState<FormCategory | null>(null);
@@ -576,6 +589,61 @@ const FormsAdministration: React.FC = () => {
       );
     }
     
+    // Filter categories based on search term and status
+    const filteredCategories = categories.filter(category => {
+      const matchesSearch = category.name.toLowerCase().includes(categoryFilter.toLowerCase()) || 
+                           (category.description && category.description.toLowerCase().includes(categoryFilter.toLowerCase()));
+      const matchesStatus = categoryStatusFilter === 'all' || 
+                           (categoryStatusFilter === 'active' && category.isActive) || 
+                           (categoryStatusFilter === 'inactive' && !category.isActive);
+      
+      return matchesSearch && matchesStatus;
+    });
+    
+    // Sort categories
+    const sortedCategories = [...filteredCategories].sort((a, b) => {
+      if (categorySortField === 'name') {
+        return categorySortDirection === 'asc' 
+          ? a.name.localeCompare(b.name) 
+          : b.name.localeCompare(a.name);
+      } else if (categorySortField === 'description') {
+        const descA = a.description || '';
+        const descB = b.description || '';
+        return categorySortDirection === 'asc' 
+          ? descA.localeCompare(descB) 
+          : descB.localeCompare(descA);
+      } else if (categorySortField === 'status') {
+        return categorySortDirection === 'asc' 
+          ? (a.isActive === b.isActive ? 0 : a.isActive ? -1 : 1) 
+          : (a.isActive === b.isActive ? 0 : a.isActive ? 1 : -1);
+      } else if (categorySortField === 'created') {
+        return categorySortDirection === 'asc' 
+          ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() 
+          : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      return 0;
+    });
+    
+    // Handle toggling sort
+    const toggleSort = (field: string) => {
+      if (categorySortField === field) {
+        setCategorySortDirection(categorySortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        setCategorySortField(field);
+        setCategorySortDirection('asc');
+      }
+    };
+    
+    // Directly toggle category status
+    const toggleCategoryStatus = async (category: FormCategory) => {
+      const updatedCategory = {
+        ...category,
+        isActive: !category.isActive
+      };
+      
+      updateCategoryMutation.mutate(updatedCategory);
+    };
+    
     return (
       <>
         <div className="flex justify-between items-center mb-4">
@@ -589,46 +657,118 @@ const FormsAdministration: React.FC = () => {
           </Button>
         </div>
         
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Filter by name or description..."
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          <div>
+            <select
+              value={categoryStatusFilter}
+              onChange={(e) => setCategoryStatusFilter(e.target.value)}
+              className="px-3 py-2 rounded-md border border-input bg-background"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead onClick={() => toggleSort('name')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Name
+                  {categorySortField === 'name' && (
+                    <span className="ml-1">
+                      {categorySortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => toggleSort('description')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Description
+                  {categorySortField === 'description' && (
+                    <span className="ml-1">
+                      {categorySortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => toggleSort('status')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Status
+                  {categorySortField === 'status' && (
+                    <span className="ml-1">
+                      {categorySortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => toggleSort('created')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Created
+                  {categorySortField === 'created' && (
+                    <span className="ml-1">
+                      {categorySortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.map(category => (
+            {sortedCategories.map(category => (
               <TableRow key={category.id}>
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>{category.description || '-'}</TableCell>
                 <TableCell>
-                  <Badge variant={category.isActive ? "success" : "secondary"}>
-                    {category.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
+                  <div className="flex items-center">
+                    <Badge 
+                      variant={category.isActive ? "success" : "secondary"}
+                      className="cursor-pointer"
+                      onClick={() => toggleCategoryStatus(category)}
+                    >
+                      {category.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground ml-2">(click to toggle)</span>
+                  </div>
                 </TableCell>
                 <TableCell>{new Date(category.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm" 
                       onClick={() => handleEditCategory(category)}
+                      className="flex items-center"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
                     </Button>
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
-                      className="text-destructive hover:text-destructive/80"
+                      className="text-destructive hover:text-destructive border-destructive hover:bg-destructive/10"
                       onClick={() => {
                         setCategoryToDelete(category);
                         setIsCategoryDeleteDialogOpen(true);
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
                     </Button>
                   </div>
                 </TableCell>
@@ -636,6 +776,12 @@ const FormsAdministration: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+        
+        {filteredCategories.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>No categories match your filters</p>
+          </div>
+        )}
       </>
     );
   };
@@ -673,6 +819,68 @@ const FormsAdministration: React.FC = () => {
       );
     }
     
+    // Filter templates based on search term, status, and category
+    const filteredTemplates = templates.filter(template => {
+      const matchesSearch = template.title.toLowerCase().includes(templateFilter.toLowerCase()) || 
+                           (template.description && template.description.toLowerCase().includes(templateFilter.toLowerCase()));
+      const matchesStatus = templateStatusFilter === 'all' || 
+                           (templateStatusFilter === 'active' && template.isActive) || 
+                           (templateStatusFilter === 'inactive' && !template.isActive);
+      const matchesCategory = templateCategoryFilter === 0 || template.categoryId === templateCategoryFilter;
+      
+      return matchesSearch && matchesStatus && matchesCategory;
+    });
+    
+    // Sort templates
+    const sortedTemplates = [...filteredTemplates].sort((a, b) => {
+      if (templateSortField === 'title') {
+        return templateSortDirection === 'asc' 
+          ? a.title.localeCompare(b.title) 
+          : b.title.localeCompare(a.title);
+      } else if (templateSortField === 'category') {
+        const catA = categoryMap.get(a.categoryId) || '';
+        const catB = categoryMap.get(b.categoryId) || '';
+        return templateSortDirection === 'asc' 
+          ? catA.localeCompare(catB) 
+          : catB.localeCompare(catA);
+      } else if (templateSortField === 'description') {
+        const descA = a.description || '';
+        const descB = b.description || '';
+        return templateSortDirection === 'asc' 
+          ? descA.localeCompare(descB) 
+          : descB.localeCompare(descA);
+      } else if (templateSortField === 'status') {
+        return templateSortDirection === 'asc' 
+          ? (a.isActive === b.isActive ? 0 : a.isActive ? -1 : 1) 
+          : (a.isActive === b.isActive ? 0 : a.isActive ? 1 : -1);
+      } else if (templateSortField === 'created') {
+        return templateSortDirection === 'asc' 
+          ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() 
+          : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      return 0;
+    });
+    
+    // Handle toggling sort
+    const toggleSort = (field: string) => {
+      if (templateSortField === field) {
+        setTemplateSortDirection(templateSortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        setTemplateSortField(field);
+        setTemplateSortDirection('asc');
+      }
+    };
+    
+    // Directly toggle template status
+    const toggleTemplateStatus = async (template: FormTemplate) => {
+      const updatedTemplate = {
+        ...template,
+        isActive: !template.isActive
+      };
+      
+      updateTemplateMutation.mutate(updatedTemplate);
+    };
+    
     return (
       <>
         <div className="flex justify-between items-center mb-4">
@@ -686,55 +894,150 @@ const FormsAdministration: React.FC = () => {
           </Button>
         </div>
         
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          <div className="flex-1 min-w-[200px]">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Filter by title or description..."
+                value={templateFilter}
+                onChange={(e) => setTemplateFilter(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          <div>
+            <select
+              value={templateStatusFilter}
+              onChange={(e) => setTemplateStatusFilter(e.target.value)}
+              className="px-3 py-2 rounded-md border border-input bg-background"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div>
+            <select
+              value={templateCategoryFilter}
+              onChange={(e) => setTemplateCategoryFilter(parseInt(e.target.value))}
+              className="px-3 py-2 rounded-md border border-input bg-background"
+            >
+              <option value={0}>All Categories</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead onClick={() => toggleSort('title')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Title
+                  {templateSortField === 'title' && (
+                    <span className="ml-1">
+                      {templateSortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => toggleSort('category')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Category
+                  {templateSortField === 'category' && (
+                    <span className="ml-1">
+                      {templateSortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => toggleSort('description')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Description
+                  {templateSortField === 'description' && (
+                    <span className="ml-1">
+                      {templateSortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => toggleSort('status')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Status
+                  {templateSortField === 'status' && (
+                    <span className="ml-1">
+                      {templateSortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => toggleSort('created')} className="cursor-pointer hover:text-primary">
+                <div className="flex items-center">
+                  Created
+                  {templateSortField === 'created' && (
+                    <span className="ml-1">
+                      {templateSortDirection === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 transform rotate-180" />}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {templates.map(template => (
+            {sortedTemplates.map(template => (
               <TableRow key={template.id}>
                 <TableCell className="font-medium">{template.title}</TableCell>
                 <TableCell>{categoryMap.get(template.categoryId) || `Category #${template.categoryId}`}</TableCell>
                 <TableCell>{template.description || '-'}</TableCell>
                 <TableCell>
-                  <Badge variant={template.isActive ? "success" : "secondary"}>
-                    {template.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
+                  <div className="flex items-center">
+                    <Badge 
+                      variant={template.isActive ? "success" : "secondary"}
+                      className="cursor-pointer"
+                      onClick={() => toggleTemplateStatus(template)}
+                    >
+                      {template.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground ml-2">(click to toggle)</span>
+                  </div>
                 </TableCell>
                 <TableCell>{new Date(template.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm" 
                       onClick={() => handleEditTemplate(template)}
+                      className="flex items-center"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
                     </Button>
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
                       onClick={() => handleCreateVersion(template)}
+                      className="flex items-center"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-4 h-4 mr-1" />
+                      Version
                     </Button>
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
-                      className="text-destructive hover:text-destructive/80"
+                      className="text-destructive hover:text-destructive border-destructive hover:bg-destructive/10"
                       onClick={() => {
                         setTemplateToDelete(template);
                         setIsTemplateDeleteDialogOpen(true);
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
                     </Button>
                   </div>
                 </TableCell>
@@ -742,6 +1045,12 @@ const FormsAdministration: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+        
+        {filteredTemplates.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>No templates match your filters</p>
+          </div>
+        )}
       </>
     );
   };
