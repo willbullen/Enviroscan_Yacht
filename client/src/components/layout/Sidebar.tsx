@@ -304,7 +304,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             >
               {location === "/vessels/admin" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <Ship className={cn("h-5 w-5", isOpen && "mr-3")} />
-              {isOpen && <span>Vessels</span>}
+              {isOpen && <span>Vessel Management</span>}
             </div>
           </NavLink>
         </nav>
