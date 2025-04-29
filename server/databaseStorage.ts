@@ -1445,4 +1445,303 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  // =========== ISM Task Management - Form Categories =============
+  async getFormCategory(id: number): Promise<FormCategory | undefined> {
+    const [category] = await db.select().from(formCategories).where(eq(formCategories.id, id));
+    return category || undefined;
+  }
+  
+  async getAllFormCategories(): Promise<FormCategory[]> {
+    return db.select().from(formCategories);
+  }
+  
+  async createFormCategory(category: InsertFormCategory): Promise<FormCategory> {
+    const [newCategory] = await db.insert(formCategories).values(category).returning();
+    return newCategory;
+  }
+  
+  async updateFormCategory(id: number, updates: Partial<FormCategory>): Promise<FormCategory | undefined> {
+    const [updated] = await db
+      .update(formCategories)
+      .set(updates)
+      .where(eq(formCategories.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteFormCategory(id: number): Promise<boolean> {
+    const result = await db.delete(formCategories).where(eq(formCategories.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+  
+  // =========== ISM Task Management - Form Templates =============
+  async getFormTemplate(id: number): Promise<FormTemplate | undefined> {
+    const [template] = await db.select().from(formTemplates).where(eq(formTemplates.id, id));
+    return template || undefined;
+  }
+  
+  async getAllFormTemplates(): Promise<FormTemplate[]> {
+    return db.select().from(formTemplates);
+  }
+  
+  async getFormTemplatesByCategory(categoryId: number): Promise<FormTemplate[]> {
+    return db.select().from(formTemplates).where(eq(formTemplates.categoryId, categoryId));
+  }
+  
+  async createFormTemplate(template: InsertFormTemplate): Promise<FormTemplate> {
+    const [newTemplate] = await db.insert(formTemplates).values(template).returning();
+    return newTemplate;
+  }
+  
+  async updateFormTemplate(id: number, updates: Partial<FormTemplate>): Promise<FormTemplate | undefined> {
+    const [updated] = await db
+      .update(formTemplates)
+      .set(updates)
+      .where(eq(formTemplates.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteFormTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(formTemplates).where(eq(formTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+  
+  // =========== ISM Task Management - Form Template Versions =============
+  async getFormTemplateVersion(id: number): Promise<FormTemplateVersion | undefined> {
+    const [version] = await db.select().from(formTemplateVersions).where(eq(formTemplateVersions.id, id));
+    return version || undefined;
+  }
+  
+  async getFormTemplateVersionsByTemplate(templateId: number): Promise<FormTemplateVersion[]> {
+    return db.select().from(formTemplateVersions).where(eq(formTemplateVersions.templateId, templateId));
+  }
+  
+  async getActiveFormTemplateVersion(templateId: number): Promise<FormTemplateVersion | undefined> {
+    const [version] = await db
+      .select()
+      .from(formTemplateVersions)
+      .where(
+        and(
+          eq(formTemplateVersions.templateId, templateId),
+          eq(formTemplateVersions.isActive, true)
+        )
+      );
+    return version || undefined;
+  }
+  
+  async createFormTemplateVersion(version: InsertFormTemplateVersion): Promise<FormTemplateVersion> {
+    // If this version is active, deactivate all other versions of this template
+    if (version.isActive) {
+      await db
+        .update(formTemplateVersions)
+        .set({ isActive: false })
+        .where(eq(formTemplateVersions.templateId, version.templateId));
+    }
+    
+    const [newVersion] = await db.insert(formTemplateVersions).values(version).returning();
+    return newVersion;
+  }
+  
+  async activateFormTemplateVersion(id: number): Promise<FormTemplateVersion | undefined> {
+    const version = await this.getFormTemplateVersion(id);
+    if (!version) return undefined;
+    
+    // Deactivate all versions of this template
+    await db
+      .update(formTemplateVersions)
+      .set({ isActive: false })
+      .where(eq(formTemplateVersions.templateId, version.templateId));
+    
+    // Activate the requested version
+    const [updatedVersion] = await db
+      .update(formTemplateVersions)
+      .set({ isActive: true })
+      .where(eq(formTemplateVersions.id, id))
+      .returning();
+    
+    return updatedVersion;
+  }
+  
+  async updateFormTemplateVersion(id: number, updates: Partial<FormTemplateVersion>): Promise<FormTemplateVersion | undefined> {
+    const version = await this.getFormTemplateVersion(id);
+    if (!version) return undefined;
+    
+    // If activating this version, deactivate all others
+    if (updates.isActive && !version.isActive) {
+      await db
+        .update(formTemplateVersions)
+        .set({ isActive: false })
+        .where(eq(formTemplateVersions.templateId, version.templateId));
+    }
+    
+    const [updatedVersion] = await db
+      .update(formTemplateVersions)
+      .set(updates)
+      .where(eq(formTemplateVersions.id, id))
+      .returning();
+    
+    return updatedVersion;
+  }
+  
+  async deleteFormTemplateVersion(id: number): Promise<boolean> {
+    const result = await db.delete(formTemplateVersions).where(eq(formTemplateVersions.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+  
+  // =========== ISM Task Management - ISM Tasks =============
+  async getIsmTask(id: number): Promise<IsmTask | undefined> {
+    const [task] = await db.select().from(ismTasks).where(eq(ismTasks.id, id));
+    return task || undefined;
+  }
+  
+  async getAllIsmTasks(): Promise<IsmTask[]> {
+    return db.select().from(ismTasks);
+  }
+  
+  async getIsmTasksByVessel(vesselId: number): Promise<IsmTask[]> {
+    return db.select().from(ismTasks).where(eq(ismTasks.vesselId, vesselId));
+  }
+  
+  async getIsmTasksByStatus(status: string): Promise<IsmTask[]> {
+    return db.select().from(ismTasks).where(eq(ismTasks.status, status));
+  }
+  
+  async getIsmTasksByAssignee(userId: number): Promise<IsmTask[]> {
+    return db.select().from(ismTasks).where(eq(ismTasks.assignedToId, userId));
+  }
+  
+  async getDueIsmTasks(): Promise<IsmTask[]> {
+    const today = new Date();
+    return db
+      .select()
+      .from(ismTasks)
+      .where(
+        and(
+          eq(ismTasks.status, "pending"),
+          lte(ismTasks.dueDate, today)
+        )
+      );
+  }
+  
+  async getIsmTasksByTemplateVersion(versionId: number): Promise<IsmTask[]> {
+    return db
+      .select()
+      .from(ismTasks)
+      .where(eq(ismTasks.formTemplateVersionId, versionId));
+  }
+  
+  async createIsmTask(task: InsertIsmTask): Promise<IsmTask> {
+    const [newTask] = await db.insert(ismTasks).values(task).returning();
+    return newTask;
+  }
+  
+  async updateIsmTask(id: number, updates: Partial<IsmTask>): Promise<IsmTask | undefined> {
+    const [updatedTask] = await db
+      .update(ismTasks)
+      .set(updates)
+      .where(eq(ismTasks.id, id))
+      .returning();
+    
+    return updatedTask;
+  }
+  
+  async deleteIsmTask(id: number): Promise<boolean> {
+    const result = await db.delete(ismTasks).where(eq(ismTasks.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+  
+  // =========== ISM Task Management - Form Submissions =============
+  async getFormSubmission(id: number): Promise<FormSubmission | undefined> {
+    const [submission] = await db.select().from(formSubmissions).where(eq(formSubmissions.id, id));
+    return submission || undefined;
+  }
+  
+  async getFormSubmissionsByTask(taskId: number): Promise<FormSubmission[]> {
+    return db
+      .select()
+      .from(formSubmissions)
+      .where(eq(formSubmissions.taskId, taskId));
+  }
+  
+  async getRecentFormSubmissions(limit: number = 10): Promise<FormSubmission[]> {
+    return db
+      .select()
+      .from(formSubmissions)
+      .orderBy(formSubmissions.submittedAt)
+      .limit(limit);
+  }
+  
+  async createFormSubmission(submission: InsertFormSubmission): Promise<FormSubmission> {
+    const [newSubmission] = await db.insert(formSubmissions).values(submission).returning();
+    
+    // If submission is final, update task status to completed
+    if (submission.reviewStatus === 'approved') {
+      await this.updateIsmTask(submission.taskId, { status: 'completed' });
+    }
+    
+    return newSubmission;
+  }
+  
+  async updateFormSubmission(id: number, updates: Partial<FormSubmission>): Promise<FormSubmission | undefined> {
+    const submission = await this.getFormSubmission(id);
+    if (!submission) return undefined;
+    
+    const [updatedSubmission] = await db
+      .update(formSubmissions)
+      .set(updates)
+      .where(eq(formSubmissions.id, id))
+      .returning();
+    
+    // If the status is changed to approved, update task status to completed
+    if (updates.reviewStatus === 'approved' && submission.reviewStatus !== 'approved') {
+      await this.updateIsmTask(submission.taskId, { status: 'completed' });
+    }
+    // If the status is changed to rejected, update task status to in-progress
+    else if (updates.reviewStatus === 'rejected' && submission.reviewStatus !== 'rejected') {
+      await this.updateIsmTask(submission.taskId, { status: 'in-progress' });
+    }
+    
+    return updatedSubmission;
+  }
+  
+  async deleteFormSubmission(id: number): Promise<boolean> {
+    const result = await db.delete(formSubmissions).where(eq(formSubmissions.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+  
+  // =========== ISM Task Management - Task Comments =============
+  async getTaskComment(id: number): Promise<TaskComment | undefined> {
+    const [comment] = await db.select().from(taskComments).where(eq(taskComments.id, id));
+    return comment || undefined;
+  }
+  
+  async getTaskCommentsByTask(taskId: number): Promise<TaskComment[]> {
+    return db
+      .select()
+      .from(taskComments)
+      .where(eq(taskComments.taskId, taskId))
+      .orderBy(taskComments.createdAt);
+  }
+  
+  async createTaskComment(comment: InsertTaskComment): Promise<TaskComment> {
+    const [newComment] = await db.insert(taskComments).values(comment).returning();
+    return newComment;
+  }
+  
+  async updateTaskComment(id: number, updates: Partial<TaskComment>): Promise<TaskComment | undefined> {
+    const [updatedComment] = await db
+      .update(taskComments)
+      .set(updates)
+      .where(eq(taskComments.id, id))
+      .returning();
+    
+    return updatedComment;
+  }
+  
+  async deleteTaskComment(id: number): Promise<boolean> {
+    const result = await db.delete(taskComments).where(eq(taskComments.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
 }
