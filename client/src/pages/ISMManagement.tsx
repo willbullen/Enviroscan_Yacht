@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient, apiRequest } from "@/lib/queryClient";
-
+import { format, formatDistanceToNow } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import {
@@ -425,7 +425,7 @@ const ISMManagement: React.FC = () => {
                 <TableCell>{doc.documentNumber}</TableCell>
                 <TableCell>{doc.version}</TableCell>
                 <TableCell>{renderStatus(doc.status)}</TableCell>
-                <TableCell>{formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}</TableCell>
+                <TableCell>{new Date(doc.updatedAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">View</Button>
                 </TableCell>
@@ -488,10 +488,10 @@ const ISMManagement: React.FC = () => {
                 <TableCell>{renderStatus(audit.status)}</TableCell>
                 <TableCell>
                   {audit.startDate 
-                    ? format(new Date(audit.startDate), 'MMM d, yyyy') 
+                    ? new Date(audit.startDate).toLocaleDateString() 
                     : 'Not scheduled'}
                 </TableCell>
-                <TableCell>{formatDistanceToNow(new Date(audit.createdAt), { addSuffix: true })}</TableCell>
+                <TableCell>{new Date(audit.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">View</Button>
                 </TableCell>
@@ -554,10 +554,10 @@ const ISMManagement: React.FC = () => {
                 <TableCell>{renderStatus(training.status)}</TableCell>
                 <TableCell>
                   {training.scheduledDate 
-                    ? format(new Date(training.scheduledDate), 'MMM d, yyyy') 
+                    ? new Date(training.scheduledDate).toLocaleDateString() 
                     : 'Not scheduled'}
                 </TableCell>
-                <TableCell>{formatDistanceToNow(new Date(training.createdAt), { addSuffix: true })}</TableCell>
+                <TableCell>{new Date(training.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">View</Button>
                 </TableCell>
@@ -629,7 +629,7 @@ const ISMManagement: React.FC = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>{renderStatus(incident.status)}</TableCell>
-                <TableCell>{format(new Date(incident.dateOccurred), 'MMM d, yyyy')}</TableCell>
+                <TableCell>{new Date(incident.dateOccurred).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">View</Button>
                 </TableCell>
@@ -802,7 +802,7 @@ const ISMManagement: React.FC = () => {
       } else if (dueDate.toDateString() === tomorrow.toDateString()) {
         return 'Tomorrow';
       } else {
-        return format(dueDate, 'MMM d, yyyy');
+        return dueDate.toLocaleDateString();
       }
     };
     
@@ -964,11 +964,11 @@ const ISMManagement: React.FC = () => {
                     id="task-due-date"
                   >
                     <Calendar className="mr-2 h-4 w-4" />
-                    {newTask.dueDate ? format(newTask.dueDate, 'PPP') : <span>Pick a date</span>}
+                    {newTask.dueDate ? newTask.dueDate.toLocaleDateString() : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
+                  <CalendarPicker
                     mode="single"
                     selected={newTask.dueDate}
                     onSelect={(date) => setNewTask({...newTask, dueDate: date || new Date()})}
