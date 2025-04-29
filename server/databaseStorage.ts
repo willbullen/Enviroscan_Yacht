@@ -911,11 +911,24 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getRecentIsmTaskSubmissions(limit: number = 10): Promise<IsmTaskSubmission[]> {
-    return db
-      .select()
-      .from(ismTaskSubmissions)
-      .orderBy(desc(ismTaskSubmissions.submissionDate))
-      .limit(limit);
+    try {
+      console.log("Executing getRecentIsmTaskSubmissions query with limit:", limit);
+      console.log("Table name:", ismTaskSubmissions.name);
+      
+      const result = await db
+        .select()
+        .from(ismTaskSubmissions)
+        .orderBy(desc(ismTaskSubmissions.submissionDate))
+        .limit(limit);
+      
+      console.log("Query result:", result ? result.length : 0, "submissions found");
+      return result;
+    } catch (error) {
+      console.error("Error in getRecentIsmTaskSubmissions:", error);
+      console.error("Error details:", Object.getOwnPropertyNames(error));
+      // Return empty array instead of throwing an error, for more graceful handling
+      return [];
+    }
   }
   
   async createIsmTaskSubmission(insertSubmission: InsertIsmTaskSubmission): Promise<IsmTaskSubmission> {
