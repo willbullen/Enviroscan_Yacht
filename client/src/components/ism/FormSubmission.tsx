@@ -76,28 +76,93 @@ const FormSubmission: React.FC<FormSubmissionProps> = ({
         method: 'GET'
       });
       
+      console.log("Form template version response:", response);
+      
+      // Check if the response contains the structure definition directly
       if (response && response.structureDefinition) {
-        setFormDefinition(response.structureDefinition);
+        // Create a default form definition if the returned structure doesn't match
+        let formStructure = response.structureDefinition;
+        
+        // If structureDefinition is a string (JSON), parse it
+        if (typeof response.structureDefinition === 'string') {
+          try {
+            formStructure = JSON.parse(response.structureDefinition);
+          } catch (e) {
+            console.error("Failed to parse structureDefinition JSON:", e);
+          }
+        }
+        
+        console.log("Parsed form structure:", formStructure);
+        
+        // The database structure is different from what our component expects
+        // The DB has { fields: [...] } but our component expects { title: "...", sections: [{ title: "...", fields: [...] }] }
+        // Let's transform it to match our component's expectations
+        let transformedStructure;
+        
+        if (formStructure.fields && !formStructure.sections) {
+          // Convert from the DB format to our component format
+          transformedStructure = {
+            title: `Form ${response.versionNumber || formTemplateVersionId}`,
+            sections: [
+              {
+                title: response.templateId ? `Template #${response.templateId}` : "Form Section",
+                fields: formStructure.fields
+              }
+            ]
+          };
+          console.log("Transformed structure for component:", transformedStructure);
+        } else if (formStructure.sections) {
+          // Already in the correct format
+          transformedStructure = formStructure;
+        } else {
+          // Create a default structure as fallback
+          transformedStructure = {
+            title: "Form " + formTemplateVersionId,
+            sections: [
+              {
+                title: "Form Fields",
+                fields: [
+                  {
+                    id: "field1",
+                    type: "text",
+                    label: "Default Field",
+                    required: true
+                  }
+                ]
+              }
+            ]
+          };
+          console.log("Using default structure:", transformedStructure);
+        }
+        
+        setFormDefinition(transformedStructure);
+        
         // Initialize form data with empty values
         const initialData: Record<string, any> = {};
-        response.structureDefinition.sections.forEach((section: FormSection) => {
-          section.fields.forEach((field: FormField) => {
-            if (field.type === 'checkbox') {
-              initialData[field.id] = false;
-            } else if (field.type === 'number') {
-              initialData[field.id] = 0;
-            } else if (field.type === 'select') {
-              initialData[field.id] = field.options?.[0] || '';
-            } else {
-              initialData[field.id] = '';
-            }
-          });
+        const fieldsList = formStructure.fields || 
+                         (formStructure.sections ? 
+                            formStructure.sections.flatMap((s: any) => s.fields) : 
+                            transformedStructure.sections.flatMap((s: any) => s.fields));
+                            
+        fieldsList.forEach((field: FormField) => {
+          if (field.type === 'checkbox') {
+            initialData[field.id] = false;
+          } else if (field.type === 'number') {
+            initialData[field.id] = 0;
+          } else if (field.type === 'select') {
+            initialData[field.id] = field.options?.[0] || '';
+          } else {
+            initialData[field.id] = '';
+          }
         });
+        
+        console.log("Initial form data:", initialData);
         setFormData(initialData);
       } else {
+        console.error("Form template missing structure definition:", response);
         toast({
           title: "Error",
-          description: "Could not load form template",
+          description: "Could not load form template - missing structure definition",
           variant: "destructive",
         });
       }
@@ -208,6 +273,22 @@ const FormSubmission: React.FC<FormSubmissionProps> = ({
             <Input
               id={field.id}
               type={field.type}
+              value={formData[field.id] || ''}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.required}
+            />
+          </div>
+        );
+      
+      case 'date':
+        return (
+          <div key={field.id} className="space-y-1.5 mb-4">
+            <Label htmlFor={field.id}>
+              {field.label} {field.required && <span className="text-red-500">*</span>}
+            </Label>
+            <Input
+              id={field.id}
+              type="datetime-local"
               value={formData[field.id] || ''}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               required={field.required}
