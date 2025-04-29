@@ -555,7 +555,7 @@ const FormsAdministration: React.FC = () => {
     }
     
     if (formCategoriesQuery.isError) {
-      return <div className="text-center py-8 text-red-500">Error loading categories</div>;
+      return <div className="text-center py-8 text-destructive">Error loading categories</div>;
     }
     
     const categories = formCategoriesQuery.data as FormCategory[] || [];
@@ -647,7 +647,7 @@ const FormsAdministration: React.FC = () => {
     }
     
     if (formTemplatesQuery.isError) {
-      return <div className="text-center py-8 text-red-500">Error loading templates</div>;
+      return <div className="text-center py-8 text-destructive">Error loading templates</div>;
     }
     
     const templates = formTemplatesQuery.data as FormTemplate[] || [];
@@ -728,7 +728,7 @@ const FormsAdministration: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="text-red-500 hover:text-red-700"
+                      className="text-destructive hover:text-destructive/80"
                       onClick={() => {
                         setTemplateToDelete(template);
                         setIsTemplateDeleteDialogOpen(true);
@@ -835,7 +835,7 @@ const FormsAdministration: React.FC = () => {
               {formVersionsQuery.isLoading ? (
                 <div className="text-center py-4">Loading versions...</div>
               ) : formVersionsQuery.isError ? (
-                <div className="text-center py-4 text-red-500">Error loading versions</div>
+                <div className="text-center py-4 text-destructive">Error loading versions</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -1195,7 +1195,7 @@ const FormsAdministration: React.FC = () => {
               />
               
               {!formStructureValid && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-destructive">
                   Invalid JSON structure. Please check the format.
                 </p>
               )}
@@ -1224,7 +1224,7 @@ const FormsAdministration: React.FC = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => categoryToDelete && deleteCategoryMutation.mutate(categoryToDelete.id)}
             >
               Delete
@@ -1246,7 +1246,7 @@ const FormsAdministration: React.FC = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 hover:bg-red-600"
+              variant="destructive"
               onClick={() => templateToDelete && deleteTemplateMutation.mutate(templateToDelete.id)}
             >
               Delete
