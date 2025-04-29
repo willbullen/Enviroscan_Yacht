@@ -15,7 +15,14 @@ import {
   voyages, type Voyage, type InsertVoyage,
   waypoints, type Waypoint, type InsertWaypoint,
   fuelConsumptionChart, type FuelConsumptionChart, type InsertFuelConsumptionChart,
-  speedChart, type SpeedChart, type InsertSpeedChart
+  speedChart, type SpeedChart, type InsertSpeedChart,
+  // New ISM Task Management imports
+  formCategories, type FormCategory, type InsertFormCategory,
+  formTemplates, type FormTemplate, type InsertFormTemplate,
+  formTemplateVersions, type FormTemplateVersion, type InsertFormTemplateVersion,
+  ismTasks, type IsmTask, type InsertIsmTask,
+  formSubmissions, type FormSubmission, type InsertFormSubmission,
+  taskComments, type TaskComment, type InsertTaskComment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
@@ -164,6 +171,56 @@ export interface IStorage {
   addSpeedDataPoint(dataPoint: InsertSpeedChart): Promise<SpeedChart>;
   updateSpeedDataPoint(id: number, dataPoint: Partial<SpeedChart>): Promise<SpeedChart | null>;
   deleteSpeedDataPoint(id: number): Promise<boolean>;
+  
+  // ISM Task Management - Form Categories operations
+  getFormCategory(id: number): Promise<FormCategory | undefined>;
+  getAllFormCategories(): Promise<FormCategory[]>;
+  createFormCategory(category: InsertFormCategory): Promise<FormCategory>;
+  updateFormCategory(id: number, category: Partial<FormCategory>): Promise<FormCategory | undefined>;
+  deleteFormCategory(id: number): Promise<boolean>;
+  
+  // ISM Task Management - Form Templates operations
+  getFormTemplate(id: number): Promise<FormTemplate | undefined>;
+  getAllFormTemplates(): Promise<FormTemplate[]>;
+  getFormTemplatesByCategory(categoryId: number): Promise<FormTemplate[]>;
+  createFormTemplate(template: InsertFormTemplate): Promise<FormTemplate>;
+  updateFormTemplate(id: number, template: Partial<FormTemplate>): Promise<FormTemplate | undefined>;
+  deleteFormTemplate(id: number): Promise<boolean>;
+  
+  // ISM Task Management - Form Template Versions operations
+  getFormTemplateVersion(id: number): Promise<FormTemplateVersion | undefined>;
+  getFormTemplateVersionsByTemplate(templateId: number): Promise<FormTemplateVersion[]>;
+  getActiveFormTemplateVersion(templateId: number): Promise<FormTemplateVersion | undefined>;
+  createFormTemplateVersion(version: InsertFormTemplateVersion): Promise<FormTemplateVersion>;
+  activateFormTemplateVersion(id: number): Promise<FormTemplateVersion | undefined>;
+  updateFormTemplateVersion(id: number, version: Partial<FormTemplateVersion>): Promise<FormTemplateVersion | undefined>;
+  deleteFormTemplateVersion(id: number): Promise<boolean>;
+  
+  // ISM Task Management - ISM Tasks operations
+  getIsmTask(id: number): Promise<IsmTask | undefined>;
+  getAllIsmTasks(): Promise<IsmTask[]>;
+  getIsmTasksByStatus(status: string): Promise<IsmTask[]>;
+  getIsmTasksByAssignee(userId: number): Promise<IsmTask[]>;
+  getDueIsmTasks(): Promise<IsmTask[]>;
+  getIsmTasksByTemplateVersion(versionId: number): Promise<IsmTask[]>;
+  createIsmTask(task: InsertIsmTask): Promise<IsmTask>;
+  updateIsmTask(id: number, task: Partial<IsmTask>): Promise<IsmTask | undefined>;
+  deleteIsmTask(id: number): Promise<boolean>;
+  
+  // ISM Task Management - Form Submissions operations
+  getFormSubmission(id: number): Promise<FormSubmission | undefined>;
+  getFormSubmissionsByTask(taskId: number): Promise<FormSubmission[]>;
+  getRecentFormSubmissions(limit?: number): Promise<FormSubmission[]>;
+  createFormSubmission(submission: InsertFormSubmission): Promise<FormSubmission>;
+  updateFormSubmission(id: number, submission: Partial<FormSubmission>): Promise<FormSubmission | undefined>;
+  deleteFormSubmission(id: number): Promise<boolean>;
+  
+  // ISM Task Management - Task Comments operations
+  getTaskComment(id: number): Promise<TaskComment | undefined>;
+  getTaskCommentsByTask(taskId: number): Promise<TaskComment[]>;
+  createTaskComment(comment: InsertTaskComment): Promise<TaskComment>;
+  updateTaskComment(id: number, comment: Partial<TaskComment>): Promise<TaskComment | undefined>;
+  deleteTaskComment(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -186,6 +243,14 @@ export class MemStorage implements IStorage {
   private waypoints: Map<number, Waypoint> = new Map<number, Waypoint>();
   private fuelConsumptionCharts: Map<number, FuelConsumptionChart> = new Map<number, FuelConsumptionChart>();
   private speedCharts: Map<number, SpeedChart> = new Map<number, SpeedChart>();
+  
+  // ISM Task Management maps
+  private formCategories: Map<number, FormCategory> = new Map<number, FormCategory>();
+  private formTemplates: Map<number, FormTemplate> = new Map<number, FormTemplate>();
+  private formTemplateVersions: Map<number, FormTemplateVersion> = new Map<number, FormTemplateVersion>();
+  private ismTasks: Map<number, IsmTask> = new Map<number, IsmTask>();
+  private formSubmissions: Map<number, FormSubmission> = new Map<number, FormSubmission>();
+  private taskComments: Map<number, TaskComment> = new Map<number, TaskComment>();
   
   private userCurrentId: number;
   private equipmentCurrentId: number;

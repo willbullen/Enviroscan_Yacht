@@ -962,3 +962,120 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit
 });
 export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
 export type PaymentMethod = typeof paymentMethods.$inferSelect;
+
+// ISM Task Management System
+
+// 1. Form Categories
+export const formCategories = pgTable("form_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFormCategorySchema = createInsertSchema(formCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertFormCategory = z.infer<typeof insertFormCategorySchema>;
+export type FormCategory = typeof formCategories.$inferSelect;
+
+// 2. Form Templates
+export const formTemplates = pgTable("form_templates", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  categoryId: integer("category_id").references(() => formCategories.id).notNull(),
+  originalFilename: text("original_filename"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdById: integer("created_by_id").references(() => users.id),
+});
+
+export const insertFormTemplateSchema = createInsertSchema(formTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertFormTemplate = z.infer<typeof insertFormTemplateSchema>;
+export type FormTemplate = typeof formTemplates.$inferSelect;
+
+// 3. Form Template Versions
+export const formTemplateVersions = pgTable("form_template_versions", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => formTemplates.id).notNull(),
+  versionNumber: text("version_number").notNull(),
+  structureDefinition: json("structure_definition").notNull(), // JSON structure defining the form fields and layout
+  isActive: boolean("is_active").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdById: integer("created_by_id").references(() => users.id),
+});
+
+export const insertFormTemplateVersionSchema = createInsertSchema(formTemplateVersions).omit({
+  id: true,
+  createdAt: true
+});
+export type InsertFormTemplateVersion = z.infer<typeof insertFormTemplateVersionSchema>;
+export type FormTemplateVersion = typeof formTemplateVersions.$inferSelect;
+
+// 4. ISM Tasks
+export const ismTasks = pgTable("ism_tasks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  formTemplateVersionId: integer("form_template_version_id").references(() => formTemplateVersions.id).notNull(),
+  assignedToId: integer("assigned_to_id").references(() => users.id).notNull(),
+  dueDate: timestamp("due_date"),
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed, overdue, reviewed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdById: integer("created_by_id").references(() => users.id),
+});
+
+export const insertIsmTaskSchema = createInsertSchema(ismTasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertIsmTask = z.infer<typeof insertIsmTaskSchema>;
+export type IsmTask = typeof ismTasks.$inferSelect;
+
+// 5. Form Submissions
+export const formSubmissions = pgTable("form_submissions", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").references(() => ismTasks.id).notNull(),
+  submittedById: integer("submitted_by_id").references(() => users.id).notNull(),
+  submissionData: json("submission_data").notNull(), // JSON data containing form values
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewStatus: text("review_status"), // approved, rejected, feedback_required
+  reviewComments: text("review_comments"),
+});
+
+export const insertFormSubmissionSchema = createInsertSchema(formSubmissions).omit({
+  id: true,
+  submittedAt: true
+});
+export type InsertFormSubmission = z.infer<typeof insertFormSubmissionSchema>;
+export type FormSubmission = typeof formSubmissions.$inferSelect;
+
+// 6. Task Comments
+export const taskComments = pgTable("task_comments", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").references(() => ismTasks.id).notNull(),
+  commenterId: integer("commenter_id").references(() => users.id).notNull(),
+  commentText: text("comment_text").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
+export type TaskComment = typeof taskComments.$inferSelect;
