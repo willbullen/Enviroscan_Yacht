@@ -64,7 +64,7 @@ const VesselSelector = ({ currentVesselId = 1, onVesselChange }: VesselSelectorP
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={goToVesselAdmin} className="flex items-center gap-2 text-primary">
           <Settings className="h-4 w-4" />
-          <span>Vessel Management</span>
+          <span>Fleet Management</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={goToVesselAdmin} className="flex items-center gap-2 text-primary">
           <PlusCircle className="h-4 w-4" />
