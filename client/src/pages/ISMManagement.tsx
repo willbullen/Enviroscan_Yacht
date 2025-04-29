@@ -1223,6 +1223,275 @@ const ISMManagement: React.FC = () => {
           </Card>
         </Tabs>
       </div>
+      
+      {/* View Task Dialog */}
+      <Dialog open={isViewTaskDialogOpen} onOpenChange={setIsViewTaskDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          {selectedTask && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center justify-between">
+                  <span>{selectedTask.title}</span>
+                  <Badge className={`${statusColors[selectedTask.status as keyof typeof statusColors] || "bg-gray-500"} text-white`}>
+                    {selectedTask.status}
+                  </Badge>
+                </DialogTitle>
+                <DialogDescription className="flex flex-col gap-1 mt-2">
+                  <div className="flex justify-between">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">Document Number:</p>
+                      <p className="text-sm font-medium">{selectedTask.documentNumber}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">Version:</p>
+                      <p className="text-sm font-medium">{selectedTask.version}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">Category:</p>
+                    <Badge variant="outline">{selectedTask.category}</Badge>
+                    <p className="text-sm text-muted-foreground ml-4">Type:</p>
+                    <Badge variant="outline">{selectedTask.taskType}</Badge>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+              
+              <Separator className="my-4" />
+              
+              {selectedTask.description && (
+                <div className="my-2">
+                  <h4 className="text-sm font-semibold mb-1">Description</h4>
+                  <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
+                </div>
+              )}
+              
+              {selectedTask.instructions && (
+                <div className="my-4">
+                  <h4 className="text-sm font-semibold mb-1">Instructions</h4>
+                  <p className="text-sm text-muted-foreground">{selectedTask.instructions}</p>
+                </div>
+              )}
+              
+              <div className="my-4">
+                <h4 className="text-sm font-semibold mb-3">Checklist Items</h4>
+                {selectedTask.items && selectedTask.items.length > 0 ? (
+                  <div className="space-y-3 border rounded-md p-4">
+                    {selectedTask.items.map((item: any, index: number) => (
+                      <div key={index} className="flex items-start gap-2">
+                        {item.type === 'checkbox' ? (
+                          <Checkbox id={`view-item-${index}`} disabled />
+                        ) : (
+                          <span className="h-4 w-4 mr-2 mt-1">•</span>
+                        )}
+                        <Label 
+                          htmlFor={`view-item-${index}`} 
+                          className={`text-sm ${item.required ? 'font-medium' : ''}`}
+                        >
+                          {item.label}
+                          {item.required && <span className="text-red-500 ml-1">*</span>}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No checklist items available</p>
+                )}
+              </div>
+              
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsViewTaskDialogOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setIsViewTaskDialogOpen(false);
+                    setTaskSubmission({
+                      ...taskSubmission,
+                      taskId: selectedTask.id
+                    });
+                    setIsCompleteTaskDialogOpen(true);
+                  }}
+                >
+                  Complete This Task
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Complete Task Dialog */}
+      <Dialog open={isCompleteTaskDialogOpen} onOpenChange={setIsCompleteTaskDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          {selectedTask && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Complete Task: {selectedTask.title}</DialogTitle>
+                <DialogDescription>
+                  Fill in the checklist below to complete this task. Items marked with * are required.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <Separator className="my-4" />
+              
+              <div className="my-4">
+                <h4 className="text-sm font-semibold mb-3">Checklist Items</h4>
+                {selectedTask.items && selectedTask.items.length > 0 ? (
+                  <div className="space-y-4 border rounded-md p-4">
+                    {selectedTask.items.map((item: any, index: number) => {
+                      const itemKey = `item-${index}`;
+                      if (item.type === 'checkbox') {
+                        return (
+                          <div key={index} className="flex items-start gap-2">
+                            <Checkbox 
+                              id={itemKey}
+                              checked={!!taskSubmission.responses[itemKey]}
+                              onCheckedChange={(checked) => {
+                                setTaskSubmission({
+                                  ...taskSubmission,
+                                  responses: {
+                                    ...taskSubmission.responses,
+                                    [itemKey]: !!checked
+                                  }
+                                });
+                              }}
+                            />
+                            <Label 
+                              htmlFor={itemKey} 
+                              className={`text-sm ${item.required ? 'font-medium' : ''}`}
+                            >
+                              {item.label}
+                              {item.required && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
+                          </div>
+                        );
+                      } else if (item.type === 'text' || item.type === 'number') {
+                        return (
+                          <div key={index} className="space-y-2">
+                            <Label 
+                              htmlFor={itemKey} 
+                              className={`text-sm ${item.required ? 'font-medium' : ''}`}
+                            >
+                              {item.label}
+                              {item.required && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
+                            <Input
+                              id={itemKey}
+                              type={item.type}
+                              value={taskSubmission.responses[itemKey] || ''}
+                              onChange={(e) => {
+                                setTaskSubmission({
+                                  ...taskSubmission,
+                                  responses: {
+                                    ...taskSubmission.responses,
+                                    [itemKey]: item.type === 'number' ? 
+                                      parseFloat(e.target.value) : e.target.value
+                                  }
+                                });
+                              }}
+                              placeholder={item.placeholder || ''}
+                            />
+                          </div>
+                        );
+                      } else if (item.type === 'textarea') {
+                        return (
+                          <div key={index} className="space-y-2">
+                            <Label 
+                              htmlFor={itemKey} 
+                              className={`text-sm ${item.required ? 'font-medium' : ''}`}
+                            >
+                              {item.label}
+                              {item.required && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
+                            <Textarea
+                              id={itemKey}
+                              value={taskSubmission.responses[itemKey] || ''}
+                              onChange={(e) => {
+                                setTaskSubmission({
+                                  ...taskSubmission,
+                                  responses: {
+                                    ...taskSubmission.responses,
+                                    [itemKey]: e.target.value
+                                  }
+                                });
+                              }}
+                              placeholder={item.placeholder || ''}
+                            />
+                          </div>
+                        );
+                      } else {
+                        return null;
+                      }
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No checklist items available</p>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="duration" className="text-sm">Duration (minutes)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    value={taskSubmission.duration || ''}
+                    onChange={(e) => setTaskSubmission({
+                      ...taskSubmission, 
+                      duration: parseInt(e.target.value)
+                    })}
+                    placeholder="How long did this task take?"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-sm">Location</Label>
+                  <Input
+                    id="location"
+                    value={taskSubmission.location || ''}
+                    onChange={(e) => setTaskSubmission({
+                      ...taskSubmission, 
+                      location: e.target.value
+                    })}
+                    placeholder="Where was this task completed?"
+                  />
+                </div>
+                
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="comments" className="text-sm">Comments</Label>
+                  <Textarea
+                    id="comments"
+                    value={taskSubmission.comments || ''}
+                    onChange={(e) => setTaskSubmission({
+                      ...taskSubmission, 
+                      comments: e.target.value
+                    })}
+                    placeholder="Any comments or notes about this task completion?"
+                    className="min-h-[100px]"
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCompleteTaskDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleTaskCompletionSubmit}
+                >
+                  Submit Task
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
