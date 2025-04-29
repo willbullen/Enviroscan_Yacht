@@ -2328,15 +2328,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get vessel ID from query parameter if provided
       const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      console.log(`Getting ISM tasks, vessel ID: ${vesselId || 'all'}`);
       
       if (vesselId) {
+        console.log("Calling getIsmTasksByVessel...");
         const tasks = await storage.getIsmTasksByVessel(vesselId);
+        console.log(`Found ${tasks.length} ISM tasks for vessel ${vesselId}`);
         res.json(tasks);
       } else {
+        console.log("Calling getAllIsmTasks...");
         const tasks = await storage.getAllIsmTasks();
+        console.log(`Found ${tasks.length} ISM tasks total`);
         res.json(tasks);
       }
     } catch (error) {
+      console.error("Error in /api/ism/tasks:", error);
+      console.error(error instanceof Error ? error.stack : String(error));
       res.status(500).json({ message: "Failed to get ISM tasks" });
     }
   });
