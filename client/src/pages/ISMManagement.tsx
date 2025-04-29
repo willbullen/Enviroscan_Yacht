@@ -693,8 +693,15 @@ const ISMManagement: React.FC = () => {
       await apiRequest('/api/ism/tasks', {
         method: 'POST',
         data: {
-          ...newTask
-          // All property names now match the database column names
+          // Map snake_case field names to camelCase as expected by the Zod schema validation
+          title: newTask.title,
+          description: newTask.description,
+          formTemplateVersionId: newTask.form_template_version_id,
+          assignedToId: newTask.assigned_to_id,
+          status: newTask.status,
+          dueDate: newTask.due_date,
+          vesselId: newTask.vessel_id,
+          createdById: newTask.created_by_id
         },
       });
       
