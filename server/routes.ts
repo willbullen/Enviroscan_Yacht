@@ -2019,6 +2019,670 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // =========== ISM Task Management Routes =============
+  
+  // --------- Form Category Routes ---------
+  
+  // Get all form categories
+  apiRouter.get("/ism/form-categories", async (_req: Request, res: Response) => {
+    try {
+      const categories = await storage.getAllFormCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form categories" });
+    }
+  });
+  
+  // Get form category by ID
+  apiRouter.get("/ism/form-categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await storage.getFormCategory(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Form category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form category" });
+    }
+  });
+  
+  // Create form category
+  apiRouter.post("/ism/form-categories", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertFormCategorySchema.parse(req.body);
+      const category = await storage.createFormCategory(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_category_created',
+        description: `New form category created: ${category.name}`,
+        userId: category.createdBy || null,
+        relatedEntityType: 'form_category',
+        relatedEntityId: category.id
+      });
+      
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid form category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create form category" });
+    }
+  });
+  
+  // Update form category
+  apiRouter.patch("/ism/form-categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingCategory = await storage.getFormCategory(id);
+      
+      if (!existingCategory) {
+        return res.status(404).json({ message: "Form category not found" });
+      }
+      
+      const updatedCategory = await storage.updateFormCategory(id, req.body);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_category_updated',
+        description: `Form category updated: ${existingCategory.name}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'form_category',
+        relatedEntityId: id,
+        metadata: { updated: Object.keys(req.body) }
+      });
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update form category" });
+    }
+  });
+  
+  // Delete form category
+  apiRouter.delete("/ism/form-categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await storage.getFormCategory(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Form category not found" });
+      }
+      
+      // Check if there are any templates using this category
+      const templates = await storage.getFormTemplatesByCategory(id);
+      if (templates.length > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete category with associated templates",
+          count: templates.length
+        });
+      }
+      
+      await storage.deleteFormCategory(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_category_deleted',
+        description: `Form category deleted: ${category.name}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'form_category',
+        relatedEntityId: id
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete form category" });
+    }
+  });
+  
+  // --------- Form Template Routes ---------
+  
+  // Get all form templates
+  apiRouter.get("/ism/form-templates", async (_req: Request, res: Response) => {
+    try {
+      const templates = await storage.getAllFormTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form templates" });
+    }
+  });
+  
+  // Get form templates by category
+  apiRouter.get("/ism/form-templates/category/:categoryId", async (req: Request, res: Response) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      const templates = await storage.getFormTemplatesByCategory(categoryId);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form templates by category" });
+    }
+  });
+  
+  // Get form template by ID
+  apiRouter.get("/ism/form-templates/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getFormTemplate(id);
+      
+      if (!template) {
+        return res.status(404).json({ message: "Form template not found" });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form template" });
+    }
+  });
+  
+  // Create form template
+  apiRouter.post("/ism/form-templates", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertFormTemplateSchema.parse(req.body);
+      const template = await storage.createFormTemplate(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_template_created',
+        description: `New form template created: ${template.title}`,
+        userId: template.createdById || null,
+        relatedEntityType: 'form_template',
+        relatedEntityId: template.id
+      });
+      
+      res.status(201).json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid form template data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create form template" });
+    }
+  });
+  
+  // Update form template
+  apiRouter.patch("/ism/form-templates/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingTemplate = await storage.getFormTemplate(id);
+      
+      if (!existingTemplate) {
+        return res.status(404).json({ message: "Form template not found" });
+      }
+      
+      const updatedTemplate = await storage.updateFormTemplate(id, req.body);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_template_updated',
+        description: `Form template updated: ${existingTemplate.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'form_template',
+        relatedEntityId: id,
+        metadata: { updated: Object.keys(req.body) }
+      });
+      
+      res.json(updatedTemplate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update form template" });
+    }
+  });
+  
+  // Delete form template
+  apiRouter.delete("/ism/form-templates/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getFormTemplate(id);
+      
+      if (!template) {
+        return res.status(404).json({ message: "Form template not found" });
+      }
+      
+      // Check if there are any template versions using this template
+      const versions = await storage.getFormTemplateVersionsByTemplate(id);
+      if (versions.length > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete template with associated versions",
+          count: versions.length
+        });
+      }
+      
+      await storage.deleteFormTemplate(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_template_deleted',
+        description: `Form template deleted: ${template.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'form_template',
+        relatedEntityId: id
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete form template" });
+    }
+  });
+  
+  // --------- Form Template Version Routes ---------
+  
+  // Get all versions of a template
+  apiRouter.get("/ism/form-template-versions/template/:templateId", async (req: Request, res: Response) => {
+    try {
+      const templateId = parseInt(req.params.templateId);
+      const versions = await storage.getFormTemplateVersionsByTemplate(templateId);
+      res.json(versions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form template versions" });
+    }
+  });
+  
+  // Get form template version by ID
+  apiRouter.get("/ism/form-template-versions/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const version = await storage.getFormTemplateVersion(id);
+      
+      if (!version) {
+        return res.status(404).json({ message: "Form template version not found" });
+      }
+      
+      res.json(version);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form template version" });
+    }
+  });
+  
+  // Create form template version
+  apiRouter.post("/ism/form-template-versions", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertFormTemplateVersionSchema.parse(req.body);
+      const version = await storage.createFormTemplateVersion(validatedData);
+      
+      // Get the associated template for logging
+      const template = await storage.getFormTemplate(version.templateId);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_template_version_created',
+        description: `New version (${version.versionNumber}) created for template: ${template?.title || 'Unknown Template'}`,
+        userId: version.createdById || null,
+        relatedEntityType: 'form_template_version',
+        relatedEntityId: version.id,
+        metadata: { templateId: version.templateId }
+      });
+      
+      res.status(201).json(version);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid form template version data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create form template version" });
+    }
+  });
+  
+  // --------- ISM Task Routes ---------
+  
+  // Get all ISM tasks
+  apiRouter.get("/ism/tasks", async (req: Request, res: Response) => {
+    try {
+      // Get vessel ID from query parameter if provided
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      
+      if (vesselId) {
+        const tasks = await storage.getIsmTasksByVessel(vesselId);
+        res.json(tasks);
+      } else {
+        const tasks = await storage.getAllIsmTasks();
+        res.json(tasks);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM tasks" });
+    }
+  });
+  
+  // Get ISM tasks by status
+  apiRouter.get("/ism/tasks/status/:status", async (req: Request, res: Response) => {
+    try {
+      const { status } = req.params;
+      const tasks = await storage.getIsmTasksByStatus(status);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM tasks by status" });
+    }
+  });
+  
+  // Get ISM tasks by assignee
+  apiRouter.get("/ism/tasks/assignee/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const tasks = await storage.getIsmTasksByAssignee(userId);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM tasks by assignee" });
+    }
+  });
+  
+  // Get ISM task by ID
+  apiRouter.get("/ism/tasks/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.getIsmTask(id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "ISM task not found" });
+      }
+      
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get ISM task" });
+    }
+  });
+  
+  // Create ISM task
+  apiRouter.post("/ism/tasks", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertIsmTaskSchema.parse(req.body);
+      const task = await storage.createIsmTask(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_task_created',
+        description: `New ISM task created: ${task.title}`,
+        userId: task.createdBy || null,
+        relatedEntityType: 'ism_task',
+        relatedEntityId: task.id
+      });
+      
+      res.status(201).json(task);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid ISM task data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create ISM task" });
+    }
+  });
+  
+  // Update ISM task
+  apiRouter.patch("/ism/tasks/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingTask = await storage.getIsmTask(id);
+      
+      if (!existingTask) {
+        return res.status(404).json({ message: "ISM task not found" });
+      }
+      
+      const updatedTask = await storage.updateIsmTask(id, req.body);
+      
+      // Log status changes
+      if (req.body.status && req.body.status !== existingTask.status) {
+        await storage.createActivityLog({
+          activityType: 'ism_task_status_changed',
+          description: `ISM task status changed from ${existingTask.status} to ${req.body.status}: ${existingTask.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_task',
+          relatedEntityId: id
+        });
+      } else {
+        // Log general updates
+        await storage.createActivityLog({
+          activityType: 'ism_task_updated',
+          description: `ISM task updated: ${existingTask.title}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'ism_task',
+          relatedEntityId: id,
+          metadata: { updated: Object.keys(req.body) }
+        });
+      }
+      
+      res.json(updatedTask);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update ISM task" });
+    }
+  });
+  
+  // Delete ISM task
+  apiRouter.delete("/ism/tasks/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.getIsmTask(id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "ISM task not found" });
+      }
+      
+      // Check if there are any form submissions for this task
+      const submissions = await storage.getFormSubmissionsByTask(id);
+      if (submissions.length > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete task with associated form submissions",
+          count: submissions.length
+        });
+      }
+      
+      await storage.deleteIsmTask(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'ism_task_deleted',
+        description: `ISM task deleted: ${task.title}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'ism_task',
+        relatedEntityId: id
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete ISM task" });
+    }
+  });
+  
+  // --------- Form Submission Routes ---------
+  
+  // Get form submissions by task
+  apiRouter.get("/ism/form-submissions/task/:taskId", async (req: Request, res: Response) => {
+    try {
+      const taskId = parseInt(req.params.taskId);
+      const submissions = await storage.getFormSubmissionsByTask(taskId);
+      res.json(submissions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form submissions" });
+    }
+  });
+  
+  // Get form submission by ID
+  apiRouter.get("/ism/form-submissions/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const submission = await storage.getFormSubmission(id);
+      
+      if (!submission) {
+        return res.status(404).json({ message: "Form submission not found" });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form submission" });
+    }
+  });
+  
+  // Create form submission
+  apiRouter.post("/ism/form-submissions", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertFormSubmissionSchema.parse(req.body);
+      const submission = await storage.createFormSubmission(validatedData);
+      
+      // Get the associated task for logging
+      const task = await storage.getIsmTask(submission.taskId);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'form_submission_created',
+        description: `New form submission created for task: ${task?.title || 'Unknown Task'}`,
+        userId: submission.submittedBy,
+        relatedEntityType: 'form_submission',
+        relatedEntityId: submission.id,
+        metadata: { taskId: submission.taskId, status: submission.status }
+      });
+      
+      // Update task status if submission is final
+      if (submission.status === 'submitted') {
+        await storage.updateIsmTask(submission.taskId, { status: 'completed' });
+      }
+      
+      res.status(201).json(submission);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid form submission data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create form submission" });
+    }
+  });
+  
+  // Update form submission (for reviews and draft updates)
+  apiRouter.patch("/ism/form-submissions/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingSubmission = await storage.getFormSubmission(id);
+      
+      if (!existingSubmission) {
+        return res.status(404).json({ message: "Form submission not found" });
+      }
+      
+      const updatedSubmission = await storage.updateFormSubmission(id, req.body);
+      
+      // Get the associated task for logging
+      const task = await storage.getIsmTask(existingSubmission.taskId);
+      
+      // Log activity
+      if (req.body.status && req.body.status !== existingSubmission.status) {
+        // Status change log
+        await storage.createActivityLog({
+          activityType: 'form_submission_status_changed',
+          description: `Form submission status changed from ${existingSubmission.status} to ${req.body.status} for task: ${task?.title || 'Unknown Task'}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'form_submission',
+          relatedEntityId: id,
+          metadata: { taskId: existingSubmission.taskId }
+        });
+        
+        // If the submission is being approved, update the task status
+        if (req.body.status === 'approved') {
+          await storage.updateIsmTask(existingSubmission.taskId, { status: 'completed' });
+        }
+        // If the submission is rejected, update the task status back to in-progress
+        else if (req.body.status === 'rejected') {
+          await storage.updateIsmTask(existingSubmission.taskId, { status: 'in-progress' });
+        }
+      } else {
+        // General update log
+        await storage.createActivityLog({
+          activityType: 'form_submission_updated',
+          description: `Form submission updated for task: ${task?.title || 'Unknown Task'}`,
+          userId: req.body.userId || null,
+          relatedEntityType: 'form_submission',
+          relatedEntityId: id,
+          metadata: { updated: Object.keys(req.body) }
+        });
+      }
+      
+      res.json(updatedSubmission);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update form submission" });
+    }
+  });
+  
+  // --------- Task Comment Routes ---------
+  
+  // Get comments by task
+  apiRouter.get("/ism/task-comments/task/:taskId", async (req: Request, res: Response) => {
+    try {
+      const taskId = parseInt(req.params.taskId);
+      const comments = await storage.getTaskCommentsByTask(taskId);
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get task comments" });
+    }
+  });
+  
+  // Get comment by ID
+  apiRouter.get("/ism/task-comments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const comment = await storage.getTaskComment(id);
+      
+      if (!comment) {
+        return res.status(404).json({ message: "Task comment not found" });
+      }
+      
+      res.json(comment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get task comment" });
+    }
+  });
+  
+  // Create task comment
+  apiRouter.post("/ism/task-comments", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertTaskCommentSchema.parse(req.body);
+      const comment = await storage.createTaskComment(validatedData);
+      
+      // Get the associated task for logging
+      const task = await storage.getIsmTask(comment.taskId);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'task_comment_created',
+        description: `New comment added to task: ${task?.title || 'Unknown Task'}`,
+        userId: comment.userId,
+        relatedEntityType: 'task_comment',
+        relatedEntityId: comment.id,
+        metadata: { taskId: comment.taskId }
+      });
+      
+      res.status(201).json(comment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid task comment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create task comment" });
+    }
+  });
+  
+  // Delete task comment
+  apiRouter.delete("/ism/task-comments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const comment = await storage.getTaskComment(id);
+      
+      if (!comment) {
+        return res.status(404).json({ message: "Task comment not found" });
+      }
+      
+      // Only allow deletion by the comment author or admin
+      if (comment.userId !== req.body.userId && req.body.role !== 'admin') {
+        return res.status(403).json({ message: "Not authorized to delete this comment" });
+      }
+      
+      await storage.deleteTaskComment(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'task_comment_deleted',
+        description: `Comment deleted from task: ${comment.taskId}`,
+        userId: req.body.userId || null,
+        relatedEntityType: 'task_comment',
+        relatedEntityId: id,
+        metadata: { taskId: comment.taskId }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete task comment" });
+    }
+  });
+
   // =========== Theme Routes =============
   
   // =========== Crew Management Routes =============

@@ -120,6 +120,74 @@ interface ISMIncident {
   createdAt: string;
 }
 
+interface FormCategory {
+  id: number;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FormTemplate {
+  id: number;
+  title: string;
+  description: string | null;
+  categoryId: number;
+  createdById: number | null;
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+}
+
+interface FormTemplateVersion {
+  id: number;
+  templateId: number;
+  versionNumber: string;
+  structureDefinition: any; // JSON structure for the form
+  createdById: number | null;
+  isActive: boolean | null;
+  createdAt: string;
+}
+
+interface ISMTask {
+  id: number;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  assignedTo: number;
+  templateVersionId: number;
+  dueDate: string | null;
+  vesselId: number;
+  createdBy: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FormSubmission {
+  id: number;
+  taskId: number;
+  submittedBy: number;
+  submissionData: any; // JSON data from form submission
+  submittedAt: string;
+  status: string;
+  reviewedBy: number | null;
+  reviewedAt: string | null;
+  reviewStatus: string | null;
+  reviewComments: string | null;
+}
+
+interface TaskComment {
+  id: number;
+  taskId: number;
+  userId: number;
+  comment: string;
+  attachments: string[];
+  createdAt: string;
+}
+
 const statusColors = {
   draft: "bg-yellow-500",
   pending: "bg-blue-500",
@@ -175,6 +243,21 @@ const ISMManagement: React.FC = () => {
   const incidentsQuery = useQuery({
     queryKey: ['/api/ism/incidents'],
     enabled: selectedTab === "incidents",
+  });
+  
+  const tasksQuery = useQuery({
+    queryKey: ['/api/ism/tasks'],
+    enabled: selectedTab === "tasks",
+  });
+  
+  const formCategoriesQuery = useQuery({
+    queryKey: ['/api/ism/form-categories'],
+    enabled: selectedTab === "tasks",
+  });
+  
+  const formTemplatesQuery = useQuery({
+    queryKey: ['/api/ism/form-templates'],
+    enabled: selectedTab === "tasks",
   });
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
