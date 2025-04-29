@@ -42,7 +42,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useVessel } from '@/contexts/VesselContext';
-import VesselMap from '@/components/vessel/VesselMap';
+import SimpleVesselMap from '@/components/vessel/SimpleVesselMap';
 import {
   Tabs,
   TabsContent,
@@ -191,7 +191,13 @@ const VesselAdmin: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); }} title="View on map">
+                            <Button variant="ghost" size="icon" onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setSelectedVesselId(vessel.id);
+                              if (mapRef.current) {
+                                mapRef.current.focusVessel(vessel.id);
+                              }
+                            }} title="View on map">
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEditVessel(vessel.id); }}>
@@ -224,11 +230,8 @@ const VesselAdmin: React.FC = () => {
                     </h3>
                   </div>
                   <div className="p-0">
-                    <VesselMap 
-                      ref={mapRef}
-                      height={500} 
-                      selectedVesselId={selectedVesselId} 
-                      onVesselSelect={setSelectedVesselId}
+                    <SimpleVesselMap 
+                      height={500}
                     />
                   </div>
                 </div>
