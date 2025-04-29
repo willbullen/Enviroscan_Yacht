@@ -211,6 +211,21 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           </div>
         </NavLink>
         
+        <NavLink href="/forms-administration">
+          <div 
+            className={cn(
+              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
+              location === "/forms-administration" 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+              !isOpen && "justify-center p-2"
+            )} 
+          >
+            <FileText className={cn("h-5 w-5", isOpen && "mr-2")} />
+            {isOpen && <span>Forms Administration</span>}
+          </div>
+        </NavLink>
+        
         <NavLink href="/voyages">
           <div 
             className={cn(

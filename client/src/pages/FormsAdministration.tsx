@@ -1,0 +1,1247 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+import MainLayout from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { 
+  Clipboard, 
+  ClipboardCheck, 
+  FileText, 
+  Users, 
+  AlertTriangle, 
+  Calendar, 
+  Search, 
+  Plus, 
+  Filter, 
+  Book,
+  Upload,
+  File,
+  X,
+  ListChecks,
+  Settings,
+  Edit,
+  Trash2,
+  Download,
+  Eye
+} from 'lucide-react';
+
+// Define interfaces for our form data models
+interface FormCategory {
+  id: number;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FormTemplate {
+  id: number;
+  title: string;
+  description: string | null;
+  categoryId: number;
+  createdById: number | null;
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+}
+
+interface FormTemplateVersion {
+  id: number;
+  templateId: number;
+  versionNumber: string;
+  structureDefinition: any; // JSON structure for the form
+  createdById: number | null;
+  isActive: boolean | null;
+  createdAt: string;
+}
+
+const FormCategory_DEFAULT = {
+  name: '',
+  description: '',
+  isActive: true,
+  createdBy: 1 // Default to captain user ID
+};
+
+const FormTemplate_DEFAULT = {
+  title: '',
+  description: '',
+  categoryId: 0,
+  isActive: true,
+  createdById: 1 // Default to captain user ID
+};
+
+const FormsAdministration: React.FC = () => {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("categories");
+  
+  // Form categories state
+  const [editingCategory, setEditingCategory] = useState<FormCategory | null>(null);
+  const [newCategory, setNewCategory] = useState(FormCategory_DEFAULT);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<FormCategory | null>(null);
+  const [isCategoryDeleteDialogOpen, setIsCategoryDeleteDialogOpen] = useState(false);
+  
+  // Form templates state
+  const [editingTemplate, setEditingTemplate] = useState<FormTemplate | null>(null);
+  const [newTemplate, setNewTemplate] = useState(FormTemplate_DEFAULT);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<FormTemplate | null>(null);
+  const [isTemplateDeleteDialogOpen, setIsTemplateDeleteDialogOpen] = useState(false);
+  
+  // Form structure editor state
+  const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null);
+  const [editingVersion, setEditingVersion] = useState<FormTemplateVersion | null>(null);
+  const [newVersion, setNewVersion] = useState<{
+    templateId: number;
+    versionNumber: string;
+    structureDefinition: string;
+    isActive: boolean;
+  }>({
+    templateId: 0,
+    versionNumber: "1.0",
+    structureDefinition: JSON.stringify({
+      fields: [
+        {
+          id: "field1",
+          type: "text",
+          label: "Default Field",
+          required: true
+        }
+      ]
+    }, null, 2),
+    isActive: true
+  });
+  const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false);
+  const [formStructureValid, setFormStructureValid] = useState(true);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  
+  // Data queries
+  const formCategoriesQuery = useQuery({
+    queryKey: ['/api/ism/form-categories'],
+  });
+  
+  const formTemplatesQuery = useQuery({
+    queryKey: ['/api/ism/form-templates'],
+  });
+  
+  const formVersionsQuery = useQuery({
+    queryKey: ['/api/ism/form-template-versions'],
+    enabled: !!selectedTemplate,
+  });
+  
+  // Category mutations
+  const createCategoryMutation = useMutation({
+    mutationFn: async (category: typeof FormCategory_DEFAULT) => {
+      return await apiRequest('/api/ism/form-categories', {
+        method: 'POST',
+        data: category,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-categories']});
+      setIsCategoryDialogOpen(false);
+      setNewCategory(FormCategory_DEFAULT);
+      toast({
+        title: "Success",
+        description: "Category created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to create category: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const updateCategoryMutation = useMutation({
+    mutationFn: async (category: FormCategory) => {
+      return await apiRequest(`/api/ism/form-categories/${category.id}`, {
+        method: 'PATCH',
+        data: {
+          name: category.name,
+          description: category.description,
+          isActive: category.isActive
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-categories']});
+      setIsCategoryDialogOpen(false);
+      setEditingCategory(null);
+      toast({
+        title: "Success",
+        description: "Category updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to update category: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: number) => {
+      return await apiRequest(`/api/ism/form-categories/${categoryId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-categories']});
+      setIsCategoryDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete category: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Template mutations
+  const createTemplateMutation = useMutation({
+    mutationFn: async (template: typeof FormTemplate_DEFAULT) => {
+      return await apiRequest('/api/ism/form-templates', {
+        method: 'POST',
+        data: template,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-templates']});
+      setIsTemplateDialogOpen(false);
+      setNewTemplate(FormTemplate_DEFAULT);
+      toast({
+        title: "Success",
+        description: "Template created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to create template: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const updateTemplateMutation = useMutation({
+    mutationFn: async (template: FormTemplate) => {
+      return await apiRequest(`/api/ism/form-templates/${template.id}`, {
+        method: 'PATCH',
+        data: {
+          title: template.title,
+          description: template.description,
+          categoryId: template.categoryId,
+          isActive: template.isActive
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-templates']});
+      setIsTemplateDialogOpen(false);
+      setEditingTemplate(null);
+      toast({
+        title: "Success",
+        description: "Template updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to update template: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      return await apiRequest(`/api/ism/form-templates/${templateId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-templates']});
+      setIsTemplateDeleteDialogOpen(false);
+      setTemplateToDelete(null);
+      toast({
+        title: "Success",
+        description: "Template deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete template: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Version mutations
+  const createVersionMutation = useMutation({
+    mutationFn: async (version: typeof newVersion) => {
+      // Make sure the structure definition is valid JSON
+      let structureDefinition = version.structureDefinition;
+      if (typeof structureDefinition === 'string') {
+        structureDefinition = JSON.parse(structureDefinition);
+      }
+      
+      return await apiRequest('/api/ism/form-template-versions', {
+        method: 'POST',
+        data: {
+          ...version,
+          structureDefinition
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-template-versions']});
+      setIsVersionDialogOpen(false);
+      setNewVersion({
+        templateId: 0,
+        versionNumber: "1.0",
+        structureDefinition: JSON.stringify({
+          fields: [
+            {
+              id: "field1",
+              type: "text",
+              label: "Default Field",
+              required: true
+            }
+          ]
+        }, null, 2),
+        isActive: true
+      });
+      setUploadedFile(null);
+      toast({
+        title: "Success",
+        description: "Form template version created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to create form version: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Form template file upload handling
+  const handleFormFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadedFile(file);
+      
+      // If it's a JSON file, we can try to parse it
+      if (file.type === 'application/json') {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const jsonText = event.target?.result as string;
+            // Validate the JSON structure
+            const parsed = JSON.parse(jsonText);
+            
+            // Check if it contains the required fields array
+            if (parsed.fields && Array.isArray(parsed.fields)) {
+              setNewVersion({
+                ...newVersion,
+                structureDefinition: jsonText
+              });
+              setFormStructureValid(true);
+            } else {
+              setFormStructureValid(false);
+              toast({
+                title: "Invalid Form Structure",
+                description: "The JSON file does not contain the required 'fields' array",
+                variant: "destructive",
+              });
+            }
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            setFormStructureValid(false);
+            toast({
+              title: "Invalid JSON",
+              description: "The file does not contain valid JSON",
+              variant: "destructive",
+            });
+          }
+        };
+        reader.readAsText(file);
+      } else if (file.type === 'application/pdf' || 
+                file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        // For PDF or Word files, we'd need server-side parsing
+        toast({
+          title: "File Upload",
+          description: "PDF and Word parsing will be implemented soon. Please use JSON format for now.",
+          variant: "default",
+        });
+      }
+    }
+  };
+  
+  // Handle category form submission
+  const handleCategorySubmit = () => {
+    if (!newCategory.name) {
+      toast({
+        title: "Validation Error",
+        description: "Category name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (editingCategory) {
+      updateCategoryMutation.mutate({
+        ...editingCategory,
+        name: newCategory.name,
+        description: newCategory.description,
+        isActive: newCategory.isActive
+      });
+    } else {
+      createCategoryMutation.mutate(newCategory);
+    }
+  };
+  
+  // Handle template form submission
+  const handleTemplateSubmit = () => {
+    if (!newTemplate.title || !newTemplate.categoryId) {
+      toast({
+        title: "Validation Error",
+        description: "Template title and category are required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (editingTemplate) {
+      updateTemplateMutation.mutate({
+        ...editingTemplate,
+        title: newTemplate.title,
+        description: newTemplate.description,
+        categoryId: newTemplate.categoryId,
+        isActive: newTemplate.isActive
+      });
+    } else {
+      createTemplateMutation.mutate(newTemplate);
+    }
+  };
+  
+  // Handle version creation
+  const handleVersionSubmit = () => {
+    if (!newVersion.templateId) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a template",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!formStructureValid) {
+      toast({
+        title: "Validation Error",
+        description: "The form structure is not valid JSON",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createVersionMutation.mutate(newVersion);
+  };
+  
+  // Open category edit dialog
+  const handleEditCategory = (category: FormCategory) => {
+    setEditingCategory(category);
+    setNewCategory({
+      name: category.name,
+      description: category.description || '',
+      isActive: category.isActive,
+      createdBy: category.createdBy
+    });
+    setIsCategoryDialogOpen(true);
+  };
+  
+  // Open template edit dialog
+  const handleEditTemplate = (template: FormTemplate) => {
+    setEditingTemplate(template);
+    setNewTemplate({
+      title: template.title,
+      description: template.description || '',
+      categoryId: template.categoryId,
+      isActive: template.isActive,
+      createdById: template.createdById || 1
+    });
+    setIsTemplateDialogOpen(true);
+  };
+  
+  // Open version creation dialog
+  const handleCreateVersion = (template: FormTemplate) => {
+    setSelectedTemplate(template);
+    setNewVersion({
+      ...newVersion,
+      templateId: template.id
+    });
+    setIsVersionDialogOpen(true);
+  };
+  
+  // Render form categories table
+  const renderCategoriesTable = () => {
+    if (formCategoriesQuery.isLoading) {
+      return <div className="text-center py-8">Loading categories...</div>;
+    }
+    
+    if (formCategoriesQuery.isError) {
+      return <div className="text-center py-8 text-red-500">Error loading categories</div>;
+    }
+    
+    const categories = formCategoriesQuery.data as FormCategory[] || [];
+    
+    if (categories.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <Book className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p>No form categories found</p>
+          <Button className="mt-4" onClick={() => {
+            setEditingCategory(null);
+            setNewCategory(FormCategory_DEFAULT);
+            setIsCategoryDialogOpen(true);
+          }}>
+            <Plus className="w-4 h-4 mr-2" /> Create First Category
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Form Categories</h2>
+          <Button onClick={() => {
+            setEditingCategory(null);
+            setNewCategory(FormCategory_DEFAULT);
+            setIsCategoryDialogOpen(true);
+          }}>
+            <Plus className="w-4 h-4 mr-2" /> New Category
+          </Button>
+        </div>
+        
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categories.map(category => (
+              <TableRow key={category.id}>
+                <TableCell className="font-medium">{category.name}</TableCell>
+                <TableCell>{category.description || '-'}</TableCell>
+                <TableCell>
+                  <Badge className={category.isActive ? "bg-green-500" : "bg-slate-500"}>
+                    {category.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </TableCell>
+                <TableCell>{new Date(category.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleEditCategory(category)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => {
+                        setCategoryToDelete(category);
+                        setIsCategoryDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </>
+    );
+  };
+  
+  // Render form templates table
+  const renderTemplatesTable = () => {
+    if (formTemplatesQuery.isLoading) {
+      return <div className="text-center py-8">Loading templates...</div>;
+    }
+    
+    if (formTemplatesQuery.isError) {
+      return <div className="text-center py-8 text-red-500">Error loading templates</div>;
+    }
+    
+    const templates = formTemplatesQuery.data as FormTemplate[] || [];
+    const categories = formCategoriesQuery.data as FormCategory[] || [];
+    
+    // Create a map of category IDs to names for display
+    const categoryMap = new Map<number, string>();
+    categories.forEach(cat => categoryMap.set(cat.id, cat.name));
+    
+    if (templates.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p>No form templates found</p>
+          <Button className="mt-4" onClick={() => {
+            setEditingTemplate(null);
+            setNewTemplate(FormTemplate_DEFAULT);
+            setIsTemplateDialogOpen(true);
+          }}>
+            <Plus className="w-4 h-4 mr-2" /> Create First Template
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Form Templates</h2>
+          <Button onClick={() => {
+            setEditingTemplate(null);
+            setNewTemplate(FormTemplate_DEFAULT);
+            setIsTemplateDialogOpen(true);
+          }}>
+            <Plus className="w-4 h-4 mr-2" /> New Template
+          </Button>
+        </div>
+        
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {templates.map(template => (
+              <TableRow key={template.id}>
+                <TableCell className="font-medium">{template.title}</TableCell>
+                <TableCell>{categoryMap.get(template.categoryId) || `Category #${template.categoryId}`}</TableCell>
+                <TableCell>{template.description || '-'}</TableCell>
+                <TableCell>
+                  <Badge className={template.isActive ? "bg-green-500" : "bg-slate-500"}>
+                    {template.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </TableCell>
+                <TableCell>{new Date(template.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleEditTemplate(template)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleCreateVersion(template)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => {
+                        setTemplateToDelete(template);
+                        setIsTemplateDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </>
+    );
+  };
+
+  // Render templates browser and form builder
+  const renderFormBuilder = () => {
+    const templates = formTemplatesQuery.data as FormTemplate[] || [];
+    const categories = formCategoriesQuery.data as FormCategory[] || [];
+    
+    // Create a map of category IDs to names for display
+    const categoryMap = new Map<number, string>();
+    categories.forEach(cat => categoryMap.set(cat.id, cat.name));
+    
+    return (
+      <div className="grid grid-cols-1 gap-6 mt-4">
+        {/* Template selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select a Template</CardTitle>
+            <CardDescription>
+              Choose a template to view or create a form structure
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates.map(template => (
+                <Card 
+                  key={template.id} 
+                  className={`cursor-pointer transition-all ${selectedTemplate?.id === template.id ? 'border-primary ring-2 ring-primary' : 'hover:border-primary/50'}`}
+                  onClick={() => setSelectedTemplate(template)}
+                >
+                  <CardHeader className="py-4 px-4 pb-0">
+                    <CardTitle className="text-base">{template.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2 px-4">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Category: {categoryMap.get(template.categoryId) || `Category #${template.categoryId}`}
+                    </p>
+                    {template.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
+                    )}
+                  </CardContent>
+                  <CardFooter className="py-2 px-4 flex justify-between">
+                    <Badge className={template.isActive ? "bg-green-500" : "bg-slate-500"}>
+                      {template.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                    <Button variant="outline" size="sm" onClick={(e) => {
+                      e.stopPropagation();
+                      handleCreateVersion(template);
+                    }}>
+                      Create Version
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+              
+              {templates.length === 0 && (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                  <p>No templates found. Please create a template first.</p>
+                  <Button className="mt-4" onClick={() => {
+                    setEditingTemplate(null);
+                    setNewTemplate(FormTemplate_DEFAULT);
+                    setIsTemplateDialogOpen(true);
+                  }}>
+                    <Plus className="w-4 h-4 mr-2" /> Create Template
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Versions list (if template is selected) */}
+        {selectedTemplate && (
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Form Versions for {selectedTemplate.title}</CardTitle>
+                  <CardDescription>
+                    Manage form structure versions for this template
+                  </CardDescription>
+                </div>
+                <Button onClick={() => handleCreateVersion(selectedTemplate)}>
+                  <Plus className="w-4 h-4 mr-2" /> New Version
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {formVersionsQuery.isLoading ? (
+                <div className="text-center py-4">Loading versions...</div>
+              ) : formVersionsQuery.isError ? (
+                <div className="text-center py-4 text-red-500">Error loading versions</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Version</TableHead>
+                      <TableHead>Active</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(formVersionsQuery.data as FormTemplateVersion[] || [])
+                      .filter(version => version.templateId === selectedTemplate.id)
+                      .map(version => (
+                        <TableRow key={version.id}>
+                          <TableCell className="font-medium">{version.versionNumber}</TableCell>
+                          <TableCell>
+                            <Badge className={version.isActive ? "bg-green-500" : "bg-slate-500"}>
+                              {version.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  // View structure
+                                  let structureDef = version.structureDefinition;
+                                  if (typeof structureDef === 'string') {
+                                    try {
+                                      structureDef = JSON.parse(structureDef);
+                                    } catch (error) {
+                                      console.error("Invalid JSON in structure definition", error);
+                                    }
+                                  }
+                                  
+                                  // Set the JSON in pretty format for editing
+                                  setEditingVersion(version);
+                                  setNewVersion({
+                                    templateId: version.templateId,
+                                    versionNumber: version.versionNumber,
+                                    structureDefinition: JSON.stringify(structureDef, null, 2),
+                                    isActive: version.isActive || false
+                                  });
+                                  setIsVersionDialogOpen(true);
+                                }}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  // Download structure as JSON
+                                  let structureDef = version.structureDefinition;
+                                  if (typeof structureDef === 'string') {
+                                    try {
+                                      structureDef = JSON.parse(structureDef);
+                                    } catch (error) {
+                                      console.error("Invalid JSON in structure definition", error);
+                                    }
+                                  }
+                                  
+                                  const jsonString = JSON.stringify(structureDef, null, 2);
+                                  const blob = new Blob([jsonString], { type: 'application/json' });
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = `form-template-${selectedTemplate.id}-v${version.versionNumber}.json`;
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  URL.revokeObjectURL(url);
+                                }}
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      
+                    {(!formVersionsQuery.data || (formVersionsQuery.data as FormTemplateVersion[]).filter(v => v.templateId === selectedTemplate.id).length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                          No versions found for this template
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  };
+  
+  return (
+    <MainLayout title="Forms Administration">
+      <div className="container mx-auto py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="builder">Form Builder</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="categories" className="mt-6">
+            {renderCategoriesTable()}
+          </TabsContent>
+          
+          <TabsContent value="templates" className="mt-6">
+            {renderTemplatesTable()}
+          </TabsContent>
+          
+          <TabsContent value="builder" className="mt-6">
+            {renderFormBuilder()}
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      {/* Category Dialog */}
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCategory ? 'Edit Category' : 'New Category'}</DialogTitle>
+            <DialogDescription>
+              {editingCategory ? 'Update the form category details' : 'Create a new form category for organizing templates'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Category Name</Label>
+              <Input
+                id="name"
+                value={newCategory.name}
+                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                placeholder="Enter category name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newCategory.description}
+                onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                placeholder="Enter category description"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={newCategory.isActive}
+                onChange={(e) => setNewCategory({ ...newCategory, isActive: e.target.checked })}
+                className="form-checkbox h-4 w-4 text-primary rounded"
+              />
+              <Label htmlFor="isActive">Active</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCategorySubmit}>
+              {editingCategory ? 'Update Category' : 'Create Category'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Template Dialog */}
+      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingTemplate ? 'Edit Template' : 'New Template'}</DialogTitle>
+            <DialogDescription>
+              {editingTemplate ? 'Update the form template details' : 'Create a new form template for your forms and checklists'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Template Title</Label>
+              <Input
+                id="title"
+                value={newTemplate.title}
+                onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
+                placeholder="Enter template title"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <select
+                id="category"
+                value={newTemplate.categoryId}
+                onChange={(e) => setNewTemplate({ ...newTemplate, categoryId: parseInt(e.target.value) })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+              >
+                <option value={0}>Select a category</option>
+                {(formCategoriesQuery.data as FormCategory[] || []).map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newTemplate.description}
+                onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
+                placeholder="Enter template description"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={newTemplate.isActive}
+                onChange={(e) => setNewTemplate({ ...newTemplate, isActive: e.target.checked })}
+                className="form-checkbox h-4 w-4 text-primary rounded"
+              />
+              <Label htmlFor="isActive">Active</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleTemplateSubmit}>
+              {editingTemplate ? 'Update Template' : 'Create Template'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Version Dialog */}
+      <Dialog open={isVersionDialogOpen} onOpenChange={setIsVersionDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingVersion ? 'Edit Form Version' : 'New Form Version'}</DialogTitle>
+            <DialogDescription>
+              {editingVersion ? 'Edit the form structure' : 'Create a new version of this form template'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="versionNumber">Version Number</Label>
+                <Input
+                  id="versionNumber"
+                  value={newVersion.versionNumber}
+                  onChange={(e) => setNewVersion({ ...newVersion, versionNumber: e.target.value })}
+                  placeholder="1.0"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2 self-end">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={newVersion.isActive}
+                  onChange={(e) => setNewVersion({ ...newVersion, isActive: e.target.checked })}
+                  className="form-checkbox h-4 w-4 text-primary rounded"
+                />
+                <Label htmlFor="isActive">Active</Label>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Form Structure (JSON)</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Input
+                    type="file"
+                    accept=".json,.pdf,.docx"
+                    onChange={handleFormFileChange}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Upload a JSON file with the form structure, or a PDF/Word document to extract a form structure.
+                  </p>
+                  
+                  {uploadedFile && (
+                    <div className="p-2 border rounded flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        <span>{uploadedFile.name}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setUploadedFile(null)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500">
+                    Example JSON structure:
+                  </p>
+                  <pre className="text-xs p-2 bg-gray-100 rounded overflow-auto max-h-24">
+{`{
+  "fields": [
+    {
+      "id": "field1",
+      "type": "text",
+      "label": "Field Label",
+      "required": true
+    }
+  ]
+}`}
+                  </pre>
+                  <p className="text-xs text-gray-500">
+                    Supported field types: text, textarea, number, checkbox, select, date
+                  </p>
+                </div>
+              </div>
+              
+              <Textarea
+                className="min-h-[300px] font-mono text-sm"
+                value={newVersion.structureDefinition}
+                onChange={(e) => {
+                  setNewVersion({ ...newVersion, structureDefinition: e.target.value });
+                  try {
+                    JSON.parse(e.target.value);
+                    setFormStructureValid(true);
+                  } catch (error) {
+                    setFormStructureValid(false);
+                  }
+                }}
+              />
+              
+              {!formStructureValid && (
+                <p className="text-xs text-red-500">
+                  Invalid JSON structure. Please check the format.
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVersionDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleVersionSubmit} disabled={!formStructureValid}>
+              {editingVersion ? 'Update Form Version' : 'Create Form Version'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Category Delete Confirmation */}
+      <AlertDialog open={isCategoryDeleteDialogOpen} onOpenChange={setIsCategoryDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the category "{categoryToDelete?.name}". 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() => categoryToDelete && deleteCategoryMutation.mutate(categoryToDelete.id)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Template Delete Confirmation */}
+      <AlertDialog open={isTemplateDeleteDialogOpen} onOpenChange={setIsTemplateDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the template "{templateToDelete?.title}". 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() => templateToDelete && deleteTemplateMutation.mutate(templateToDelete.id)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </MainLayout>
+  );
+};
+
+export default FormsAdministration;
