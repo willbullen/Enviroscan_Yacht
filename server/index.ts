@@ -82,9 +82,8 @@ process.on('unhandledRejection', (reason, promise) => {
     serveStatic(app);
   }
 
-  // We need to use a different port as 5000 is already in use
   // this serves both the API and the client.
-  const port = 5001;
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",
