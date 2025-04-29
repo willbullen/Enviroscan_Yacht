@@ -168,7 +168,10 @@ interface ISMTask {
   status: string;
   priority: string;
   assignedTo: number;
-  templateVersionId: number; // Field name as it appears in the API response
+  // Allow both camelCase and snake_case property names based on API/DB responses
+  templateVersionId?: number;
+  formTemplateVersionId?: number;
+  form_template_version_id?: number;
   dueDate: string | null;
   vesselId: number;
   createdBy: number | null;
@@ -378,13 +381,26 @@ const ISMManagement: React.FC = () => {
       }).then(response => {
         console.log("Retrieved task details:", response);
         
-        // Determine the form template version ID from the response
-        // The database has form_template_version_id (snake_case)
-        // But the API code might return it as formTemplateVersionId (camelCase)
+        const formTemplateVersionId = response.formTemplateVersionId || response.form_template_version_id;
+        console.log("Found form template version ID:", formTemplateVersionId);
+        
+        // Create an enhanced task object with the templateVersionId property
         const enhancedTask = {
           ...task,
-          templateVersionId: response.formTemplateVersionId || response.form_template_version_id
+          id: response.id,
+          templateVersionId: formTemplateVersionId
         };
+        
+        // First, validate that we have the form template version ID
+        if (!formTemplateVersionId) {
+          console.error("Missing form template version ID in task data:", response);
+          toast({
+            title: "Error",
+            description: "This task doesn't have an associated form template",
+            variant: "destructive",
+          });
+          return;
+        }
         
         console.log("Enhanced task with templateVersionId:", enhancedTask);
         setSelectedTask(enhancedTask);
