@@ -690,6 +690,18 @@ const ISMManagement: React.FC = () => {
       }
 
       // Create the task using apiRequest
+      // Log what we're about to send
+      console.log("Sending task data:", {
+        title: newTask.title,
+        description: newTask.description,
+        formTemplateVersionId: newTask.form_template_version_id,
+        assignedToId: newTask.assigned_to_id,
+        status: newTask.status,
+        dueDate: newTask.due_date,
+        vesselId: newTask.vessel_id,
+        createdById: newTask.created_by_id
+      });
+
       await apiRequest('/api/ism/tasks', {
         method: 'POST',
         data: {
@@ -699,7 +711,8 @@ const ISMManagement: React.FC = () => {
           formTemplateVersionId: newTask.form_template_version_id,
           assignedToId: newTask.assigned_to_id,
           status: newTask.status,
-          dueDate: newTask.due_date,
+          // Ensure dueDate is sent as a proper Date object, not a string
+          dueDate: new Date(newTask.due_date),
           vesselId: newTask.vessel_id,
           createdById: newTask.created_by_id
         },
