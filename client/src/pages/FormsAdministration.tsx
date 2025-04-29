@@ -605,7 +605,7 @@ const FormsAdministration: React.FC = () => {
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>{category.description || '-'}</TableCell>
                 <TableCell>
-                  <Badge className={category.isActive ? "bg-green-500" : "bg-slate-500"}>
+                  <Badge variant={category.isActive ? "success" : "secondary"}>
                     {category.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
@@ -622,7 +622,7 @@ const FormsAdministration: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="text-red-500 hover:text-red-700"
+                      className="text-destructive hover:text-destructive/80"
                       onClick={() => {
                         setCategoryToDelete(category);
                         setIsCategoryDeleteDialogOpen(true);
@@ -704,7 +704,7 @@ const FormsAdministration: React.FC = () => {
                 <TableCell>{categoryMap.get(template.categoryId) || `Category #${template.categoryId}`}</TableCell>
                 <TableCell>{template.description || '-'}</TableCell>
                 <TableCell>
-                  <Badge className={template.isActive ? "bg-green-500" : "bg-slate-500"}>
+                  <Badge variant={template.isActive ? "success" : "secondary"}>
                     {template.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
@@ -785,7 +785,7 @@ const FormsAdministration: React.FC = () => {
                     )}
                   </CardContent>
                   <CardFooter className="py-2 px-4 flex justify-between">
-                    <Badge className={template.isActive ? "bg-green-500" : "bg-slate-500"}>
+                    <Badge variant={template.isActive ? "success" : "secondary"}>
                       {template.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                     <Button variant="outline" size="sm" onClick={(e) => {
@@ -853,7 +853,7 @@ const FormsAdministration: React.FC = () => {
                         <TableRow key={version.id}>
                           <TableCell className="font-medium">{version.versionNumber}</TableCell>
                           <TableCell>
-                            <Badge className={version.isActive ? "bg-green-500" : "bg-slate-500"}>
+                            <Badge variant={version.isActive ? "success" : "secondary"}>
                               {version.isActive ? 'Active' : 'Inactive'}
                             </Badge>
                           </TableCell>
