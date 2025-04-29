@@ -228,16 +228,13 @@ const FormsAdministration: React.FC = () => {
     queryKey: ['/api/ism/form-templates'],
   });
   
+  // Using TanStack Query v5 format
   const formVersionsQuery = useQuery({
     queryKey: ['/api/ism/form-template-versions'],
     enabled: !!selectedTemplate,
     retry: false,
-    onSuccess: () => {
-      console.log('Successfully fetched form versions');
-    },
-    meta: {
-      errorMessage: 'Could not load form versions. The API endpoint may not be fully implemented.'
-    }
+    gcTime: 0,
+    staleTime: 0
   });
   
   // Category mutations
