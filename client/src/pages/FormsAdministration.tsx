@@ -158,6 +158,7 @@ const FormsAdministration: React.FC = () => {
   // Form structure editor state
   const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null);
   const [editingVersion, setEditingVersion] = useState<FormTemplateVersion | null>(null);
+  const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
   const [newVersion, setNewVersion] = useState<{
     templateId: number;
     versionNumber: string;
@@ -178,6 +179,42 @@ const FormsAdministration: React.FC = () => {
     }, null, 2),
     isActive: true
   });
+  
+  // Mock versions data for development (until the API is fully implemented)
+  const [mockVersions, setMockVersions] = useState<FormTemplateVersion[]>([
+    {
+      id: 1,
+      templateId: 1,
+      versionNumber: "1.0",
+      structureDefinition: {
+        fields: [
+          {
+            id: "field1",
+            type: "text",
+            label: "Incident Description",
+            required: true,
+            placeholder: "Enter a detailed description of the incident"
+          },
+          {
+            id: "field2",
+            type: "select",
+            label: "Severity Level",
+            required: true,
+            options: ["Low", "Medium", "High", "Critical"]
+          },
+          {
+            id: "field3",
+            type: "date",
+            label: "Date of Incident",
+            required: true
+          }
+        ]
+      },
+      createdById: 1,
+      isActive: true,
+      createdAt: new Date().toISOString()
+    }
+  ]);
   const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false);
   const [formStructureValid, setFormStructureValid] = useState(true);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -194,6 +231,13 @@ const FormsAdministration: React.FC = () => {
   const formVersionsQuery = useQuery({
     queryKey: ['/api/ism/form-template-versions'],
     enabled: !!selectedTemplate,
+    retry: false,
+    onSuccess: () => {
+      console.log('Successfully fetched form versions');
+    },
+    meta: {
+      errorMessage: 'Could not load form versions. The API endpoint may not be fully implemented.'
+    }
   });
   
   // Category mutations
@@ -1466,7 +1510,8 @@ const FormsAdministration: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {(formVersionsQuery.data as FormTemplateVersion[] || [])
+                        {/* Use mock versions data since API might not be implemented yet */}
+                        {(formVersionsQuery.isError ? mockVersions : (formVersionsQuery.data as FormTemplateVersion[] || mockVersions))
                           .filter(version => version.templateId === selectedTemplate.id)
                           .map(version => (
                             <TableRow key={version.id}>
