@@ -1027,6 +1027,7 @@ export const ismTasks = pgTable("ism_tasks", {
   description: text("description"),
   formTemplateVersionId: integer("form_template_version_id").references(() => formTemplateVersions.id).notNull(),
   assignedToId: integer("assigned_to_id").references(() => users.id).notNull(),
+  vesselId: integer("vessel_id"),
   dueDate: timestamp("due_date"),
   status: text("status").notNull().default("pending"), // pending, in_progress, completed, overdue, reviewed
   createdAt: timestamp("created_at").defaultNow().notNull(),
