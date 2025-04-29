@@ -624,6 +624,122 @@ const ISMManagement: React.FC = () => {
       </div>
     );
   };
+  
+  const renderTasksList = () => {
+    if (tasksQuery.isLoading) return <div className="p-8 text-center">Loading ISM tasks...</div>;
+    if (tasksQuery.isError) return <div className="p-8 text-center text-red-500">Error loading ISM tasks</div>;
+    
+    const tasks = tasksQuery.data as ISMTask[] || [];
+    
+    if (tasks.length === 0) {
+      return (
+        <div className="p-8 text-center text-gray-500">
+          <Clipboard className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p>No ISM tasks found</p>
+        </div>
+      );
+    }
+    
+    // For the demo, we'll create a simple lookup by ID
+    const userMap = new Map();
+    const usersData = useQuery({ queryKey: ['/api/users'] });
+    if (usersData.data) {
+      (usersData.data as any[]).forEach(user => {
+        userMap.set(user.id, user.fullName);
+      });
+    }
+    
+    // Get templates for displaying template names
+    const templateVersionMap = new Map();
+    const templatesData = formTemplatesQuery.data as FormTemplate[] || [];
+    templatesData.forEach(template => {
+      templateVersionMap.set(template.id, template.title);
+    });
+    
+    const getPriorityBadge = (priority: string) => {
+      let colorClass = '';
+      switch (priority.toLowerCase()) {
+        case 'high':
+          colorClass = 'bg-red-500 text-white';
+          break;
+        case 'medium':
+          colorClass = 'bg-orange-500 text-white';
+          break;
+        case 'low':
+          colorClass = 'bg-blue-500 text-white';
+          break;
+        default:
+          colorClass = 'bg-gray-500 text-white';
+      }
+      return <Badge className={colorClass}>{priority}</Badge>;
+    };
+    
+    const formattedDueDate = (dateString: string | null) => {
+      if (!dateString) return 'No due date';
+      
+      const dueDate = new Date(dateString);
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Check if the date is today or tomorrow for special formatting
+      if (dueDate.toDateString() === today.toDateString()) {
+        return 'Today';
+      } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+        return 'Tomorrow';
+      } else {
+        return format(dueDate, 'MMM d, yyyy');
+      }
+    };
+    
+    return (
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Filter className="w-4 h-4" /> Filter
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Search className="w-4 h-4" /> Search
+            </Button>
+          </div>
+          <Button className="flex items-center gap-1">
+            <Plus className="w-4 h-4" /> Assign Task
+          </Button>
+        </div>
+        
+        <Table>
+          <TableCaption>List of ISM Tasks</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Assigned To</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tasks.map(task => (
+              <TableRow key={task.id}>
+                <TableCell className="font-medium">{task.title}</TableCell>
+                <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                <TableCell>{renderStatus(task.status)}</TableCell>
+                <TableCell>{userMap.get(task.assignedTo) || `User #${task.assignedTo}`}</TableCell>
+                <TableCell>{task.dueDate ? formattedDueDate(task.dueDate) : 'No due date'}</TableCell>
+                <TableCell>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm">Complete</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
 
   return (
     <MainLayout title="ISM Management">
@@ -789,7 +905,7 @@ const ISMManagement: React.FC = () => {
         <Separator />
         
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="documents" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Documents
@@ -805,6 +921,10 @@ const ISMManagement: React.FC = () => {
             <TabsTrigger value="incidents" className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               Incidents
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="flex items-center gap-2">
+              <Clipboard className="w-4 h-4" />
+              Tasks
             </TabsTrigger>
           </TabsList>
           
@@ -824,6 +944,10 @@ const ISMManagement: React.FC = () => {
               
               <TabsContent value="incidents" className="m-0">
                 {renderIncidentsList()}
+              </TabsContent>
+
+              <TabsContent value="tasks" className="m-0">
+                {renderTasksList()}
               </TabsContent>
             </ScrollArea>
           </Card>
