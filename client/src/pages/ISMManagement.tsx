@@ -364,6 +364,21 @@ const ISMManagement: React.FC = () => {
       });
     }
   };
+  
+  // Function to open the form submission dialog
+  const handleCompleteTask = (taskId: number) => {
+    const task = (tasksQuery.data as ISMTask[]).find(t => t.id === taskId);
+    if (task) {
+      setSelectedTask(task);
+      setIsFormSubmissionOpen(true);
+    } else {
+      toast({
+        title: "Error",
+        description: "Could not find task details",
+        variant: "destructive",
+      });
+    }
+  };
 
   const renderStatus = (status: string | undefined) => {
     if (!status) {
@@ -715,33 +730,7 @@ const ISMManagement: React.FC = () => {
     }
   };
 
-  // Function to handle task completion
-  const handleCompleteTask = async (taskId: number) => {
-    try {
-      // Update the task status to completed
-      await apiRequest(`/api/ism/tasks/${taskId}`, {
-        method: 'PATCH',
-        data: {
-          status: 'completed'
-        },
-      });
-      
-      // Success handling
-      queryClient.invalidateQueries({queryKey: ['/api/ism/tasks']});
-      
-      toast({
-        title: "Success",
-        description: "Task marked as completed",
-      });
-    } catch (error: any) {
-      console.error('Error completing task:', error);
-      toast({
-        title: "Error",
-        description: `Failed to complete task: ${error.message || 'Unknown error'}`,
-        variant: "destructive",
-      });
-    }
-  };
+  // This function has been replaced by the handleCompleteTask function above
 
   const renderTasksList = () => {
     if (tasksQuery.isLoading) return <div className="p-8 text-center">Loading ISM tasks...</div>;
@@ -857,8 +846,9 @@ const ISMManagement: React.FC = () => {
                       variant="ghost" 
                       size="sm"
                       onClick={() => handleCompleteTask(task.id)}
+                      className="flex items-center gap-1"
                     >
-                      Complete
+                      <ListChecks className="w-4 h-4" /> Complete Form
                     </Button>
                   ) : (
                     <Badge className="bg-green-500 text-white">Completed</Badge>
@@ -874,6 +864,19 @@ const ISMManagement: React.FC = () => {
 
   return (
     <MainLayout title="ISM Management">
+      {/* Form Submission Dialog */}
+      {selectedTask && (
+        <FormSubmission
+          taskId={selectedTask.id}
+          formTemplateVersionId={selectedTask.formTemplateVersionId}
+          isOpen={isFormSubmissionOpen}
+          onClose={() => {
+            setIsFormSubmissionOpen(false);
+            setSelectedTask(null);
+          }}
+        />
+      )}
+      
       {/* Assign Task Dialog */}
       <Dialog open={isAssignTaskDialogOpen} onOpenChange={setIsAssignTaskDialogOpen}>
         <DialogContent className="max-w-2xl">
