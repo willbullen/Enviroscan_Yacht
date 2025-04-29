@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient, apiRequest } from "@/lib/queryClient";
+
+import { useToast } from "@/hooks/use-toast";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import MainLayout from "@/components/layout/MainLayout";
 import {
   Tabs,
@@ -59,8 +67,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow, format } from 'date-fns';
+
 import { 
   Clipboard, 
   ClipboardCheck, 
@@ -634,6 +641,101 @@ const ISMManagement: React.FC = () => {
     );
   };
   
+  // State for new task dialog
+  const [isAssignTaskDialogOpen, setIsAssignTaskDialogOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    formTemplateVersionId: 1,  // Default to the first form template version
+    assignedToId: 1,           // Default to the captain (user ID 1)
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to one week from now
+    priority: 'medium',
+    status: 'pending',
+    vesselId: 1,               // Default vessel ID
+    createdById: 1             // Default to current user (captain)
+  });
+
+  // Function to handle task creation
+  const handleTaskSubmit = async () => {
+    try {
+      // Validate form
+      if (!newTask.title) {
+        toast({
+          title: "Validation Error",
+          description: "Please provide a title for the task",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create the task using apiRequest
+      await apiRequest('/api/ism/tasks', {
+        method: 'POST',
+        data: {
+          ...newTask,
+          dueDate: newTask.dueDate?.toISOString()
+        },
+      });
+      
+      // Success handling
+      queryClient.invalidateQueries({queryKey: ['/api/ism/tasks']});
+      setIsAssignTaskDialogOpen(false);
+      
+      // Reset form
+      setNewTask({
+        title: '',
+        description: '',
+        formTemplateVersionId: 1,
+        assignedToId: 1,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        priority: 'medium',
+        status: 'pending',
+        vesselId: 1,
+        createdById: 1
+      });
+      
+      toast({
+        title: "Success",
+        description: "Task assigned successfully",
+      });
+    } catch (error: any) {
+      console.error('Error assigning task:', error);
+      toast({
+        title: "Error",
+        description: `Failed to assign task: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to handle task completion
+  const handleCompleteTask = async (taskId: number) => {
+    try {
+      // Update the task status to completed
+      await apiRequest(`/api/ism/tasks/${taskId}`, {
+        method: 'PATCH',
+        data: {
+          status: 'completed'
+        },
+      });
+      
+      // Success handling
+      queryClient.invalidateQueries({queryKey: ['/api/ism/tasks']});
+      
+      toast({
+        title: "Success",
+        description: "Task marked as completed",
+      });
+    } catch (error: any) {
+      console.error('Error completing task:', error);
+      toast({
+        title: "Error",
+        description: `Failed to complete task: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const renderTasksList = () => {
     if (tasksQuery.isLoading) return <div className="p-8 text-center">Loading ISM tasks...</div>;
     if (tasksQuery.isError) return <div className="p-8 text-center text-red-500">Error loading ISM tasks</div>;
@@ -715,7 +817,7 @@ const ISMManagement: React.FC = () => {
               <Search className="w-4 h-4" /> Search
             </Button>
           </div>
-          <Button className="flex items-center gap-1">
+          <Button className="flex items-center gap-1" onClick={() => setIsAssignTaskDialogOpen(true)}>
             <Plus className="w-4 h-4" /> Assign Task
           </Button>
         </div>
@@ -743,7 +845,17 @@ const ISMManagement: React.FC = () => {
                 <TableCell>{task.dueDate ? formattedDueDate(task.dueDate) : 'No due date'}</TableCell>
                 <TableCell>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">Complete</Button>
+                  {task.status !== 'completed' ? (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleCompleteTask(task.id)}
+                    >
+                      Complete
+                    </Button>
+                  ) : (
+                    <Badge className="bg-green-500 text-white">Completed</Badge>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -755,6 +867,126 @@ const ISMManagement: React.FC = () => {
 
   return (
     <MainLayout title="ISM Management">
+      {/* Assign Task Dialog */}
+      <Dialog open={isAssignTaskDialogOpen} onOpenChange={setIsAssignTaskDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Assign New ISM Task</DialogTitle>
+            <DialogDescription>
+              Create a new task and assign it to a crew member. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="task-title">Task Title *</Label>
+              <Input
+                id="task-title"
+                value={newTask.title}
+                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                placeholder="Enter task title"
+              />
+            </div>
+            
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="task-description">Description</Label>
+              <Textarea
+                id="task-description"
+                value={newTask.description || ''}
+                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                placeholder="Describe the task requirements and objectives"
+                className="min-h-[100px]"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="task-template">Form Template *</Label>
+              <Select 
+                value={newTask.formTemplateVersionId.toString()}
+                onValueChange={(value) => setNewTask({...newTask, formTemplateVersionId: parseInt(value)})}
+              >
+                <SelectTrigger id="task-template">
+                  <SelectValue placeholder="Select Template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(formTemplatesQuery.data as FormTemplate[] || []).map(template => (
+                    <SelectItem key={template.id} value={template.id.toString()}>
+                      {template.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="task-assigned">Assign To *</Label>
+              <Select 
+                value={newTask.assignedToId.toString()}
+                onValueChange={(value) => setNewTask({...newTask, assignedToId: parseInt(value)})}
+              >
+                <SelectTrigger id="task-assigned">
+                  <SelectValue placeholder="Select Crew Member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(usersQuery.data as any[] || []).map(user => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="task-priority">Priority</Label>
+              <Select 
+                value={newTask.priority}
+                onValueChange={(value) => setNewTask({...newTask, priority: value})}
+              >
+                <SelectTrigger id="task-priority">
+                  <SelectValue placeholder="Select Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="task-due-date">Due Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                    id="task-due-date"
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {newTask.dueDate ? format(newTask.dueDate, 'PPP') : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={newTask.dueDate}
+                    onSelect={(date) => setNewTask({...newTask, dueDate: date || new Date()})}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignTaskDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleTaskSubmit}>Assign Task</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {/* New Document Dialog */}
       <Dialog open={isNewDocumentDialogOpen} onOpenChange={setIsNewDocumentDialogOpen}>
         <DialogContent className="max-w-2xl">
