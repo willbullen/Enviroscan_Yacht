@@ -2397,6 +2397,231 @@ export class MemStorage implements IStorage {
     ismIncidents.forEach(incident => {
       this.createIsmIncident(incident as InsertIsmIncident);
     });
+
+    // Initialize Form Categories
+    const formCategories = [
+      {
+        name: 'Safety Procedures',
+        description: 'Forms and checklists related to safety protocols and procedures',
+        isActive: true,
+        createdBy: 1
+      },
+      {
+        name: 'Engineering Inspections',
+        description: 'Technical inspection forms for engineering and mechanical systems',
+        isActive: true,
+        createdBy: 2
+      },
+      {
+        name: 'Navigation',
+        description: 'Navigation and voyage planning checklists',
+        isActive: true,
+        createdBy: 1
+      },
+      {
+        name: 'Environmental Compliance',
+        description: 'Forms for tracking environmental compliance and waste management',
+        isActive: true,
+        createdBy: 1
+      }
+    ];
+
+    formCategories.forEach(category => {
+      this.createFormCategory(category as InsertFormCategory);
+    });
+
+    // Initialize Form Templates
+    const formTemplates = [
+      {
+        title: 'Pre-Departure Safety Checklist',
+        description: 'Comprehensive safety check before vessel departure',
+        categoryId: 1,
+        createdBy: 1,
+        isActive: true
+      },
+      {
+        title: 'Main Engine Inspection Form',
+        description: 'Detailed inspection checklist for main engines',
+        categoryId: 2,
+        createdBy: 2,
+        isActive: true
+      },
+      {
+        title: 'Voyage Planning Checklist',
+        description: 'Route planning and navigation safety checks',
+        categoryId: 3,
+        createdBy: 1,
+        isActive: true
+      },
+      {
+        title: 'Waste Management Log',
+        description: 'MARPOL compliance waste tracking form',
+        categoryId: 4,
+        createdBy: 1,
+        isActive: true
+      }
+    ];
+
+    // Create templates and their initial versions
+    formTemplates.forEach((template, index) => {
+      const createdTemplate = this.createFormTemplate(template as InsertFormTemplate);
+      
+      // Create an initial version for each template
+      const templateVersion = {
+        templateId: createdTemplate.id,
+        versionNumber: '1.0',
+        structure: JSON.stringify({
+          sections: [
+            {
+              title: index === 0 ? 'Safety Equipment Checks' : 
+                     index === 1 ? 'Engine General Condition' :
+                     index === 2 ? 'Route Planning' : 'Waste Collection',
+              fields: [
+                {
+                  type: 'checkbox',
+                  label: index === 0 ? 'Life jackets inspected and accessible' :
+                         index === 1 ? 'Oil levels within normal range' :
+                         index === 2 ? 'Weather forecasts reviewed' : 'Waste separated by type',
+                  required: true,
+                  key: `field_${index}_1`
+                },
+                {
+                  type: 'checkbox',
+                  label: index === 0 ? 'Fire extinguishers checked and operational' :
+                         index === 1 ? 'Cooling system functioning properly' :
+                         index === 2 ? 'Nautical charts up to date' : 'Hazardous waste properly contained',
+                  required: true,
+                  key: `field_${index}_2`
+                },
+                {
+                  type: 'text',
+                  label: 'Additional comments',
+                  required: false,
+                  key: `field_${index}_3`
+                }
+              ]
+            },
+            {
+              title: index === 0 ? 'Navigation Readiness' : 
+                     index === 1 ? 'Performance Test Results' :
+                     index === 2 ? 'Safety Measures' : 'Disposal Records',
+              fields: [
+                {
+                  type: 'checkbox',
+                  label: index === 0 ? 'Navigation lights operational' :
+                         index === 1 ? 'Engine started and running smoothly' :
+                         index === 2 ? 'Crew briefed on voyage plan' : 'Disposal receipts collected',
+                  required: true,
+                  key: `field_${index}_4`
+                },
+                {
+                  type: 'text',
+                  label: 'Notes',
+                  required: false,
+                  key: `field_${index}_5`
+                }
+              ]
+            }
+          ]
+        }),
+        changes: 'Initial version',
+        isActive: true,
+        createdBy: template.createdBy
+      };
+      
+      this.createFormTemplateVersion(templateVersion as InsertFormTemplateVersion);
+    });
+
+    // Initialize ISM Tasks
+    const ismTasks = [
+      {
+        title: 'Complete Pre-Departure Safety Inspection',
+        description: 'Perform all safety checks before departing from Miami port',
+        assignedTo: 1,
+        templateVersionId: 1,
+        dueDate: new Date(Date.now() + 86400000 * 2), // 2 days from now
+        priority: 'high',
+        status: 'assigned',
+        vesselId: 1,
+        createdBy: 1
+      },
+      {
+        title: 'Monthly Main Engine Inspection',
+        description: 'Conduct standard inspection of main engines as per company policy',
+        assignedTo: 2,
+        templateVersionId: 2,
+        dueDate: new Date(Date.now() + 86400000 * 5), // 5 days from now
+        priority: 'medium',
+        status: 'in-progress',
+        vesselId: 1,
+        createdBy: 1
+      },
+      {
+        title: 'Prepare Voyage Plan: Miami to Bahamas',
+        description: 'Complete voyage planning checklist for upcoming Bahamas trip',
+        assignedTo: 1,
+        templateVersionId: 3,
+        dueDate: new Date(Date.now() + 86400000 * 1), // 1 day from now
+        priority: 'high',
+        status: 'assigned',
+        vesselId: 1,
+        createdBy: 1
+      },
+      {
+        title: 'Weekly Waste Management Log',
+        description: 'Complete the waste management log for regulatory compliance',
+        assignedTo: 3,
+        templateVersionId: 4,
+        dueDate: new Date(Date.now() - 86400000 * 1), // 1 day ago (overdue)
+        priority: 'low',
+        status: 'overdue',
+        vesselId: 1,
+        createdBy: 1
+      }
+    ];
+
+    ismTasks.forEach(task => {
+      this.createIsmTask(task as InsertIsmTask);
+    });
+
+    // Initialize one Form Submission (for the in-progress task)
+    const formSubmission = {
+      taskId: 2, // Monthly Main Engine Inspection task
+      submittedBy: 2,
+      submissionData: JSON.stringify({
+        field_1_1: true, // Oil levels within normal range - checked
+        field_1_2: true, // Cooling system functioning properly - checked
+        field_1_3: 'Found minor oil leakage, needs to be monitored',
+        field_1_4: false, // Engine started and running smoothly - not checked yet
+        field_1_5: 'Will complete performance test tomorrow'
+      }),
+      status: 'draft',
+      feedback: null,
+      reviewedBy: null,
+      reviewDate: null
+    };
+
+    this.createFormSubmission(formSubmission as InsertFormSubmission);
+
+    // Initialize Task Comments
+    const taskComments = [
+      {
+        taskId: 2, // Monthly Main Engine Inspection task
+        userId: 2,
+        comment: 'Started the inspection, found minor oil leakage that needs monitoring. Will complete performance tests tomorrow.',
+        attachments: []
+      },
+      {
+        taskId: 3, // Prepare Voyage Plan task
+        userId: 1,
+        comment: 'Weather forecast indicates possible storms near Bahamas. Need to prepare alternate routes.',
+        attachments: []
+      }
+    ];
+
+    taskComments.forEach(comment => {
+      this.createTaskComment(comment as InsertTaskComment);
+    });
   }
 }
 

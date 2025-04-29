@@ -22,7 +22,13 @@ import {
   insertVoyageSchema,
   insertWaypointSchema,
   insertFuelConsumptionChartSchema,
-  insertSpeedChartSchema
+  insertSpeedChartSchema,
+  insertFormCategorySchema,
+  insertFormTemplateSchema,
+  insertFormTemplateVersionSchema,
+  insertIsmTaskSchema,
+  insertFormSubmissionSchema,
+  insertTaskCommentSchema
 } from "@shared/schema";
 import { db } from "./db";
 
