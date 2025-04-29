@@ -222,6 +222,7 @@ const statusColors = {
 const ISMManagement: React.FC = () => {
   const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState("documents");
+  const [isFormAdminDialogOpen, setIsFormAdminDialogOpen] = useState(false);
   const [isNewDocumentDialogOpen, setIsNewDocumentDialogOpen] = useState(false);
   const [newDocument, setNewDocument] = useState({
     title: '',
@@ -873,9 +874,18 @@ const ISMManagement: React.FC = () => {
               <Search className="w-4 h-4" /> Search
             </Button>
           </div>
-          <Button className="flex items-center gap-1" onClick={() => setIsAssignTaskDialogOpen(true)}>
-            <Plus className="w-4 h-4" /> Assign Task
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={() => setIsFormAdminDialogOpen(true)}
+            >
+              <Settings className="w-4 h-4" /> Manage Forms
+            </Button>
+            <Button className="flex items-center gap-1" onClick={() => setIsAssignTaskDialogOpen(true)}>
+              <Plus className="w-4 h-4" /> Assign Task
+            </Button>
+          </div>
         </div>
         
         <Table>
@@ -922,6 +932,129 @@ const ISMManagement: React.FC = () => {
     );
   };
 
+  // State for form admin features
+  const [selectedFormCategory, setSelectedFormCategory] = useState<FormCategory | null>(null);
+  const [selectedFormTemplate, setSelectedFormTemplate] = useState<FormTemplate | null>(null);
+  const [selectedFormTemplateVersion, setSelectedFormTemplateVersion] = useState<FormTemplateVersion | null>(null);
+  const [newFormStructure, setNewFormStructure] = useState<string>('');
+  const [formStructureValid, setFormStructureValid] = useState(true);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  
+  // Form template file upload handling
+  const handleFormFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadedFile(file);
+      
+      // If it's a JSON file, we can try to parse it
+      if (file.type === 'application/json') {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const jsonText = event.target?.result as string;
+            // Validate the JSON structure
+            const parsed = JSON.parse(jsonText);
+            
+            // Check if it contains the required fields array
+            if (parsed.fields && Array.isArray(parsed.fields)) {
+              setNewFormStructure(jsonText);
+              setFormStructureValid(true);
+            } else {
+              setFormStructureValid(false);
+              toast({
+                title: "Invalid Form Structure",
+                description: "The JSON file does not contain the required 'fields' array",
+                variant: "destructive",
+              });
+            }
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            setFormStructureValid(false);
+            toast({
+              title: "Invalid JSON",
+              description: "The file does not contain valid JSON",
+              variant: "destructive",
+            });
+          }
+        };
+        reader.readAsText(file);
+      } else if (file.type === 'application/pdf' || 
+                file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        // For PDF or Word files, we'd need server-side parsing
+        toast({
+          title: "File Upload",
+          description: "PDF and Word parsing will be implemented soon. Please use JSON format for now.",
+          variant: "default",
+        });
+      }
+    }
+  };
+  
+  // Create a form template version from the structure
+  const handleCreateFormTemplateVersion = async () => {
+    if (!selectedFormTemplate) {
+      toast({
+        title: "Error",
+        description: "Please select a form template first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!formStructureValid) {
+      toast({
+        title: "Error",
+        description: "The form structure is not valid",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Create a new version of the form template
+      await apiRequest('/api/ism/form-template-versions', {
+        method: 'POST',
+        data: {
+          templateId: selectedFormTemplate.id,
+          versionNumber: "1.0", // This would be incremented in a real scenario
+          structureDefinition: newFormStructure || JSON.stringify({
+            fields: [
+              {
+                id: "default_field",
+                type: "text",
+                label: "Default Field",
+                required: true
+              }
+            ]
+          }),
+          isActive: true,
+          createdById: 1 // Assuming user ID 1 (Captain)
+        },
+      });
+      
+      toast({
+        title: "Success",
+        description: "Form template version created successfully",
+      });
+      
+      // Invalidate related queries to refresh data
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-template-versions']});
+      
+      // Close the dialog and reset state
+      setSelectedFormTemplate(null);
+      setNewFormStructure('');
+      setUploadedFile(null);
+      setIsFormAdminDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error creating form template version:', error);
+      toast({
+        title: "Error",
+        description: `Failed to create form template version: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <MainLayout title="ISM Management">
       {/* Form Submission Dialog */}
@@ -936,6 +1069,199 @@ const ISMManagement: React.FC = () => {
           }}
         />
       )}
+      
+      {/* Form Administration Dialog */}
+      <Dialog open={isFormAdminDialogOpen} onOpenChange={setIsFormAdminDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Form Template Administration</DialogTitle>
+            <DialogDescription>
+              Create, edit, and manage form templates and their structures.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs defaultValue="templates">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="categories">Categories</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="builder">Form Builder</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="categories" className="py-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Form Categories</h3>
+                <Button size="sm">
+                  <Plus className="w-4 h-4 mr-1" /> Add Category
+                </Button>
+              </div>
+              
+              {formCategoriesQuery.isLoading ? (
+                <div className="text-center py-4">Loading categories...</div>
+              ) : formCategoriesQuery.isError ? (
+                <div className="text-center py-4 text-red-500">Error loading categories</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2">
+                  {(formCategoriesQuery.data as FormCategory[] || []).map(category => (
+                    <Card key={category.id} className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">{category.name}</h4>
+                          {category.description && (
+                            <p className="text-sm text-gray-500">{category.description}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">Edit</Button>
+                          <Button variant="destructive" size="sm">Delete</Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="templates" className="py-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Form Templates</h3>
+                <Button size="sm">
+                  <Plus className="w-4 h-4 mr-1" /> Add Template
+                </Button>
+              </div>
+              
+              {formTemplatesQuery.isLoading ? (
+                <div className="text-center py-4">Loading templates...</div>
+              ) : formTemplatesQuery.isError ? (
+                <div className="text-center py-4 text-red-500">Error loading templates</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2">
+                  {(formTemplatesQuery.data as FormTemplate[] || []).map(template => (
+                    <Card key={template.id} className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">{template.title}</h4>
+                          {template.description && (
+                            <p className="text-sm text-gray-500">{template.description}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedFormTemplate(template)}
+                          >
+                            Use
+                          </Button>
+                          <Button variant="outline" size="sm">Edit</Button>
+                          <Button variant="destructive" size="sm">Delete</Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="builder" className="py-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Form Builder</h3>
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {selectedFormTemplate ? (
+                        <>Selected template: <span className="font-medium">{selectedFormTemplate.title}</span></>
+                      ) : (
+                        'No template selected'
+                      )}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <Label>Upload Form Structure</Label>
+                    <Input
+                      type="file"
+                      accept=".json,.pdf,.docx"
+                      onChange={handleFormFileChange}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Upload a JSON file with the form structure, or a PDF/Word document to extract a form structure.
+                    </p>
+                    
+                    {uploadedFile && (
+                      <div className="p-2 border rounded flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          <span>{uploadedFile.name}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setUploadedFile(null)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <Label>Form Structure (JSON)</Label>
+                    <Textarea
+                      className="min-h-[200px] font-mono text-sm"
+                      value={newFormStructure}
+                      onChange={(e) => {
+                        setNewFormStructure(e.target.value);
+                        try {
+                          JSON.parse(e.target.value);
+                          setFormStructureValid(true);
+                        } catch (error) {
+                          setFormStructureValid(false);
+                        }
+                      }}
+                      placeholder={`{
+  "fields": [
+    {
+      "id": "field1",
+      "type": "text",
+      "label": "Field Label",
+      "required": true
+    }
+  ]
+}`}
+                    />
+                    {!formStructureValid && (
+                      <p className="text-xs text-red-500">
+                        Invalid JSON structure. Please check the format.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedFormTemplate(null);
+                      setNewFormStructure('');
+                      setUploadedFile(null);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    onClick={handleCreateFormTemplateVersion}
+                    disabled={!selectedFormTemplate || !formStructureValid}
+                  >
+                    Create Form Version
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
       
       {/* Assign Task Dialog */}
       <Dialog open={isAssignTaskDialogOpen} onOpenChange={setIsAssignTaskDialogOpen}>
