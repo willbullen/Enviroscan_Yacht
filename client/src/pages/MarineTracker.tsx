@@ -27,20 +27,32 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Function to create custom ship icon that rotates based on heading
-const createShipIcon = (heading = 0) => {
+// Vessel icon colors by vessel ID
+const vesselColors = {
+  1: "#3b82f6", // blue
+  2: "#10b981", // emerald
+  3: "#ef4444", // red
+  4: "#8b5cf6"  // purple
+};
+
+// Function to create custom yacht icon that rotates based on heading
+const createShipIcon = (vesselId: number, heading = 0) => {
+  const color = vesselColors[vesselId as keyof typeof vesselColors] || "#3b82f6";
+  
   return L.divIcon({
     className: 'custom-ship-icon',
-    html: `<div style="color: #0055FF; transform: rotate(${heading}deg);" class="ship-marker">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                 <path d="M18 15l-6-6l-6 6"></path>
-                 <path d="M12 9v6"></path>
+    html: `<div style="color: ${color}; transform: rotate(${heading}deg);" class="ship-marker">
+             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="${color}" 
+                 stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                 <!-- Top view of a yacht -->
+                 <path d="M12 4 L18 10 L20 16 L4 16 L6 10 Z" fill="${color}" />
+                 <path d="M10 16 L10 19 L14 19 L14 16" fill="${color}" />
+                 <circle cx="12" cy="8" r="1" fill="white" />
              </svg>
            </div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -12]
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
   });
 };
 
@@ -220,7 +232,9 @@ const MarineTracker = () => {
                     >
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <Ship className="h-4 w-4 text-primary" />
+                          <div style={{ color: vesselColors[vessel.id as keyof typeof vesselColors] || "#3b82f6" }}>
+                            <Ship className="h-4 w-4" />
+                          </div>
                           <span className="font-medium">{vessel.name}</span>
                         </div>
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -313,7 +327,7 @@ const MarineTracker = () => {
                       <Marker 
                         key={vessel.id}
                         position={[vessel.latitude, vessel.longitude]}
-                        icon={createShipIcon(vessel.heading)}
+                        icon={createShipIcon(vessel.id, vessel.heading)}
                         eventHandlers={{
                           click: () => setSelectedVesselId(vessel.id)
                         }}
