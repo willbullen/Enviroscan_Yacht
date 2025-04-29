@@ -168,7 +168,7 @@ interface ISMTask {
   status: string;
   priority: string;
   assignedTo: number;
-  templateVersionId: number;
+  formTemplateVersionId: number; // Using consistent field names
   dueDate: string | null;
   vesselId: number;
   createdBy: number | null;
@@ -868,7 +868,7 @@ const ISMManagement: React.FC = () => {
       {selectedTask && (
         <FormSubmission
           taskId={selectedTask.id}
-          formTemplateVersionId={selectedTask.formTemplateVersionId}
+          formTemplateVersionId={selectedTask.templateVersionId}
           isOpen={isFormSubmissionOpen}
           onClose={() => {
             setIsFormSubmissionOpen(false);
