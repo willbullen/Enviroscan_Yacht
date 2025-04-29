@@ -670,8 +670,7 @@ const ISMManagement: React.FC = () => {
     description: '',
     form_template_version_id: 1,  // Default to the first form template version, matching the db column name
     assigned_to_id: 1,            // Default to the captain (user ID 1), matching the db column name
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to one week from now
-    priority: 'medium',
+    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to one week from now
     status: 'pending',
     vessel_id: 1,                // Default vessel ID, matching the db column name
     created_by_id: 1              // Default to current user (captain), matching the db column name
@@ -694,9 +693,8 @@ const ISMManagement: React.FC = () => {
       await apiRequest('/api/ism/tasks', {
         method: 'POST',
         data: {
-          ...newTask,
-          // The server expects a Date object, not an ISO string
-          dueDate: newTask.dueDate
+          ...newTask
+          // All property names now match the database column names
         },
       });
       
@@ -710,8 +708,7 @@ const ISMManagement: React.FC = () => {
         description: '',
         form_template_version_id: 1,
         assigned_to_id: 1,
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        priority: 'medium',
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         status: 'pending',
         vessel_id: 1,
         created_by_id: 1
@@ -949,18 +946,18 @@ const ISMManagement: React.FC = () => {
             </div>
             
             <div className="space-y-1.5">
-              <Label htmlFor="task-priority">Priority</Label>
+              <Label htmlFor="task-status">Status</Label>
               <Select 
-                value={newTask.priority}
-                onValueChange={(value) => setNewTask({...newTask, priority: value})}
+                value={newTask.status}
+                onValueChange={(value) => setNewTask({...newTask, status: value})}
               >
-                <SelectTrigger id="task-priority">
-                  <SelectValue placeholder="Select Priority" />
+                <SelectTrigger id="task-status">
+                  <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -975,14 +972,14 @@ const ISMManagement: React.FC = () => {
                     id="task-due-date"
                   >
                     <Calendar className="mr-2 h-4 w-4" />
-                    {newTask.dueDate ? newTask.dueDate.toLocaleDateString() : <span>Pick a date</span>}
+                    {newTask.due_date ? newTask.due_date.toLocaleDateString() : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <CalendarPicker
                     mode="single"
-                    selected={newTask.dueDate}
-                    onSelect={(date) => setNewTask({...newTask, dueDate: date || new Date()})}
+                    selected={newTask.due_date}
+                    onSelect={(date) => setNewTask({...newTask, due_date: date || new Date()})}
                     initialFocus
                   />
                 </PopoverContent>
