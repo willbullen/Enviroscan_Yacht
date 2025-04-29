@@ -16,6 +16,12 @@ import {
   waypoints,
   fuelConsumptionChart,
   speedChart,
+  formCategories,
+  formTemplates,
+  formTemplateVersions,
+  ismTasks,
+  formSubmissions,
+  taskComments,
   type User,
   type InsertUser,
   type Equipment,
@@ -49,7 +55,19 @@ import {
   type FuelConsumptionChart,
   type InsertFuelConsumptionChart,
   type SpeedChart,
-  type InsertSpeedChart
+  type InsertSpeedChart,
+  type FormCategory,
+  type InsertFormCategory,
+  type FormTemplate,
+  type InsertFormTemplate,
+  type FormTemplateVersion,
+  type InsertFormTemplateVersion,
+  type IsmTask,
+  type InsertIsmTask,
+  type FormSubmission,
+  type InsertFormSubmission,
+  type TaskComment,
+  type InsertTaskComment
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
