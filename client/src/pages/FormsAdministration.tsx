@@ -1246,7 +1246,7 @@ const FormsAdministration: React.FC = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => templateToDelete && deleteTemplateMutation.mutate(templateToDelete.id)}
             >
               Delete
