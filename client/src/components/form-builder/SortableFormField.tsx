@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FormField } from './FormBuilderDragDrop';
+import { FormField } from './FormFieldItem';
 import { FormFieldItem } from './FormFieldItem';
 
 interface SortableFormFieldProps {

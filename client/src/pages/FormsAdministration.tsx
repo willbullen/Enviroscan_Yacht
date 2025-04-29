@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { FormBuilderDragDrop, FormField } from "@/components/form-builder/FormBuilderDragDrop";
+import { FormBuilderDragDrop } from "@/components/form-builder/FormBuilderDragDrop";
+import { FormField } from "@/components/form-builder/FormFieldItem";
 
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -399,6 +400,55 @@ const FormsAdministration: React.FC = () => {
       toast({
         title: "Error",
         description: `Failed to create form version: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Update version mutation
+  const updateVersionMutation = useMutation({
+    mutationFn: async (version: { 
+      id: number;
+      templateId: number;
+      versionNumber: string;
+      structureDefinition: any;
+      isActive: boolean | null; 
+    }) => {
+      // Make sure the structure definition is valid JSON
+      let structureDefinition = version.structureDefinition;
+      if (typeof structureDefinition === 'string') {
+        try {
+          structureDefinition = JSON.parse(structureDefinition);
+        } catch (error) {
+          console.error("Invalid JSON in structure definition", error);
+          structureDefinition = { fields: [] };
+        }
+      }
+      
+      return await apiRequest(`/api/ism/form-template-versions/${version.id}`, {
+        method: 'PATCH',
+        data: {
+          templateId: version.templateId,
+          versionNumber: version.versionNumber,
+          structureDefinition,
+          isActive: version.isActive
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-template-versions']});
+      setIsVersionDialogOpen(false);
+      setEditingVersion(null);
+      setSelectedVersionId(null);
+      toast({
+        title: "Success",
+        description: "Form template updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to update form template: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -1065,6 +1115,92 @@ const FormsAdministration: React.FC = () => {
     const categoryMap = new Map<number, string>();
     categories.forEach(cat => categoryMap.set(cat.id, cat.name));
     
+    // For selected version form fields - handle initial field data
+    const [formFields, setFormFields] = useState<FormField[]>([]);
+    const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
+    const [previewMode, setPreviewMode] = useState(false);
+    
+    // Handle form fields change from the drag-and-drop builder
+    const handleFormFieldsChange = (newFields: FormField[]) => {
+      setFormFields(newFields);
+      
+      // Update the structureDefinition in newVersion state
+      const updatedStructure = JSON.stringify({ fields: newFields }, null, 2);
+      if (editingVersion) {
+        setNewVersion({
+          ...newVersion,
+          structureDefinition: updatedStructure
+        });
+      }
+    };
+    
+    // Handle saving form structure
+    const handleSaveFormStructure = () => {
+      if (!selectedTemplate) return;
+      
+      // Prepare JSON structure for saving
+      const structureData = {
+        fields: formFields
+      };
+      
+      // If editing an existing version, update it
+      if (editingVersion) {
+        setNewVersion({
+          ...newVersion,
+          structureDefinition: JSON.stringify(structureData, null, 2)
+        });
+        updateVersionMutation.mutate({
+          id: editingVersion.id,
+          templateId: editingVersion.templateId,
+          versionNumber: newVersion.versionNumber,
+          structureDefinition: structureData,
+          isActive: newVersion.isActive
+        });
+      } else {
+        // Create a new version
+        setNewVersion({
+          templateId: selectedTemplate.id,
+          versionNumber: "1.0",
+          structureDefinition: JSON.stringify(structureData, null, 2),
+          isActive: true
+        });
+        
+        // Open the version dialog to allow user to set version number
+        setIsVersionDialogOpen(true);
+      }
+    };
+    
+    // Handle opening the form builder for a specific version
+    const handleEditFormStructure = (version: FormTemplateVersion) => {
+      let structureDef = version.structureDefinition;
+      if (typeof structureDef === 'string') {
+        try {
+          structureDef = JSON.parse(structureDef);
+        } catch (error) {
+          console.error("Invalid JSON in structure definition", error);
+          structureDef = { fields: [] };
+        }
+      }
+      
+      // Set editing version
+      setEditingVersion(version);
+      setSelectedVersionId(version.id);
+      
+      // Set form fields for the builder
+      setFormFields(structureDef.fields || []);
+      
+      // Set newVersion data for potential updates
+      setNewVersion({
+        templateId: version.templateId,
+        versionNumber: version.versionNumber,
+        structureDefinition: JSON.stringify(structureDef, null, 2),
+        isActive: version.isActive || false
+      });
+      
+      // Switch to builder mode
+      setPreviewMode(false);
+    };
+    
     return (
       <div className="grid grid-cols-1 gap-6 mt-4">
         {/* Template selection */}
@@ -1125,123 +1261,278 @@ const FormsAdministration: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Versions list (if template is selected) */}
+        {/* Versions list and Form Builder (if template is selected) */}
         {selectedTemplate && (
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Form Versions for {selectedTemplate.title}</CardTitle>
-                  <CardDescription>
-                    Manage form structure versions for this template
-                  </CardDescription>
-                </div>
-                <Button onClick={() => handleCreateVersion(selectedTemplate)}>
-                  <Plus className="w-4 h-4 mr-2" /> New Version
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {formVersionsQuery.isLoading ? (
-                <div className="text-center py-4">Loading versions...</div>
-              ) : formVersionsQuery.isError ? (
-                <div className="text-center py-4 text-destructive">Error loading versions</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Version</TableHead>
-                      <TableHead>Active</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(formVersionsQuery.data as FormTemplateVersion[] || [])
-                      .filter(version => version.templateId === selectedTemplate.id)
-                      .map(version => (
-                        <TableRow key={version.id}>
-                          <TableCell className="font-medium">{version.versionNumber}</TableCell>
-                          <TableCell>
-                            <Badge variant={version.isActive ? "success" : "secondary"}>
-                              {version.isActive ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end space-x-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => {
-                                  // View structure
-                                  let structureDef = version.structureDefinition;
-                                  if (typeof structureDef === 'string') {
-                                    try {
-                                      structureDef = JSON.parse(structureDef);
-                                    } catch (error) {
-                                      console.error("Invalid JSON in structure definition", error);
-                                    }
-                                  }
-                                  
-                                  // Set the JSON in pretty format for editing
-                                  setEditingVersion(version);
-                                  setNewVersion({
-                                    templateId: version.templateId,
-                                    versionNumber: version.versionNumber,
-                                    structureDefinition: JSON.stringify(structureDef, null, 2),
-                                    isActive: version.isActive || false
-                                  });
-                                  setIsVersionDialogOpen(true);
-                                }}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  // Download structure as JSON
-                                  let structureDef = version.structureDefinition;
-                                  if (typeof structureDef === 'string') {
-                                    try {
-                                      structureDef = JSON.parse(structureDef);
-                                    } catch (error) {
-                                      console.error("Invalid JSON in structure definition", error);
-                                    }
-                                  }
-                                  
-                                  const jsonString = JSON.stringify(structureDef, null, 2);
-                                  const blob = new Blob([jsonString], { type: 'application/json' });
-                                  const url = URL.createObjectURL(blob);
-                                  const a = document.createElement('a');
-                                  a.href = url;
-                                  a.download = `form-template-${selectedTemplate.id}-v${version.versionNumber}.json`;
-                                  document.body.appendChild(a);
-                                  a.click();
-                                  document.body.removeChild(a);
-                                  URL.revokeObjectURL(url);
-                                }}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+          <>
+            {selectedVersionId ? (
+              // Show form builder for the selected version
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>
+                        {previewMode ? "Form Preview" : "Form Builder"} - {selectedTemplate.title} (v{editingVersion?.versionNumber})
+                      </CardTitle>
+                      <CardDescription>
+                        {previewMode 
+                          ? "Preview how the form will appear to users" 
+                          : "Use drag-and-drop to build your form layout"}
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setPreviewMode(!previewMode)}
+                      >
+                        {previewMode ? <Settings className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                        {previewMode ? "Edit" : "Preview"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setSelectedVersionId(null);
+                          setEditingVersion(null);
+                          setFormFields([]);
+                        }}
+                      >
+                        Back to Versions
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {previewMode ? (
+                    <div className="border rounded-lg p-5 bg-background">
+                      {/* Form Preview Mode */}
+                      <div className="space-y-5">
+                        {formFields.map((field, index) => (
+                          <div key={field.id} className="space-y-2">
+                            {field.type !== 'checkbox' && field.type !== 'heading' && field.type !== 'paragraph' && (
+                              <label className="text-sm font-medium flex items-start">
+                                {field.label}
+                                {field.required && <span className="text-destructive ml-1">*</span>}
+                              </label>
+                            )}
+                            
+                            {field.description && field.type !== 'heading' && field.type !== 'paragraph' && (
+                              <p className="text-xs text-muted-foreground">{field.description}</p>
+                            )}
+                            
+                            {field.type === 'text' && (
+                              <input 
+                                type="text" 
+                                className="w-full p-2 border rounded" 
+                                placeholder={field.placeholder}
+                              />
+                            )}
+                            
+                            {field.type === 'textarea' && (
+                              <textarea 
+                                className="w-full p-2 border rounded min-h-[100px]" 
+                                placeholder={field.placeholder}
+                              />
+                            )}
+                            
+                            {field.type === 'number' && (
+                              <input 
+                                type="number" 
+                                className="w-full p-2 border rounded"
+                                min={field.min}
+                                max={field.max}
+                                step={field.step}
+                                placeholder={field.placeholder}
+                              />
+                            )}
+                            
+                            {field.type === 'checkbox' && (
+                              <div className="flex items-center space-x-2">
+                                <input 
+                                  type="checkbox" 
+                                  id={`field-${index}`}
+                                  className="h-4 w-4 rounded border-gray-300" 
+                                />
+                                <label htmlFor={`field-${index}`} className="text-sm">
+                                  {field.label}
+                                  {field.required && <span className="text-destructive ml-1">*</span>}
+                                </label>
+                              </div>
+                            )}
+                            
+                            {field.type === 'select' && (
+                              <select className="w-full p-2 border rounded">
+                                <option value="">Select an option...</option>
+                                {field.options?.map((option, i) => (
+                                  <option key={i} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            )}
+                            
+                            {field.type === 'radio' && (
+                              <div className="space-y-2">
+                                {field.options?.map((option, i) => (
+                                  <div key={i} className="flex items-center space-x-2">
+                                    <input 
+                                      type="radio" 
+                                      id={`field-${index}-option-${i}`}
+                                      name={`field-${index}`}
+                                      className="h-4 w-4 border-gray-300" 
+                                    />
+                                    <label htmlFor={`field-${index}-option-${i}`} className="text-sm">{option}</label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {field.type === 'date' && (
+                              <input 
+                                type="date" 
+                                className="w-full p-2 border rounded" 
+                              />
+                            )}
+                            
+                            {field.type === 'heading' && (
+                              <h3 className="text-lg font-semibold">{field.label}</h3>
+                            )}
+                            
+                            {field.type === 'paragraph' && (
+                              <p className="text-sm text-muted-foreground">{field.label}</p>
+                            )}
+                          </div>
+                        ))}
+                        
+                        {formFields.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <p>No form fields have been added yet</p>
+                          </div>
+                        )}
+                        
+                        {formFields.length > 0 && (
+                          <div className="pt-4 flex justify-end">
+                            <Button>Submit Form</Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    // Form Builder Drag-and-Drop Interface
+                    <FormBuilderDragDrop
+                      initialFields={formFields}
+                      onChange={handleFormFieldsChange}
+                      onSave={handleSaveFormStructure}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              // Show versions list when no specific version is selected for editing
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Form Versions for {selectedTemplate.title}</CardTitle>
+                      <CardDescription>
+                        Manage form structure versions for this template
+                      </CardDescription>
+                    </div>
+                    <Button onClick={() => {
+                      // Start with a new empty form builder
+                      setFormFields([]);
+                      setSelectedVersionId(0); // Use 0 to indicate new version
+                      setEditingVersion(null);
+                      setNewVersion({
+                        templateId: selectedTemplate.id,
+                        versionNumber: "1.0",
+                        structureDefinition: JSON.stringify({ fields: [] }, null, 2),
+                        isActive: true
+                      });
+                    }}>
+                      <Plus className="w-4 h-4 mr-2" /> New Version
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {formVersionsQuery.isLoading ? (
+                    <div className="text-center py-4">Loading versions...</div>
+                  ) : formVersionsQuery.isError ? (
+                    <div className="text-center py-4 text-destructive">Error loading versions</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Version</TableHead>
+                          <TableHead>Active</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                      
-                    {(!formVersionsQuery.data || (formVersionsQuery.data as FormTemplateVersion[]).filter(v => v.templateId === selectedTemplate.id).length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                          No versions found for this template
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {(formVersionsQuery.data as FormTemplateVersion[] || [])
+                          .filter(version => version.templateId === selectedTemplate.id)
+                          .map(version => (
+                            <TableRow key={version.id}>
+                              <TableCell className="font-medium">{version.versionNumber}</TableCell>
+                              <TableCell>
+                                <Badge variant={version.isActive ? "success" : "secondary"}>
+                                  {version.isActive ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleEditFormStructure(version)}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => {
+                                      // Download structure as JSON
+                                      let structureDef = version.structureDefinition;
+                                      if (typeof structureDef === 'string') {
+                                        try {
+                                          structureDef = JSON.parse(structureDef);
+                                        } catch (error) {
+                                          console.error("Invalid JSON in structure definition", error);
+                                        }
+                                      }
+                                      
+                                      const jsonString = JSON.stringify(structureDef, null, 2);
+                                      const blob = new Blob([jsonString], { type: 'application/json' });
+                                      const url = URL.createObjectURL(blob);
+                                      const a = document.createElement('a');
+                                      a.href = url;
+                                      a.download = `form-template-${selectedTemplate.id}-v${version.versionNumber}.json`;
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      document.body.removeChild(a);
+                                      URL.revokeObjectURL(url);
+                                    }}
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          
+                        {(!formVersionsQuery.data || (formVersionsQuery.data as FormTemplateVersion[]).filter(v => v.templateId === selectedTemplate.id).length === 0) && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                              No versions found for this template
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     );

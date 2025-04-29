@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableFormField } from './SortableFormField';
-import { FormFieldItem } from './FormFieldItem';
+import { FormFieldItem, FormField, FieldType } from './FormFieldItem';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -37,36 +37,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-
-// Field type definitions
-export type FieldType = 
-  | 'text' 
-  | 'textarea' 
-  | 'number' 
-  | 'checkbox' 
-  | 'select' 
-  | 'radio' 
-  | 'date' 
-  | 'time' 
-  | 'email' 
-  | 'tel' 
-  | 'url' 
-  | 'heading' 
-  | 'paragraph';
-
-export interface FormField {
-  id: string;
-  type: FieldType;
-  label: string;
-  required?: boolean;
-  placeholder?: string;
-  options?: string[];
-  defaultValue?: string | number | boolean;
-  min?: number;
-  max?: number;
-  step?: number;
-  description?: string;
-}
 
 interface FormBuilderDragDropProps {
   initialFields?: FormField[];

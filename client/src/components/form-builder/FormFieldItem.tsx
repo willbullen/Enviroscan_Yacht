@@ -1,7 +1,36 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { FormField } from './FormBuilderDragDrop';
+
+// Field type definitions
+export type FieldType = 
+  | 'text' 
+  | 'textarea' 
+  | 'number' 
+  | 'checkbox' 
+  | 'select' 
+  | 'radio' 
+  | 'date' 
+  | 'time' 
+  | 'email' 
+  | 'tel' 
+  | 'url' 
+  | 'heading' 
+  | 'paragraph';
+
+export interface FormField {
+  id: string;
+  type: FieldType;
+  label: string;
+  required?: boolean;
+  placeholder?: string;
+  options?: string[];
+  defaultValue?: string | number | boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  description?: string;
+}
 import { Pencil, Trash2, Copy, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
