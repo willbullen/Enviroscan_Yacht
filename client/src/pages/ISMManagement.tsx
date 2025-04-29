@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { format, formatDistanceToNow } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import {
@@ -843,7 +842,7 @@ const ISMManagement: React.FC = () => {
                 <TableCell>{renderStatus(task.status)}</TableCell>
                 <TableCell>{task.assignedTo ? (userMap.get(task.assignedTo) || `User #${task.assignedTo}`) : 'Unassigned'}</TableCell>
                 <TableCell>{task.dueDate ? formattedDueDate(task.dueDate) : 'No due date'}</TableCell>
-                <TableCell>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</TableCell>
+                <TableCell>{new Date(task.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   {task.status !== 'completed' ? (
                     <Button 
