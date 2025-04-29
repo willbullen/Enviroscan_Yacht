@@ -898,6 +898,22 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(ismTaskSubmissions);
   }
   
+  async getRecentIsmTaskSubmissions(limit: number = 10): Promise<IsmTaskSubmission[]> {
+    try {
+      console.log(`Getting recent ISM task submissions from DB with limit: ${limit}`);
+      const submissions = await db.select()
+        .from(ismTaskSubmissions)
+        .orderBy(desc(ismTaskSubmissions.submissionDate))
+        .limit(limit);
+      
+      console.log(`Found ${submissions.length} recent submissions in database`);
+      return submissions;
+    } catch (error) {
+      console.error("Error getting recent ISM task submissions:", error);
+      return [];
+    }
+  }
+  
   async getIsmTaskSubmissionsByTask(taskId: number): Promise<IsmTaskSubmission[]> {
     return db.select().from(ismTaskSubmissions).where(eq(ismTaskSubmissions.taskId, taskId));
   }
@@ -910,26 +926,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(ismTaskSubmissions).where(eq(ismTaskSubmissions.submittedBy, userId));
   }
   
-  async getRecentIsmTaskSubmissions(limit: number = 10): Promise<IsmTaskSubmission[]> {
-    try {
-      console.log("Executing getRecentIsmTaskSubmissions query with limit:", limit);
-      console.log("Table name:", ismTaskSubmissions.name);
-      
-      const result = await db
-        .select()
-        .from(ismTaskSubmissions)
-        .orderBy(desc(ismTaskSubmissions.submissionDate))
-        .limit(limit);
-      
-      console.log("Query result:", result ? result.length : 0, "submissions found");
-      return result;
-    } catch (error) {
-      console.error("Error in getRecentIsmTaskSubmissions:", error);
-      console.error("Error details:", Object.getOwnPropertyNames(error));
-      // Return empty array instead of throwing an error, for more graceful handling
-      return [];
-    }
-  }
+
   
   async createIsmTaskSubmission(insertSubmission: InsertIsmTaskSubmission): Promise<IsmTaskSubmission> {
     const now = new Date();

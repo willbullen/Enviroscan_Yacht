@@ -2245,29 +2245,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.params.limit ? parseInt(req.params.limit) : 10;
       console.log(`Getting recent ISM task submissions with limit: ${limit}`);
       
-      // Direct & simplified query with fixed columns
+      // Use the storage interface method
       try {
-        console.log("Using simplified SQL query to get task submissions");
-        const submissions = await db.select({
-          id: ismTaskSubmissions.id,
-          taskId: ismTaskSubmissions.taskId,
-          submittedBy: ismTaskSubmissions.submittedBy,
-          submissionDate: ismTaskSubmissions.submissionDate,
-          status: ismTaskSubmissions.status,
-          reviewedBy: ismTaskSubmissions.reviewedBy,
-          reviewDate: ismTaskSubmissions.reviewDate,
-          createdAt: ismTaskSubmissions.createdAt,
-          responses: ismTaskSubmissions.responses
-        })
-        .from(ismTaskSubmissions)
-        .orderBy(desc(ismTaskSubmissions.submissionDate))
-        .limit(limit);
-        
-        console.log(`Found ${submissions.length} submissions with direct query`);
+        console.log("Using storage interface to get task submissions");
+        const submissions = await storage.getRecentIsmTaskSubmissions(limit);
+        console.log(`Found ${submissions.length} submissions with storage interface`);
         res.json(submissions);
-      } catch (sqlError) {
-        console.error("Direct query failed:", sqlError);
-        console.error(sqlError);
+      } catch (error) {
+        console.error("Storage interface failed:", error);
         // Return empty array instead of error
         res.status(200).json([]);
       }
