@@ -351,7 +351,11 @@ const ISMManagement: React.FC = () => {
     }
   };
 
-  const renderStatus = (status: string) => {
+  const renderStatus = (status: string | undefined) => {
+    if (!status) {
+      return <Badge className="bg-gray-500 text-white">Unknown</Badge>;
+    }
+    
     const colorClass = statusColors[status as keyof typeof statusColors] || "bg-gray-500";
     return (
       <Badge 
@@ -660,7 +664,11 @@ const ISMManagement: React.FC = () => {
       templateVersionMap.set(template.id, template.title);
     });
     
-    const getPriorityBadge = (priority: string) => {
+    const getPriorityBadge = (priority: string | undefined) => {
+      if (!priority) {
+        return <Badge className="bg-gray-500 text-white">Normal</Badge>;
+      }
+      
       let colorClass = '';
       switch (priority.toLowerCase()) {
         case 'high':
@@ -731,7 +739,7 @@ const ISMManagement: React.FC = () => {
                 <TableCell className="font-medium">{task.title}</TableCell>
                 <TableCell>{getPriorityBadge(task.priority)}</TableCell>
                 <TableCell>{renderStatus(task.status)}</TableCell>
-                <TableCell>{userMap.get(task.assignedTo) || `User #${task.assignedTo}`}</TableCell>
+                <TableCell>{task.assignedTo ? (userMap.get(task.assignedTo) || `User #${task.assignedTo}`) : 'Unassigned'}</TableCell>
                 <TableCell>{task.dueDate ? formattedDueDate(task.dueDate) : 'No due date'}</TableCell>
                 <TableCell>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</TableCell>
                 <TableCell className="text-right">
