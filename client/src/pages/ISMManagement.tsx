@@ -80,8 +80,12 @@ import {
   Book,
   Upload,
   File,
-  X
+  X,
+  ListChecks
 } from 'lucide-react';
+
+// Import form submission component
+import FormSubmission from "@/components/ism/FormSubmission";
 
 interface ISMDocument {
   id: number;
@@ -227,6 +231,10 @@ const ISMManagement: React.FC = () => {
     attachmentPath: '',
     createdBy: 1 // Assuming user ID 1 (Captain) is creating this
   });
+  
+  // State for form submission dialog
+  const [isFormSubmissionOpen, setIsFormSubmissionOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<ISMTask | null>(null);
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
