@@ -2241,11 +2241,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/ism/task-submissions/recent/:limit?", async (req: Request, res: Response) => {
     try {
       const limit = req.params.limit ? parseInt(req.params.limit) : 10;
+      console.log(`Getting recent ISM task submissions with limit: ${limit}`);
       const submissions = await storage.getRecentIsmTaskSubmissions(limit);
-      res.json(submissions);
+      console.log(`Found ${submissions ? submissions.length : 0} submissions`);
+      res.json(submissions || []);
     } catch (error) {
       console.error("Error fetching recent ISM task submissions:", error);
-      res.status(500).json({ message: "Failed to get recent ISM task submissions" });
+      console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      res.status(500).json({ message: "Failed to get ISM task submissions", error: error.message });
     }
   });
   
