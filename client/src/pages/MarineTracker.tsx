@@ -42,17 +42,26 @@ const createShipIcon = (vesselId: number, heading = 0) => {
   return L.divIcon({
     className: 'custom-ship-icon',
     html: `<div style="color: ${color}; transform: rotate(${heading}deg);" class="ship-marker">
-             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="${color}" 
-                 stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                 <!-- Top view of a yacht -->
-                 <path d="M12 4 L18 10 L20 16 L4 16 L6 10 Z" fill="${color}" />
-                 <path d="M10 16 L10 19 L14 19 L14 16" fill="${color}" />
-                 <circle cx="12" cy="8" r="1" fill="white" />
+             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="${color}" 
+                 stroke="white" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
+                 <!-- Detailed top view of a luxury yacht -->
+                 <path d="M12 2 L16 6 L18 10 L20 14 L20 18 L4 18 L4 14 L6 10 L8 6 Z" fill="${color}" />
+                 <!-- Stern details -->
+                 <path d="M8 18 L8 20 L16 20 L16 18" fill="${color}" />
+                 <!-- Cabin/bridge structure -->
+                 <rect x="9" y="8" width="6" height="6" fill="white" stroke="${color}" />
+                 <!-- Deck details -->
+                 <line x1="8" y1="10" x2="9" y2="10" stroke="white" stroke-width="0.5" />
+                 <line x1="15" y1="10" x2="16" y2="10" stroke="white" stroke-width="0.5" />
+                 <line x1="8" y1="12" x2="9" y2="12" stroke="white" stroke-width="0.5" />
+                 <line x1="15" y1="12" x2="16" y2="12" stroke="white" stroke-width="0.5" />
+                 <!-- Bow accent -->
+                 <circle cx="12" cy="5" r="0.8" fill="white" />
              </svg>
            </div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14]
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
   });
 };
 
