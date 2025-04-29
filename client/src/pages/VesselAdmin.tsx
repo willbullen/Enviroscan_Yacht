@@ -133,102 +133,92 @@ const VesselAdmin: React.FC = () => {
       </div>
       
       <div className="space-y-4">
-        <Tabs defaultValue="list" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="list" className="flex items-center gap-2">
-              <Ship className="h-4 w-4" />
-              Fleet List
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <Map className="h-4 w-4" />
-              Marine Tracker
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="list">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle>Fleet Overview</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Info className="h-4 w-4 mr-2" />
-                      Export
-                    </Button>
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle>Fleet Management & Live Tracking</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <Info className="h-4 w-4 mr-2" />
+                  AIS Settings
+                </Button>
+              </div>
+            </div>
+            <CardDescription>
+              Manage your fleet and track vessel positions in real-time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Fleet List - Left Column */}
+              <div className="lg:col-span-1">
+                <div className="rounded-md border">
+                  <div className="p-4 border-b bg-muted/40">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      <Ship className="h-4 w-4" />
+                      Fleet List
+                    </h3>
                   </div>
-                </div>
-                <CardDescription>
-                  Manage all vessels in your fleet. Add, edit, or remove vessels.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Vessel Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Length</TableHead>
-                      <TableHead>Flag</TableHead>
-                      <TableHead>Year Built</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {vessels.map((vessel) => (
-                      <TableRow key={vessel.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <Ship className="h-4 w-4 text-primary" />
-                            {vessel.name}
+                  <div className="p-0">
+                    <div className="max-h-[500px] overflow-y-auto">
+                      {vessels.map((vessel) => (
+                        <div 
+                          key={vessel.id}
+                          className="p-3 border-b cursor-pointer hover:bg-accent transition-colors flex items-center justify-between"
+                          onClick={() => startEditVessel(vessel.id)}
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <div style={{ color: `var(--${vessel.id === 1 ? 'blue' : vessel.id === 2 ? 'emerald' : vessel.id === 3 ? 'red' : 'purple'})` }}>
+                                <Ship className="h-4 w-4" />
+                              </div>
+                              <span className="font-medium">{vessel.name}</span>
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 gap-x-4">
+                              <div>Type: {vessel.type}</div>
+                              <div>Length: {vessel.length}</div>
+                              <div>Flag: Malta</div>
+                              <div>Built: 2018</div>
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>{vessel.type}</TableCell>
-                        <TableCell>{vessel.length}</TableCell>
-                        <TableCell>Malta</TableCell>
-                        <TableCell>2018</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => startEditVessel(vessel.id)}>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEditVessel(vessel.id); }}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
-                              <Info className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-destructive">
+                            <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => e.stopPropagation()}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="map">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle>Live Vessel Tracking</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <Info className="h-4 w-4 mr-2" />
-                      AIS Settings
-                    </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 border-t">
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => { resetForm(); setShowAddDialog(true); }}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add New Vessel
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <CardDescription>
-                  Real-time position tracking of all vessels in your fleet.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <VesselMap height={500} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </div>
+
+              {/* Marine Tracker Map - Right Column */}
+              <div className="lg:col-span-2">
+                <div className="rounded-md border h-full">
+                  <div className="p-4 border-b bg-muted/40">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      <Map className="h-4 w-4" />
+                      Marine Tracker
+                    </h3>
+                  </div>
+                  <div className="p-0">
+                    <VesselMap height={500} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
         {/* Add Vessel Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
