@@ -1597,7 +1597,40 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAllIsmTasks(): Promise<IsmTask[]> {
-    return db.select().from(ismTasks);
+    try {
+      console.log("Running getAllIsmTasks...");
+      
+      // Check if table exists 
+      const checkTableResult = await db.execute(
+        sql`SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'ism_tasks'
+        )`
+      );
+      
+      console.log("Table check result:", checkTableResult.rows);
+      
+      if (checkTableResult.rows && checkTableResult.rows[0] && !checkTableResult.rows[0].exists) {
+        console.error("The ism_tasks table does not exist!");
+        return [];
+      }
+      
+      // Check table structure
+      const columnCheckResult = await db.execute(
+        sql`SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'ism_tasks'`
+      );
+      
+      console.log("Table columns:", columnCheckResult.rows);
+      
+      const tasks = await db.select().from(ismTasks);
+      console.log(`Found ${tasks.length} ISM tasks`);
+      return tasks;
+    } catch (error) {
+      console.error("Error in getAllIsmTasks:", error);
+      console.error(error instanceof Error ? error.stack : String(error));
+      return [];
+    }
   }
   
   async getIsmTasksByVessel(vesselId: number): Promise<IsmTask[]> {
