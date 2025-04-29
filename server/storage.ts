@@ -252,6 +252,328 @@ export class MemStorage implements IStorage {
   private formSubmissions: Map<number, FormSubmission> = new Map<number, FormSubmission>();
   private taskComments: Map<number, TaskComment> = new Map<number, TaskComment>();
   
+  // ISM Task Management - Form Categories operations
+  async getFormCategory(id: number): Promise<FormCategory | undefined> {
+    return this.formCategories.get(id);
+  }
+  
+  async getAllFormCategories(): Promise<FormCategory[]> {
+    return Array.from(this.formCategories.values());
+  }
+  
+  async createFormCategory(category: InsertFormCategory): Promise<FormCategory> {
+    const id = this.formCategoryCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const formCategory: FormCategory = { ...category, id, createdAt, updatedAt };
+    this.formCategories.set(id, formCategory);
+    return formCategory;
+  }
+  
+  async updateFormCategory(id: number, categoryUpdate: Partial<FormCategory>): Promise<FormCategory | undefined> {
+    const existingCategory = this.formCategories.get(id);
+    if (!existingCategory) return undefined;
+    
+    const updatedCategory = { 
+      ...existingCategory, 
+      ...categoryUpdate,
+      updatedAt: new Date()
+    };
+    this.formCategories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+  
+  async deleteFormCategory(id: number): Promise<boolean> {
+    return this.formCategories.delete(id);
+  }
+  
+  // ISM Task Management - Form Templates operations
+  async getFormTemplate(id: number): Promise<FormTemplate | undefined> {
+    return this.formTemplates.get(id);
+  }
+  
+  async getAllFormTemplates(): Promise<FormTemplate[]> {
+    return Array.from(this.formTemplates.values());
+  }
+  
+  async getFormTemplatesByCategory(categoryId: number): Promise<FormTemplate[]> {
+    return Array.from(this.formTemplates.values()).filter(
+      (template) => template.categoryId === categoryId
+    );
+  }
+  
+  async createFormTemplate(template: InsertFormTemplate): Promise<FormTemplate> {
+    const id = this.formTemplateCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const formTemplate: FormTemplate = { ...template, id, createdAt, updatedAt };
+    this.formTemplates.set(id, formTemplate);
+    return formTemplate;
+  }
+  
+  async updateFormTemplate(id: number, templateUpdate: Partial<FormTemplate>): Promise<FormTemplate | undefined> {
+    const existingTemplate = this.formTemplates.get(id);
+    if (!existingTemplate) return undefined;
+    
+    const updatedTemplate = { 
+      ...existingTemplate, 
+      ...templateUpdate,
+      updatedAt: new Date()
+    };
+    this.formTemplates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+  
+  async deleteFormTemplate(id: number): Promise<boolean> {
+    return this.formTemplates.delete(id);
+  }
+  
+  // ISM Task Management - Form Template Versions operations
+  async getFormTemplateVersion(id: number): Promise<FormTemplateVersion | undefined> {
+    return this.formTemplateVersions.get(id);
+  }
+  
+  async getFormTemplateVersionsByTemplate(templateId: number): Promise<FormTemplateVersion[]> {
+    return Array.from(this.formTemplateVersions.values()).filter(
+      (version) => version.templateId === templateId
+    );
+  }
+  
+  async getActiveFormTemplateVersion(templateId: number): Promise<FormTemplateVersion | undefined> {
+    return Array.from(this.formTemplateVersions.values()).find(
+      (version) => version.templateId === templateId && version.isActive === true
+    );
+  }
+  
+  async createFormTemplateVersion(version: InsertFormTemplateVersion): Promise<FormTemplateVersion> {
+    const id = this.formTemplateVersionCurrentId++;
+    const createdAt = new Date();
+    
+    // Deactivate all other versions of this template if this one is active
+    if (version.isActive) {
+      for (const existingVersion of this.formTemplateVersions.values()) {
+        if (existingVersion.templateId === version.templateId && existingVersion.isActive) {
+          existingVersion.isActive = false;
+          this.formTemplateVersions.set(existingVersion.id, existingVersion);
+        }
+      }
+    }
+    
+    const formTemplateVersion: FormTemplateVersion = { ...version, id, createdAt };
+    this.formTemplateVersions.set(id, formTemplateVersion);
+    return formTemplateVersion;
+  }
+  
+  async activateFormTemplateVersion(id: number): Promise<FormTemplateVersion | undefined> {
+    const existingVersion = this.formTemplateVersions.get(id);
+    if (!existingVersion) return undefined;
+    
+    // Deactivate all other versions of this template
+    for (const version of this.formTemplateVersions.values()) {
+      if (version.templateId === existingVersion.templateId && version.isActive) {
+        version.isActive = false;
+        this.formTemplateVersions.set(version.id, version);
+      }
+    }
+    
+    // Activate the requested version
+    existingVersion.isActive = true;
+    this.formTemplateVersions.set(id, existingVersion);
+    return existingVersion;
+  }
+  
+  async updateFormTemplateVersion(id: number, versionUpdate: Partial<FormTemplateVersion>): Promise<FormTemplateVersion | undefined> {
+    const existingVersion = this.formTemplateVersions.get(id);
+    if (!existingVersion) return undefined;
+    
+    // If activating this version, deactivate all others
+    if (versionUpdate.isActive && !existingVersion.isActive) {
+      for (const version of this.formTemplateVersions.values()) {
+        if (version.templateId === existingVersion.templateId && version.isActive) {
+          version.isActive = false;
+          this.formTemplateVersions.set(version.id, version);
+        }
+      }
+    }
+    
+    const updatedVersion = { ...existingVersion, ...versionUpdate };
+    this.formTemplateVersions.set(id, updatedVersion);
+    return updatedVersion;
+  }
+  
+  async deleteFormTemplateVersion(id: number): Promise<boolean> {
+    return this.formTemplateVersions.delete(id);
+  }
+  
+  // ISM Task Management - ISM Tasks operations
+  async getIsmTask(id: number): Promise<IsmTask | undefined> {
+    return this.ismTasks.get(id);
+  }
+  
+  async getAllIsmTasks(): Promise<IsmTask[]> {
+    return Array.from(this.ismTasks.values());
+  }
+  
+  async getIsmTasksByStatus(status: string): Promise<IsmTask[]> {
+    return Array.from(this.ismTasks.values()).filter(
+      (task) => task.status === status
+    );
+  }
+  
+  async getIsmTasksByAssignee(userId: number): Promise<IsmTask[]> {
+    return Array.from(this.ismTasks.values()).filter(
+      (task) => task.assignedToId === userId
+    );
+  }
+  
+  async getDueIsmTasks(): Promise<IsmTask[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return Array.from(this.ismTasks.values()).filter(
+      (task) => {
+        if (!task.dueDate) return false;
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        return dueDate <= today && task.status !== 'completed';
+      }
+    );
+  }
+  
+  async getIsmTasksByTemplateVersion(versionId: number): Promise<IsmTask[]> {
+    return Array.from(this.ismTasks.values()).filter(
+      (task) => task.formTemplateVersionId === versionId
+    );
+  }
+  
+  async createIsmTask(task: InsertIsmTask): Promise<IsmTask> {
+    const id = this.ismTaskCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    const ismTask: IsmTask = { ...task, id, createdAt, updatedAt };
+    this.ismTasks.set(id, ismTask);
+    return ismTask;
+  }
+  
+  async updateIsmTask(id: number, taskUpdate: Partial<IsmTask>): Promise<IsmTask | undefined> {
+    const existingTask = this.ismTasks.get(id);
+    if (!existingTask) return undefined;
+    
+    const updatedTask = { 
+      ...existingTask, 
+      ...taskUpdate,
+      updatedAt: new Date()
+    };
+    this.ismTasks.set(id, updatedTask);
+    return updatedTask;
+  }
+  
+  async deleteIsmTask(id: number): Promise<boolean> {
+    return this.ismTasks.delete(id);
+  }
+  
+  // ISM Task Management - Form Submissions operations
+  async getFormSubmission(id: number): Promise<FormSubmission | undefined> {
+    return this.formSubmissions.get(id);
+  }
+  
+  async getFormSubmissionsByTask(taskId: number): Promise<FormSubmission[]> {
+    return Array.from(this.formSubmissions.values()).filter(
+      (submission) => submission.taskId === taskId
+    );
+  }
+  
+  async getRecentFormSubmissions(limit: number = 10): Promise<FormSubmission[]> {
+    return Array.from(this.formSubmissions.values())
+      .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime())
+      .slice(0, limit);
+  }
+  
+  async createFormSubmission(submission: InsertFormSubmission): Promise<FormSubmission> {
+    const id = this.formSubmissionCurrentId++;
+    const submittedAt = new Date();
+    
+    const formSubmission: FormSubmission = { ...submission, id, submittedAt };
+    this.formSubmissions.set(id, formSubmission);
+    
+    // Update the related task status to 'completed' when a submission is created
+    const task = this.ismTasks.get(submission.taskId);
+    if (task) {
+      task.status = 'completed';
+      task.updatedAt = new Date();
+      this.ismTasks.set(task.id, task);
+    }
+    
+    return formSubmission;
+  }
+  
+  async updateFormSubmission(id: number, submissionUpdate: Partial<FormSubmission>): Promise<FormSubmission | undefined> {
+    const existingSubmission = this.formSubmissions.get(id);
+    if (!existingSubmission) return undefined;
+    
+    const updatedSubmission = { ...existingSubmission, ...submissionUpdate };
+    this.formSubmissions.set(id, updatedSubmission);
+    
+    // If the review status is updated, update the related task status accordingly
+    if (submissionUpdate.reviewStatus && existingSubmission.reviewStatus !== submissionUpdate.reviewStatus) {
+      const task = this.ismTasks.get(existingSubmission.taskId);
+      if (task) {
+        if (submissionUpdate.reviewStatus === 'approved') {
+          task.status = 'reviewed';
+        } else if (submissionUpdate.reviewStatus === 'rejected') {
+          task.status = 'in_progress'; // Reset to in_progress to require a new submission
+        }
+        task.updatedAt = new Date();
+        this.ismTasks.set(task.id, task);
+      }
+    }
+    
+    return updatedSubmission;
+  }
+  
+  async deleteFormSubmission(id: number): Promise<boolean> {
+    return this.formSubmissions.delete(id);
+  }
+  
+  // ISM Task Management - Task Comments operations
+  async getTaskComment(id: number): Promise<TaskComment | undefined> {
+    return this.taskComments.get(id);
+  }
+  
+  async getTaskCommentsByTask(taskId: number): Promise<TaskComment[]> {
+    return Array.from(this.taskComments.values())
+      .filter((comment) => comment.taskId === taskId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+  
+  async createTaskComment(comment: InsertTaskComment): Promise<TaskComment> {
+    const id = this.taskCommentCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    const taskComment: TaskComment = { ...comment, id, createdAt, updatedAt };
+    this.taskComments.set(id, taskComment);
+    return taskComment;
+  }
+  
+  async updateTaskComment(id: number, commentUpdate: Partial<TaskComment>): Promise<TaskComment | undefined> {
+    const existingComment = this.taskComments.get(id);
+    if (!existingComment) return undefined;
+    
+    const updatedComment = { 
+      ...existingComment, 
+      ...commentUpdate,
+      updatedAt: new Date()
+    };
+    this.taskComments.set(id, updatedComment);
+    return updatedComment;
+  }
+  
+  async deleteTaskComment(id: number): Promise<boolean> {
+    return this.taskComments.delete(id);
+  }
+  
   private userCurrentId: number;
   private equipmentCurrentId: number;
   private taskCurrentId: number;
@@ -267,6 +589,12 @@ export class MemStorage implements IStorage {
   private waypointCurrentId: number = 1;
   private fuelChartCurrentId: number = 1;
   private speedChartCurrentId: number = 1;
+  private formCategoryCurrentId: number = 1;
+  private formTemplateCurrentId: number = 1;
+  private formTemplateVersionCurrentId: number = 1;
+  private ismTaskCurrentId: number = 1;
+  private formSubmissionCurrentId: number = 1;
+  private taskCommentCurrentId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -289,6 +617,14 @@ export class MemStorage implements IStorage {
     this.fuelConsumptionCharts = new Map();
     this.speedCharts = new Map();
     
+    // Initialize ISM Task Management maps
+    this.formCategories = new Map();
+    this.formTemplates = new Map();
+    this.formTemplateVersions = new Map();
+    this.ismTasks = new Map();
+    this.formSubmissions = new Map();
+    this.taskComments = new Map();
+    
     this.userCurrentId = 1;
     this.equipmentCurrentId = 1;
     this.taskCurrentId = 1;
@@ -304,6 +640,12 @@ export class MemStorage implements IStorage {
     this.waypointCurrentId = 1;
     this.fuelChartCurrentId = 1;
     this.speedChartCurrentId = 1;
+    this.formCategoryCurrentId = 1;
+    this.formTemplateCurrentId = 1;
+    this.formTemplateVersionCurrentId = 1;
+    this.ismTaskCurrentId = 1;
+    this.formSubmissionCurrentId = 1;
+    this.taskCommentCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeData();
