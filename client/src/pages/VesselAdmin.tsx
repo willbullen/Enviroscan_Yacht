@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { 
   Ship, 
@@ -9,6 +9,8 @@ import {
   X,
   Save,
   Map,
+  Navigation,
+  Eye,
   Image as ImageIcon 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -63,6 +65,8 @@ const VesselAdmin: React.FC = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingVessel, setEditingVessel] = useState<number | null>(null);
+  const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
+  const mapRef = useRef<{ focusVessel: (vesselId: number) => void }>(null);
   
   const [formData, setFormData] = useState<VesselFormData>({
     name: '',
@@ -164,8 +168,13 @@ const VesselAdmin: React.FC = () => {
                       {vessels.map((vessel) => (
                         <div 
                           key={vessel.id}
-                          className="p-3 border-b cursor-pointer hover:bg-accent transition-colors flex items-center justify-between"
-                          onClick={() => startEditVessel(vessel.id)}
+                          className={`p-3 border-b cursor-pointer hover:bg-accent transition-colors flex items-center justify-between ${selectedVesselId === vessel.id ? 'bg-primary/10 border-primary' : ''}`}
+                          onClick={() => {
+                            setSelectedVesselId(vessel.id);
+                            if (mapRef.current) {
+                              mapRef.current.focusVessel(vessel.id);
+                            }
+                          }}
                         >
                           <div>
                             <div className="flex items-center gap-2">
@@ -182,6 +191,9 @@ const VesselAdmin: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); }} title="View on map">
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEditVessel(vessel.id); }}>
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -212,7 +224,12 @@ const VesselAdmin: React.FC = () => {
                     </h3>
                   </div>
                   <div className="p-0">
-                    <VesselMap height={500} />
+                    <VesselMap 
+                      ref={mapRef}
+                      height={500} 
+                      selectedVesselId={selectedVesselId} 
+                      onVesselSelect={setSelectedVesselId}
+                    />
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Ship, Navigation, Anchor } from 'lucide-react';
 import L from 'leaflet';
@@ -72,19 +72,25 @@ interface VesselMapProps {
   width?: string | number;
   showControls?: boolean;
   onVesselSelect?: (vesselId: number) => void;
+  selectedVesselId?: number | null;
   className?: string;
 }
 
-const VesselMap: React.FC<VesselMapProps> = ({
+const VesselMap = React.forwardRef<{ focusVessel: (vesselId: number) => void }, VesselMapProps>(({
   height = 400,
   width = '100%',
   showControls = false,
   onVesselSelect,
+  selectedVesselId: externalSelectedVesselId = null,
   className = '',
-}) => {
+}, ref) => {
   const { vessels, currentVessel } = useVessel();
-  const [selectedVesselId, setSelectedVesselId] = useState<number | null>(currentVessel.id);
+  const [selectedVesselId, setSelectedVesselId] = useState<number | null>(
+    externalSelectedVesselId !== null ? externalSelectedVesselId : currentVessel.id
+  );
   const [refreshInterval, setRefreshInterval] = useState<number>(60000); // 1 minute by default
+  const [markerRefs, setMarkerRefs] = useState<{ [key: number]: L.Marker | null }>({});
+  const mapRef = useRef<L.Map | null>(null);
 
   // Query to fetch vessel positions
   const vesselPositionsQuery = useQuery({
@@ -132,7 +138,40 @@ const VesselMap: React.FC<VesselMapProps> = ({
     });
   }, [vessels, vesselPositionsQuery.data]);
 
-  // Handle vessel selection
+  // Focus on a vessel and open its popup
+  const focusVessel = (vesselId: number) => {
+    const vessel = vesselData.find(v => v.id === vesselId);
+    if (vessel && mapRef.current) {
+      // Zoom to vessel position
+      mapRef.current.setView([vessel.latitude, vessel.longitude], 13);
+      
+      // Open the popup for this vessel if it exists
+      const marker = markerRefs[vesselId];
+      if (marker) {
+        marker.openPopup();
+      }
+      
+      // Update selected state
+      setSelectedVesselId(vesselId);
+      if (onVesselSelect) {
+        onVesselSelect(vesselId);
+      }
+    }
+  };
+
+  // Expose focus method via ref
+  React.useImperativeHandle(ref, () => ({
+    focusVessel
+  }));
+
+  // Handle external selection changes
+  React.useEffect(() => {
+    if (externalSelectedVesselId !== null && externalSelectedVesselId !== selectedVesselId) {
+      focusVessel(externalSelectedVesselId);
+    }
+  }, [externalSelectedVesselId]);
+
+  // Handle vessel selection from map click
   const handleSelectVessel = (vesselId: number) => {
     setSelectedVesselId(vesselId);
     if (onVesselSelect) {
@@ -152,12 +191,18 @@ const VesselMap: React.FC<VesselMapProps> = ({
 
   L.Marker.prototype.options.icon = DefaultIcon;
 
+  // Initialize the map refs when it's mounted
+  const handleMapInit = (map: L.Map) => {
+    mapRef.current = map;
+  };
+
   return (
     <div style={{ height, width }} className={className}>
       <MapContainer
         center={[25.7617, -80.1918]} // Default to Miami
         zoom={9}
         style={{ height: '100%', width: '100%', borderRadius: 'calc(var(--radius) - 2px)' }}
+        whenReady={(e: L.LeafletEvent) => handleMapInit(e.target)}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -172,14 +217,25 @@ const VesselMap: React.FC<VesselMapProps> = ({
             eventHandlers={{
               click: () => handleSelectVessel(vessel.id)
             }}
+            ref={(marker) => {
+              if (marker) {
+                setMarkerRefs(prev => ({ ...prev, [vessel.id]: marker }));
+              }
+            }}
           >
             <Popup>
-              <div className="text-sm font-medium">{vessel.name}</div>
-              <div className="text-xs text-muted-foreground">{vessel.type} • {vessel.length}</div>
-              <div className="text-xs mt-1">
-                <div>Speed: {vessel.speed} knots</div>
-                <div>Heading: {vessel.heading}°</div>
-                <div>Last Update: {new Date(vessel.lastUpdate).toLocaleTimeString()}</div>
+              <div className="p-1">
+                <div className="text-sm font-medium">{vessel.name}</div>
+                <div className="text-xs text-muted-foreground">{vessel.type} • {vessel.length}</div>
+                <div className="text-xs mt-2 grid grid-cols-2 gap-y-1">
+                  <div><span className="font-medium">Position:</span> {vessel.latitude.toFixed(4)}, {vessel.longitude.toFixed(4)}</div>
+                  <div><span className="font-medium">Flag:</span> Malta</div>
+                  <div><span className="font-medium">Speed:</span> {vessel.speed} knots</div>
+                  <div><span className="font-medium">Heading:</span> {vessel.heading}°</div>
+                </div>
+                <div className="text-xs mt-2">
+                  <span className="font-medium">Last Update:</span> {new Date(vessel.lastUpdate).toLocaleTimeString()}
+                </div>
               </div>
             </Popup>
           </Marker>
@@ -189,6 +245,6 @@ const VesselMap: React.FC<VesselMapProps> = ({
       </MapContainer>
     </div>
   );
-};
+});
 
 export default VesselMap;
