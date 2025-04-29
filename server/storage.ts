@@ -199,6 +199,7 @@ export interface IStorage {
   // ISM Task Management - ISM Tasks operations
   getIsmTask(id: number): Promise<IsmTask | undefined>;
   getAllIsmTasks(): Promise<IsmTask[]>;
+  getIsmTasksByVessel(vesselId: number): Promise<IsmTask[]>;
   getIsmTasksByStatus(status: string): Promise<IsmTask[]>;
   getIsmTasksByAssignee(userId: number): Promise<IsmTask[]>;
   getDueIsmTasks(): Promise<IsmTask[]>;
@@ -412,6 +413,12 @@ export class MemStorage implements IStorage {
   
   async getAllIsmTasks(): Promise<IsmTask[]> {
     return Array.from(this.ismTasks.values());
+  }
+  
+  async getIsmTasksByVessel(vesselId: number): Promise<IsmTask[]> {
+    return Array.from(this.ismTasks.values()).filter(
+      (task) => task.vesselId === vesselId
+    );
   }
   
   async getIsmTasksByStatus(status: string): Promise<IsmTask[]> {
