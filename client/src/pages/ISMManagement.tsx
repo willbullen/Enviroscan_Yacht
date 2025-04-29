@@ -81,7 +81,8 @@ import {
   Upload,
   File,
   X,
-  ListChecks
+  ListChecks,
+  Settings
 } from 'lucide-react';
 
 // Import form submission component

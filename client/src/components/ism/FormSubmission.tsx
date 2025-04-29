@@ -44,7 +44,7 @@ interface FormDefinition {
 
 interface FormSubmissionProps {
   taskId: number;
-  formTemplateVersionId: number;
+  formTemplateVersionId?: number;
   isOpen: boolean;
   onClose: () => void;
 }
