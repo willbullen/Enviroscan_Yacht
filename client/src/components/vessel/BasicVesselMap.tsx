@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { useQuery } from '@tanstack/react-query';
 import { useVessel } from '@/contexts/VesselContext';
@@ -43,21 +43,17 @@ const createShipIcon = (vesselId: number, heading = 0) => {
   });
 };
 
-interface SimpleVesselMapProps {
+interface BasicVesselMapProps {
   height?: string | number;
   width?: string | number;
   className?: string;
-  selectedVesselId?: number | null;
-  onVesselSelect?: (vesselId: number) => void;
 }
 
-const SimpleVesselMap = React.forwardRef<{ focusVessel: (vesselId: number) => void }, SimpleVesselMapProps>(({
+const BasicVesselMap: React.FC<BasicVesselMapProps> = ({
   height = 400,
   width = '100%',
   className = '',
-  selectedVesselId = null,
-  onVesselSelect
-}, ref) => {
+}) => {
   const { vessels } = useVessel();
   const [refreshInterval] = useState<number>(60000); // 1 minute by default
 
@@ -107,68 +103,6 @@ const SimpleVesselMap = React.forwardRef<{ focusVessel: (vesselId: number) => vo
     });
   }, [vessels, vesselPositionsQuery.data]);
 
-  // Track map reference and markers for programmatic control
-  const mapRef = useRef<L.Map | null>(null);
-  const [markerRefs, setMarkerRefs] = useState<{ [key: number]: L.Marker | null }>({});
-
-  // Focus vessel method exposed via ref
-  const focusVessel = (vesselId: number) => {
-    const vessel = vesselData.find(v => v.id === vesselId);
-    if (vessel && mapRef.current) {
-      // Zoom to vessel position
-      mapRef.current.setView([vessel.latitude, vessel.longitude], 13);
-      
-      // Open the popup for this vessel if it exists
-      const marker = markerRefs[vesselId];
-      if (marker) {
-        marker.openPopup();
-      }
-
-      // Call onVesselSelect if provided
-      if (onVesselSelect) {
-        onVesselSelect(vesselId);
-      }
-    }
-  };
-
-  // Expose the focusVessel method via ref
-  React.useImperativeHandle(ref, () => ({
-    focusVessel
-  }));
-
-  // Handle vessel selection from map
-  const handleVesselClick = (vesselId: number) => {
-    focusVessel(vesselId);
-  };
-
-  // Custom component to handle map initialization
-  const MapController = () => {
-    const map = useMap();
-    
-    // Store the map reference
-    React.useEffect(() => {
-      mapRef.current = map;
-    }, [map]);
-
-    // Focus on selected vessel if one is provided
-    React.useEffect(() => {
-      if (selectedVesselId && map) {
-        const vessel = vesselData.find(v => v.id === selectedVesselId);
-        if (vessel) {
-          map.setView([vessel.latitude, vessel.longitude], 13);
-          
-          // Open popup if marker exists
-          const marker = markerRefs[selectedVesselId];
-          if (marker) {
-            marker.openPopup();
-          }
-        }
-      }
-    }, [selectedVesselId]);
-    
-    return null;
-  };
-
   return (
     <div style={{ height, width }} className={className}>
       <MapContainer
@@ -186,14 +120,6 @@ const SimpleVesselMap = React.forwardRef<{ focusVessel: (vesselId: number) => vo
             key={vessel.id}
             position={[vessel.latitude, vessel.longitude]}
             icon={createShipIcon(vessel.id, vessel.heading)}
-            eventHandlers={{
-              click: () => handleVesselClick(vessel.id)
-            }}
-            ref={(marker) => {
-              if (marker) {
-                setMarkerRefs(prev => ({ ...prev, [vessel.id]: marker }));
-              }
-            }}
           >
             <Popup>
               <div className="p-1">
@@ -212,11 +138,9 @@ const SimpleVesselMap = React.forwardRef<{ focusVessel: (vesselId: number) => vo
             </Popup>
           </Marker>
         ))}
-        
-        <MapController />
       </MapContainer>
     </div>
   );
 };
 
-export default SimpleVesselMap;
+export default BasicVesselMap;
