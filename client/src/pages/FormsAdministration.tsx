@@ -941,16 +941,6 @@ const FormsAdministration: React.FC = () => {
     <MainLayout title="Forms Management">
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold tracking-tight"></h1>
-        <div className="flex gap-2">
-          <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Category
-              </Button>
-            </DialogTrigger>
-          </Dialog>
-        </div>
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
