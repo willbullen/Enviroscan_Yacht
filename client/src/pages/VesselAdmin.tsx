@@ -113,19 +113,29 @@ const VesselAdmin: React.FC = () => {
   };
   
   return (
-    <MainLayout title="Vessel Administration">
-      <div className="container mx-auto py-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Vessel Management</h1>
+    <MainLayout title="Vessel Management">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold tracking-tight">Fleet Management</h1>
+        <div className="flex gap-2">
           <Button onClick={() => { resetForm(); setShowAddDialog(true); }}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add New Vessel
           </Button>
         </div>
-        
+      </div>
+      
+      <div className="space-y-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Fleet Overview</CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle>Fleet Overview</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm">
+                  <Info className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
+            </div>
             <CardDescription>
               Manage all vessels in your fleet. Add, edit, or remove vessels.
             </CardDescription>
@@ -145,21 +155,28 @@ const VesselAdmin: React.FC = () => {
               <TableBody>
                 {vessels.map((vessel) => (
                   <TableRow key={vessel.id}>
-                    <TableCell className="font-medium">{vessel.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Ship className="h-4 w-4 text-primary" />
+                        {vessel.name}
+                      </div>
+                    </TableCell>
                     <TableCell>{vessel.type}</TableCell>
                     <TableCell>{vessel.length}</TableCell>
-                    <TableCell>Malta</TableCell> {/* Mock data */}
-                    <TableCell>2018</TableCell> {/* Mock data */}
+                    <TableCell>Malta</TableCell>
+                    <TableCell>2018</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => startEditVessel(vessel.id)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Info className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => startEditVessel(vessel.id)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <Info className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

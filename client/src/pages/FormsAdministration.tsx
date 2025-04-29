@@ -938,28 +938,42 @@ const FormsAdministration: React.FC = () => {
   };
   
   return (
-    <MainLayout title="Forms Administration">
-      <div className="container mx-auto py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+    <MainLayout title="Forms Management">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold tracking-tight"></h1>
+        <div className="flex gap-2">
+          <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Category
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+        </div>
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="builder">Form Builder</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="categories" className="mt-6">
-            {renderCategoriesTable()}
-          </TabsContent>
-          
-          <TabsContent value="templates" className="mt-6">
-            {renderTemplatesTable()}
-          </TabsContent>
-          
-          <TabsContent value="builder" className="mt-6">
-            {renderFormBuilder()}
-          </TabsContent>
-        </Tabs>
-      </div>
+        </div>
+        
+        <TabsContent value="categories" className="mt-0">
+          {renderCategoriesTable()}
+        </TabsContent>
+        
+        <TabsContent value="templates" className="mt-0">
+          {renderTemplatesTable()}
+        </TabsContent>
+        
+        <TabsContent value="builder" className="mt-0">
+          {renderFormBuilder()}
+        </TabsContent>
+      </Tabs>
       
       {/* Category Dialog */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
