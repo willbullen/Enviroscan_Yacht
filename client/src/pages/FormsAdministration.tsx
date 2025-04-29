@@ -1253,11 +1253,29 @@ const FormsAdministration: React.FC = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-between items-center mb-4">
-          <TabsList>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-            <TabsTrigger value="builder">Form Builder</TabsTrigger>
+        <div className="flex justify-between items-center mb-6">
+          <TabsList className="bg-muted/60 p-1 dark:bg-gray-800">
+            <TabsTrigger 
+              value="categories" 
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm flex gap-2 items-center"
+            >
+              <Book className="h-4 w-4" />
+              Categories
+            </TabsTrigger>
+            <TabsTrigger 
+              value="templates" 
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm flex gap-2 items-center"
+            >
+              <FileText className="h-4 w-4" />
+              Templates
+            </TabsTrigger>
+            <TabsTrigger 
+              value="builder" 
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm flex gap-2 items-center"
+            >
+              <Settings className="h-4 w-4" />
+              Form Builder
+            </TabsTrigger>
           </TabsList>
         </div>
         
@@ -1521,12 +1539,13 @@ const FormsAdministration: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800">Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center gap-2"
               onClick={() => categoryToDelete && deleteCategoryMutation.mutate(categoryToDelete.id)}
             >
-              Delete
+              <Trash2 className="h-4 w-4" />
+              Delete Category
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1543,12 +1562,13 @@ const FormsAdministration: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800">Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center gap-2"
               onClick={() => templateToDelete && deleteTemplateMutation.mutate(templateToDelete.id)}
             >
-              Delete
+              <Trash2 className="h-4 w-4" />
+              Delete Template
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
