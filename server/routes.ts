@@ -1,6 +1,8 @@
 import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
@@ -24,7 +26,8 @@ import {
   insertVoyageSchema,
   insertWaypointSchema,
   insertFuelConsumptionChartSchema,
-  insertSpeedChartSchema
+  insertSpeedChartSchema,
+  ismTaskSubmissions
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -2243,28 +2246,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.params.limit ? parseInt(req.params.limit) : 10;
       console.log(`Getting recent ISM task submissions with limit: ${limit}`);
       
-      // Manual query to work around any issues
+      // Direct & simplified query with fixed columns
       try {
-        console.log("Attempting direct SQL query as workaround");
-        const result = await db.execute(sql`
-          SELECT * FROM ism_task_submissions 
-          ORDER BY submission_date DESC 
-          LIMIT ${limit}
-        `);
-        console.log(`Direct query result:`, result && result.length);
-        res.json(result || []);
-      } catch (sqlError) {
-        console.error("Direct SQL query failed:", sqlError);
+        console.log("Using simplified SQL query to get task submissions");
+        const submissions = await db.select({
+          id: ismTaskSubmissions.id,
+          taskId: ismTaskSubmissions.taskId,
+          submittedBy: ismTaskSubmissions.submittedBy,
+          submissionDate: ismTaskSubmissions.submissionDate,
+          status: ismTaskSubmissions.status,
+          reviewedBy: ismTaskSubmissions.reviewedBy,
+          reviewDate: ismTaskSubmissions.reviewDate,
+          createdAt: ismTaskSubmissions.createdAt,
+        })
+        .from(ismTaskSubmissions)
+        .orderBy(desc(ismTaskSubmissions.submissionDate))
+        .limit(limit);
         
-        // Try the storage method as fallback
-        console.log("Trying original method as fallback");
-        const submissions = await storage.getRecentIsmTaskSubmissions(limit);
-        console.log(`Found ${submissions ? submissions.length : 0} submissions`);
-        res.json(submissions || []);
+        console.log(`Found ${submissions.length} submissions with direct query`);
+        res.json(submissions);
+      } catch (sqlError) {
+        console.error("Direct query failed:", sqlError);
+        // Return empty array instead of error
+        res.json([]);
       }
     } catch (error) {
-      console.error("Error fetching recent ISM task submissions:", error);
-      console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.error("Error in task submissions endpoint:", error);
       // Return empty array instead of error
       res.json([]);
     }
