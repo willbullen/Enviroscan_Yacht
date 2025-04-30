@@ -969,7 +969,12 @@ const UserAdmin: React.FC = () => {
                                   <TableCell className="font-medium">{vesselName}</TableCell>
                                   <TableCell>{vessel?.vesselType || '-'}</TableCell>
                                   <TableCell>
-                                    <Badge variant="outline">{assignment.role}</Badge>
+                                    <Badge 
+                                      variant="outline" 
+                                      className="text-foreground border-primary/30 font-normal"
+                                    >
+                                      {assignment.role.charAt(0).toUpperCase() + assignment.role.slice(1)}
+                                    </Badge>
                                   </TableCell>
                                   <TableCell>
                                     {new Date(assignment.assignmentDate).toLocaleDateString()}
@@ -1077,16 +1082,16 @@ const UserAdmin: React.FC = () => {
                           <TableCell className="hidden md:table-cell">
                             <div className="flex flex-wrap gap-1">
                               {role.permissions.includes('all') ? (
-                                <Badge variant="default" className="font-normal">All permissions</Badge>
+                                <Badge variant="default" className="font-normal bg-primary text-primary-foreground">All permissions</Badge>
                               ) : (
                                 role.permissions.slice(0, 3).map(permission => (
-                                  <Badge key={permission} variant="outline" className="whitespace-nowrap font-normal">
+                                  <Badge key={permission} variant="outline" className="whitespace-nowrap font-normal text-foreground border-primary/30">
                                     {permission.replace(/_/g, ' ')}
                                   </Badge>
                                 ))
                               )}
                               {role.permissions.length > 3 && !role.permissions.includes('all') && (
-                                <Badge variant="outline" className="font-normal">+{role.permissions.length - 3} more</Badge>
+                                <Badge variant="outline" className="font-normal text-foreground border-primary/30">+{role.permissions.length - 3} more</Badge>
                               )}
                             </div>
                           </TableCell>
@@ -1095,13 +1100,22 @@ const UserAdmin: React.FC = () => {
                               {role.pages && role.pages.slice(0, 3).map(pageId => {
                                 const page = SYSTEM_PAGES.find(p => p.id === pageId);
                                 return (
-                                  <Badge key={pageId} variant="secondary" className="whitespace-nowrap font-normal">
+                                  <Badge 
+                                    key={pageId} 
+                                    variant="secondary" 
+                                    className="whitespace-nowrap font-normal bg-secondary/70 text-secondary-foreground"
+                                  >
                                     {page?.name || pageId}
                                   </Badge>
                                 );
                               })}
                               {role.pages && role.pages.length > 3 && (
-                                <Badge variant="secondary" className="font-normal">+{role.pages.length - 3} more</Badge>
+                                <Badge 
+                                  variant="secondary" 
+                                  className="font-normal bg-secondary/70 text-secondary-foreground"
+                                >
+                                  +{role.pages.length - 3} more
+                                </Badge>
                               )}
                             </div>
                           </TableCell>
