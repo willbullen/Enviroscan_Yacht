@@ -124,7 +124,30 @@ router.get('/vessel-positions', async (req, res) => {
       return res.json(mockVesselPositions);
     }
     
-    // Get vessel MMSIs from query params or use default fleet
+    // Check if the request asks for all vessels
+    const showAllVessels = req.query.showAll === 'true';
+    
+    // If showAllVessels is true, return all vessels in the cache
+    if (showAllVessels) {
+      console.log('Returning all vessels from cache, count:', Object.keys(vesselPositionsCache).length);
+      // Convert vesselsPositionsCache object to array
+      const allVessels = Object.values(vesselPositionsCache);
+      
+      // Only return vessels with valid coordinates
+      const validVessels = allVessels.filter(vessel => 
+        vessel && vessel.latitude && vessel.longitude && 
+        vessel.latitude !== 0 && vessel.longitude !== 0
+      );
+      
+      if (validVessels.length > 0) {
+        return res.json(validVessels);
+      } else {
+        console.log('No valid vessels in cache, returning mock data');
+        return res.json(mockVesselPositions);
+      }
+    }
+    
+    // Otherwise use vessel MMSIs from query params or use default fleet
     let mmsiList = req.query.mmsi ? 
       Array.isArray(req.query.mmsi) ? 
         req.query.mmsi.map(String) : 
