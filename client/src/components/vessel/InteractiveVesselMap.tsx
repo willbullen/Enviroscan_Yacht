@@ -257,7 +257,7 @@ const InteractiveVesselMap = React.forwardRef<{
       useEffect(() => {
         if (selectedVesselId && map) {
           const vessel = vesselData.find(v => v.id === selectedVesselId);
-          if (vessel) {
+          if (vessel && vessel.latitude !== undefined && vessel.longitude !== undefined) {
             map.setView([vessel.latitude, vessel.longitude], 13);
             
             // Open popup if marker exists
