@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import {
   Card,
@@ -76,7 +76,8 @@ import {
   Settings,
   Ship,
   FileText,
-  UserCog
+  UserCog,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -155,18 +156,28 @@ const SYSTEM_ROLES: Role[] = [
 const UserAdmin: React.FC = () => {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  
+  // Tab state
   const [selectedTab, setSelectedTab] = useState('users');
+  
+  // User state
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [isEditingUser, setIsEditingUser] = useState(false);
+  
+  // Vessel assignment state
   const [isAddingAssignment, setIsAddingAssignment] = useState(false);
-  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
   const [assignmentRole, setAssignmentRole] = useState('crew');
+  
+  // Role state
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  
+  // Filter state
   const [userFilter, setUserFilter] = useState('');
   const [userStatusFilter, setUserStatusFilter] = useState('all');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   // User form state
   const [userForm, setUserForm] = useState({
@@ -178,7 +189,7 @@ const UserAdmin: React.FC = () => {
     isActive: true
   });
 
-  // Get all users with improved error handling
+  // Queries
   const { 
     data: users, 
     isLoading: usersLoading, 
@@ -191,7 +202,6 @@ const UserAdmin: React.FC = () => {
     }
   });
 
-  // Get all vessels
   const { 
     data: vessels, 
     isLoading: vesselsLoading, 
@@ -204,7 +214,6 @@ const UserAdmin: React.FC = () => {
     }
   });
 
-  // Get user-vessel assignments (if user is selected)
   const {
     data: userVesselAssignments,
     isLoading: assignmentsLoading,
@@ -219,7 +228,7 @@ const UserAdmin: React.FC = () => {
     enabled: !!selectedUser
   });
 
-  // Create user mutation
+  // Mutations
   const createUserMutation = useMutation({
     mutationFn: async (userData: Omit<User, 'id' | 'avatarUrl'> & { password: string }) => {
       return await apiRequest('POST', '/api/register', userData);
@@ -243,9 +252,8 @@ const UserAdmin: React.FC = () => {
     }
   });
 
-  // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async (data: { id: number, userData: Partial<User> }) => {
+    mutationFn: async (data: { id: number, userData: Partial<User> & { password?: string } }) => {
       const { id, userData } = data;
       return await apiRequest('PATCH', `/api/users/${id}`, userData);
     },
@@ -268,7 +276,6 @@ const UserAdmin: React.FC = () => {
     }
   });
 
-  // Create user-vessel assignment mutation
   const createAssignmentMutation = useMutation({
     mutationFn: async (assignment: { userId: number, vesselId: number, role: string }) => {
       return await apiRequest('POST', '/api/user-vessel-assignments', assignment);
@@ -295,7 +302,6 @@ const UserAdmin: React.FC = () => {
     }
   });
 
-  // Delete user-vessel assignment mutation
   const deleteAssignmentMutation = useMutation({
     mutationFn: async (assignmentId: number) => {
       await apiRequest('DELETE', `/api/user-vessel-assignments/${assignmentId}`);
@@ -320,7 +326,7 @@ const UserAdmin: React.FC = () => {
     }
   });
 
-  // Reset user form
+  // Helper functions
   const resetUserForm = () => {
     setUserForm({
       username: '',
@@ -332,13 +338,11 @@ const UserAdmin: React.FC = () => {
     });
   };
 
-  // Handle user selection
   const handleSelectUser = (user: User) => {
     setSelectedUser(user);
     setSelectedTab('vessels');
   };
 
-  // Handle edit user
   const handleEditUser = (user: User) => {
     setUserForm({
       username: user.username,
@@ -352,13 +356,12 @@ const UserAdmin: React.FC = () => {
     setIsEditingUser(true);
   };
 
-  // Handle user form submission
   const handleUserFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isEditingUser && selectedUser) {
       // Update existing user
-      const userData: Partial<User> = {
+      const userData: Partial<User> & { password?: string } = {
         fullName: userForm.fullName,
         email: userForm.email || null,
         role: userForm.role,
@@ -387,7 +390,6 @@ const UserAdmin: React.FC = () => {
     }
   };
 
-  // Handle assignment creation
   const handleCreateAssignment = () => {
     if (!selectedUser || !selectedVesselId) return;
     
@@ -398,48 +400,89 @@ const UserAdmin: React.FC = () => {
     });
   };
 
-  // Handle assignment deletion
   const handleDeleteAssignment = (assignmentId: number) => {
     if (window.confirm('Are you sure you want to remove this vessel assignment?')) {
       deleteAssignmentMutation.mutate(assignmentId);
     }
   };
 
-  // Format vessel assignments for display
   const getVesselName = (vesselId: number): string => {
     const vessel = vessels?.find(v => v.id === vesselId);
     return vessel ? vessel.name : `Vessel #${vesselId}`;
   };
 
-  // Get assigned vessels IDs for filtering available vessels
   const getAssignedVesselIds = (): number[] => {
     if (!userVesselAssignments) return [];
     return userVesselAssignments.map(assignment => assignment.vesselId);
   };
 
-  // Filter vessels that are not yet assigned to the user
   const getAvailableVessels = (): Vessel[] => {
     if (!vessels || !selectedUser) return [];
     const assignedIds = getAssignedVesselIds();
     return vessels.filter(vessel => !assignedIds.includes(vessel.id));
   };
 
+  const getRoleDetails = (roleId: string): Role | undefined => {
+    return SYSTEM_ROLES.find(role => role.id === roleId);
+  };
+
+  const handleSelectRole = (role: Role) => {
+    setSelectedRole(role);
+    setIsRoleDialogOpen(true);
+  };
+
+  // Filter users based on search criteria
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    
+    return users.filter(user => {
+      // Filter by search term
+      const searchMatch = 
+        userFilter === '' || 
+        user.fullName.toLowerCase().includes(userFilter.toLowerCase()) ||
+        user.username.toLowerCase().includes(userFilter.toLowerCase()) ||
+        (user.email && user.email.toLowerCase().includes(userFilter.toLowerCase()));
+      
+      // Filter by status
+      const statusMatch = 
+        userStatusFilter === 'all' || 
+        (userStatusFilter === 'active' && user.isActive) ||
+        (userStatusFilter === 'inactive' && !user.isActive);
+      
+      // Filter by role
+      const roleMatch = 
+        userRoleFilter === 'all' || 
+        user.role === userRoleFilter;
+      
+      return searchMatch && statusMatch && roleMatch;
+    });
+  }, [users, userFilter, userStatusFilter, userRoleFilter]);
+
   return (
     <MainLayout title="User Administration">
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">User Administration</h1>
-          <Button onClick={() => {
-            resetUserForm();
-            setIsAddingUser(true);
-          }}>
-            <UserPlus className="mr-2 h-4 w-4" /> 
-            Add User
-          </Button>
+          <div className="space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setSelectedTab("roles")}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              View Roles
+            </Button>
+            <Button onClick={() => {
+              resetUserForm();
+              setIsAddingUser(true);
+            }}>
+              <UserPlus className="mr-2 h-4 w-4" /> 
+              Add User
+            </Button>
+          </div>
         </div>
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full md:w-auto grid-cols-2">
+          <TabsList className="grid w-full md:w-auto grid-cols-3">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
@@ -449,8 +492,12 @@ const UserAdmin: React.FC = () => {
               className="flex items-center gap-2"
               disabled={!selectedUser}
             >
-              <Users className="h-4 w-4" />
+              <Ship className="h-4 w-4" />
               Vessel Assignments
+            </TabsTrigger>
+            <TabsTrigger value="roles" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Roles
             </TabsTrigger>
           </TabsList>
           
@@ -458,10 +505,63 @@ const UserAdmin: React.FC = () => {
           <TabsContent value="users" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
+                <CardTitle className="flex justify-between items-center">
+                  <span>User Management</span>
+                  <Button variant="default" onClick={() => refetchUsers()}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                </CardTitle>
                 <CardDescription>
-                  View, add, and edit users for the yacht management system.
+                  View, add, and edit users for the fleet management system.
                 </CardDescription>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search users..."
+                      value={userFilter}
+                      onChange={(e) => setUserFilter(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2 items-center">
+                    <Label htmlFor="role-filter" className="whitespace-nowrap text-xs">Role:</Label>
+                    <Select
+                      value={userRoleFilter}
+                      onValueChange={setUserRoleFilter}
+                    >
+                      <SelectTrigger id="role-filter" className="h-9">
+                        <SelectValue placeholder="Filter by role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Roles</SelectItem>
+                        {SYSTEM_ROLES.map(role => (
+                          <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex gap-2 items-center">
+                    <Label htmlFor="status-filter" className="whitespace-nowrap text-xs">Status:</Label>
+                    <Select
+                      value={userStatusFilter}
+                      onValueChange={setUserStatusFilter}
+                    >
+                      <SelectTrigger id="status-filter" className="h-9">
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               
               <CardContent>
@@ -488,15 +588,15 @@ const UserAdmin: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {users && users.length > 0 ? (
-                          users.map(user => (
+                        {filteredUsers && filteredUsers.length > 0 ? (
+                          filteredUsers.map(user => (
                             <TableRow key={user.id}>
                               <TableCell className="font-medium">{user.fullName}</TableCell>
                               <TableCell>{user.username}</TableCell>
                               <TableCell>{user.email || '-'}</TableCell>
                               <TableCell>
                                 <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
-                                  {user.role}
+                                  {SYSTEM_ROLES.find(r => r.id === user.role)?.name || user.role}
                                 </Badge>
                               </TableCell>
                               <TableCell>
@@ -515,9 +615,10 @@ const UserAdmin: React.FC = () => {
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                     <DropdownMenuItem onClick={() => handleSelectUser(user)}>
-                                      <Users className="mr-2 h-4 w-4" />
+                                      <Ship className="mr-2 h-4 w-4" />
                                       <span>Manage Vessels</span>
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => handleEditUser(user)}>
                                       <Edit className="mr-2 h-4 w-4" />
                                       <span>Edit User</span>
@@ -530,7 +631,7 @@ const UserAdmin: React.FC = () => {
                         ) : (
                           <TableRow>
                             <TableCell colSpan={6} className="text-center py-4">
-                              No users found
+                              No users found matching your filters
                             </TableCell>
                           </TableRow>
                         )}
@@ -605,6 +706,7 @@ const UserAdmin: React.FC = () => {
                                       onClick={() => handleDeleteAssignment(assignment.id)}
                                     >
                                       <Trash2 className="h-4 w-4 text-destructive" />
+                                      <span className="sr-only">Delete</span>
                                     </Button>
                                   </TableCell>
                                 </TableRow>
@@ -613,7 +715,7 @@ const UserAdmin: React.FC = () => {
                           ) : (
                             <TableRow>
                               <TableCell colSpan={5} className="text-center py-4">
-                                No vessel assignments found for this user
+                                No vessel assignments found
                               </TableCell>
                             </TableRow>
                           )}
@@ -625,37 +727,82 @@ const UserAdmin: React.FC = () => {
               </Card>
             ) : (
               <Card>
-                <CardContent className="flex flex-col items-center justify-center h-40">
-                  <p className="text-muted-foreground mb-4">Please select a user to manage vessel assignments</p>
-                  <Button variant="outline" onClick={() => setSelectedTab('users')}>
-                    Go to Users
-                  </Button>
+                <CardContent className="py-10 text-center">
+                  <p className="text-muted-foreground">
+                    Please select a user to manage their vessel assignments.
+                  </p>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
+
+          {/* Roles Tab */}
+          <TabsContent value="roles" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Role Management</CardTitle>
+                <CardDescription>
+                  View system roles and their permissions. These roles determine what users can access.
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Permissions</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {SYSTEM_ROLES.map(role => (
+                        <TableRow key={role.id}>
+                          <TableCell className="font-medium">{role.name}</TableCell>
+                          <TableCell>{role.description}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {role.permissions.includes('all') ? (
+                                <Badge>All permissions</Badge>
+                              ) : (
+                                role.permissions.map(permission => (
+                                  <Badge key={permission} variant="outline">
+                                    {permission.replace('_', ' ')}
+                                  </Badge>
+                                ))
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleSelectRole(role)}
+                            >
+                              <Info className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
-      {/* Add/Edit User Dialog */}
-      <Dialog 
-        open={isAddingUser || isEditingUser} 
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsAddingUser(false);
-            setIsEditingUser(false);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[425px]">
+      {/* Add User Dialog */}
+      <Dialog open={isAddingUser} onOpenChange={setIsAddingUser}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {isEditingUser ? 'Edit User' : 'Add New User'}
-            </DialogTitle>
+            <DialogTitle>Add New User</DialogTitle>
             <DialogDescription>
-              {isEditingUser 
-                ? 'Update the user information below' 
-                : 'Fill in the details to create a new user'}
+              Create a new user account in the system.
             </DialogDescription>
           </DialogHeader>
           
@@ -663,85 +810,178 @@ const UserAdmin: React.FC = () => {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={userForm.username}
-                  onChange={(e) => setUserForm({...userForm, username: e.target.value})}
-                  disabled={isEditingUser} // Can't change username when editing
-                  required={!isEditingUser}
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={userForm.fullName}
-                  onChange={(e) => setUserForm({...userForm, fullName: e.target.value})}
+                <Input 
+                  id="username" 
+                  value={userForm.username} 
+                  onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
                   required
                 />
               </div>
-              
+
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={userForm.email}
-                  onChange={(e) => setUserForm({...userForm, email: e.target.value})}
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input 
+                  id="fullName" 
+                  value={userForm.fullName} 
+                  onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
+                  required
                 />
               </div>
-              
+
               <div className="grid gap-2">
-                <Label htmlFor="password">
-                  {isEditingUser ? 'New Password (leave blank to keep current)' : 'Password'}
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={userForm.password}
-                  onChange={(e) => setUserForm({...userForm, password: e.target.value})}
-                  required={!isEditingUser}
+                <Label htmlFor="email">Email (optional)</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={userForm.email} 
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                 />
               </div>
-              
+
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={userForm.password} 
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                  required
+                />
+              </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="role">Role</Label>
                 <Select 
                   value={userForm.role} 
-                  onValueChange={(value) => setUserForm({...userForm, role: value})}
+                  onValueChange={(value) => setUserForm({ ...userForm, role: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="captain">Captain</SelectItem>
-                    <SelectItem value="engineer">Engineer</SelectItem>
-                    <SelectItem value="crew">Crew</SelectItem>
+                    {SYSTEM_ROLES.map(role => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="isActive" 
-                  checked={userForm.isActive}
-                  onCheckedChange={(checked) => 
-                    setUserForm({...userForm, isActive: checked as boolean})
-                  } 
+                  checked={userForm.isActive} 
+                  onCheckedChange={(checked) => setUserForm({ ...userForm, isActive: checked as boolean })}
                 />
-                <Label htmlFor="isActive">Active account</Label>
+                <Label htmlFor="isActive">User is active</Label>
               </div>
             </div>
             
             <DialogFooter>
-              <Button type="submit" disabled={createUserMutation.isPending || updateUserMutation.isPending}>
-                {(createUserMutation.isPending || updateUserMutation.isPending) && (
+              <Button 
+                type="submit" 
+                disabled={createUserMutation.isPending}
+              >
+                {createUserMutation.isPending && (
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {isEditingUser ? 'Update User' : 'Create User'}
+                Create User
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditingUser} onOpenChange={setIsEditingUser}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user account information.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleUserFormSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-username">Username</Label>
+                <Input 
+                  id="edit-username" 
+                  value={userForm.username} 
+                  disabled // Username cannot be changed
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-fullName">Full Name</Label>
+                <Input 
+                  id="edit-fullName" 
+                  value={userForm.fullName} 
+                  onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-email">Email (optional)</Label>
+                <Input 
+                  id="edit-email" 
+                  type="email" 
+                  value={userForm.email} 
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-password">Password (leave blank to keep current)</Label>
+                <Input 
+                  id="edit-password" 
+                  type="password" 
+                  value={userForm.password} 
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-role">Role</Label>
+                <Select 
+                  value={userForm.role} 
+                  onValueChange={(value) => setUserForm({ ...userForm, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SYSTEM_ROLES.map(role => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="edit-isActive" 
+                  checked={userForm.isActive} 
+                  onCheckedChange={(checked) => setUserForm({ ...userForm, isActive: checked as boolean })}
+                />
+                <Label htmlFor="edit-isActive">User is active</Label>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                type="submit" 
+                disabled={updateUserMutation.isPending}
+              >
+                {updateUserMutation.isPending && (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Update User
               </Button>
             </DialogFooter>
           </form>
@@ -749,23 +989,12 @@ const UserAdmin: React.FC = () => {
       </Dialog>
 
       {/* Add Vessel Assignment Dialog */}
-      <Dialog 
-        open={isAddingAssignment} 
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsAddingAssignment(false);
-            setSelectedVesselId(null);
-            setAssignmentRole('crew');
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={isAddingAssignment} onOpenChange={setIsAddingAssignment}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign Vessel</DialogTitle>
             <DialogDescription>
-              {selectedUser && (
-                <span>Assign a vessel to {selectedUser.fullName}</span>
-              )}
+              Assign {selectedUser?.fullName} to a vessel.
             </DialogDescription>
           </DialogHeader>
           
@@ -818,6 +1047,84 @@ const UserAdmin: React.FC = () => {
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               )}
               Assign Vessel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Role Details Dialog */}
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedRole?.name} Role</DialogTitle>
+            <DialogDescription>
+              Details and permissions for this role
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedRole && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium">Description</h3>
+                <p className="text-sm text-muted-foreground mt-1">{selectedRole.description}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium">Permissions</h3>
+                <div className="mt-2 border rounded-md p-4">
+                  {selectedRole.permissions.includes('all') ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default">All Permissions</Badge>
+                      <span className="text-sm text-muted-foreground">This role has full access to all system features</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {selectedRole.permissions.map(permission => (
+                        <div key={permission} className="flex items-center gap-2">
+                          <Badge variant="outline">{permission.replace('_', ' ')}</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {permission === 'manage_vessels' && 'Create, edit and manage vessel information'}
+                            {permission === 'view_reports' && 'View system reports and analytics'}
+                            {permission === 'assign_tasks' && 'Assign tasks to crew members'}
+                            {permission === 'manage_inventory' && 'Manage vessel inventory and supplies'}
+                            {permission === 'operate_vessel' && 'Primary vessel operation permissions'}
+                            {permission === 'manage_crew' && 'Manage crew assignments and schedules'}
+                            {permission === 'report_incidents' && 'Create and manage incident reports'}
+                            {permission === 'manage_maintenance' && 'Schedule and oversee maintenance tasks'}
+                            {permission === 'view_equipment' && 'View equipment details and status'}
+                            {permission === 'update_inventory' && 'Update inventory levels and requests'}
+                            {permission === 'view_vessel' && 'View assigned vessel information'}
+                            {permission === 'complete_tasks' && 'View and complete assigned tasks'}
+                            {permission === 'submit_reports' && 'Submit required operational reports'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium">System Information</h3>
+                <div className="mt-1 text-sm text-muted-foreground space-y-1">
+                  <p>
+                    <span className="font-medium">Role ID:</span> {selectedRole.id}
+                  </p>
+                  <p>
+                    <span className="font-medium">Permission Count:</span> {
+                      selectedRole.permissions.includes('all') 
+                        ? 'Unlimited (All)' 
+                        : selectedRole.permissions.length
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={() => setIsRoleDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
