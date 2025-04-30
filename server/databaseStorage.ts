@@ -16,6 +16,8 @@ import {
   waypoints,
   fuelConsumptionChart,
   speedChart,
+  vessels,
+  userVesselAssignments,
   formCategories,
   formTemplates,
   formTemplateVersions,
@@ -72,8 +74,28 @@ import {
 import { IStorage } from "./storage";
 import { db } from "./db";
 import { and, eq, lte, gte, sql } from "drizzle-orm";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
+
+// PostgreSQL session store for auth
+const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
+  // Session store for authentication
+  sessionStore: session.SessionStore;
+  
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
+    });
+  }
+  
+  // =========== Active users (isActive = true) =============
+  async getActiveUsers(): Promise<User[]> {
+    return db.select().from(users).where(eq(users.isActive, true));
+  }
   // =========== User Methods =============
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -389,6 +411,82 @@ export class DatabaseStorage implements IStorage {
       return result.rowCount ? result.rowCount > 0 : false;
     } catch (error) {
       console.error("Error deleting inventory item:", error);
+      return false;
+    }
+  }
+  
+  // =========== Vessel Methods =============
+  async getVessel(id: number): Promise<Vessel | undefined> {
+    const [vessel] = await db.select().from(vessels).where(eq(vessels.id, id));
+    return vessel || undefined;
+  }
+  
+  async getAllVessels(): Promise<Vessel[]> {
+    return db.select().from(vessels);
+  }
+  
+  async getActiveVessels(): Promise<Vessel[]> {
+    return db.select().from(vessels).where(eq(vessels.isActive, true));
+  }
+  
+  async createVessel(vessel: InsertVessel): Promise<Vessel> {
+    const [newVessel] = await db.insert(vessels).values(vessel).returning();
+    return newVessel;
+  }
+  
+  async updateVessel(id: number, updates: Partial<InsertVessel>): Promise<Vessel | undefined> {
+    const [updatedVessel] = await db
+      .update(vessels)
+      .set(updates)
+      .where(eq(vessels.id, id))
+      .returning();
+    return updatedVessel;
+  }
+  
+  async deleteVessel(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(vessels).where(eq(vessels.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting vessel:", error);
+      return false;
+    }
+  }
+  
+  // =========== User-Vessel Assignment Methods =============
+  async getUserVesselAssignment(id: number): Promise<UserVesselAssignment | undefined> {
+    const [assignment] = await db.select().from(userVesselAssignments).where(eq(userVesselAssignments.id, id));
+    return assignment || undefined;
+  }
+  
+  async getUserVesselAssignments(userId: number): Promise<UserVesselAssignment[]> {
+    return db.select().from(userVesselAssignments).where(eq(userVesselAssignments.userId, userId));
+  }
+  
+  async getVesselUserAssignments(vesselId: number): Promise<UserVesselAssignment[]> {
+    return db.select().from(userVesselAssignments).where(eq(userVesselAssignments.vesselId, vesselId));
+  }
+  
+  async createUserVesselAssignment(assignment: InsertUserVesselAssignment): Promise<UserVesselAssignment> {
+    const [newAssignment] = await db.insert(userVesselAssignments).values(assignment).returning();
+    return newAssignment;
+  }
+  
+  async updateUserVesselAssignment(id: number, updates: Partial<InsertUserVesselAssignment>): Promise<UserVesselAssignment | undefined> {
+    const [updatedAssignment] = await db
+      .update(userVesselAssignments)
+      .set(updates)
+      .where(eq(userVesselAssignments.id, id))
+      .returning();
+    return updatedAssignment;
+  }
+  
+  async deleteUserVesselAssignment(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(userVesselAssignments).where(eq(userVesselAssignments.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting user-vessel assignment:", error);
       return false;
     }
   }

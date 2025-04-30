@@ -28,6 +28,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
+import session from "express-session";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -42,7 +43,7 @@ export interface IStorage {
   getActiveUsers(): Promise<User[]>;
   
   // Session store for authentication
-  sessionStore: any;
+  sessionStore: any; // Using 'any' for session store compatibility
 
   // Vessel operations
   getVessel(id: number): Promise<Vessel | undefined>;
