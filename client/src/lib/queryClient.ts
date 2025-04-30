@@ -27,12 +27,22 @@ async function parseErrorResponse(res: Response): Promise<ApiError> {
       errorData = await res.clone().json();
       errorMessage = errorData.message || `${res.status}: ${res.statusText}`;
     } else {
-      // Fall back to text
-      errorMessage = await res.text() || res.statusText;
+      // If it's not JSON and status is 401, it's an authentication error
+      if (res.status === 401) {
+        errorMessage = "Authentication required. Please log in.";
+      } else {
+        // For other content types, just use a generic message to avoid parsing HTML
+        const responseText = await res.text();
+        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html>')) {
+          errorMessage = `${res.status}: ${res.statusText} (HTML response)`;
+        } else {
+          errorMessage = responseText || res.statusText;
+        }
+      }
     }
   } catch (e) {
     // If all else fails, use the status text
-    errorMessage = res.statusText;
+    errorMessage = `${res.status}: ${res.statusText}`;
   }
   
   const error = new Error(errorMessage) as ApiError;
@@ -120,12 +130,49 @@ export const getQueryFn: <T>(options: {
         return null;
       }
 
-      await throwIfResNotOk(res, 'GET');
+      if (!res.ok) {
+        await throwIfResNotOk(res, 'GET');
+      }
       
       // Only try to parse JSON if there's content
       if (res.status !== 204) { // No content
-        const data = await res.json();
-        return data;
+        try {
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await res.json();
+            return data;
+          } else {
+            // If not JSON, handle appropriately
+            const textResponse = await res.text();
+            if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
+              // HTML response indicates auth issue or error page
+              if (res.status === 401 || res.status === 403) {
+                const error = new Error("Authentication required. Please log in.") as ApiError;
+                error.status = res.status;
+                error.url = url;
+                error.method = 'GET';
+                logApiError(error);
+                throw error;
+              } else {
+                const error = new Error(`Received HTML instead of JSON response.`) as ApiError;
+                error.status = res.status;
+                error.url = url;
+                error.method = 'GET';
+                logApiError(error);
+                throw error;
+              }
+            }
+            // For non-JSON text responses, create an appropriate response object
+            return { message: textResponse } as any;
+          }
+        } catch (parseError) {
+          const error = new Error(`Failed to parse response: ${(parseError as Error).message}`) as ApiError;
+          error.status = res.status;
+          error.url = url;
+          error.method = 'GET';
+          logApiError(error);
+          throw error;
+        }
       }
       
       return {} as any;
