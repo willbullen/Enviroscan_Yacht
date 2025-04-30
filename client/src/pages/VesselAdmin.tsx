@@ -58,7 +58,13 @@ export type VesselFormData = {
 };
 
 const VesselAdmin: React.FC = () => {
-  const { vessels } = useVessel();
+  const { 
+    vessels, 
+    addVessel, 
+    updateVessel, 
+    deleteVessel, 
+    refreshVessels 
+  } = useVessel();
   const [isAddingVessel, setIsAddingVessel] = useState(false);
   const [isEditingVessel, setIsEditingVessel] = useState(false);
   const [editingVessel, setEditingVessel] = useState<number | null>(null);
@@ -92,19 +98,71 @@ const VesselAdmin: React.FC = () => {
     });
   };
   
-  const handleAddVessel = () => {
-    // Here we would send the data to the API
-    console.log('Adding vessel:', formData);
-    setIsAddingVessel(false);
-    resetForm();
+  const handleAddVessel = async () => {
+    try {
+      // Show loading state
+      console.log('Adding vessel:', formData);
+      
+      // Convert form data to proper format
+      const result = await addVessel({
+        name: formData.name,
+        type: formData.type,
+        length: formData.length,
+        flag: formData.flag,
+        mmsi: formData.mmsi,
+        // Add other fields as needed
+      });
+      
+      if (result) {
+        console.log('Vessel added successfully:', result);
+        // Close the form and reset
+        setIsAddingVessel(false);
+        resetForm();
+      } else {
+        console.error('Failed to add vessel');
+        // Display error message to user
+        alert('Failed to add vessel. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error adding vessel:', error);
+      alert('Error adding vessel. Please try again.');
+    }
   };
   
-  const handleEditVessel = () => {
-    // Here we would send the updated data to the API
-    console.log('Updating vessel:', editingVessel, formData);
-    setIsEditingVessel(false);
-    setEditingVessel(null);
-    resetForm();
+  const handleEditVessel = async () => {
+    if (!editingVessel) {
+      console.error('No vessel selected for editing');
+      return;
+    }
+    
+    try {
+      console.log('Updating vessel:', editingVessel, formData);
+      
+      // Convert form data to proper format
+      const result = await updateVessel(editingVessel, {
+        name: formData.name,
+        type: formData.type,
+        length: formData.length,
+        flag: formData.flag,
+        mmsi: formData.mmsi,
+        // Add other fields as needed
+      });
+      
+      if (result) {
+        console.log('Vessel updated successfully:', result);
+        // Close the form and reset
+        setIsEditingVessel(false);
+        setEditingVessel(null);
+        resetForm();
+      } else {
+        console.error('Failed to update vessel');
+        // Display error message to user
+        alert('Failed to update vessel. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating vessel:', error);
+      alert('Error updating vessel. Please try again.');
+    }
   };
 
   const startEditVessel = (vesselId: number) => {
@@ -584,8 +642,24 @@ const VesselAdmin: React.FC = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (confirm('Are you sure you want to delete this vessel? This action cannot be undone.')) {
-                                      // Delete vessel action would be here
-                                      console.log('Delete vessel:', vessel.id);
+                                      // Show a loading state
+                                      console.log('Deleting vessel:', vessel.id);
+                                      
+                                      deleteVessel(vessel.id)
+                                        .then(success => {
+                                          if (success) {
+                                            console.log('Vessel deleted successfully');
+                                            // Refresh the vessels list
+                                            refreshVessels();
+                                          } else {
+                                            console.error('Failed to delete vessel');
+                                            alert('Failed to delete vessel. Please try again.');
+                                          }
+                                        })
+                                        .catch(error => {
+                                          console.error('Error deleting vessel:', error);
+                                          alert('Error deleting vessel. Please try again.');
+                                        });
                                     }
                                   }}
                                   title="Delete vessel"
