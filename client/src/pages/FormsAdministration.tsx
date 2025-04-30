@@ -1785,22 +1785,35 @@ const FormsAdministration: React.FC = () => {
                             <TableRow key={version.id}>
                               <TableCell className="font-medium">{version.versionNumber}</TableCell>
                               <TableCell>
-                                <Badge variant={version.isActive ? "success" : "secondary"}>
+                                <Button
+                                  variant={version.isActive ? "success" : "outline"}
+                                  size="sm"
+                                  className={`flex items-center gap-1 ${version.isActive ? "bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 border-0" : "border-gray-200 hover:bg-gray-100"}`}
+                                  onClick={() => updateVersionMutation.mutate({
+                                    ...version,
+                                    isActive: !version.isActive
+                                  })}
+                                  title={version.isActive ? "Click to deactivate version" : "Click to activate version"}
+                                >
+                                  <div className={`w-2 h-2 rounded-full ${version.isActive ? "bg-green-500" : "bg-gray-400"}`}></div>
                                   {version.isActive ? 'Active' : 'Inactive'}
-                                </Badge>
+                                </Button>
                               </TableCell>
                               <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end space-x-2">
                                   <Button 
-                                    variant="ghost" 
+                                    variant="outline" 
                                     size="sm"
                                     onClick={() => handleEditFormStructure(version)}
+                                    className="flex items-center gap-1.5"
+                                    title="Edit form structure and fields"
                                   >
                                     <Edit className="w-4 h-4" />
+                                    <span>Edit Form</span>
                                   </Button>
                                   <Button 
-                                    variant="ghost" 
+                                    variant="outline" 
                                     size="sm"
                                     onClick={() => {
                                       // Download structure as JSON
@@ -1824,8 +1837,11 @@ const FormsAdministration: React.FC = () => {
                                       document.body.removeChild(a);
                                       URL.revokeObjectURL(url);
                                     }}
+                                    className="flex items-center gap-1.5"
+                                    title="Download form structure as JSON file"
                                   >
                                     <Download className="w-4 h-4" />
+                                    <span>Export</span>
                                   </Button>
                                 </div>
                               </TableCell>
