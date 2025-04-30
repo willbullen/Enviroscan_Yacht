@@ -66,8 +66,10 @@ export function setupAuth(app: Express) {
           console.log("Invalid username or password");
           return done(null, false, { message: "Invalid username or password" });
         }
-        // Check if the user is active (if the field exists)
-        if (user.hasOwnProperty('isActive') && user.isActive === false) {
+        // Note: isActive field doesn't exist in the DB but is added by the storage layer
+        // Since we're adding it virtually in the storage layer and defaulting to true,
+        // we can just check it directly
+        if (user.isActive === false) {
           console.log("Account is inactive");
           return done(null, false, { message: "Account is inactive" });
         }
@@ -90,8 +92,8 @@ export function setupAuth(app: Express) {
         console.log(`User ${id} not found`);
         return done(null, false);
       }
-      // If isActive field exists and user is inactive, logout
-      if (user.hasOwnProperty('isActive') && user.isActive === false) {
+      // Note: isActive field is added by storage layer with default true
+      if (user.isActive === false) {
         console.log(`User ${id} is inactive`);
         return done(null, false);
       }
@@ -147,18 +149,17 @@ export function setupAuth(app: Express) {
         if (loginErr) {
           return next(loginErr);
         }
-        // Create response with required fields and optional fields
-        const userResponse: Record<string, any> = {
+        
+        // Create response with all fields (including virtual ones)
+        const userResponse = {
           id: user.id,
           username: user.username,
           fullName: user.fullName,
           role: user.role,
+          email: user.email || null,
+          avatarUrl: user.avatarUrl,
+          isActive: user.isActive === false ? false : true
         };
-        
-        // Add optional fields if they exist
-        if (user.hasOwnProperty('email')) userResponse.email = user.email;
-        if (user.hasOwnProperty('avatarUrl')) userResponse.avatarUrl = user.avatarUrl;
-        if (user.hasOwnProperty('isActive')) userResponse.isActive = user.isActive;
         
         console.log("Login successful, returning user:", JSON.stringify(userResponse));
         return res.status(200).json(userResponse);
