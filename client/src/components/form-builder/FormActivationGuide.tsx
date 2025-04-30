@@ -9,8 +9,15 @@ import {
   Info,
   Check,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  HelpCircle
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FormActivationStep {
   title: string;
@@ -100,49 +107,97 @@ export const FormActivationGuide: React.FC<{ className?: string }> = ({ classNam
   ];
 
   return (
-    <Card className={className}>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">Form Activation Guide</CardTitle>
-          <Info className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <CardDescription>
-          How to activate forms and make them available to users
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {activationSteps.map((step, index) => (
-          <div key={index} className="flex flex-col md:flex-row gap-4 pb-4 border-b last:border-0 last:pb-0">
-            <div className="md:w-1/2">
-              <h3 className="text-sm font-medium">{step.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
-              {step.hint && (
-                <div className="flex items-center gap-1 mt-2 p-1.5 bg-primary/10 rounded text-xs">
-                  <Info className="h-3.5 w-3.5 text-primary" />
-                  <span>{step.hint}</span>
-                </div>
-              )}
+    <TooltipProvider>
+      <Card className={className}>
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <CardTitle className="text-lg">Form Activation Guide</CardTitle>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="ml-1 p-0 h-6 w-6">
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <p>This guide explains how to activate forms and make them available for users in the system</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <div className="md:w-1/2">
-              {step.image}
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Info className="h-5 w-5 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Click any step for more details</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        ))}
+          <CardDescription>
+            How to activate forms and make them available to users
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {activationSteps.map((step, index) => (
+            <div key={index} className="flex flex-col md:flex-row gap-4 pb-4 border-b last:border-0 last:pb-0">
+              <div className="md:w-1/2">
+                <h3 className="text-sm font-medium">{step.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
+                {step.hint && (
+                  <div className="flex items-center gap-1 mt-2 p-1.5 bg-primary/10 rounded text-xs">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-primary" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        <p>Important guidance for this step</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <span>{step.hint}</span>
+                  </div>
+                )}
+              </div>
+              <div className="md:w-1/2">
+                {step.image}
+              </div>
+            </div>
+          ))}
 
-        <div className="rounded-md border border-primary/30 p-3 mt-4 bg-primary/5">
-          <div className="flex items-start gap-2">
-            <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium">Activation Status Indicators</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                When a form is fully active, it will appear with a green status indicator and be available to users
-                in their appropriate sections. If any component of the form (category, template, or version) is inactive,
-                the form will not be accessible.
-              </p>
+          <div className="rounded-md border border-primary/30 p-3 mt-4 bg-primary/5">
+            <div className="flex items-start gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Check the activation status in tables and lists</p>
+                </TooltipContent>
+              </Tooltip>
+              <div>
+                <h3 className="text-sm font-medium">Activation Status Indicators</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  When a form is fully active, it will appear with a green status indicator and be available to users
+                  in their appropriate sections. If any component of the form (category, template, or version) is inactive,
+                  the form will not be accessible.
+                </p>
+                
+                <div className="flex items-center gap-2 mt-2">
+                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                    <ToggleRight className="h-3.5 w-3.5 mr-1 text-green-500" />
+                    View Active Forms
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                    <ToggleLeft className="h-3.5 w-3.5 mr-1 text-gray-500" />
+                    View Inactive Forms
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 };
