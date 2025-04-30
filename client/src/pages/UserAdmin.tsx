@@ -350,7 +350,7 @@ const UserAdmin: React.FC = () => {
   };
 
   return (
-    <MainLayout>
+    <MainLayout title="User Administration">
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">User Administration</h1>

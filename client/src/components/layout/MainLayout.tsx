@@ -3,11 +3,20 @@ import Sidebar from "./Sidebar";
 import { useMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Bell, PanelRightOpen, PanelRightClose, Ship } from "lucide-react";
+import { Menu, Search, Bell, PanelRightOpen, PanelRightClose, Ship, LogOut, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import VesselSelector from "../vessel/VesselSelector";
 import { useVessel } from "@/contexts/VesselContext";
+import { useAuth } from "@/hooks/use-auth";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -18,6 +27,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const { currentVessel, setCurrentVessel } = useVessel();
+  const { user, logoutMutation } = useAuth();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   useEffect(() => {
     // Close sidebar on mobile, open on desktop
@@ -93,9 +107,39 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
               <Button variant="ghost" size="icon">
                 <Bell className="h-5 w-5" />
               </Button>
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="font-medium text-primary text-sm">CS</span>
-              </div>
+              
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer">
+                      {user.avatarUrl ? (
+                        <img 
+                          src={user.avatarUrl} 
+                          alt={user.fullName} 
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="font-medium text-primary text-sm">
+                          {user.fullName?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}
+                        </span>
+                      )}
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span>{user.fullName}</span>
+                        <span className="text-xs text-muted-foreground">{user.username}</span>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </header>

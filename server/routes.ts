@@ -3749,13 +3749,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all user-vessel assignments
   apiRouter.get("/user-vessel-assignments", async (req: Request, res: Response) => {
     try {
-      // Only admins can see all assignments
-      if (req.isAuthenticated() && req.user.role === "admin") {
-        // In reality, this should have pagination for larger datasets
-        // For now, we'll handle it by filtering by userId or vesselId if provided
-        const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
-        const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
-        
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      
+      // Regular users can only view their own assignments
+      if (req.user.role !== "admin" && (!userId || userId !== req.user.id)) {
+        return res.status(403).json({ error: "You are only authorized to view your own assignments" });
+      }
+      
+      console.log(`Processing vessel assignment request for ${userId ? `userId ${userId}` : vesselId ? `vesselId ${vesselId}` : 'all assignments'}`);
+      
+      try {
         let assignments = [];
         
         if (userId) {
@@ -3763,23 +3771,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (vesselId) {
           assignments = await storage.getVesselUserAssignments(vesselId);
         } else {
-          // This would need pagination in a real-world scenario
-          // For now, fetch all (not recommended for production)
-          // We would implement something like:
-          // const { page = 1, limit = 20 } = req.query;
-          // const assignments = await storage.getAllUserVesselAssignments(page, limit);
-          
+          // Admin requesting all assignments
           // For now, return a message suggesting to filter
           return res.status(400).json({ 
             message: "Please provide either userId or vesselId query parameter to filter assignments" 
           });
         }
         
+        // Get vessel details for each assignment
+        const vessels = await storage.getAllVessels();
+        
+        // Join vessel data with assignments for better context
+        if (vessels && vessels.length > 0) {
+          assignments = assignments.map(assignment => {
+            const vessel = vessels.find(v => v.id === assignment.vesselId);
+            return {
+              ...assignment,
+              vessel: vessel || undefined
+            };
+          });
+        }
+        
+        console.log(`Returning ${assignments.length} vessel assignments`);
         res.json(assignments);
-      } else {
-        res.status(403).json({ error: "Only admins can view all assignments" });
+        
+      } catch (error) {
+        console.error("Error retrieving vessel assignments:", error);
+        throw error;
       }
     } catch (error) {
+      console.error("Failed to get user-vessel assignments:", error);
       res.status(500).json({ message: "Failed to get user-vessel assignments" });
     }
   });
