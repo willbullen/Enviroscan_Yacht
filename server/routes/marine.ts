@@ -11,7 +11,8 @@ const router = express.Router();
 const AIS_API_KEY = process.env.AIS_API_KEY || ''; // API key should be set in environment variables
 const AIS_STREAM_WS_URL = 'wss://stream.aisstream.io/v0/stream';
 const MARINE_TRAFFIC_API_URL = 'https://services.marinetraffic.com/api';
-const BACKUP_API_URL = 'https://api.aisstream.io/v1';
+// Updated API URL to use the main domain instead of subdomain due to DNS resolution issues
+const BACKUP_API_URL = 'https://aisstream.io/api/v1';
 // Internal cache for vessel positions received from AIS Stream
 const vesselPositionsCache: Record<string, any> = {};
 
