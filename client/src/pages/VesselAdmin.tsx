@@ -187,8 +187,12 @@ const VesselAdmin: React.FC = () => {
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Fleet Management</h1>
         <div className="flex gap-2">
-          <Button onClick={startAddVessel}>
-            <PlusCircle className="mr-2 h-4 w-4" />
+          <Button 
+            onClick={startAddVessel}
+            className="gap-1.5 font-medium"
+            title="Register a new vessel to the fleet"
+          >
+            <PlusCircle className="h-4 w-4" />
             Add New Vessel
           </Button>
         </div>
@@ -200,8 +204,13 @@ const VesselAdmin: React.FC = () => {
             <div className="flex items-center justify-between">
               <CardTitle>Fleet Management & Live Tracking</CardTitle>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Info className="h-4 w-4 mr-2" />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-1.5 border-primary/20 hover:border-primary/60 transition-colors font-medium"
+                  title="Configure vessel tracking settings"
+                >
+                  <Info className="h-4 w-4 text-primary/70" />
                   AIS Settings
                 </Button>
               </div>
@@ -254,10 +263,11 @@ const VesselAdmin: React.FC = () => {
                             <div className="flex flex-col gap-2 mb-4">
                               <Button 
                                 variant="outline" 
-                                className="w-full flex justify-center items-center gap-2"
+                                className="w-full flex justify-center items-center gap-2 border-primary/20 hover:border-primary/60 transition-colors font-medium"
                                 onClick={startSearchVessel}
+                                title="Find vessels using AIS marine tracking data"
                               >
-                                <Search className="h-4 w-4" />
+                                <Search className="h-4 w-4 text-primary/70" />
                                 <span>Search AIS Database</span>
                               </Button>
                               <p className="text-xs text-muted-foreground">
@@ -356,12 +366,21 @@ const VesselAdmin: React.FC = () => {
                             </Button>
                           </div>
                           <div className="flex justify-between gap-3 pt-2">
-                            <Button variant="outline" className="flex-1" onClick={cancelAction}>
-                              <X className="mr-2 h-4 w-4" />
+                            <Button 
+                              variant="outline" 
+                              className="flex-1 gap-1.5 border-primary/20 hover:border-primary/60 transition-colors"
+                              onClick={cancelAction}
+                              title="Discard vessel information and return to list"
+                            >
+                              <X className="h-4 w-4 text-primary/70" />
                               Cancel
                             </Button>
-                            <Button className="flex-1" onClick={handleAddVessel}>
-                              <Save className="mr-2 h-4 w-4" />
+                            <Button 
+                              className="flex-1 gap-1.5 font-medium"
+                              onClick={handleAddVessel}
+                              title="Save the new vessel to the database"
+                            >
+                              <Save className="h-4 w-4" />
                               Add Vessel
                             </Button>
                           </div>
@@ -480,12 +499,21 @@ const VesselAdmin: React.FC = () => {
                             </Button>
                           </div>
                           <div className="flex justify-between gap-3 pt-2">
-                            <Button variant="outline" className="flex-1" onClick={cancelAction}>
-                              <X className="mr-2 h-4 w-4" />
+                            <Button 
+                              variant="outline" 
+                              className="flex-1 gap-1.5 border-primary/20 hover:border-primary/60 transition-colors"
+                              onClick={cancelAction}
+                              title="Discard changes and return to list"
+                            >
+                              <X className="h-4 w-4 text-primary/70" />
                               Cancel
                             </Button>
-                            <Button className="flex-1" onClick={handleEditVessel}>
-                              <Save className="mr-2 h-4 w-4" />
+                            <Button 
+                              className="flex-1 gap-1.5 font-medium"
+                              onClick={handleEditVessel}
+                              title="Save changes to vessel information"
+                            >
+                              <Save className="h-4 w-4" />
                               Update
                             </Button>
                           </div>
@@ -570,8 +598,14 @@ const VesselAdmin: React.FC = () => {
                           ))}
                         </div>
                         <div className="p-3 border-t">
-                          <Button variant="outline" size="sm" className="w-full" onClick={startAddVessel}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full gap-1.5 border-primary/20 hover:border-primary/60 transition-colors font-medium"
+                            onClick={startAddVessel}
+                            title="Register a new vessel to the fleet"
+                          >
+                            <PlusCircle className="h-4 w-4 text-primary/70" />
                             Add New Vessel
                           </Button>
                         </div>
