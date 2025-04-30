@@ -646,6 +646,20 @@ router.get('/search-vessels', async (req, res) => {
               };
               console.log(`Returning test vessel: ${JSON.stringify(testVessel)}`);
               return res.json([testVessel]);
+            } else if (mmsi === '319904000') {
+              console.log(`Adding special test case for MMSI 319904000`);
+              const grandMarina = {
+                mmsi: '319904000',
+                name: 'GRAND MARINA',
+                type: 'Passenger',
+                length: 85,
+                width: 14,
+                flag: 'Cayman Islands',
+                imo: '319904000',
+                callsign: 'ZCB7890'
+              };
+              console.log(`Returning Grand Marina vessel: ${JSON.stringify(grandMarina)}`);
+              return res.json([grandMarina]);
             }
           }
         }
@@ -807,6 +821,16 @@ router.get('/search-vessels', async (req, res) => {
 // Mock data for development when no API key is available
 const mockVesselPositions = [
   {
+    mmsi: '319904000',
+    vesselId: 0,
+    name: 'GRAND MARINA',
+    latitude: 36.169,
+    longitude: 14.297,
+    speed: 15.3,
+    heading: 90,
+    timestamp: new Date().toISOString()
+  },
+  {
     mmsi: '366998410',
     vesselId: 1,
     name: 'Serenity',
@@ -839,6 +863,14 @@ const mockVesselPositions = [
 ];
 
 const mockVesselDetails = [
+  {
+    mmsi: '319904000',
+    name: 'GRAND MARINA',
+    type: 'Passenger',
+    length: 85,
+    width: 14,
+    flag: 'Cayman Islands'
+  },
   {
     mmsi: '366998410',
     name: 'Serenity',
