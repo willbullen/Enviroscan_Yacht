@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import {
   Card,
@@ -28,7 +28,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -46,14 +45,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Check, Edit, MoreHorizontal, Plus, RefreshCw, Search, Trash2, UserPlus, Users } from 'lucide-react';
+import { AlertCircle, Edit, MoreHorizontal, Plus, RefreshCw, Trash2, UserPlus, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
 
 // Type definitions
 interface User {
@@ -78,13 +77,14 @@ interface UserVesselAssignment {
   userId: number;
   vesselId: number;
   role: string;
-  assignmentDate: Date;
+  assignmentDate: string;
   vessel?: Vessel;
   user?: User;
 }
 
 const UserAdmin: React.FC = () => {
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const [selectedTab, setSelectedTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddingUser, setIsAddingUser] = useState(false);
@@ -103,17 +103,16 @@ const UserAdmin: React.FC = () => {
     isActive: true
   });
 
-  // Get all users
+  // Get all users with improved error handling
   const { 
     data: users, 
     isLoading: usersLoading, 
-    error: usersError 
+    error: usersError,
+    refetch: refetchUsers 
   } = useQuery<User[]>({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/users');
-      if (!res.ok) throw new Error('Failed to fetch users');
-      return res.json();
+      return await apiRequest('GET', '/api/users');
     }
   });
 
@@ -121,13 +120,12 @@ const UserAdmin: React.FC = () => {
   const { 
     data: vessels, 
     isLoading: vesselsLoading, 
-    error: vesselsError 
+    error: vesselsError,
+    refetch: refetchVessels
   } = useQuery<Vessel[]>({
     queryKey: ['/api/vessels-management'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/vessels-management');
-      if (!res.ok) throw new Error('Failed to fetch vessels');
-      return res.json();
+      return await apiRequest('GET', '/api/vessels-management');
     }
   });
 
@@ -141,9 +139,7 @@ const UserAdmin: React.FC = () => {
     queryKey: ['/api/user-vessel-assignments', selectedUser?.id],
     queryFn: async () => {
       if (!selectedUser) return [];
-      const res = await apiRequest('GET', `/api/user-vessel-assignments?userId=${selectedUser.id}`);
-      if (!res.ok) throw new Error('Failed to fetch user vessel assignments');
-      return res.json();
+      return await apiRequest('GET', `/api/user-vessel-assignments?userId=${selectedUser.id}`);
     },
     enabled: !!selectedUser
   });
@@ -151,12 +147,7 @@ const UserAdmin: React.FC = () => {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: Omit<User, 'id' | 'avatarUrl'> & { password: string }) => {
-      const res = await apiRequest('POST', '/api/register', userData);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create user');
-      }
-      return res.json();
+      return await apiRequest('POST', '/api/register', userData);
     },
     onSuccess: () => {
       toast({
@@ -181,12 +172,7 @@ const UserAdmin: React.FC = () => {
   const updateUserMutation = useMutation({
     mutationFn: async (data: { id: number, userData: Partial<User> }) => {
       const { id, userData } = data;
-      const res = await apiRequest('PATCH', `/api/users/${id}`, userData);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update user');
-      }
-      return res.json();
+      return await apiRequest('PATCH', `/api/users/${id}`, userData);
     },
     onSuccess: (data) => {
       toast({
@@ -210,12 +196,7 @@ const UserAdmin: React.FC = () => {
   // Create user-vessel assignment mutation
   const createAssignmentMutation = useMutation({
     mutationFn: async (assignment: { userId: number, vesselId: number, role: string }) => {
-      const res = await apiRequest('POST', '/api/user-vessel-assignments', assignment);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create assignment');
-      }
-      return res.json();
+      return await apiRequest('POST', '/api/user-vessel-assignments', assignment);
     },
     onSuccess: () => {
       toast({
@@ -242,10 +223,7 @@ const UserAdmin: React.FC = () => {
   // Delete user-vessel assignment mutation
   const deleteAssignmentMutation = useMutation({
     mutationFn: async (assignmentId: number) => {
-      const res = await apiRequest('DELETE', `/api/user-vessel-assignments/${assignmentId}`);
-      if (!res.ok) {
-        throw new Error('Failed to delete assignment');
-      }
+      await apiRequest('DELETE', `/api/user-vessel-assignments/${assignmentId}`);
       return true;
     },
     onSuccess: () => {
@@ -347,7 +325,7 @@ const UserAdmin: React.FC = () => {
 
   // Handle assignment deletion
   const handleDeleteAssignment = (assignmentId: number) => {
-    if (confirm('Are you sure you want to remove this vessel assignment?')) {
+    if (window.confirm('Are you sure you want to remove this vessel assignment?')) {
       deleteAssignmentMutation.mutate(assignmentId);
     }
   };
