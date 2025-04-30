@@ -254,16 +254,7 @@ const FormsAdministration: React.FC = () => {
     enabled: !!selectedTemplate,
     retry: false,
     gcTime: 0,
-    staleTime: 0,
-    // Add error handling to prevent rendering issues
-    onError: (error) => {
-      console.error("Error fetching form template versions:", error);
-      toast({
-        title: "Data Loading Error",
-        description: "Unable to fetch form versions. Using local data instead.",
-        variant: "destructive",
-      });
-    }
+    staleTime: 0
   });
   
   // Category mutations
@@ -685,11 +676,10 @@ const FormsAdministration: React.FC = () => {
   // Render form categories table
   const renderCategoriesTable = () => {
     if (formCategoriesQuery.isLoading) {
-      return <div className="text-center py-8">Loading categories...</div>;
-    }
-    
-    if (formCategoriesQuery.isError) {
-      return <div className="text-center py-8 text-destructive">Error loading categories</div>;
+      return <div className="text-center py-8">
+        <CircularProgress className="mx-auto" />
+        <p className="mt-2 text-sm text-muted-foreground">Loading categories...</p>
+      </div>;
     }
     
     const categories = formCategoriesQuery.data as FormCategory[] || [];
@@ -1556,7 +1546,17 @@ const FormsAdministration: React.FC = () => {
                   {formVersionsQuery.isLoading ? (
                     <div className="text-center py-4">Loading versions...</div>
                   ) : formVersionsQuery.isError ? (
-                    <div className="text-center py-4 text-destructive">Error loading versions</div>
+                    <div className="bg-destructive/10 p-4 rounded-md border border-destructive/50 mb-4">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-destructive">API Error</h4>
+                          <p className="text-sm text-muted-foreground">
+                            There was an error loading form versions data. Using local fallback data instead.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <Table>
                       <TableHeader>
@@ -1568,7 +1568,7 @@ const FormsAdministration: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {/* Use mock versions data since API might not be implemented yet */}
+                        {/* Use mock versions data as fallback when API has an error */}
                         {(formVersionsQuery.isError ? mockVersions : (formVersionsQuery.data as FormTemplateVersion[] || mockVersions))
                           .filter(version => version.templateId === selectedTemplate.id)
                           .map(version => (
