@@ -63,6 +63,7 @@ const VesselAdmin: React.FC = () => {
   const [editingVessel, setEditingVessel] = useState<number | null>(null);
   const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
   const [isSearchingForVessel, setIsSearchingForVessel] = useState(false);
+  const [allowMapClickForEdit, setAllowMapClickForEdit] = useState(false);
   const mapRef = useRef<{ 
     focusVessel: (vesselId: number) => void;
     focusPosition: (latitude: number, longitude: number, zoom?: number) => void;
@@ -85,7 +86,8 @@ const VesselAdmin: React.FC = () => {
       flag: '',
       year: '',
       image: null,
-      mmsi: undefined
+      mmsi: undefined,
+      position: undefined
     });
   };
   
@@ -107,16 +109,26 @@ const VesselAdmin: React.FC = () => {
   const startEditVessel = (vesselId: number) => {
     const vessel = vessels.find(v => v.id === vesselId);
     if (vessel) {
+      // Get vessel position if available
+      let position: string | undefined = undefined;
+      if (vessel.latitude && vessel.longitude) {
+        position = `${vessel.latitude.toFixed(6)}, ${vessel.longitude.toFixed(6)}`;
+      }
+
       setFormData({
         name: vessel.name,
         type: vessel.type,
         length: vessel.length,
         flag: 'Malta', // Mock data
         year: '2018',  // Mock data
-        image: null
+        image: null,
+        position: position
       });
       setEditingVessel(vesselId);
       setIsEditingVessel(true);
+      
+      // Also enable map position selection for the edit form
+      setAllowMapClickForEdit(true);
     }
   };
   
@@ -302,6 +314,38 @@ const VesselAdmin: React.FC = () => {
                               placeholder="e.g. 2020"
                             />
                           </div>
+                          {formData.position && (
+                            <div className="grid gap-2">
+                              <Label htmlFor="position">Position (from map)</Label>
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  id="position"
+                                  name="position"
+                                  value={formData.position}
+                                  readOnly
+                                  className="flex-1 bg-muted/30"
+                                />
+                                <Button 
+                                  type="button" 
+                                  size="icon" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    const [lat, lng] = formData.position?.split(',').map(s => parseFloat(s.trim())) || [];
+                                    if (lat && lng && mapRef.current) {
+                                      mapRef.current.focusPosition(lat, lng, 14);
+                                    }
+                                  }}
+                                  title="View on map"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                <span className="font-medium">Tip:</span> Click on the map to select a different position
+                              </p>
+                            </div>
+                          )}
+                          
                           <div className="grid gap-2">
                             <Label htmlFor="image">Vessel Image</Label>
                             <Button variant="outline" className="w-full">
@@ -373,6 +417,38 @@ const VesselAdmin: React.FC = () => {
                               onChange={handleChange}
                             />
                           </div>
+                          {formData.position && (
+                            <div className="grid gap-2">
+                              <Label htmlFor="edit-position">Position</Label>
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  id="edit-position"
+                                  name="position"
+                                  value={formData.position}
+                                  readOnly
+                                  className="flex-1 bg-muted/30"
+                                />
+                                <Button 
+                                  type="button" 
+                                  size="icon" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    const [lat, lng] = formData.position?.split(',').map(s => parseFloat(s.trim())) || [];
+                                    if (lat && lng && mapRef.current) {
+                                      mapRef.current.focusPosition(lat, lng, 14);
+                                    }
+                                  }}
+                                  title="View on map"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                <span className="font-medium">Tip:</span> Click on the map to update the position
+                              </p>
+                            </div>
+                          )}
+                          
                           <div className="grid gap-2">
                             <Label htmlFor="edit-image">Vessel Image</Label>
                             <Button variant="outline" className="w-full">
@@ -467,7 +543,7 @@ const VesselAdmin: React.FC = () => {
                       height={500}
                       selectedVesselId={selectedVesselId}
                       onVesselSelect={setSelectedVesselId}
-                      allowMapClick={isAddingVessel}
+                      allowMapClick={isAddingVessel || (isEditingVessel && allowMapClickForEdit)}
                       onMapPositionSelect={handleMapPositionSelect}
                     />
                   </div>
