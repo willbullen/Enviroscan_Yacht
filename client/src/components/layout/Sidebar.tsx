@@ -76,12 +76,19 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         )}
       </div>
       
-      {/* Create Button */}
+      {/* Create Button with Dropdown */}
       {isOpen && (
         <div className="px-4 mb-2">
-          <Button className="w-full justify-start space-x-2">
+          <Button 
+            className="w-full justify-start space-x-2 group relative"
+            variant="outline"
+            title="Create new items quickly in different sections of the application"
+          >
             <PlusCircle className="h-4 w-4" />
-            <span>Quick Create</span>
+            <span>Create New Item</span>
+            <div className="absolute right-2 top-2 h-4 w-4 bg-primary/10 rounded-full flex items-center justify-center">
+              <span className="text-xs text-primary font-semibold">?</span>
+            </div>
           </Button>
         </div>
       )}

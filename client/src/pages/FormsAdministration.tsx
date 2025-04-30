@@ -755,12 +755,14 @@ const FormsAdministration: React.FC = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Filter by name or description..."
+                placeholder="Search Categories by name or description..."
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="pl-8"
+                aria-label="Search categories"
               />
             </div>
+            <p className="text-xs text-muted-foreground mt-1 ml-1">Type to filter form categories</p>
           </div>
           <div>
             <select
@@ -828,14 +830,28 @@ const FormsAdministration: React.FC = () => {
                 <TableCell>{category.description || '-'}</TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    <Badge 
-                      variant={category.isActive ? "success" : "secondary"}
-                      className="cursor-pointer"
+                    <div 
+                      className={`flex items-center px-3 py-1 rounded-full cursor-pointer transition-colors ${
+                        category.isActive 
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50' 
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                      }`}
                       onClick={() => toggleCategoryStatus(category)}
+                      role="button"
+                      aria-label={`Toggle status. Currently ${category.isActive ? 'Active' : 'Inactive'}`}
                     >
+                      <div className={`w-3 h-3 rounded-full mr-2 ${category.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                       {category.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground ml-2">(click to toggle)</span>
+                      <svg 
+                        className="w-4 h-4 ml-2" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24" 
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m-8 4H4m0 0l4 4m-4-4l4-4"></path>
+                      </svg>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>{new Date(category.createdAt).toLocaleDateString()}</TableCell>
@@ -992,12 +1008,14 @@ const FormsAdministration: React.FC = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Filter by title or description..."
+                placeholder="Search Templates by title or description..."
                 value={templateFilter}
                 onChange={(e) => setTemplateFilter(e.target.value)}
                 className="pl-8"
+                aria-label="Search templates"
               />
             </div>
+            <p className="text-xs text-muted-foreground mt-1 ml-1">Type to filter form templates</p>
           </div>
           <div>
             <select
@@ -1088,14 +1106,28 @@ const FormsAdministration: React.FC = () => {
                 <TableCell>{template.description || '-'}</TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    <Badge 
-                      variant={template.isActive ? "success" : "secondary"}
-                      className="cursor-pointer"
+                    <div 
+                      className={`flex items-center px-3 py-1 rounded-full cursor-pointer transition-colors ${
+                        template.isActive 
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50' 
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                      }`}
                       onClick={() => toggleTemplateStatus(template)}
+                      role="button"
+                      aria-label={`Toggle status. Currently ${template.isActive ? 'Active' : 'Inactive'}`}
                     >
+                      <div className={`w-3 h-3 rounded-full mr-2 ${template.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                       {template.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground ml-2">(click to toggle)</span>
+                      <svg 
+                        className="w-4 h-4 ml-2" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24" 
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m-8 4H4m0 0l4 4m-4-4l4-4"></path>
+                      </svg>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>{new Date(template.createdAt).toLocaleDateString()}</TableCell>
