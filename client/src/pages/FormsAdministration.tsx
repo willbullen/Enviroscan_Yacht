@@ -254,7 +254,16 @@ const FormsAdministration: React.FC = () => {
     enabled: !!selectedTemplate,
     retry: false,
     gcTime: 0,
-    staleTime: 0
+    staleTime: 0,
+    // Add error handling to prevent rendering issues
+    onError: (error) => {
+      console.error("Error fetching form template versions:", error);
+      toast({
+        title: "Data Loading Error",
+        description: "Unable to fetch form versions. Using local data instead.",
+        variant: "destructive",
+      });
+    }
   });
   
   // Category mutations
