@@ -16,6 +16,8 @@ import {
   waypoints, type Waypoint, type InsertWaypoint,
   fuelConsumptionChart, type FuelConsumptionChart, type InsertFuelConsumptionChart,
   speedChart, type SpeedChart, type InsertSpeedChart,
+  vessels, type Vessel, type InsertVessel,
+  userVesselAssignments, type UserVesselAssignment, type InsertUserVesselAssignment,
   // New ISM Task Management imports
   formCategories, type FormCategory, type InsertFormCategory,
   formTemplates, type FormTemplate, type InsertFormTemplate,
@@ -35,7 +37,28 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
+  getActiveUsers(): Promise<User[]>;
+  
+  // Session store for authentication
+  sessionStore: any;
+
+  // Vessel operations
+  getVessel(id: number): Promise<Vessel | undefined>;
+  getAllVessels(): Promise<Vessel[]>;
+  getActiveVessels(): Promise<Vessel[]>;
+  createVessel(vessel: InsertVessel): Promise<Vessel>;
+  updateVessel(id: number, vessel: Partial<Vessel>): Promise<Vessel | undefined>;
+  deleteVessel(id: number): Promise<boolean>;
+  
+  // User-Vessel Assignment operations
+  getUserVesselAssignment(id: number): Promise<UserVesselAssignment | undefined>;
+  getUserVesselAssignments(userId: number): Promise<UserVesselAssignment[]>;
+  getVesselUserAssignments(vesselId: number): Promise<UserVesselAssignment[]>;
+  createUserVesselAssignment(assignment: InsertUserVesselAssignment): Promise<UserVesselAssignment>;
+  updateUserVesselAssignment(id: number, assignment: Partial<UserVesselAssignment>): Promise<UserVesselAssignment | undefined>;
+  deleteUserVesselAssignment(id: number): Promise<boolean>;
 
   // Equipment operations
   getEquipment(id: number): Promise<Equipment | undefined>;
