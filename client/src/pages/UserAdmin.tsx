@@ -799,69 +799,51 @@ const UserAdmin: React.FC = () => {
                                 </div>
                               </TableCell>
                               <TableCell className="text-right">
-                                <div className="flex justify-end space-x-1">
+                                <div className="flex justify-end gap-1">
                                   <Button 
                                     variant="ghost" 
-                                    size="icon"
+                                    size="sm"
                                     onClick={() => handleSelectUser(user)}
-                                    className="h-8 w-8"
+                                    className="h-8 px-2 text-xs"
+                                    title="Manage vessel assignments"
                                   >
-                                    <Ship className="h-4 w-4" />
-                                    <span className="sr-only">Manage vessels</span>
+                                    <Ship className="h-3.5 w-3.5 mr-1" />
+                                    <span>Vessels</span>
                                   </Button>
                                   <Button 
                                     variant="ghost" 
-                                    size="icon"
+                                    size="sm"
                                     onClick={() => handleEditUser(user)}
-                                    className="h-8 w-8"
+                                    className="h-8 px-2 text-xs"
+                                    title="Edit user details"
                                   >
-                                    <Edit className="h-4 w-4" />
-                                    <span className="sr-only">Edit user</span>
+                                    <Edit className="h-3.5 w-3.5 mr-1" />
+                                    <span>Edit</span>
                                   </Button>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        className="h-8 w-8"
-                                      >
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">Open menu</span>
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-40">
-                                      <DropdownMenuLabel>User Actions</DropdownMenuLabel>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem onClick={() => handleSelectUser(user)}>
-                                        <Ship className="mr-2 h-4 w-4" />
-                                        <span>Vessel Access</span>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        <span>Edit Details</span>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem 
-                                        className={user.isActive ? 'text-destructive' : 'text-green-600'}
-                                        onClick={() => updateUserMutation.mutate({
-                                          id: user.id,
-                                          userData: { isActive: !user.isActive }
-                                        })}
-                                      >
-                                        {user.isActive ? (
-                                          <>
-                                            <XCircle className="mr-2 h-4 w-4" />
-                                            <span>Deactivate</span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                            <span>Activate</span>
-                                          </>
-                                        )}
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+                                  {user.id !== currentUser?.id && (
+                                    <Button
+                                      variant={user.isActive ? "ghost" : "secondary"}
+                                      size="sm"
+                                      className={`h-8 px-2 text-xs ${user.isActive ? "hover:text-destructive" : "hover:text-green-600"}`}
+                                      onClick={() => updateUserMutation.mutate({
+                                        id: user.id,
+                                        userData: { isActive: !user.isActive }
+                                      })}
+                                      title={user.isActive ? "Deactivate user account" : "Activate user account"}
+                                    >
+                                      {user.isActive ? (
+                                        <>
+                                          <XCircle className="h-3.5 w-3.5 mr-1" />
+                                          <span>Deactivate</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                          <span>Activate</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
                                 </div>
                               </TableCell>
                             </TableRow>
