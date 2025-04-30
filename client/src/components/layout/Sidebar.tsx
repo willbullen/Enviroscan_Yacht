@@ -181,36 +181,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           </div>
         </NavLink>
         
-        <NavLink href="/crew-management">
-          <div 
-            className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/crew-management" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-              !isOpen && "justify-center p-2"
-            )} 
-          >
-            <Users className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Crew Management</span>}
-          </div>
-        </NavLink>
-        
-        <NavLink href="/ism-management">
-          <div 
-            className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/ism-management" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-              !isOpen && "justify-center p-2"
-            )} 
-          >
-            <Shield className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>ISM Management</span>}
-          </div>
-        </NavLink>
-        
+
 
         <NavLink href="/voyages">
           <div 
@@ -257,35 +228,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           </div>
         </NavLink>
         
-        <NavLink href="/financial-management">
-          <div 
-            className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/financial-management" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-              !isOpen && "justify-center p-2"
-            )} 
-          >
-            <DollarSign className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Finances</span>}
-          </div>
-        </NavLink>
-        
-        <NavLink href="/reports">
-          <div 
-            className={cn(
-              "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors", 
-              location === "/reports" 
-                ? "bg-accent text-accent-foreground" 
-                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
-              !isOpen && "justify-center p-2"
-            )} 
-          >
-            <FileText className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>Reports</span>}
-          </div>
-        </NavLink>
+
       </nav>
 
       {/* Sidebar Footer */}
@@ -335,6 +278,70 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               {location === "/users/admin" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <Users className={cn("h-5 w-5", isOpen && "mr-3")} />
               {isOpen && <span>User Management</span>}
+            </div>
+          </NavLink>
+          
+          <NavLink href="/crew-management">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/crew-management" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/crew-management" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <Users className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>Crew Management</span>}
+            </div>
+          </NavLink>
+          
+          <NavLink href="/ism-management">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/ism-management" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/ism-management" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <Shield className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>ISM Management</span>}
+            </div>
+          </NavLink>
+          
+          <NavLink href="/financial-management">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/financial-management" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/financial-management" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <DollarSign className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>Finances</span>}
+            </div>
+          </NavLink>
+          
+          <NavLink href="/reports">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/reports" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/reports" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <FileText className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>Reports</span>}
             </div>
           </NavLink>
         </nav>
