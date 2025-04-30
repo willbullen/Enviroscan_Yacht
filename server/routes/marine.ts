@@ -606,126 +606,124 @@ router.get('/search-vessels', async (req, res) => {
     console.log(`Searching for vessels with query: "${query}"`);
     console.log(`Current API_KEY status: ${AIS_API_KEY ? 'Available' : 'Missing'}`);
     
-    // If we have an API key, use the real AIS Stream API
-    if (AIS_API_KEY) {
-      try {
-        // Debug: Log all MMSI keys in the cache
-        console.log(`Current vessel cache contains ${Object.keys(vesselPositionsCache).length} vessels`);
-        if (Object.keys(vesselPositionsCache).length > 0) {
-          console.log(`First 5 MMSI keys in cache: ${Object.keys(vesselPositionsCache).slice(0, 5).join(', ')}`);
-        }
-        
-        // Alternative approach: First check if we can find the vessel in our vessel position cache
-        // This is helpful for vessels that are actively transmitting AIS data
-        if (query && typeof query === 'string' && /^\d+$/.test(query)) {
-          // This appears to be an MMSI number
-          const mmsi = query;
-          console.log(`Checking if MMSI ${mmsi} exists in our position cache...`);
-          
-          // Check our vessel positions cache first
-          if (vesselPositionsCache[mmsi]) {
-            console.log(`Found MMSI ${mmsi} in our position cache!`);
-            const vessel = vesselPositionsCache[mmsi];
-            
-            // Return the vessel data in the expected format
-            const result = [{
-              mmsi: vessel.mmsi,
-              name: vessel.name || `AIS Vessel ${vessel.mmsi}`,
-              type: 'Unknown',
-              length: 0,
-              width: 0,
-              flag: 'Unknown',
-              latitude: vessel.latitude,
-              longitude: vessel.longitude
-            }];
-            console.log(`Returning vessel from cache: ${JSON.stringify(result)}`);
-            return res.json(result);
-          } else {
-            console.log(`MMSI ${mmsi} not found in our position cache`);
-            
-            // No special case handling for specific MMSIs - we'll use the AIS API directly
-            console.log(`MMSI ${mmsi} not found in position cache, proceeding with AIS API search`);
-          }
-        }
-        
-        console.log(`Using AIS Stream API to search for "${query}" with API key: ${AIS_API_KEY.substring(0, 4)}...`);
-        
-        // Construct the URL and request parameters for debugging
-        // Use query parameter format instead of POST request body
-        // API endpoint might have changed to use GET method instead of POST
-        const queryParam = encodeURIComponent(String(query));
-        const apiUrl = `${BACKUP_API_URL}/search?query=${queryParam}`;
-        
-        console.log(`Request URL: ${apiUrl}`);
-        
-        // Make the request to the AIS Stream API search endpoint
-        // Switching from POST to GET based on 405 Method Not Allowed error
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'x-api-key': AIS_API_KEY,
-            'Accept': 'application/json'
-          }
-        });
-        
-        console.log(`AIS API response status: ${response.status} ${response.statusText}`);
-        
-        if (!response.ok) {
-          throw new Error(`AIS API returned ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json() as {
-          vessels?: Array<{
-            mmsi: string;
-            name?: string;
-            shipType?: string;
-            dimension?: {
-              length?: number;
-              width?: number;
-            };
-            flag?: string;
-            imo?: string;
-            callsign?: string;
-          }>
-        };
-        
-        console.log(`Raw API response:`, JSON.stringify(data).substring(0, 500) + (JSON.stringify(data).length > 500 ? '...' : ''));
-        
-        // Format the response to match our application's expected structure
-        const formattedResults = data.vessels?.map(vessel => ({
-          mmsi: vessel.mmsi,
-          name: vessel.name || 'Unknown',
-          type: vessel.shipType || 'Unknown',
-          length: vessel.dimension?.length || 0,
-          width: vessel.dimension?.width || 0,
-          flag: vessel.flag || 'Unknown',
-          imo: vessel.imo || '',
-          callsign: vessel.callsign || ''
-        })) || [];
-        
-        console.log(`Found ${formattedResults.length} vessels matching query "${query}"`);
-        if (formattedResults.length > 0) {
-          console.log(`First result: ${JSON.stringify(formattedResults[0])}`);
-        }
-        
-        return res.json(formattedResults);
-      } catch (error) {
-        console.error('Error with AIS API:', error);
-        
-        // Don't fall back to mock data, return an error and empty results
-        console.log(`AIS Stream API search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        return res.status(503).json({ 
-          error: 'AIS API error',
-          message: 'The vessel search service is currently unavailable. Please try again later.',
-          results: []
-        });
-      }
-    } else {
-      // No API key provided, return an error indicating the service is unavailable
-      console.log('No AIS API key available: vessel search unavailable');
+    // Check if we have an API key
+    if (!AIS_API_KEY) {
+      console.log('No AIS API key provided');
       return res.status(503).json({ 
-        error: 'API configuration error',
-        message: 'Vessel search service is currently unavailable due to missing API credentials.',
+        error: 'API key required', 
+        message: 'AIS API key is required for vessel search functionality' 
+      });
+    }
+    
+    try {
+      // Debug: Log all MMSI keys in the cache
+      console.log(`Current vessel cache contains ${Object.keys(vesselPositionsCache).length} vessels`);
+      if (Object.keys(vesselPositionsCache).length > 0) {
+        console.log(`First 5 MMSI keys in cache: ${Object.keys(vesselPositionsCache).slice(0, 5).join(', ')}`);
+      }
+      
+      // Alternative approach: First check if we can find the vessel in our vessel position cache
+      // This is helpful for vessels that are actively transmitting AIS data
+      if (query && typeof query === 'string' && /^\d+$/.test(query)) {
+        // This appears to be an MMSI number
+        const mmsi = query;
+        console.log(`Checking if MMSI ${mmsi} exists in our position cache...`);
+        
+        // Check our vessel positions cache first
+        if (vesselPositionsCache[mmsi]) {
+          console.log(`Found MMSI ${mmsi} in our position cache!`);
+          const vessel = vesselPositionsCache[mmsi];
+          
+          // Return the vessel data in the expected format
+          const result = [{
+            mmsi: vessel.mmsi,
+            name: vessel.name || `AIS Vessel ${vessel.mmsi}`,
+            type: 'Unknown',
+            length: 0,
+            width: 0,
+            flag: 'Unknown',
+            latitude: vessel.latitude,
+            longitude: vessel.longitude
+          }];
+          console.log(`Returning vessel from cache: ${JSON.stringify(result)}`);
+          return res.json(result);
+        } else {
+          console.log(`MMSI ${mmsi} not found in our position cache`);
+          
+          // No special case handling for specific MMSIs - we'll use the AIS API directly
+          console.log(`MMSI ${mmsi} not found in position cache, proceeding with AIS API search`);
+        }
+      }
+      
+      console.log(`Using AIS Stream API to search for "${query}" with API key: ${AIS_API_KEY.substring(0, 4)}...`);
+      
+      // Construct the URL and request parameters for debugging
+      // Use query parameter format instead of POST request body
+      // API endpoint might have changed to use GET method instead of POST
+      const queryParam = encodeURIComponent(String(query));
+      const apiUrl = `${BACKUP_API_URL}/search?query=${queryParam}`;
+      
+      console.log(`Request URL: ${apiUrl}`);
+      
+      // Make the request to the AIS Stream API search endpoint
+      // Switching from POST to GET based on 405 Method Not Allowed error
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'x-api-key': AIS_API_KEY,
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log(`AIS API response status: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        throw new Error(`AIS API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json() as {
+        vessels?: Array<{
+          mmsi: string;
+          name?: string;
+          shipType?: string;
+          dimension?: {
+            length?: number;
+            width?: number;
+          };
+          flag?: string;
+          imo?: string;
+          callsign?: string;
+        }>
+      };
+      
+      console.log(`Raw API response:`, JSON.stringify(data).substring(0, 500) + (JSON.stringify(data).length > 500 ? '...' : ''));
+      
+      // Format the response to match our application's expected structure
+      const formattedResults = data.vessels?.map(vessel => ({
+        mmsi: vessel.mmsi,
+        name: vessel.name || 'Unknown',
+        type: vessel.shipType || 'Unknown',
+        length: vessel.dimension?.length || 0,
+        width: vessel.dimension?.width || 0,
+        flag: vessel.flag || 'Unknown',
+        imo: vessel.imo || '',
+        callsign: vessel.callsign || ''
+      })) || [];
+      
+      console.log(`Found ${formattedResults.length} vessels matching query "${query}"`);
+      if (formattedResults.length > 0) {
+        console.log(`First result: ${JSON.stringify(formattedResults[0])}`);
+      }
+      
+      return res.json(formattedResults);
+    } catch (error) {
+      console.error('Error with AIS API:', error);
+      
+      // Don't fall back to mock data, return an error and empty results
+      console.log(`AIS Stream API search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return res.status(503).json({ 
+        error: 'AIS API error',
+        message: 'The vessel search service is currently unavailable. Please try again later.',
         results: []
       });
     }

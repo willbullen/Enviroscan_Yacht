@@ -43,21 +43,36 @@ const VesselSearchForm: React.FC<VesselSearchFormProps> = ({
     
     try {
       setIsSearching(true);
+      console.log(`Searching for vessels with query: ${searchQuery}`);
+      
       const response = await fetch(`/api/marine/search-vessels?query=${encodeURIComponent(searchQuery)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.statusText}`);
-      }
-      
       const data = await response.json();
       
       // Check if the response is an error message
       if (data && data.error) {
-        toast({
-          title: 'Search error',
-          description: data.message || 'Failed to search for vessels',
-          variant: 'destructive'
-        });
+        console.log('Search returned an error:', data.error);
+        
+        // Show more helpful error messages based on the error type
+        if (data.error === 'API key required') {
+          toast({
+            title: 'AIS API key required',
+            description: 'Please configure the AIS API key to enable vessel searches',
+            variant: 'destructive'
+          });
+        } else if (response.status === 503) {
+          toast({
+            title: 'AIS API service unavailable',
+            description: 'The vessel search service is temporarily unavailable. Please try again later.',
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Search error',
+            description: data.message || 'Failed to search for vessels',
+            variant: 'destructive'
+          });
+        }
+        
         setSearchResults([]);
       } else {
         // Handle normal results
@@ -79,9 +94,11 @@ const VesselSearchForm: React.FC<VesselSearchFormProps> = ({
       }
     } catch (error) {
       console.error('Error searching for vessels:', error);
+      
+      // Handle network errors more gracefully
       toast({
         title: 'Search failed',
-        description: error instanceof Error ? error.message : 'Failed to search for vessels',
+        description: 'Unable to connect to the vessel search service. Please check your network connection and try again.',
         variant: 'destructive'
       });
     } finally {
