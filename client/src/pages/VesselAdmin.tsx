@@ -12,7 +12,8 @@ import {
   Navigation,
   Eye,
   Image as ImageIcon,
-  Search
+  Search,
+  MousePointerClick
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -149,6 +150,7 @@ const VesselAdmin: React.FC = () => {
     setIsEditingVessel(false);
     setEditingVessel(null);
     setIsSearchingForVessel(false);
+    setAllowMapClickForEdit(false);
     resetForm();
   };
   
@@ -417,37 +419,58 @@ const VesselAdmin: React.FC = () => {
                               onChange={handleChange}
                             />
                           </div>
-                          {formData.position && (
-                            <div className="grid gap-2">
-                              <Label htmlFor="edit-position">Position</Label>
-                              <div className="flex gap-2 items-center">
-                                <Input
-                                  id="edit-position"
-                                  name="position"
-                                  value={formData.position}
-                                  readOnly
-                                  className="flex-1 bg-muted/30"
-                                />
-                                <Button 
-                                  type="button" 
-                                  size="icon" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    const [lat, lng] = formData.position?.split(',').map(s => parseFloat(s.trim())) || [];
-                                    if (lat && lng && mapRef.current) {
-                                      mapRef.current.focusPosition(lat, lng, 14);
-                                    }
-                                  }}
-                                  title="View on map"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-position">Position</Label>
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                id="edit-position"
+                                name="position"
+                                value={formData.position || ''}
+                                readOnly
+                                className="flex-1 bg-muted/30"
+                              />
+                              <Button 
+                                type="button" 
+                                size="icon" 
+                                variant="outline"
+                                onClick={() => {
+                                  const [lat, lng] = formData.position?.split(',').map(s => parseFloat(s.trim())) || [];
+                                  if (lat && lng && mapRef.current) {
+                                    mapRef.current.focusPosition(lat, lng, 14);
+                                  }
+                                }}
+                                title="View on map"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Button 
+                                type="button" 
+                                size="sm"
+                                variant={allowMapClickForEdit ? "default" : "outline"}
+                                onClick={() => setAllowMapClickForEdit(!allowMapClickForEdit)}
+                                className="text-xs flex items-center gap-1"
+                              >
+                                {allowMapClickForEdit ? (
+                                  <>
+                                    <MousePointerClick className="h-3 w-3" />
+                                    Disable Map Selection
+                                  </>
+                                ) : (
+                                  <>
+                                    <MousePointerClick className="h-3 w-3" />
+                                    Enable Map Selection
+                                  </>
+                                )}
+                              </Button>
                               <p className="text-xs text-muted-foreground">
-                                <span className="font-medium">Tip:</span> Click on the map to update the position
+                                {allowMapClickForEdit 
+                                  ? "Click on the map to update vessel position" 
+                                  : "Enable to select position from map"}
                               </p>
                             </div>
-                          )}
+                          </div>
                           
                           <div className="grid gap-2">
                             <Label htmlFor="edit-image">Vessel Image</Label>
