@@ -24,15 +24,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+
 import {
   Table,
   TableBody,
@@ -62,8 +54,8 @@ type VesselFormData = {
 
 const VesselAdmin: React.FC = () => {
   const { vessels } = useVessel();
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [isAddingVessel, setIsAddingVessel] = useState(false);
+  const [isEditingVessel, setIsEditingVessel] = useState(false);
   const [editingVessel, setEditingVessel] = useState<number | null>(null);
   const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
   const mapRef = useRef<{ focusVessel: (vesselId: number) => void }>(null);
@@ -91,14 +83,14 @@ const VesselAdmin: React.FC = () => {
   const handleAddVessel = () => {
     // Here we would send the data to the API
     console.log('Adding vessel:', formData);
-    setShowAddDialog(false);
+    setIsAddingVessel(false);
     resetForm();
   };
   
   const handleEditVessel = () => {
     // Here we would send the updated data to the API
     console.log('Updating vessel:', editingVessel, formData);
-    setShowEditDialog(false);
+    setIsEditingVessel(false);
     setEditingVessel(null);
     resetForm();
   };
@@ -115,8 +107,20 @@ const VesselAdmin: React.FC = () => {
         image: null
       });
       setEditingVessel(vesselId);
-      setShowEditDialog(true);
+      setIsEditingVessel(true);
     }
+  };
+  
+  const startAddVessel = () => {
+    resetForm();
+    setIsAddingVessel(true);
+  };
+  
+  const cancelAction = () => {
+    setIsAddingVessel(false);
+    setIsEditingVessel(false);
+    setEditingVessel(null);
+    resetForm();
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +133,7 @@ const VesselAdmin: React.FC = () => {
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Fleet Management</h1>
         <div className="flex gap-2">
-          <Button onClick={() => { resetForm(); setShowAddDialog(true); }}>
+          <Button onClick={startAddVessel}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add New Vessel
           </Button>
@@ -164,58 +168,209 @@ const VesselAdmin: React.FC = () => {
                     </h3>
                   </div>
                   <div className="p-0">
-                    <div className="max-h-[500px] overflow-y-auto">
-                      {vessels.map((vessel) => (
-                        <div 
-                          key={vessel.id}
-                          className={`p-3 border-b cursor-pointer hover:bg-accent transition-colors flex items-center justify-between ${selectedVesselId === vessel.id ? 'bg-primary/10 border-primary' : ''}`}
-                          onClick={() => {
-                            setSelectedVesselId(vessel.id);
-                            if (mapRef.current) {
-                              mapRef.current.focusVessel(vessel.id);
-                            }
-                          }}
-                        >
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <div style={{ color: `var(--${vessel.id === 1 ? 'blue' : vessel.id === 2 ? 'emerald' : vessel.id === 3 ? 'red' : 'purple'})` }}>
-                                <Ship className="h-4 w-4" />
-                              </div>
-                              <span className="font-medium">{vessel.name}</span>
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 gap-x-4">
-                              <div>Type: {vessel.type}</div>
-                              <div>Length: {vessel.length}</div>
-                              <div>Flag: Malta</div>
-                              <div>Built: 2018</div>
-                            </div>
+                    {isAddingVessel ? (
+                      <div className="p-4">
+                        <div className="border-b pb-3 mb-4">
+                          <h3 className="text-base font-medium">Add New Vessel</h3>
+                          <p className="text-xs text-muted-foreground mt-1">Enter vessel details below</p>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="name">Vessel Name</Label>
+                            <Input
+                              id="name"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              placeholder="e.g. M/Y Explorer"
+                            />
                           </div>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={(e) => { 
-                              e.stopPropagation(); 
-                              setSelectedVesselId(vessel.id);
-                              if (mapRef.current) {
-                                mapRef.current.focusVessel(vessel.id);
-                              }
-                            }} title="View on map">
-                              <Eye className="h-4 w-4" />
+                          <div className="grid gap-2">
+                            <Label htmlFor="type">Vessel Type</Label>
+                            <Input
+                              id="type"
+                              name="type"
+                              value={formData.type}
+                              onChange={handleChange}
+                              placeholder="e.g. Motor Yacht"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="length">Length</Label>
+                            <Input
+                              id="length"
+                              name="length"
+                              value={formData.length}
+                              onChange={handleChange}
+                              placeholder="e.g. 45m"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="flag">Flag</Label>
+                            <Input
+                              id="flag"
+                              name="flag"
+                              value={formData.flag}
+                              onChange={handleChange}
+                              placeholder="e.g. Malta"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="year">Year Built</Label>
+                            <Input
+                              id="year"
+                              name="year"
+                              value={formData.year}
+                              onChange={handleChange}
+                              placeholder="e.g. 2020"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="image">Vessel Image</Label>
+                            <Button variant="outline" className="w-full">
+                              <ImageIcon className="mr-2 h-4 w-4" />
+                              Upload Vessel Image
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEditVessel(vessel.id); }}>
-                              <Pencil className="h-4 w-4" />
+                          </div>
+                          <div className="flex justify-between gap-3 pt-2">
+                            <Button variant="outline" className="flex-1" onClick={cancelAction}>
+                              <X className="mr-2 h-4 w-4" />
+                              Cancel
                             </Button>
-                            <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => e.stopPropagation()}>
-                              <Trash2 className="h-4 w-4" />
+                            <Button className="flex-1" onClick={handleAddVessel}>
+                              <Save className="mr-2 h-4 w-4" />
+                              Add Vessel
                             </Button>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="p-3 border-t">
-                      <Button variant="outline" size="sm" className="w-full" onClick={() => { resetForm(); setShowAddDialog(true); }}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add New Vessel
-                      </Button>
-                    </div>
+                      </div>
+                    ) : isEditingVessel ? (
+                      <div className="p-4">
+                        <div className="border-b pb-3 mb-4">
+                          <h3 className="text-base font-medium">Edit Vessel</h3>
+                          <p className="text-xs text-muted-foreground mt-1">Update vessel information</p>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-name">Vessel Name</Label>
+                            <Input
+                              id="edit-name"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-type">Vessel Type</Label>
+                            <Input
+                              id="edit-type"
+                              name="type"
+                              value={formData.type}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-length">Length</Label>
+                            <Input
+                              id="edit-length"
+                              name="length"
+                              value={formData.length}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-flag">Flag</Label>
+                            <Input
+                              id="edit-flag"
+                              name="flag"
+                              value={formData.flag}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-year">Year Built</Label>
+                            <Input
+                              id="edit-year"
+                              name="year"
+                              value={formData.year}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-image">Vessel Image</Label>
+                            <Button variant="outline" className="w-full">
+                              <ImageIcon className="mr-2 h-4 w-4" />
+                              Update Vessel Image
+                            </Button>
+                          </div>
+                          <div className="flex justify-between gap-3 pt-2">
+                            <Button variant="outline" className="flex-1" onClick={cancelAction}>
+                              <X className="mr-2 h-4 w-4" />
+                              Cancel
+                            </Button>
+                            <Button className="flex-1" onClick={handleEditVessel}>
+                              <Save className="mr-2 h-4 w-4" />
+                              Update
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="max-h-[500px] overflow-y-auto">
+                          {vessels.map((vessel) => (
+                            <div 
+                              key={vessel.id}
+                              className={`p-3 border-b cursor-pointer hover:bg-accent transition-colors flex items-center justify-between ${selectedVesselId === vessel.id ? 'bg-primary/10 border-primary' : ''}`}
+                              onClick={() => {
+                                setSelectedVesselId(vessel.id);
+                                if (mapRef.current) {
+                                  mapRef.current.focusVessel(vessel.id);
+                                }
+                              }}
+                            >
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <div style={{ color: `var(--${vessel.id === 1 ? 'blue' : vessel.id === 2 ? 'emerald' : vessel.id === 3 ? 'red' : 'purple'})` }}>
+                                    <Ship className="h-4 w-4" />
+                                  </div>
+                                  <span className="font-medium">{vessel.name}</span>
+                                </div>
+                                <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 gap-x-4">
+                                  <div>Type: {vessel.type}</div>
+                                  <div>Length: {vessel.length}</div>
+                                  <div>Flag: Malta</div>
+                                  <div>Built: 2018</div>
+                                </div>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="icon" onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setSelectedVesselId(vessel.id);
+                                  if (mapRef.current) {
+                                    mapRef.current.focusVessel(vessel.id);
+                                  }
+                                }} title="View on map">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEditVessel(vessel.id); }}>
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => e.stopPropagation()}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-3 border-t">
+                          <Button variant="outline" size="sm" className="w-full" onClick={startAddVessel}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add New Vessel
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -242,177 +397,6 @@ const VesselAdmin: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
-        {/* Add Vessel Dialog */}
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Vessel</DialogTitle>
-              <DialogDescription>
-                Enter the details of the new vessel to add to your fleet.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="e.g. M/Y Explorer"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="type" className="text-right">Type</Label>
-                <Input
-                  id="type"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="e.g. Motor Yacht"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="length" className="text-right">Length</Label>
-                <Input
-                  id="length"
-                  name="length"
-                  value={formData.length}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="e.g. 45m"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="flag" className="text-right">Flag</Label>
-                <Input
-                  id="flag"
-                  name="flag"
-                  value={formData.flag}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="e.g. Malta"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="year" className="text-right">Year Built</Label>
-                <Input
-                  id="year"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleChange}
-                  className="col-span-3"
-                  placeholder="e.g. 2020"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="image" className="text-right">Image</Label>
-                <div className="col-span-3">
-                  <Button variant="outline" className="w-full">
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    Upload Vessel Image
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-                <X className="mr-2 h-4 w-4" />
-                Cancel
-              </Button>
-              <Button onClick={handleAddVessel}>
-                <Save className="mr-2 h-4 w-4" />
-                Add Vessel
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Edit Vessel Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit Vessel</DialogTitle>
-              <DialogDescription>
-                Update the details of this vessel.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">Name</Label>
-                <Input
-                  id="edit-name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-type" className="text-right">Type</Label>
-                <Input
-                  id="edit-type"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-length" className="text-right">Length</Label>
-                <Input
-                  id="edit-length"
-                  name="length"
-                  value={formData.length}
-                  onChange={handleChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-flag" className="text-right">Flag</Label>
-                <Input
-                  id="edit-flag"
-                  name="flag"
-                  value={formData.flag}
-                  onChange={handleChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-year" className="text-right">Year Built</Label>
-                <Input
-                  id="edit-year"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-image" className="text-right">Image</Label>
-                <div className="col-span-3">
-                  <Button variant="outline" className="w-full">
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    Upload New Image
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                <X className="mr-2 h-4 w-4" />
-                Cancel
-              </Button>
-              <Button onClick={handleEditVessel}>
-                <Save className="mr-2 h-4 w-4" />
-                Update Vessel
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </MainLayout>
   );
