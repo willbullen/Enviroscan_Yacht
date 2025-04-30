@@ -47,13 +47,17 @@ interface BasicVesselMapProps {
   height?: string | number;
   width?: string | number;
   className?: string;
+  selectedVesselId?: number | null; 
+  onVesselSelect?: (vesselId: number) => void;
 }
 
-const BasicVesselMap: React.FC<BasicVesselMapProps> = ({
+const BasicVesselMap = React.forwardRef<{ focusVessel: (vesselId: number) => void }, BasicVesselMapProps>(({
   height = 400,
   width = '100%',
   className = '',
-}) => {
+  selectedVesselId = null,
+  onVesselSelect
+}, ref) => {
   const { vessels } = useVessel();
   const [refreshInterval] = useState<number>(60000); // 1 minute by default
 

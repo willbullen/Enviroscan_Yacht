@@ -42,7 +42,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useVessel } from '@/contexts/VesselContext';
-import BasicVesselMap from '@/components/vessel/BasicVesselMap';
+import InteractiveVesselMap from '@/components/vessel/InteractiveVesselMap';
 import {
   Tabs,
   TabsContent,
@@ -230,8 +230,11 @@ const VesselAdmin: React.FC = () => {
                     </h3>
                   </div>
                   <div className="p-0">
-                    <BasicVesselMap 
+                    <InteractiveVesselMap 
+                      ref={mapRef}
                       height={500}
+                      selectedVesselId={selectedVesselId}
+                      onVesselSelect={setSelectedVesselId}
                     />
                   </div>
                 </div>
