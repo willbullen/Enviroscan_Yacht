@@ -631,36 +631,8 @@ router.get('/search-vessels', async (req, res) => {
           } else {
             console.log(`MMSI ${mmsi} not found in our position cache`);
             
-            // Add mock data for the specific vessel for testing
-            if (mmsi === '319155500') {
-              console.log(`Adding special test case for MMSI 319155500`);
-              const testVessel = {
-                mmsi: '319155500',
-                name: 'MARINE RESEARCH VESSEL',
-                type: 'Research Vessel',
-                length: 65,
-                width: 12,
-                flag: 'Cayman Islands',
-                imo: '319155500',
-                callsign: 'ZAB1234'
-              };
-              console.log(`Returning test vessel: ${JSON.stringify(testVessel)}`);
-              return res.json([testVessel]);
-            } else if (mmsi === '319904000') {
-              console.log(`Adding special test case for MMSI 319904000`);
-              const grandMarina = {
-                mmsi: '319904000',
-                name: 'GRAND MARINA',
-                type: 'Passenger',
-                length: 85,
-                width: 14,
-                flag: 'Cayman Islands',
-                imo: '319904000',
-                callsign: 'ZCB7890'
-              };
-              console.log(`Returning Grand Marina vessel: ${JSON.stringify(grandMarina)}`);
-              return res.json([grandMarina]);
-            }
+            // No special case handling for specific MMSIs - we'll use the AIS API directly
+            console.log(`MMSI ${mmsi} not found in position cache, proceeding with AIS API search`);
           }
         }
         
@@ -726,88 +698,24 @@ router.get('/search-vessels', async (req, res) => {
         
         return res.json(formattedResults);
       } catch (error) {
-        console.error('Error with AIS API, falling back to mock data:', error);
-        // Fall back to mock data on error
+        console.error('Error with AIS API:', error);
         
-        // Check if we're searching for a well-known vessel first
-        if (typeof query === 'string') {
-          const lowercaseQuery = query.toLowerCase();
-          
-          // Handle special searches
-          if (lowercaseQuery.includes('marine') || lowercaseQuery.includes('research')) {
-            console.log(`Special handling for "${query}" search after API error`);
-            const specialVessel = {
-              mmsi: '319155500',
-              name: 'MARINE RESEARCH VESSEL',
-              type: 'Research Vessel',
-              length: 65,
-              width: 12,
-              flag: 'Cayman Islands',
-              imo: '319155500',
-              callsign: 'ZAB1234'
-            };
-            return res.json([specialVessel]);
-          }
-        }
-        
-        // Filter from mock data for other queries
-        const searchResults = mockVesselDetails.filter(vessel => 
-          vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
-          vessel.mmsi.includes(String(query))
-        );
-        
-        console.log(`Returning ${searchResults.length} mock results after API error`);
-        return res.json(searchResults);
+        // Don't fall back to mock data, return an error and empty results
+        console.log(`AIS Stream API search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return res.status(503).json({ 
+          error: 'AIS API error',
+          message: 'The vessel search service is currently unavailable. Please try again later.',
+          results: []
+        });
       }
     } else {
-      // No API key provided, use mock data
-      console.log('No API key available, using mock data');
-      
-      // Check if we need to add special vessels to our mock data based on name search
-      if (typeof query === 'string' && query.toLowerCase().includes('marine') && query.toLowerCase().includes('research')) {
-        // Add the Marine Research Vessel to the mock data if it doesn't exist
-        if (!mockVesselDetails.some(v => v.mmsi === '319155500')) {
-          mockVesselDetails.push({
-            mmsi: '319155500',
-            name: 'MARINE RESEARCH VESSEL',
-            type: 'Research Vessel',
-            length: 65,
-            width: 12,
-            flag: 'Cayman Islands'
-          });
-          console.log('Added MARINE RESEARCH VESSEL to mock data for name search');
-        }
-      }
-      
-      const searchResults = mockVesselDetails.filter(vessel => 
-        vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
-        vessel.mmsi.includes(String(query))
-      );
-      console.log(`Returning ${searchResults.length} mock results (no API key)`);
-      
-      // Log what we found for debugging
-      if (searchResults.length > 0) {
-        console.log(`Found vessels: ${searchResults.map(v => v.name).join(', ')}`);
-      } else {
-        console.log(`No vessels found matching "${query}" in mock data`);
-        // If searching for "marine" or "research" and no results, add a special vessel
-        if (typeof query === 'string' && 
-            (query.toLowerCase().includes('marine') || 
-             query.toLowerCase().includes('research'))) {
-          const specialVessel = {
-            mmsi: '319155500',
-            name: 'MARINE RESEARCH VESSEL',
-            type: 'Research Vessel',
-            length: 65,
-            width: 12,
-            flag: 'Cayman Islands'
-          };
-          console.log(`Adding special vessel for "${query}" search`);
-          return res.json([specialVessel]);
-        }
-      }
-      
-      return res.json(searchResults);
+      // No API key provided, return an error indicating the service is unavailable
+      console.log('No AIS API key available: vessel search unavailable');
+      return res.status(503).json({ 
+        error: 'API configuration error',
+        message: 'Vessel search service is currently unavailable due to missing API credentials.',
+        results: []
+      });
     }
   } catch (error) {
     console.error('Error searching vessels:', error);
