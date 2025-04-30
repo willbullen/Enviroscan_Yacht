@@ -429,6 +429,9 @@ export const vessels = pgTable("vessels", {
   manufacturer: text("manufacturer").notNull(),
   ownerId: integer("owner_id"), // Could reference to Customers table
   status: text("status").notNull().default("active"), // active, maintenance, charter
+  mmsi: text("mmsi"), // Maritime Mobile Service Identity for AIS
+  imo: text("imo"), // International Maritime Organization number
+  callSign: text("call_sign"), // Vessel radio call sign
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
