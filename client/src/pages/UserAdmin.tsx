@@ -15,6 +15,34 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import {
+  Users,
+  UserPlus,
+  Ship,
+  Shield,
+  Edit,
+  Trash2,
+  RefreshCw,
+  Check,
+  Search,
+  X,
+  XCircle,
+  CheckCircle,
+  PlusCircle,
+  AlertCircle,
+  HelpCircle,
+  ShieldCheck,
+  Info,
+  Anchor,
+  ArrowLeft,
+  ArrowUpDown,
+  MoreHorizontal,
+  Plus,
+  UserX,
+  Settings,
+  FileText,
+  UserCog
+} from 'lucide-react';
+import {
   Table,
   TableBody,
   TableCell,
@@ -61,31 +89,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { 
-  AlertCircle, 
-  Anchor,
-  ArrowLeft,
-  ArrowUpDown,
-  Check,
-  CheckCircle,
-  Edit, 
-  MoreHorizontal, 
-  Plus, 
-  RefreshCw, 
-  Trash2, 
-  UserPlus,
-  UserX,
-  Users, 
-  Search,
-  Shield,
-  Settings,
-  Ship,
-  FileText,
-  UserCog,
-  Info,
-  X,
-  XCircle
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
@@ -590,12 +593,23 @@ const UserAdmin: React.FC = () => {
 
   return (
     <MainLayout title="User Administration">
-      <div className="container mx-auto py-6">
-        <div className="flex flex-col space-y-2 md:flex-row md:justify-between md:items-center mb-4">
+      <div className="mb-6 flex flex-col justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">User Administration</h1>
+        <p className="text-muted-foreground">
+          Manage system users, their roles, and vessel assignments
+        </p>
+      </div>
+      
+      {/* Help & Information Section */}
+      <div className="mb-6 bg-muted/50 p-4 rounded-lg border shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">User Administration</h1>
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              User Management Resources
+            </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Manage system users, their roles, and vessel assignments
+              Organize users, assign vessel access, and manage system roles
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -620,26 +634,35 @@ const UserAdmin: React.FC = () => {
             </Button>
           </div>
         </div>
+      </div>
 
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full md:w-auto grid-cols-3 rounded-full p-1 h-11 mb-2">
-            <TabsTrigger value="users" className="flex items-center gap-2 rounded-full">
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <div className="flex justify-between items-center mb-6">
+          <TabsList className="bg-muted/60 p-1 dark:bg-gray-800">
+            <TabsTrigger 
+              value="users" 
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm flex gap-2 items-center"
+            >
               <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Manage</span> Users
+              <span>Users</span>
             </TabsTrigger>
             <TabsTrigger 
               value="vessels" 
-              className="flex items-center gap-2 rounded-full"
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm flex gap-2 items-center"
               disabled={!selectedUser}
             >
               <Ship className="h-4 w-4" />
-              <span className="hidden sm:inline">Vessel</span> Assignments
+              <span>Vessel Assignments</span>
             </TabsTrigger>
-            <TabsTrigger value="roles" className="flex items-center gap-2 rounded-full">
+            <TabsTrigger 
+              value="roles" 
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm flex gap-2 items-center"
+            >
               <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">System</span> Roles
+              <span>System Roles</span>
             </TabsTrigger>
           </TabsList>
+        </div>
           
           {/* Users Tab */}
           <TabsContent value="users" className="space-y-6">
@@ -782,7 +805,10 @@ const UserAdmin: React.FC = () => {
                               <TableCell>{user.username}</TableCell>
                               <TableCell className="hidden md:table-cell">{user.email || '-'}</TableCell>
                               <TableCell>
-                                <Badge variant={user.role === 'admin' ? 'default' : 'outline'} className="font-normal">
+                                <Badge 
+                                  variant={user.role === 'admin' ? 'default' : 'outline'} 
+                                  className={`font-normal ${user.role === 'admin' ? 'bg-primary text-primary-foreground' : 'text-foreground border-primary/30'}`}
+                                >
                                   {SYSTEM_ROLES.find(r => r.id === user.role)?.name || user.role}
                                 </Badge>
                               </TableCell>
@@ -790,11 +816,11 @@ const UserAdmin: React.FC = () => {
                                 <div 
                                   className={`flex items-center px-2 py-1 rounded-full text-xs ${
                                     user.isActive 
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                                      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                      ? 'bg-green-100 text-green-900 dark:bg-green-900/40 dark:text-green-300' 
+                                      : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-300'
                                   }`}
                                 >
-                                  <div className={`w-2 h-2 rounded-full mr-1.5 ${user.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                  <div className={`w-2 h-2 rounded-full mr-1.5 ${user.isActive ? 'bg-green-600' : 'bg-gray-500'}`}></div>
                                   {user.isActive ? 'Active' : 'Inactive'}
                                 </div>
                               </TableCell>
@@ -1175,7 +1201,6 @@ const UserAdmin: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
 
       {/* Add User Dialog */}
       <Dialog open={isAddingUser} onOpenChange={setIsAddingUser}>
