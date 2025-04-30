@@ -188,11 +188,10 @@ const InteractiveVesselMap = React.forwardRef<{ focusVessel: (vesselId: number) 
               position={[vessel.latitude, vessel.longitude]}
               icon={createShipIcon(vessel.id, vessel.heading)}
               eventHandlers={{
-                click: () => handleVesselClick(vessel.id)
-              }}
-              ref={(marker) => {
-                if (marker) {
-                  setMarkerRefs(prev => ({ ...prev, [vessel.id]: marker }));
+                click: () => handleVesselClick(vessel.id),
+                add: (e) => {
+                  // Store marker reference on initial add only
+                  setMarkerRefs(prev => ({ ...prev, [vessel.id]: e.target }));
                 }
               }}
             >
