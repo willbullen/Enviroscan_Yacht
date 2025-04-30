@@ -11,7 +11,8 @@ import {
   Map,
   Navigation,
   Eye,
-  Image as ImageIcon 
+  Image as ImageIcon,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,7 @@ export type VesselFormData = {
   year: string;
   image: string | null;
   mmsi?: string;
+  position?: string;
 };
 
 const VesselAdmin: React.FC = () => {
@@ -147,6 +149,18 @@ const VesselAdmin: React.FC = () => {
     if (mapRef.current) {
       mapRef.current.focusPosition(latitude, longitude, 13);
     }
+  };
+  
+  const handleMapPositionSelect = (latitude: number, longitude: number) => {
+    console.log('Position selected from map:', latitude, longitude);
+    // Here we would typically use the coordinates to set a vessel's position
+    // or lookup nearby vessels from an API
+    
+    // For now, just add coordinates to the form data
+    setFormData(prev => ({
+      ...prev,
+      position: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+    }));
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -453,6 +467,8 @@ const VesselAdmin: React.FC = () => {
                       height={500}
                       selectedVesselId={selectedVesselId}
                       onVesselSelect={setSelectedVesselId}
+                      allowMapClick={isAddingVessel}
+                      onMapPositionSelect={handleMapPositionSelect}
                     />
                   </div>
                 </div>
