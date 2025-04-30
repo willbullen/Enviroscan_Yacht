@@ -375,6 +375,19 @@ const VesselAdmin: React.FC = () => {
                             />
                           </div>
                           <div className="grid gap-2">
+                            <Label htmlFor="mmsi">MMSI Number</Label>
+                            <Input
+                              id="mmsi"
+                              name="mmsi"
+                              value={formData.mmsi || ''}
+                              onChange={handleChange}
+                              placeholder="e.g. 366998410"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              MMSI is required for AIS tracking and vessel identification
+                            </p>
+                          </div>
+                          <div className="grid gap-2">
                             <Label htmlFor="year">Year Built</Label>
                             <Input
                               id="year"
@@ -486,6 +499,18 @@ const VesselAdmin: React.FC = () => {
                               value={formData.flag}
                               onChange={handleChange}
                             />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="edit-mmsi">MMSI Number</Label>
+                            <Input
+                              id="edit-mmsi"
+                              name="mmsi"
+                              value={formData.mmsi || ''}
+                              onChange={handleChange}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              MMSI is required for AIS tracking and vessel identification
+                            </p>
                           </div>
                           <div className="grid gap-2">
                             <Label htmlFor="edit-year">Year Built</Label>
@@ -601,8 +626,8 @@ const VesselAdmin: React.FC = () => {
                                 <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 gap-x-4">
                                   <div>Type: {vessel.type}</div>
                                   <div>Length: {vessel.length}</div>
-                                  <div>Flag: Malta</div>
-                                  <div>Built: 2018</div>
+                                  <div>Flag: {vessel.flag || 'Unknown'}</div>
+                                  <div>MMSI: {vessel.mmsi || 'Not Set'}</div>
                                 </div>
                               </div>
                               <div className="flex gap-1">
