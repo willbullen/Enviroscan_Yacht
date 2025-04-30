@@ -22,6 +22,12 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  // Handle plaintext passwords for demo/development
+  if (!stored.includes('.')) {
+    return supplied === stored;
+  }
+  
+  // Handle hashed passwords
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
@@ -49,11 +55,14 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password)) || !user.isActive) {
+        if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false, { message: "Invalid username or password" });
-        } else {
-          return done(null, user);
         }
+        // Check if the user is active (if the field exists)
+        if (user.isActive === false) {
+          return done(null, false, { message: "Account is inactive" });
+        }
+        return done(null, user);
       } catch (err) {
         return done(err);
       }
@@ -64,8 +73,12 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-      // If user is inactive or deleted, logout
-      if (!user || !user.isActive) {
+      // If user is deleted, logout
+      if (!user) {
+        return done(null, false);
+      }
+      // If isActive field exists and user is inactive, logout
+      if (user.isActive === false) {
         return done(null, false);
       }
       done(null, user);
