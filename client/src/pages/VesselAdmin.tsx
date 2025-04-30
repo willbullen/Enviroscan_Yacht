@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/table';
 import { useVessel } from '@/contexts/VesselContext';
 import InteractiveVesselMap from '@/components/vessel/InteractiveVesselMap';
+import VesselSearchForm from '@/components/vessel/VesselSearchForm';
 import {
   Tabs,
   TabsContent,
@@ -59,7 +60,11 @@ const VesselAdmin: React.FC = () => {
   const [isEditingVessel, setIsEditingVessel] = useState(false);
   const [editingVessel, setEditingVessel] = useState<number | null>(null);
   const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
-  const mapRef = useRef<{ focusVessel: (vesselId: number) => void }>(null);
+  const [isSearchingForVessel, setIsSearchingForVessel] = useState(false);
+  const mapRef = useRef<{ 
+    focusVessel: (vesselId: number) => void;
+    focusPosition: (latitude: number, longitude: number, zoom?: number) => void;
+  }>(null);
   
   const [formData, setFormData] = useState<VesselFormData>({
     name: '',
@@ -77,7 +82,8 @@ const VesselAdmin: React.FC = () => {
       length: '',
       flag: '',
       year: '',
-      image: null
+      image: null,
+      mmsi: undefined
     });
   };
   

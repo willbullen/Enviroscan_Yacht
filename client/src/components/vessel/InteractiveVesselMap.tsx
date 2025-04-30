@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useQuery } from '@tanstack/react-query';
 import { useVessel } from '@/contexts/VesselContext';
@@ -136,10 +136,18 @@ const InteractiveVesselMap = React.forwardRef<{
         }
       }
     };
+    
+    // Focus on specific coordinates
+    const focusPosition = (latitude: number, longitude: number, zoom: number = 13) => {
+      if (mapRef.current) {
+        mapRef.current.setView([latitude, longitude], zoom);
+      }
+    };
 
-    // Expose focusVessel method via ref
+    // Expose methods via ref
     React.useImperativeHandle(ref, () => ({
-      focusVessel
+      focusVessel,
+      focusPosition
     }));
 
     // Handle vessel click
@@ -150,6 +158,7 @@ const InteractiveVesselMap = React.forwardRef<{
     // Custom component to handle map initialization and updates
     const MapController = () => {
       const map = useMap();
+      const [clickMarker, setClickMarker] = useState<L.Marker | null>(null);
       
       // Store the map reference on mount
       useEffect(() => {
@@ -171,6 +180,61 @@ const InteractiveVesselMap = React.forwardRef<{
           }
         }
       }, [selectedVesselId, map]);
+      
+      // Handle map clicks if allowMapClick is enabled
+      useMapEvents({
+        click: (e) => {
+          if (allowMapClick) {
+            const { lat, lng } = e.latlng;
+            
+            // Remove previous temporary marker if it exists
+            if (clickMarker) {
+              clickMarker.remove();
+            }
+            
+            // Create a new marker at the clicked position
+            const newMarker = L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="w-6 h-6 rounded-full bg-primary border-2 border-white flex items-center justify-center text-white text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 8v8M8 12h8" />
+                        </svg>
+                      </div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+              })
+            }).addTo(map);
+            
+            // Open a popup with the coordinates
+            newMarker.bindPopup(
+              `<div class="text-xs">
+                <div class="font-medium">Selected Position</div>
+                <div>${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+                <div class="text-xs text-blue-500 cursor-pointer mt-1" id="use-position">
+                  Use this position
+                </div>
+              </div>`
+            ).openPopup();
+            
+            // Setup event listener for the "Use this position" link
+            setTimeout(() => {
+              const usePositionLink = document.getElementById('use-position');
+              if (usePositionLink) {
+                usePositionLink.addEventListener('click', () => {
+                  // Here you would typically set some state or call a callback
+                  // For now, just close the popup
+                  newMarker.closePopup();
+                });
+              }
+            }, 100);
+            
+            // Store the marker reference
+            setClickMarker(newMarker);
+          }
+        }
+      });
       
       return null;
     };
