@@ -1520,10 +1520,24 @@ const FormsAdministration: React.FC = () => {
         {/* Template selection with data table */}
         <FormTemplateDataTable 
           templates={templates.map(template => ({
-            ...template,
-            originalFilename: null // Adding this field to satisfy the interface
+            id: template.id,
+            title: template.title,
+            description: template.description,
+            categoryId: template.categoryId,
+            originalFilename: null, // Required by the DataTable interface
+            createdById: template.createdById,
+            createdAt: template.createdAt,
+            updatedAt: template.updatedAt || null, // Convert string to string | null
+            isActive: template.isActive
           }))} 
-          categories={categories}
+          categories={categories.map(category => ({
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            createdAt: category.createdAt,
+            updatedAt: category.updatedAt || null, 
+            isActive: category.isActive
+          }))}
           onSelectTemplate={(template) => {
             // Find the original template in our data and select it
             const originalTemplate = templates.find(t => t.id === template.id);
