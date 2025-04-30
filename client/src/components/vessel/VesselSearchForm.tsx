@@ -50,14 +50,32 @@ const VesselSearchForm: React.FC<VesselSearchFormProps> = ({
       }
       
       const data = await response.json();
-      setSearchResults(data);
       
-      if (data.length === 0) {
+      // Check if the response is an error message
+      if (data && data.error) {
         toast({
-          title: 'No vessels found',
-          description: 'Try a different search term or MMSI number',
-          variant: 'default'
+          title: 'Search error',
+          description: data.message || 'Failed to search for vessels',
+          variant: 'destructive'
         });
+        setSearchResults([]);
+      } else {
+        // Handle normal results
+        setSearchResults(data || []);
+        
+        if (data.length === 0) {
+          toast({
+            title: 'No vessels found',
+            description: 'Try a different search term or MMSI number',
+            variant: 'default'
+          });
+        } else {
+          toast({
+            title: 'Vessels found',
+            description: `Found ${data.length} matching vessels`,
+            variant: 'default'
+          });
+        }
       }
     } catch (error) {
       console.error('Error searching for vessels:', error);
