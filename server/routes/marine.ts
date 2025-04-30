@@ -504,22 +504,21 @@ router.get('/search-vessels', async (req, res) => {
         console.log(`Using AIS Stream API to search for "${query}" with API key: ${AIS_API_KEY.substring(0, 4)}...`);
         
         // Construct the URL and request parameters for debugging
-        const apiUrl = `${BACKUP_API_URL}/search`;
-        const requestBody = JSON.stringify({
-          query: String(query)
-        });
+        // Use query parameter format instead of POST request body
+        // API endpoint might have changed to use GET method instead of POST
+        const queryParam = encodeURIComponent(String(query));
+        const apiUrl = `${BACKUP_API_URL}/search?query=${queryParam}`;
         
         console.log(`Request URL: ${apiUrl}`);
-        console.log(`Request body: ${requestBody}`);
         
         // Make the request to the AIS Stream API search endpoint
+        // Switching from POST to GET based on 405 Method Not Allowed error
         const response = await fetch(apiUrl, {
-          method: 'POST',
+          method: 'GET',
           headers: {
             'x-api-key': AIS_API_KEY,
-            'Content-Type': 'application/json'
-          },
-          body: requestBody
+            'Accept': 'application/json'
+          }
         });
         
         console.log(`AIS API response status: ${response.status} ${response.statusText}`);
