@@ -15,7 +15,8 @@ const vesselPositionsCache: Record<string, any> = {};
 // Function to initialize AIS Stream WebSocket connection (if needed)
 // AIS Stream primarily uses WebSockets for real-time tracking
 let wsInitialized = false;
-function initAisStreamWebsocket() {
+// Initialize and export the function so it can be called from other modules
+export function initAisStreamWebsocket() {
   if (wsInitialized || !AIS_API_KEY) return;
   
   try {
@@ -42,11 +43,30 @@ function initAisStreamWebsocket() {
     // Handle incoming messages
     ws.on('message', function incoming(data: WebSocket.Data) {
       try {
-        const jsonData = JSON.parse(data.toString());
+        // Make sure data is a Buffer or string before trying to parse
+        let jsonData;
+        if (Buffer.isBuffer(data)) {
+          jsonData = JSON.parse(data.toString());
+        } else if (typeof data === 'string') {
+          jsonData = JSON.parse(data);
+        } else {
+          console.log('Received non-string/buffer data:', typeof data);
+          return; // Skip processing for other data types
+        }
+        
+        // Log message type for debugging
+        console.log(`Received message type: ${jsonData?.MessageType || 'unknown'}`);
         
         // Process AIS message
         if (jsonData && jsonData.MessageType === 'PositionReport' && jsonData.Message) {
           const vesselPosition = jsonData.Message;
+          
+          // Ensure MMSI exists before processing
+          if (!vesselPosition.MMSI) {
+            console.log('Received position report without MMSI:', vesselPosition);
+            return;
+          }
+          
           const mmsi = vesselPosition.MMSI.toString();
           
           // Update vessel cache
@@ -60,6 +80,8 @@ function initAisStreamWebsocket() {
             heading: vesselPosition.Heading || 0,
             timestamp: new Date().toISOString()
           };
+          
+          console.log(`Updated position for vessel MMSI: ${mmsi}`);
         }
       } catch (error) {
         console.error('Error processing AIS message:', error);

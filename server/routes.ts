@@ -6,7 +6,7 @@ import fs from "fs";
 import path from "path";
 import { logger } from "./services/logger";
 import { createError, asyncHandler } from "./middleware/errorHandler";
-import marineRouter from "./routes/marine";
+import marineRouter, { initAisStreamWebsocket } from "./routes/marine";
 import { 
   insertUserSchema, 
   insertEquipmentSchema, 
@@ -36,6 +36,14 @@ import { db } from "./db";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create API router
   const apiRouter = express.Router();
+  
+  // Initialize AIS Stream WebSocket connection
+  try {
+    console.log('Initializing AIS Stream WebSocket connection...');
+    initAisStreamWebsocket();
+  } catch (error) {
+    console.error('Failed to initialize AIS Stream WebSocket:', error);
+  }
   
   // =========== User Routes =============
   
