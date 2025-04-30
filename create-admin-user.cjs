@@ -1,7 +1,7 @@
 // Create a script to add an admin user
-import { storage } from "./server/storage.js";
-import { scrypt, randomBytes } from "crypto";
-import { promisify } from "util";
+const { storage } = require("./server/storage");
+const { scrypt, randomBytes } = require("crypto");
+const { promisify } = require("util");
 
 const scryptAsync = promisify(scrypt);
 
