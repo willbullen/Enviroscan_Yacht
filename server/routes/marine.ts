@@ -798,4 +798,55 @@ const mockVesselDetails = [
   }
 ];
 
+// Endpoint to update vessel positions in the database
+router.post('/update-vessel-position', async (req, res) => {
+  try {
+    const { vesselId, latitude, longitude, heading, speed } = req.body;
+    
+    if (!vesselId || !latitude || !longitude) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters',
+        message: 'vesselId, latitude, and longitude are required' 
+      });
+    }
+    
+    // Get the vessel from database first to make sure it exists
+    const [vessel] = await db.select()
+      .from(vessels)
+      .where(eq(vessels.id, vesselId));
+      
+    if (!vessel) {
+      return res.status(404).json({ 
+        error: 'Vessel not found',
+        message: `No vessel found with ID ${vesselId}` 
+      });
+    }
+    
+    // Update vessel position in database
+    const [updatedVessel] = await db.update(vessels)
+      .set({
+        latitude,
+        longitude,
+        heading: heading || null,
+        speed: speed || null,
+        lastPositionUpdate: new Date()
+      })
+      .where(eq(vessels.id, vesselId))
+      .returning();
+    
+    console.log(`Updated position for vessel ${vessel.vesselName} (ID: ${vesselId}): ${latitude}, ${longitude}`);
+    
+    res.json({ 
+      success: true,
+      vessel: updatedVessel
+    });
+  } catch (error) {
+    console.error('Error updating vessel position:', error);
+    res.status(500).json({ 
+      error: 'Failed to update vessel position',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

@@ -432,6 +432,12 @@ export const vessels = pgTable("vessels", {
   mmsi: text("mmsi"), // Maritime Mobile Service Identity for AIS
   imo: text("imo"), // International Maritime Organization number
   callSign: text("call_sign"), // Vessel radio call sign
+  // Position and navigation data
+  latitude: decimal("latitude", { precision: 10, scale: 6 }), // Current latitude
+  longitude: decimal("longitude", { precision: 10, scale: 6 }), // Current longitude
+  heading: real("heading"), // Heading in degrees (0-359)
+  speed: real("speed"), // Speed in knots
+  lastPositionUpdate: timestamp("last_position_update"), // When position was last updated
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
