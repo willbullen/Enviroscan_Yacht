@@ -2011,6 +2011,54 @@ const FormsAdministration: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Form Lifecycle Guide */}
+      <Sheet open={showLifecycleGuide} onOpenChange={setShowLifecycleGuide}>
+        <SheetContent className="overflow-y-auto w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Form Lifecycle Guide</SheetTitle>
+            <SheetDescription>
+              Follow this guide to understand the form creation process
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4">
+            <FormLifecycleGuide 
+              currentStep={currentLifecycleStep} 
+              onSelectStep={handleLifecycleStepChange} 
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+      
+      {/* Form Process Visualization */}
+      <Sheet open={showProcessGuide} onOpenChange={setShowProcessGuide}>
+        <SheetContent className="overflow-y-auto w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Form Process Overview</SheetTitle>
+            <SheetDescription>
+              See how forms are used throughout the system
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4">
+            <FormProcessVisualization />
+          </div>
+        </SheetContent>
+      </Sheet>
+      
+      {/* Form Activation Guide */}
+      <Sheet open={showActivationGuide} onOpenChange={setShowActivationGuide}>
+        <SheetContent className="overflow-y-auto w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Form Activation Guide</SheetTitle>
+            <SheetDescription>
+              Learn how to activate forms for use
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4">
+            <FormActivationGuide />
+          </div>
+        </SheetContent>
+      </Sheet>
     </MainLayout>
   );
 };
