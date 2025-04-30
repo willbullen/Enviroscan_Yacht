@@ -8,12 +8,15 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
-  role: text("role").notNull(),
+  email: text("email"),
+  role: text("role").notNull(), // admin, manager, crew
+  isActive: boolean("is_active").default(true).notNull(),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -425,6 +428,26 @@ export const insertVesselSchema = createInsertSchema(vessels).omit({
 });
 export type InsertVessel = z.infer<typeof insertVesselSchema>;
 export type Vessel = typeof vessels.$inferSelect;
+
+// User-to-Vessel assignments for role-based access control
+export const userVesselAssignments = pgTable("user_vessel_assignments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
+  role: text("role").notNull(), // captain, engineer, deckhand, etc.
+  isPrimary: boolean("is_primary").default(false).notNull(), // is this the user's primary vessel assignment
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  assignedById: integer("assigned_by_id").references(() => users.id).notNull(),
+  notes: text("notes"),
+  isActive: boolean("is_active").default(true).notNull(),
+});
+
+export const insertUserVesselAssignmentSchema = createInsertSchema(userVesselAssignments).omit({
+  id: true,
+  assignedAt: true
+});
+export type InsertUserVesselAssignment = z.infer<typeof insertUserVesselAssignmentSchema>;
+export type UserVesselAssignment = typeof userVesselAssignments.$inferSelect;
 
 // Customers (owners, charterers, service providers)
 export const customers = pgTable("customers", {

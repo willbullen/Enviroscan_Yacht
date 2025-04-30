@@ -171,14 +171,14 @@ export function FormTemplateDataTable({
           </div>
           
           <Select
-            value={categoryFilter?.toString() || ''}
-            onValueChange={(value) => setCategoryFilter(value ? parseInt(value) : null)}
+            value={categoryFilter?.toString() || 'all'}
+            onValueChange={(value) => setCategoryFilter(value === 'all' ? null : parseInt(value))}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {categories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -188,9 +188,9 @@ export function FormTemplateDataTable({
           </Select>
           
           <Select
-            value={statusFilter === null ? '' : statusFilter ? 'active' : 'inactive'}
+            value={statusFilter === null ? 'all' : statusFilter ? 'active' : 'inactive'}
             onValueChange={(value) => {
-              if (value === '') setStatusFilter(null);
+              if (value === 'all') setStatusFilter(null);
               else if (value === 'active') setStatusFilter(true);
               else setStatusFilter(false);
             }}
@@ -199,7 +199,7 @@ export function FormTemplateDataTable({
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
