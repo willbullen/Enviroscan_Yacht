@@ -2275,6 +2275,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // --------- Form Template Version Routes ---------
   
+  // Get all form template versions
+  apiRouter.get("/ism/form-template-versions", async (req: Request, res: Response) => {
+    try {
+      // If templateId is provided as a query parameter, filter by that
+      if (req.query.templateId) {
+        const templateId = parseInt(req.query.templateId as string);
+        const versions = await storage.getFormTemplateVersionsByTemplate(templateId);
+        return res.json(versions);
+      }
+      
+      // Otherwise get all versions
+      const templateVersions = [];
+      const templates = await storage.getAllFormTemplates();
+      
+      for (const template of templates) {
+        const versions = await storage.getFormTemplateVersionsByTemplate(template.id);
+        templateVersions.push(...versions);
+      }
+      
+      res.json(templateVersions);
+    } catch (error) {
+      console.error("Error fetching form template versions:", error);
+      res.status(500).json({ message: "Failed to get form template versions" });
+    }
+  });
+  
   // Get all versions of a template
   apiRouter.get("/ism/form-template-versions/template/:templateId", async (req: Request, res: Response) => {
     try {
