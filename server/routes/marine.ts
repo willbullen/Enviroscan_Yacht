@@ -1,15 +1,101 @@
 import express from 'express';
 import fetch from 'node-fetch';
+import WebSocket from 'ws';
 
 const router = express.Router();
 
 // AIS Stream API configuration
-const AIS_API_URL = 'https://api.aisstream.io/v1';
 const AIS_API_KEY = process.env.AIS_API_KEY || ''; // API key should be set in environment variables
+const AIS_STREAM_WS_URL = 'wss://stream.aisstream.io/v0/stream';
+const MARINE_TRAFFIC_API_URL = 'https://services.marinetraffic.com/api';
+const BACKUP_API_URL = 'https://api.aisstream.io/v1';
+// Internal cache for vessel positions received from AIS Stream
+const vesselPositionsCache: Record<string, any> = {};
+
+// Function to initialize AIS Stream WebSocket connection (if needed)
+// AIS Stream primarily uses WebSockets for real-time tracking
+let wsInitialized = false;
+function initAisStreamWebsocket() {
+  if (wsInitialized || !AIS_API_KEY) return;
+  
+  try {
+    // Connect to AIS Stream WebSocket API
+    const ws = new WebSocket(AIS_STREAM_WS_URL);
+    
+    // Handle WebSocket connection open
+    ws.on('open', function open() {
+      console.log('Connected to AIS Stream WebSocket');
+      
+      // Subscribe to specific vessel types (e.g., 30=fishing, 37=pleasure craft)
+      const subscriptionMessage = {
+        APIKey: AIS_API_KEY,
+        BoundingBoxes: [[
+          [-180, -90], // Southwest point
+          [180, 90]    // Northeast point (whole world)
+        ]],
+        FilterMessageTypes: ["PositionReport"]
+      };
+      
+      ws.send(JSON.stringify(subscriptionMessage));
+    });
+    
+    // Handle incoming messages
+    ws.on('message', function incoming(data: WebSocket.Data) {
+      try {
+        const jsonData = JSON.parse(data.toString());
+        
+        // Process AIS message
+        if (jsonData && jsonData.MessageType === 'PositionReport' && jsonData.Message) {
+          const vesselPosition = jsonData.Message;
+          const mmsi = vesselPosition.MMSI.toString();
+          
+          // Update vessel cache
+          vesselPositionsCache[mmsi] = {
+            mmsi: mmsi,
+            vesselId: parseInt(mmsi.slice(-8), 10) % 1000, // Generate vessel ID from MMSI
+            name: vesselPosition.ShipName || 'Unknown',
+            latitude: vesselPosition.Latitude || 0,
+            longitude: vesselPosition.Longitude || 0,
+            speed: vesselPosition.SOG || 0,
+            heading: vesselPosition.Heading || 0,
+            timestamp: new Date().toISOString()
+          };
+        }
+      } catch (error) {
+        console.error('Error processing AIS message:', error);
+      }
+    });
+    
+    // Handle errors
+    ws.on('error', function error(err) {
+      console.error('AIS Stream WebSocket error:', err);
+    });
+    
+    // Handle close
+    ws.on('close', function close() {
+      console.log('AIS Stream WebSocket connection closed');
+      wsInitialized = false;
+      
+      // Try to reconnect after a delay
+      setTimeout(() => {
+        initAisStreamWebsocket();
+      }, 10000);
+    });
+    
+    wsInitialized = true;
+  } catch (error) {
+    console.error('Failed to initialize AIS Stream WebSocket:', error);
+  }
+}
 
 // Get vessel positions from AIS Stream API
 router.get('/vessel-positions', async (req, res) => {
   try {
+    // Initialize WebSocket if not already done
+    if (!wsInitialized && AIS_API_KEY) {
+      initAisStreamWebsocket();
+    }
+    
     // If we don't have an API key, return mock data for development
     if (!AIS_API_KEY) {
       console.log('No AIS API key provided, returning mock position data');
@@ -22,68 +108,26 @@ router.get('/vessel-positions', async (req, res) => {
         req.query.mmsi.map(String) : 
         [String(req.query.mmsi)] : 
       ['366998410', '366759530', '367671640']; // Default vessels to track
+      
+    // Check if we have any of the requested vessels in our cache
+    const result: any[] = [];
+    let foundVessels = false;
     
-    // Make the request to the AIS Stream API for vessel positions
-    const response = await fetch(`${AIS_API_URL}/positions`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': AIS_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        mmsi: mmsiList
-      })
+    // First try to get positions from our WebSocket cache
+    mmsiList.forEach(mmsi => {
+      if (vesselPositionsCache[mmsi]) {
+        result.push(vesselPositionsCache[mmsi]);
+        foundVessels = true;
+      }
     });
     
-    if (!response.ok) {
-      throw new Error(`AIS API returned ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json() as { 
-      vessels?: Array<{
-        vessel?: {
-          mmsi: string;
-          name?: string;
-        };
-        position?: {
-          lat?: number;
-          lon?: number;
-          sog?: number;
-          heading?: number;
-        };
-        lastPosUpdate?: string;
-      }>
-    };
-    
-    // Format the response to match our application's expected structure
-    const formattedPositions = data.vessels?.map(vessel => {
-      // Extract vessel info with type safety
-      const vesselData = vessel.vessel || { mmsi: '', name: '' };
-      
-      // Find matching vessel ID in our mock data (for mapping to our internal IDs)
-      // In a real application, this would be a database lookup
-      const mockVessel = mockVesselPositions.find(v => v.mmsi === vesselData.mmsi);
-      const vesselId = mockVessel?.vesselId || 0;
-      
-      return {
-        mmsi: vesselData.mmsi,
-        vesselId: vesselId,
-        name: vesselData.name || 'Unknown',
-        latitude: vessel.position?.lat || 0,
-        longitude: vessel.position?.lon || 0,
-        speed: vessel.position?.sog || 0,
-        heading: vessel.position?.heading || 0,
-        timestamp: vessel.lastPosUpdate || new Date().toISOString()
-      };
-    }) || [];
-    
-    // If no results returned, use mock data (to ensure we always have data for demo)
-    if (formattedPositions.length === 0) {
-      console.log('No vessels found in AIS Stream, returning mock data');
+    // If no results from our WebSocket cache, use the mock vessels
+    if (!foundVessels) {
+      console.log('No vessels found in position cache, returning mock data');
       return res.json(mockVesselPositions);
     }
     
-    res.json(formattedPositions);
+    res.json(result);
   } catch (error) {
     console.error('Error fetching vessel positions:', error);
     res.status(500).json({ 
@@ -113,7 +157,7 @@ router.get('/vessel-details/:mmsi', async (req, res) => {
     }
     
     // Make the request to the AIS Stream API with POST request for vessel details
-    const response = await fetch(`${AIS_API_URL}/vessels`, {
+    const response = await fetch(`${BACKUP_API_URL}/vessels`, {
       method: 'POST',
       headers: {
         'x-api-key': AIS_API_KEY,
@@ -205,7 +249,7 @@ router.get('/search-vessels', async (req, res) => {
     
     // Make the request to the AIS Stream API search endpoint
     // AIS Stream requires POST for search, with a specific format
-    const response = await fetch(`${AIS_API_URL}/search`, {
+    const response = await fetch(`${BACKUP_API_URL}/search`, {
       method: 'POST',
       headers: {
         'x-api-key': AIS_API_KEY,
