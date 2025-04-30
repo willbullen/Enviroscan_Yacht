@@ -553,11 +553,27 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserVesselAssignments(userId: number): Promise<UserVesselAssignment[]> {
-    return db.select().from(userVesselAssignments).where(eq(userVesselAssignments.userId, userId));
+    try {
+      console.log(`Fetching vessel assignments for user: ${userId}`);
+      const assignments = await db.select().from(userVesselAssignments).where(eq(userVesselAssignments.userId, userId));
+      console.log(`Found ${assignments.length} vessel assignments for user ${userId}`);
+      return assignments;
+    } catch (error) {
+      console.error(`Error fetching vessel assignments for user ${userId}:`, error);
+      throw error;
+    }
   }
   
   async getVesselUserAssignments(vesselId: number): Promise<UserVesselAssignment[]> {
-    return db.select().from(userVesselAssignments).where(eq(userVesselAssignments.vesselId, vesselId));
+    try {
+      console.log(`Fetching user assignments for vessel: ${vesselId}`);
+      const assignments = await db.select().from(userVesselAssignments).where(eq(userVesselAssignments.vesselId, vesselId));
+      console.log(`Found ${assignments.length} user assignments for vessel ${vesselId}`);
+      return assignments;
+    } catch (error) {
+      console.error(`Error fetching user assignments for vessel ${vesselId}:`, error);
+      throw error;
+    }
   }
   
   async createUserVesselAssignment(assignment: InsertUserVesselAssignment): Promise<UserVesselAssignment> {

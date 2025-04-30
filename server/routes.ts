@@ -76,6 +76,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get active users only
+  apiRouter.get("/users/active", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const users = await storage.getActiveUsers();
+      
+      // Remove sensitive data before sending to client
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching active users:", error);
+      res.status(500).json({ error: "Failed to get active users" });
+    }
+  });
+  
   // Get a single user by ID
   apiRouter.get("/users/:id", async (req: Request, res: Response) => {
     try {
