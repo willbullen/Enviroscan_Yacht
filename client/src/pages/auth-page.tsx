@@ -30,6 +30,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+// Import eastwind logo as a module reference (this will be processed by vite)
+import eastwindLogo from '../../../eastwind_logo.svg';
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -91,7 +93,11 @@ export default function AuthPage() {
       <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-8">
         <div className="w-full max-w-md">
           <div className="flex justify-center mb-6">
-            <h2 className="text-2xl font-bold text-primary">Eastwind Fleet Management</h2>
+            <img 
+              src={eastwindLogo}
+              alt="Eastwind Logo" 
+              className="h-12 mx-auto"
+            />
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
