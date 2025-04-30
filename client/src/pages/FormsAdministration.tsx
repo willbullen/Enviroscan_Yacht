@@ -265,8 +265,6 @@ const FormsAdministration: React.FC = () => {
   });
   
   // Using TanStack Query v5 format
-  
-  // Using TanStack Query v5 format
   const formVersionsQuery = useQuery({
     queryKey: ['/api/ism/form-template-versions'],
     enabled: !!selectedTemplate,
@@ -1793,8 +1791,8 @@ const FormsAdministration: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {/* Use mock versions data as fallback when API has an error */}
-                        {(formVersionsQuery.isError ? mockVersions : (formVersionsQuery.data as FormTemplateVersion[] || mockVersions))
+                        {/* Use fallback data when API has an error */}
+                        {(formVersionsQuery.isError ? (mockVersions as FormTemplateVersion[]) : (formVersionsQuery.data as FormTemplateVersion[] || []))
                           .filter(version => version.templateId === selectedTemplate.id)
                           .map(version => (
                             <TableRow key={version.id}>
