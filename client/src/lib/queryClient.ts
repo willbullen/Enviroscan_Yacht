@@ -64,15 +64,15 @@ async function throwIfResNotOk(res: Response, method: string = 'GET') {
 }
 
 export async function apiRequest<T = any>(
+  method: string,
   url: string,
+  data?: unknown,
   options: {
-    method: string;
-    data?: unknown;
     headers?: Record<string, string>;
     validateStatus?: (status: number) => boolean;
-  }
+  } = {}
 ): Promise<T> {
-  const { method, data, headers = {}, validateStatus } = options;
+  const { headers = {}, validateStatus } = options;
   
   try {
     // Set default headers and add custom headers
@@ -97,7 +97,47 @@ export async function apiRequest<T = any>(
     
     // Only try to parse JSON if there's content
     if (res.status !== 204) { // No content
-      return await res.json();
+      try {
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return await res.json();
+        } else {
+          // If not JSON, check if it's HTML (which might be a login page or error page)
+          const textResponse = await res.text();
+          if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
+            // Handle HTML response (likely a login page when session expired)
+            if (url === '/api/login' || url === '/api/register') {
+              const error = new Error("Authentication failed. Please check your credentials.") as ApiError;
+              error.status = res.status;
+              error.url = url;
+              error.method = method;
+              logApiError(error);
+              throw error;
+            } else {
+              // For other endpoints, session likely expired
+              const error = new Error("Session expired. Please log in again.") as ApiError;
+              error.status = 401; // Force as auth error
+              error.url = url;
+              error.method = method;
+              logApiError(error);
+              throw error;
+            }
+          }
+          // For non-JSON text responses, create an appropriate response object
+          return { message: textResponse } as any;
+        }
+      } catch (parseError) {
+        if (parseError instanceof SyntaxError) {
+          const error = new Error(`Invalid JSON response: ${(parseError as Error).message}`) as ApiError;
+          error.status = res.status;
+          error.url = url;
+          error.method = method;
+          logApiError(error);
+          throw error;
+        }
+        // Re-throw if it's our custom ApiError
+        throw parseError;
+      }
     }
     
     return {} as T;
