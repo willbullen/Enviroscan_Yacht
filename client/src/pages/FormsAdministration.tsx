@@ -169,6 +169,9 @@ const FormsAdministration: React.FC = () => {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<FormCategory | null>(null);
   const [isCategoryDeleteDialogOpen, setIsCategoryDeleteDialogOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [bulkActionOpen, setBulkActionOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState<'activate' | 'deactivate' | 'delete' | ''>('');
   
   // Form templates state
   const [editingTemplate, setEditingTemplate] = useState<FormTemplate | null>(null);
@@ -259,6 +262,46 @@ const FormsAdministration: React.FC = () => {
     staleTime: 0
   });
   
+  // Bulk action mutation for categories
+  const bulkActionCategoryMutation = useMutation({
+    mutationFn: async ({action, categoryIds}: {action: 'activate' | 'deactivate' | 'delete', categoryIds: number[]}) => {
+      if (action === 'delete') {
+        // Handle bulk delete
+        const promises = categoryIds.map(id => 
+          apiRequest(`/api/ism/form-categories/${id}`, { method: 'DELETE' })
+        );
+        return Promise.all(promises);
+      } else {
+        // Handle bulk activate/deactivate
+        const isActive = action === 'activate';
+        const promises = categoryIds.map(id => 
+          apiRequest(`/api/ism/form-categories/${id}`, {
+            method: 'PATCH',
+            data: { isActive }
+          })
+        );
+        return Promise.all(promises);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['/api/ism/form-categories']});
+      setSelectedCategories([]);
+      setBulkActionOpen(false);
+      setBulkAction('');
+      toast({
+        title: "Success",
+        description: "Bulk action completed successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `Failed to complete bulk action: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Category mutations
   const createCategoryMutation = useMutation({
     mutationFn: async (category: typeof FormCategory_DEFAULT) => {
@@ -786,13 +829,60 @@ const FormsAdministration: React.FC = () => {
       <>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Form Categories</h2>
-          <Button onClick={() => {
-            setEditingCategory(null);
-            setNewCategory(FormCategory_DEFAULT);
-            setIsCategoryDialogOpen(true);
-          }}>
-            <Plus className="w-4 h-4 mr-2" /> New Category
-          </Button>
+          <div className="flex space-x-2">
+            {selectedCategories.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <ListChecks className="w-4 h-4 mr-2" /> 
+                    Bulk Actions ({selectedCategories.length})
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Bulk Operations</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setBulkAction('activate');
+                      setBulkActionOpen(true);
+                    }}
+                    className="flex items-center"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                    Activate Selected
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setBulkAction('deactivate');
+                      setBulkActionOpen(true);
+                    }}
+                    className="flex items-center"
+                  >
+                    <XCircle className="w-4 h-4 mr-2 text-gray-500" />
+                    Deactivate Selected
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setBulkAction('delete');
+                      setBulkActionOpen(true);
+                    }}
+                    className="flex items-center text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Selected
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button onClick={() => {
+              setEditingCategory(null);
+              setNewCategory(FormCategory_DEFAULT);
+              setIsCategoryDialogOpen(true);
+            }}>
+              <Plus className="w-4 h-4 mr-2" /> New Category
+            </Button>
+          </div>
         </div>
         
         <div className="flex items-center space-x-4 mb-4">
@@ -2119,6 +2209,41 @@ const FormsAdministration: React.FC = () => {
           </div>
         </SheetContent>
       </Sheet>
+      
+      {/* Bulk Action Dialog */}
+      <AlertDialog open={bulkActionOpen} onOpenChange={setBulkActionOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Bulk Action</AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === 'activate' && `This will activate ${selectedCategories.length} selected categories.`}
+              {bulkAction === 'deactivate' && `This will deactivate ${selectedCategories.length} selected categories.`}
+              {bulkAction === 'delete' && `This will permanently delete ${selectedCategories.length} selected categories. This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setBulkAction('')}
+              className="border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className={`flex items-center gap-2 ${
+                bulkAction === 'delete' 
+                  ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
+              onClick={executeBulkAction}
+            >
+              {bulkAction === 'activate' && <CheckCircle className="h-4 w-4" />}
+              {bulkAction === 'deactivate' && <XCircle className="h-4 w-4" />}
+              {bulkAction === 'delete' && <Trash2 className="h-4 w-4" />}
+              Confirm {bulkAction === 'activate' ? 'Activation' : bulkAction === 'deactivate' ? 'Deactivation' : 'Deletion'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 };
