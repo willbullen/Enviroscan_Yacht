@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 
-// This script tests the vessel position update process
+// This script tests the vessel position update process for AIS-tracked vessels
+// It will update the position of a vessel in the database and verify the changes
 async function testVesselPositionUpdate() {
   try {
     console.log('Testing vessel position update process');
