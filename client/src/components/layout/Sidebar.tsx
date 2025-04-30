@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Home, 
   CheckSquare, 
@@ -25,10 +26,17 @@ import {
   AlertTriangle,
   Clock,
   Shield,
-  Map
+  Map,
+  UserCircle
 } from "lucide-react";
 import eastwindLogo from '@/assets/eastwind_logo.svg';
 import { Button } from "@/components/ui/button";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -54,6 +62,7 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const [location] = useLocation();
   const isMobile = useMobile();
+  const { user, logoutMutation } = useAuth();
 
   return (
     <div
@@ -365,19 +374,59 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         </nav>
         
         {/* User Profile - At the very bottom */}
-        {isOpen && (
-          <div className="px-4 py-4 mt-2 border-t">
-            <div className="flex items-center space-x-3">
-              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="font-medium text-primary">CS</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Capt. Smith</p>
-                <p className="text-xs text-muted-foreground">Operations Manager</p>
-              </div>
+        <div className="px-2 py-3 mt-2 border-t">
+          {isOpen ? (
+            <div className="px-3 py-2">
+              {user ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="font-medium text-primary">
+                        {user.fullName.split(' ').map(name => name[0]).join('').substring(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{user.fullName}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => logoutMutation.mutate()}
+                    className="ml-2 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    title="Logout"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <UserCircle className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm">Not logged in</span>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => logoutMutation.mutate()}
+                    className="w-full text-muted-foreground hover:text-primary hover:bg-primary/10"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Logout</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </div>
     </div>
   );
