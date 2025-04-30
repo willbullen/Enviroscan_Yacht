@@ -90,11 +90,9 @@ export default function AuthPage() {
     <div className="flex min-h-screen bg-gray-900">
       <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-8">
         <div className="w-full max-w-md">
-          <img 
-            src="/eastwind_logo.svg" 
-            alt="Eastwind Logo" 
-            className="h-10 mx-auto mb-6" 
-          />
+          <div className="flex justify-center mb-6">
+            <h2 className="text-2xl font-bold text-primary">Eastwind Fleet Management</h2>
+          </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
