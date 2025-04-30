@@ -23,6 +23,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -91,7 +99,8 @@ import {
   FileCheck,
   CheckCircle,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  XCircle
 } from 'lucide-react';
 
 // Define interfaces for our form data models
