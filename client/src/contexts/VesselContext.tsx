@@ -14,6 +14,14 @@ export interface Vessel {
   speed?: number;
   heading?: number;
   timestamp?: string;
+  
+  // Additional fields required by the vessel schema
+  registrationNumber?: string;
+  beam?: string;
+  draft?: string;
+  year?: string;
+  manufacturer?: string;
+  status?: string;
 }
 
 interface VesselContextType {
@@ -92,6 +100,7 @@ export const VesselProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Add a new vessel
   const addVessel = async (vesselData: Partial<Vessel>): Promise<Vessel | null> => {
     try {
+      console.log('Adding vessel:', vesselData);
       const response = await fetch('/api/vessels-management', {
         method: 'POST',
         headers: {
@@ -100,11 +109,18 @@ export const VesselProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         body: JSON.stringify({
           vesselName: vesselData.name,
           vesselType: vesselData.type || 'Unknown',
-          length: vesselData.length,
-          flagCountry: vesselData.flag || null,
+          length: vesselData.length || '0',
+          flagCountry: vesselData.flag || 'Unknown',
           mmsi: vesselData.mmsi || null,
           callSign: vesselData.callSign || null,
-          // Add other fields as needed for your vessel schema
+          
+          // Add required fields for vessel schema validation
+          registrationNumber: vesselData.registrationNumber || 'REG-' + Date.now(),
+          beam: vesselData.beam || '10',
+          draft: vesselData.draft || '5',
+          buildYear: vesselData.year || '2020',
+          manufacturer: vesselData.manufacturer || 'Unknown',
+          status: 'active'
         }),
       });
       
