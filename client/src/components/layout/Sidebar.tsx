@@ -247,7 +247,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             >
               {location === "/forms-administration" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <FileText className={cn("h-5 w-5", isOpen && "mr-3")} />
-              {isOpen && <span>Forms Management</span>}
+              {isOpen && <span>Forms</span>}
             </div>
           </NavLink>
           <NavLink href="/vessels/admin">
@@ -262,7 +262,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             >
               {location === "/vessels/admin" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <Ship className={cn("h-5 w-5", isOpen && "mr-3")} />
-              {isOpen && <span>Fleet Management</span>}
+              {isOpen && <span>Vessels</span>}
             </div>
           </NavLink>
           <NavLink href="/users/admin">
@@ -277,7 +277,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             >
               {location === "/users/admin" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <Users className={cn("h-5 w-5", isOpen && "mr-3")} />
-              {isOpen && <span>User Management</span>}
+              {isOpen && <span>Users</span>}
             </div>
           </NavLink>
           
@@ -293,7 +293,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             >
               {location === "/crew-management" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <Users className={cn("h-5 w-5", isOpen && "mr-3")} />
-              {isOpen && <span>Crew Management</span>}
+              {isOpen && <span>Crew</span>}
             </div>
           </NavLink>
           
@@ -309,7 +309,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             >
               {location === "/ism-management" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <Shield className={cn("h-5 w-5", isOpen && "mr-3")} />
-              {isOpen && <span>ISM Management</span>}
+              {isOpen && <span>ISM</span>}
             </div>
           </NavLink>
           
