@@ -54,8 +54,8 @@ export function initAisStreamWebsocket() {
           return; // Skip processing for other data types
         }
         
-        // Log message type for debugging
-        console.log(`Received message type: ${jsonData?.MessageType || 'unknown'}`);
+        // Only log message types for debugging if they're not position reports
+        // or uncomment for all message types: console.log(`Received message type: ${jsonData?.MessageType || 'unknown'}`);
         
         // Process AIS message
         if (jsonData && jsonData.MessageType === 'PositionReport') {
@@ -85,7 +85,8 @@ export function initAisStreamWebsocket() {
               timestamp: new Date().toISOString()
             };
             
-            console.log(`Updated position for vessel MMSI: ${mmsi} (New Format)`);
+            // Disabled for less verbose logging
+            // console.log(`Updated position for vessel MMSI: ${mmsi} (New Format)`);
           }
           // Handle the old format where data is directly in Message
           else if (jsonData.Message) {
@@ -111,7 +112,8 @@ export function initAisStreamWebsocket() {
               timestamp: new Date().toISOString()
             };
             
-            console.log(`Updated position for vessel MMSI: ${mmsi} (Old Format)`);
+            // Disabled for less verbose logging
+            // console.log(`Updated position for vessel MMSI: ${mmsi} (Old Format)`);
           }
           // Console log already handled in individual cases
         }
