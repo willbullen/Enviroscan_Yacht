@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronRight, Navigation, Anchor, AlertTriangle, Ship, RefreshCw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ChevronRight, Navigation, Anchor, AlertTriangle, Ship, RefreshCw, Search, Loader2, PlusCircle } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { useVessel } from '@/contexts/VesselContext';
 import { useToast } from '@/hooks/use-toast';
@@ -93,6 +94,8 @@ const MarineTracker = () => {
   const { vessels, currentVessel } = useVessel();
   const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
   const [refreshInterval, setRefreshInterval] = useState<number>(60000); // 1 minute by default
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const { toast } = useToast();
   const mapRef = useRef<any>(null);
 
@@ -220,6 +223,114 @@ const MarineTracker = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-1 space-y-4">
+            {/* Vessel Search Component */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Search Vessels</CardTitle>
+                <CardDescription>
+                  Find vessels by name, MMSI, or IMO
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const searchInput = (e.currentTarget.elements.namedItem('vesselSearch') as HTMLInputElement).value;
+                    if (searchInput.trim()) {
+                      setIsSearching(true);
+                      fetch(`/api/marine/search-vessels?query=${encodeURIComponent(searchInput)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          console.log("Search results:", data);
+                          setSearchResults(data || []);
+                          if (!data || data.length === 0) {
+                            toast({
+                              title: 'No vessels found',
+                              description: 'Try a different search term or MMSI number'
+                            });
+                          }
+                        })
+                        .catch(err => {
+                          console.error("Error searching for vessels:", err);
+                          setSearchResults([]);
+                          toast({
+                            title: 'Search failed',
+                            description: 'Could not search for vessels. Please try again.'
+                          });
+                        })
+                        .finally(() => {
+                          setIsSearching(false);
+                        });
+                    }
+                  }}>
+                    <div className="flex space-x-2">
+                      <Input 
+                        name="vesselSearch" 
+                        placeholder="Vessel name, MMSI, or IMO" 
+                        className="flex-1" 
+                        disabled={isSearching}
+                      />
+                      <Button type="submit" disabled={isSearching}>
+                        {isSearching ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        ) : (
+                          <Search className="h-4 w-4 mr-1" />
+                        )}
+                        Search
+                      </Button>
+                    </div>
+                  </form>
+                  
+                  {/* Search Results */}
+                  {searchResults.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-medium">Search Results</h4>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setSearchResults([])}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                      <div className="max-h-40 overflow-y-auto space-y-2">
+                        {searchResults.map((vessel: any) => (
+                          <div 
+                            key={vessel.mmsi}
+                            className="p-2 rounded-md border hover:bg-accent transition-colors cursor-pointer"
+                            onClick={() => {
+                              // Add this vessel to tracked vessels
+                              toast({
+                                title: "Vessel added",
+                                description: `${vessel.name} will now appear on the map`
+                              });
+                              // Could trigger API call to add this vessel to your tracked fleet
+                            }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <Ship className="h-4 w-4 text-primary" />
+                                <span className="font-medium">{vessel.name || 'Unknown Vessel'}</span>
+                              </div>
+                              <PlusCircle className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 gap-1">
+                              <div>MMSI: {vessel.mmsi}</div>
+                              <div>Flag: {vessel.flag}</div>
+                              <div>Type: {vessel.type}</div>
+                              <div>Length: {vessel.length}m</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Fleet Status */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Fleet Status</CardTitle>
