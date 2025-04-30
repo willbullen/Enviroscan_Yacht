@@ -388,6 +388,46 @@ const mockVesselDetails = [
     length: 32,
     width: 7.1,
     flag: 'France'
+  },
+  {
+    mmsi: '235087450',
+    name: 'Serenity Dream',
+    type: 'Super Yacht',
+    length: 75,
+    width: 12.3,
+    flag: 'Malta'
+  },
+  {
+    mmsi: '319085400',
+    name: 'Royal Serenity',
+    type: 'Mega Yacht',
+    length: 92,
+    width: 14.8,
+    flag: 'Cayman Islands'
+  },
+  {
+    mmsi: '538005451',
+    name: 'Northern Explorer',
+    type: 'Expedition Yacht',
+    length: 68,
+    width: 11.5,
+    flag: 'Norway'
+  },
+  {
+    mmsi: '232025611',
+    name: 'Mediterranean Blue',
+    type: 'Sailing Yacht',
+    length: 38,
+    width: 8.2,
+    flag: 'Greece'
+  },
+  {
+    mmsi: '273458901',
+    name: 'Atlantic Voyager',
+    type: 'Motor Yacht',
+    length: 45,
+    width: 9.0,
+    flag: 'Bermuda'
   }
 ];
 
