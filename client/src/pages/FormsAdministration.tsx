@@ -16,6 +16,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -78,7 +85,11 @@ import {
   Trash2,
   Download,
   Eye,
-  ArrowUpDown
+  ArrowUpDown,
+  HelpCircle,
+  Info,
+  FileCheck,
+  CheckCircle
 } from 'lucide-react';
 
 // Define interfaces for our form data models
@@ -1621,10 +1632,62 @@ const FormsAdministration: React.FC = () => {
     );
   };
   
+  // Handler for lifecycle step changes
+  const handleLifecycleStepChange = (step: number) => {
+    setCurrentLifecycleStep(step);
+  };
+      
   return (
     <MainLayout title="Forms Management">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold tracking-tight"></h1>
+      <div className="mb-6 flex flex-col justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Forms Administration</h1>
+        <p className="text-muted-foreground">
+          Manage form categories, templates, and create form structures
+        </p>
+      </div>
+      
+      {/* Help & Guides Section */}
+      <div className="mb-6 bg-muted/50 p-4 rounded-lg border shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h3 className="text-lg font-medium flex items-center gap-2">
+            <HelpCircle className="h-5 w-5 text-primary" />
+            Form Management Guides
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1.5"
+              onClick={() => setShowLifecycleGuide(true)}
+            >
+              <ListChecks className="h-4 w-4" />
+              <span>Lifecycle Guide</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1.5"
+              onClick={() => setShowProcessGuide(true)}
+            >
+              <Info className="h-4 w-4" />
+              <span>Process Overview</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1.5"
+              onClick={() => setShowActivationGuide(true)}
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span>Activation Guide</span>
+            </Button>
+          </div>
+        </div>
+        <p className="text-muted-foreground text-sm mt-2">
+          Use these guides to understand the form management process from creation to deployment.
+        </p>
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
