@@ -1,0 +1,27 @@
+[vite] connecting...
+[vite] connected.
+Fetching vessels in bounds: N:90.0000, S:-90.0000, E:180.0000, W:-180.0000
+Warning: Encountered two children with the same key, &#x60;-61000&#x60;. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at MapContainerComponent (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-leaflet.js?v=424edc9a:545:34)
+    at div
+    at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/vessel/InteractiveVesselMap.tsx:85:9
+    at div
+    at div
+    at div
+    at div
+    at div
+    at _c9 (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at main
+    at div
+    at div
+    at MainLayout (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/layout/MainLayout.tsx:27:23)
+    at VesselAdmin (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/pages/VesselAdmin.tsx:49:23)
+    at Route (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=424edc9a:323:16)
+    at Switch (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=424edc9a:379:17)
+    at App
+    at VesselProvider (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/contexts/VesselContext.tsx:26:34)
+    at QueryClientProvider (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=424edc9a:2805:3)

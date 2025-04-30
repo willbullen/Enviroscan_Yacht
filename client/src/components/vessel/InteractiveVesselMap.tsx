@@ -149,8 +149,8 @@ const InteractiveVesselMap = React.forwardRef<{
           return !vessels.some(v => v.mmsi === pos.mmsi || v.id === pos.vesselId);
         }).map(pos => {
           // Generate a synthetic vessel ID for external vessels (negative to avoid conflicts)
-          // Using the last 5 digits of MMSI for a stable ID
-          const syntheticId = -Math.abs(parseInt(String(pos.mmsi).slice(-5)));
+          // Use the full MMSI for uniqueness to avoid duplicate keys
+          const syntheticId = -Math.abs(parseInt(pos.mmsi));
           return {
             id: syntheticId,
             name: pos.name || `Vessel ${pos.mmsi}`,
@@ -458,7 +458,7 @@ const InteractiveVesselMap = React.forwardRef<{
           
           {vesselData.map((vessel) => (
             <Marker 
-              key={vessel.id}
+              key={`vessel-${vessel.id}-${vessel.mmsi}`}
               position={[vessel.latitude, vessel.longitude]}
               icon={createShipIcon(vessel.id, vessel.heading, vessel.isExternal)}
               eventHandlers={{
