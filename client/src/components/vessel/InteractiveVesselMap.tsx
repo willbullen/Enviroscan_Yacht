@@ -118,14 +118,29 @@ const InteractiveVesselMap = React.forwardRef<{
       west: -180
     });
 
-    // Query to fetch vessel positions
+    // Query to fetch fleet vessels with integrated AIS data
+    const vesselDataQuery = useQuery({
+      queryKey: ['/api/marine/fleet-vessels'],
+      queryFn: async () => {
+        const response = await fetch('/api/marine/fleet-vessels');
+        if (!response.ok) {
+          throw new Error('Failed to fetch fleet vessels');
+        }
+        return response.json();
+      },
+      refetchInterval: refreshInterval,
+    });
+    
+    // Query to fetch additional vessels (if showing all vessels)
     const vesselPositionsQuery = useQuery({
       queryKey: ['/api/marine/vessel-positions', localShowAllVessels, mapBounds],
       queryFn: async () => {
+        if (!localShowAllVessels) {
+          return [];
+        }
+        
         // Construct URL with map bounds for filtering
-        let url = localShowAllVessels 
-          ? `/api/marine/vessel-positions?showAll=true&north=${mapBounds.north}&south=${mapBounds.south}&east=${mapBounds.east}&west=${mapBounds.west}` 
-          : '/api/marine/vessel-positions';
+        let url = `/api/marine/vessel-positions?showAll=true&north=${mapBounds.north}&south=${mapBounds.south}&east=${mapBounds.east}&west=${mapBounds.west}`;
         
         console.log(`Fetching vessels in bounds: N:${mapBounds.north.toFixed(4)}, S:${mapBounds.south.toFixed(4)}, E:${mapBounds.east.toFixed(4)}, W:${mapBounds.west.toFixed(4)}`);
         
@@ -136,6 +151,7 @@ const InteractiveVesselMap = React.forwardRef<{
         return response.json();
       },
       refetchInterval: refreshInterval,
+      enabled: localShowAllVessels, // Only fetch when showing all vessels
     });
 
     // Process external vessels from AIS stream
@@ -173,48 +189,21 @@ const InteractiveVesselMap = React.forwardRef<{
       }
     }, [localShowAllVessels, vessels, vesselPositionsQuery.data]);
 
-    // Combined data (static vessel info + latest positions)
+    // Combined data (fleet vessel info with integrated AIS data + additional external vessels)
     const vesselData = React.useMemo(() => {
-      if (!vesselPositionsQuery.data) return vessels.map(v => ({
+      // Use the fleet vessel data from the new endpoint
+      const fleetVesselsWithPositions = vesselDataQuery.data ? vesselDataQuery.data : vessels.map(v => ({
         ...v,
-        latitude: 25.7617 + (Math.random() * 0.5), // Default to Miami area for testing
+        latitude: 25.7617 + (Math.random() * 0.5), // Default to Miami area only if API fails
         longitude: -80.1918 + (Math.random() * 0.5),
         heading: Math.floor(Math.random() * 360),
         speed: Math.floor(Math.random() * 15),
         lastUpdate: new Date().toISOString(),
       }));
-
-      // Combine static vessel data with position data
-      const fleetVesselsWithPositions = vessels.map(vessel => {
-        const positionData = (vesselPositionsQuery.data as any[]).find(
-          (pos: any) => pos.mmsi === vessel.mmsi || pos.vesselId === vessel.id
-        );
-        
-        if (positionData) {
-          return {
-            ...vessel,
-            latitude: positionData.latitude,
-            longitude: positionData.longitude,
-            heading: positionData.heading || 0,
-            speed: positionData.speed || 0,
-            lastUpdate: positionData.timestamp,
-          };
-        }
-        
-        // If no position data, return default values
-        return {
-          ...vessel,
-          latitude: 25.7617 + (Math.random() * 0.5), // Default to Miami area for testing
-          longitude: -80.1918 + (Math.random() * 0.5),
-          heading: Math.floor(Math.random() * 360),
-          speed: Math.floor(Math.random() * 15),
-          lastUpdate: new Date().toISOString(),
-        };
-      });
       
       // Combine fleet vessels with external vessels if localShowAllVessels is true
       return localShowAllVessels ? [...fleetVesselsWithPositions, ...externalVessels] : fleetVesselsWithPositions;
-    }, [vessels, vesselPositionsQuery.data, externalVessels, localShowAllVessels]);
+    }, [vessels, vesselDataQuery.data, externalVessels, localShowAllVessels]);
 
     // Focus vessel method exposed via ref
     const focusVessel = (vesselId: number) => {
