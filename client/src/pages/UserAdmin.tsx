@@ -1004,53 +1004,81 @@ const UserAdmin: React.FC = () => {
           </TabsContent>
 
           {/* Roles Tab */}
-          <TabsContent value="roles" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  <span>Role Management</span>
+          <TabsContent value="roles" className="space-y-6">
+            <Card className="rounded-lg shadow-sm border-border/40">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-bold flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    System Roles
+                  </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedTab("users")}>
-                      <Users className="mr-2 h-4 w-4" />
-                      Manage Users
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setSelectedTab("users")}
+                      className="gap-1.5 h-9 px-3"
+                    >
+                      <Users className="h-4 w-4" />
+                      View Users
                     </Button>
                   </div>
                 </CardTitle>
                 <CardDescription>
-                  View system roles and manage their permissions and page access controls. These roles determine what users can access.
+                  Manage system roles, their permissions, and page access controls. These determine what users can access.
                 </CardDescription>
               </CardHeader>
               
-              <CardContent>
-                <div className="rounded-md border">
+              <CardContent className="p-0">
+                <div className="p-4 border-y bg-muted/30">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm">
+                      <p className="font-medium">About System Roles</p>
+                      <p className="text-muted-foreground">Each role represents a set of permissions and access controls for users. Assign roles to users to grant them specific abilities.</p>
+                    </div>
+                    <div>
+                      <Badge variant="secondary" className="gap-1">
+                        <Shield className="h-3.5 w-3.5" />
+                        {SYSTEM_ROLES.length} Roles
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="rounded-md overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="hidden md:table-cell">Permissions</TableHead>
-                        <TableHead className="hidden md:table-cell">Page Access</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                      <TableRow className="bg-muted/50 hover:bg-muted">
+                        <TableHead className="font-semibold">Role Name</TableHead>
+                        <TableHead className="font-semibold">Description</TableHead>
+                        <TableHead className="font-semibold hidden md:table-cell">Permissions</TableHead>
+                        <TableHead className="font-semibold hidden md:table-cell">Page Access</TableHead>
+                        <TableHead className="text-right font-semibold">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {SYSTEM_ROLES.map(role => (
-                        <TableRow key={role.id}>
-                          <TableCell className="font-medium">{role.name}</TableCell>
+                        <TableRow key={role.id} className="hover:bg-muted/30">
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <Shield className={`h-4 w-4 ${role.id === 'admin' ? 'text-primary' : 'text-muted-foreground'}`} />
+                              {role.name}
+                            </div>
+                          </TableCell>
                           <TableCell className="max-w-[200px] truncate">{role.description}</TableCell>
                           <TableCell className="hidden md:table-cell">
                             <div className="flex flex-wrap gap-1">
                               {role.permissions.includes('all') ? (
-                                <Badge>All permissions</Badge>
+                                <Badge variant="default" className="font-normal">All permissions</Badge>
                               ) : (
                                 role.permissions.slice(0, 3).map(permission => (
-                                  <Badge key={permission} variant="outline" className="whitespace-nowrap">
+                                  <Badge key={permission} variant="outline" className="whitespace-nowrap font-normal">
                                     {permission.replace(/_/g, ' ')}
                                   </Badge>
                                 ))
                               )}
                               {role.permissions.length > 3 && !role.permissions.includes('all') && (
-                                <Badge variant="outline">+{role.permissions.length - 3} more</Badge>
+                                <Badge variant="outline" className="font-normal">+{role.permissions.length - 3} more</Badge>
                               )}
                             </div>
                           </TableCell>
@@ -1059,34 +1087,61 @@ const UserAdmin: React.FC = () => {
                               {role.pages && role.pages.slice(0, 3).map(pageId => {
                                 const page = SYSTEM_PAGES.find(p => p.id === pageId);
                                 return (
-                                  <Badge key={pageId} variant="secondary" className="whitespace-nowrap">
+                                  <Badge key={pageId} variant="secondary" className="whitespace-nowrap font-normal">
                                     {page?.name || pageId}
                                   </Badge>
                                 );
                               })}
                               {role.pages && role.pages.length > 3 && (
-                                <Badge variant="secondary">+{role.pages.length - 3} more</Badge>
+                                <Badge variant="secondary" className="font-normal">+{role.pages.length - 3} more</Badge>
                               )}
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end space-x-1">
                               <Button 
                                 variant="ghost" 
-                                size="sm"
+                                size="icon"
                                 onClick={() => handleSelectRole(role)}
+                                className="h-8 w-8"
                               >
-                                <Info className="h-4 w-4 mr-2" />
-                                View
+                                <Info className="h-4 w-4" />
+                                <span className="sr-only">View details</span>
                               </Button>
                               <Button 
-                                variant="outline" 
-                                size="sm"
+                                variant="ghost" 
+                                size="icon"
                                 onClick={() => handleEditRole(role)}
+                                className="h-8 w-8"
                               >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit role</span>
                               </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    disabled={role.id === 'admin'} // Prevent actions on admin role
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">More options</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuLabel>Role Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleEditRole(role)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    <span>Edit Role</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSelectRole(role)}>
+                                    <Info className="mr-2 h-4 w-4" />
+                                    <span>View Details</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1095,6 +1150,22 @@ const UserAdmin: React.FC = () => {
                   </Table>
                 </div>
               </CardContent>
+              <CardFooter className="py-3 border-t bg-muted/20 flex justify-between items-center">
+                <div className="text-xs text-muted-foreground">
+                  System roles can be assigned to users in the Users tab
+                </div>
+                <div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setSelectedTab("users")}
+                    className="gap-1 h-8"
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    Manage Users
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
             
             <Card>
