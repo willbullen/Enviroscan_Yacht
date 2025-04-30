@@ -242,12 +242,28 @@ const MarineTracker = () => {
                         .then(res => res.json())
                         .then(data => {
                           console.log("Search results:", data);
-                          setSearchResults(data || []);
-                          if (!data || data.length === 0) {
+                          // Check if the response is an error message
+                          if (data && data.error) {
                             toast({
-                              title: 'No vessels found',
-                              description: 'Try a different search term or MMSI number'
+                              title: 'Search error',
+                              description: data.message || 'Failed to search for vessels',
+                              variant: 'destructive'
                             });
+                            setSearchResults([]);
+                          } else {
+                            // Handle normal results
+                            setSearchResults(data || []);
+                            if (!data || data.length === 0) {
+                              toast({
+                                title: 'No vessels found',
+                                description: 'Try a different search term or MMSI number'
+                              });
+                            } else {
+                              toast({
+                                title: 'Vessels found',
+                                description: `Found ${data.length} matching vessels`
+                              });
+                            }
                           }
                         })
                         .catch(err => {

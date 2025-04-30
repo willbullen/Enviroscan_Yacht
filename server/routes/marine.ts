@@ -256,64 +256,71 @@ router.get('/search-vessels', async (req, res) => {
       return res.status(400).json({ error: 'Search query is required' });
     }
     
-    // If we don't have an API key, return mock data for development
-    if (!AIS_API_KEY) {
-      console.log('No AIS API key provided, returning mock search results');
-      
-      // Simple mock search for development - would be replaced by API call
-      const searchResults = mockVesselDetails.filter(vessel => 
-        vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
-        vessel.mmsi.includes(String(query))
-      );
-      
-      return res.json(searchResults);
-    }
+    // Always return mock data for now until API issue is fixed
+    console.log('Searching for vessels with query:', query);
     
-    // Make the request to the AIS Stream API search endpoint
-    // AIS Stream requires POST for search, with a specific format
-    const response = await fetch(`${BACKUP_API_URL}/search`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': AIS_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        query: String(query)
-      })
-    });
+    // Filter mock data to match the search query (name or MMSI)
+    const searchResults = mockVesselDetails.filter(vessel => 
+      vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
+      vessel.mmsi.includes(String(query))
+    );
     
-    if (!response.ok) {
-      throw new Error(`AIS API returned ${response.status}: ${response.statusText}`);
-    }
+    return res.json(searchResults);
     
-    const data = await response.json() as {
-      vessels?: Array<{
-        mmsi: string;
-        name?: string;
-        shipType?: string;
-        dimension?: {
-          length?: number;
-          width?: number;
+    /* The following code is temporarily disabled due to API connectivity issues
+    // If we have an API key, try to use the real AIS Stream API
+    if (AIS_API_KEY) {
+      try {
+        // Make the request to the AIS Stream API search endpoint
+        const response = await fetch(`${BACKUP_API_URL}/search`, {
+          method: 'POST',
+          headers: {
+            'x-api-key': AIS_API_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            query: String(query)
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`AIS API returned ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json() as {
+          vessels?: Array<{
+            mmsi: string;
+            name?: string;
+            shipType?: string;
+            dimension?: {
+              length?: number;
+              width?: number;
+            };
+            flag?: string;
+            imo?: string;
+            callsign?: string;
+          }>
         };
-        flag?: string;
-        imo?: string;
-        callsign?: string;
-      }>
-    };
-    
-    // Format the response to match our application's expected structure
-    const formattedResults = data.vessels?.map(vessel => ({
-      mmsi: vessel.mmsi,
-      name: vessel.name || 'Unknown',
-      type: vessel.shipType || 'Unknown',
-      length: vessel.dimension?.length || 0,
-      width: vessel.dimension?.width || 0,
-      flag: vessel.flag || 'Unknown',
-      imo: vessel.imo || '',
-      callsign: vessel.callsign || ''
-    })) || [];
-    
-    res.json(formattedResults);
+        
+        // Format the response to match our application's expected structure
+        const formattedResults = data.vessels?.map(vessel => ({
+          mmsi: vessel.mmsi,
+          name: vessel.name || 'Unknown',
+          type: vessel.shipType || 'Unknown',
+          length: vessel.dimension?.length || 0,
+          width: vessel.dimension?.width || 0,
+          flag: vessel.flag || 'Unknown',
+          imo: vessel.imo || '',
+          callsign: vessel.callsign || ''
+        })) || [];
+        
+        return res.json(formattedResults);
+      } catch (error) {
+        console.error('Error with AIS API, falling back to mock data:', error);
+        // Fall back to mock data on error
+      }
+    }
+    */
   } catch (error) {
     console.error('Error searching vessels:', error);
     res.status(500).json({ 
