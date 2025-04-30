@@ -190,6 +190,7 @@ router.get('/vessel-positions', async (req, res) => {
     
     // Initialize WebSocket if not already done
     if (!wsInitialized && AIS_API_KEY) {
+      console.log('Initializing AIS Stream WebSocket with API key');
       initAisStreamWebsocket();
     }
     
@@ -197,6 +198,12 @@ router.get('/vessel-positions', async (req, res) => {
     if (!AIS_API_KEY) {
       console.log('No AIS API key provided, returning mock position data');
       return res.json(mockVesselPositions);
+    }
+    
+    console.log(`Current vessel position cache status: ${Object.keys(vesselPositionsCache).length} vessels cached`);
+    if (Object.keys(vesselPositionsCache).length > 0) {
+      const sampleVessels = Object.keys(vesselPositionsCache).slice(0, 3);
+      console.log(`Sample cached vessels: ${sampleVessels.join(', ')}`);
     }
     
     // Check if the request asks for all vessels within map bounds
