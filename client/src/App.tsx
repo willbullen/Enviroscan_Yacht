@@ -13,6 +13,7 @@ import FinancialManagement from "@/pages/FinancialManagement";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 import VesselAdmin from "@/pages/VesselAdmin";
+import UserAdmin from "@/pages/UserAdmin";
 import FormsAdministration from "@/pages/FormsAdministration";
 import MarineTracker from "@/pages/MarineTracker";
 import { VoyagesListPage } from "@/pages/VoyagesListPage";
@@ -35,8 +36,9 @@ function App() {
       <Route path="/financial-management" component={FinancialManagement} />
       <Route path="/forms-administration" component={FormsAdministration} />
       
-      {/* Vessel Management Routes */}
+      {/* Admin Routes */}
       <Route path="/vessels/admin" component={VesselAdmin} />
+      <Route path="/users/admin" component={UserAdmin} />
       
       {/* Voyage Planner Routes */}
       <Route path="/voyages" component={VoyagesListPage} />

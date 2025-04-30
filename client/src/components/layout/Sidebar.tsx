@@ -310,7 +310,22 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             >
               {location === "/vessels/admin" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <Ship className={cn("h-5 w-5", isOpen && "mr-3")} />
-              {isOpen && <span>Vessel Management</span>}
+              {isOpen && <span>Fleet Management</span>}
+            </div>
+          </NavLink>
+          <NavLink href="/users/admin">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/users/admin" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/users/admin" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <Users className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>User Management</span>}
             </div>
           </NavLink>
         </nav>
