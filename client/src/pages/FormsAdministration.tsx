@@ -7,6 +7,7 @@ import { FormField } from "@/components/form-builder/FormFieldItem";
 import { FormLifecycleGuide } from "@/components/form-builder/FormLifecycleGuide";
 import { FormProcessVisualization } from "@/components/form-builder/FormProcessVisualization";
 import { FormActivationGuide } from "@/components/form-builder/FormActivationGuide";
+import { FormTemplateDataTable } from "@/components/form-builder/FormTemplateDataTable";
 
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -105,15 +106,13 @@ import {
   XCircle
 } from 'lucide-react';
 
-// Define interfaces for our form data models
-interface FormCategory {
+// Import the shared types from the FormTemplateDataTable
+import { FormTemplate as DataTableFormTemplate, FormCategory as DataTableFormCategory } from "@/components/form-builder/FormTemplateDataTable";
+
+// Define our local interfaces
+interface FormCategory extends Omit<DataTableFormCategory, 'id'> {
   id: number;
-  name: string;
-  description: string | null;
-  isActive: boolean;
   createdBy: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface FormTemplate {
@@ -1520,9 +1519,18 @@ const FormsAdministration: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 mt-4">
         {/* Template selection with data table */}
         <FormTemplateDataTable 
-          templates={templates} 
+          templates={templates.map(template => ({
+            ...template,
+            originalFilename: null // Adding this field to satisfy the interface
+          }))} 
           categories={categories}
-          onSelectTemplate={setSelectedTemplate}
+          onSelectTemplate={(template) => {
+            // Find the original template in our data and select it
+            const originalTemplate = templates.find(t => t.id === template.id);
+            if (originalTemplate) {
+              setSelectedTemplate(originalTemplate);
+            }
+          }}
         />
         
         {templates.length === 0 && (
