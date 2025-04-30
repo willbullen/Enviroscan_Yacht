@@ -614,90 +614,137 @@ const UserAdmin: React.FC = () => {
           </div>
         </div>
 
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full md:w-auto grid-cols-3">
-            <TabsTrigger value="users" className="flex items-center gap-2">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+          <TabsList className="grid w-full md:w-auto grid-cols-3 rounded-full p-1 h-11 mb-2">
+            <TabsTrigger value="users" className="flex items-center gap-2 rounded-full">
               <Users className="h-4 w-4" />
-              Users
+              <span className="hidden sm:inline">Manage</span> Users
             </TabsTrigger>
             <TabsTrigger 
               value="vessels" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 rounded-full"
               disabled={!selectedUser}
             >
               <Ship className="h-4 w-4" />
-              Vessel Assignments
+              <span className="hidden sm:inline">Vessel</span> Assignments
             </TabsTrigger>
-            <TabsTrigger value="roles" className="flex items-center gap-2">
+            <TabsTrigger value="roles" className="flex items-center gap-2 rounded-full">
               <Shield className="h-4 w-4" />
-              Roles
+              <span className="hidden sm:inline">System</span> Roles
             </TabsTrigger>
           </TabsList>
           
           {/* Users Tab */}
-          <TabsContent value="users" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  <span>User Management</span>
-                  <Button variant="default" onClick={() => refetchUsers()}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
+          <TabsContent value="users" className="space-y-6">
+            <Card className="rounded-lg shadow-sm border-border/40">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-bold flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    System Users
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => refetchUsers()}
+                    size="sm"
+                    className="gap-1.5 h-9 px-3"
+                  >
+                    <RefreshCw className="h-4 w-4" />
                     Refresh
                   </Button>
                 </CardTitle>
                 <CardDescription>
-                  View, add, and edit users for the fleet management system.
+                  View and manage all system users, their roles, and access permissions
                 </CardDescription>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search users..."
-                      value={userFilter}
-                      onChange={(e) => setUserFilter(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2 items-center">
-                    <Label htmlFor="role-filter" className="whitespace-nowrap text-xs">Role:</Label>
-                    <Select
-                      value={userRoleFilter}
-                      onValueChange={setUserRoleFilter}
-                    >
-                      <SelectTrigger id="role-filter" className="h-9">
-                        <SelectValue placeholder="Filter by role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Roles</SelectItem>
-                        {SYSTEM_ROLES.map(role => (
-                          <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex gap-2 items-center">
-                    <Label htmlFor="status-filter" className="whitespace-nowrap text-xs">Status:</Label>
-                    <Select
-                      value={userStatusFilter}
-                      onValueChange={setUserStatusFilter}
-                    >
-                      <SelectTrigger id="status-filter" className="h-9">
-                        <SelectValue placeholder="Filter by status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
               </CardHeader>
               
-              <CardContent>
+              <CardContent className="p-0">
+                <div className="p-4 border-y bg-muted/30">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div className="relative md:col-span-6">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search users by name, username or email..."
+                        value={userFilter}
+                        onChange={(e) => setUserFilter(e.target.value)}
+                        className="pl-8 h-9"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1 ml-1">
+                        Type to filter users
+                      </p>
+                    </div>
+                    
+                    <div className="md:col-span-3">
+                      <Select
+                        value={userRoleFilter}
+                        onValueChange={setUserRoleFilter}
+                      >
+                        <SelectTrigger id="role-filter" className="h-9">
+                          <SelectValue placeholder="Filter by role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Roles</SelectItem>
+                          {SYSTEM_ROLES.map(role => (
+                            <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1 ml-1">Filter by role</p>
+                    </div>
+                    
+                    <div className="md:col-span-3">
+                      <Select
+                        value={userStatusFilter}
+                        onValueChange={setUserStatusFilter}
+                      >
+                        <SelectTrigger id="status-filter" className="h-9">
+                          <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1 ml-1">Filter by status</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mt-4">
+                    <div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setUserFilter('');
+                          setUserRoleFilter('all');
+                          setUserStatusFilter('all');
+                        }}
+                        className="h-8 gap-1.5"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Clear Filters
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {filteredUsers?.length || 0} Users
+                      </Badge>
+                      <Button
+                        onClick={() => {
+                          resetUserForm();
+                          setIsAddingUser(true);
+                        }}
+                        size="sm"
+                        className="gap-1.5 h-8"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Add User
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
                 {usersLoading ? (
                   <div className="flex justify-center items-center h-40">
                     <RefreshCw className="h-8 w-8 animate-spin text-primary" />
@@ -708,63 +755,127 @@ const UserAdmin: React.FC = () => {
                     <p>Error loading users. Please try again.</p>
                   </div>
                 ) : (
-                  <div className="rounded-md border">
+                  <div className="rounded-md overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Username</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                        <TableRow className="bg-muted/50 hover:bg-muted">
+                          <TableHead className="font-semibold">Name</TableHead>
+                          <TableHead className="font-semibold">Username</TableHead>
+                          <TableHead className="font-semibold hidden md:table-cell">Email</TableHead>
+                          <TableHead className="font-semibold">Role</TableHead>
+                          <TableHead className="font-semibold">Status</TableHead>
+                          <TableHead className="text-right font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredUsers && filteredUsers.length > 0 ? (
                           filteredUsers.map(user => (
-                            <TableRow key={user.id}>
+                            <TableRow key={user.id} className="hover:bg-muted/30">
                               <TableCell className="font-medium">{user.fullName}</TableCell>
                               <TableCell>{user.username}</TableCell>
-                              <TableCell>{user.email || '-'}</TableCell>
+                              <TableCell className="hidden md:table-cell">{user.email || '-'}</TableCell>
                               <TableCell>
-                                <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
+                                <Badge variant={user.role === 'admin' ? 'default' : 'outline'} className="font-normal">
                                   {SYSTEM_ROLES.find(r => r.id === user.role)?.name || user.role}
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                <Badge variant={user.isActive ? 'success' : 'destructive'}>
+                                <div 
+                                  className={`flex items-center px-2 py-1 rounded-full text-xs ${
+                                    user.isActive 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                                      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                  }`}
+                                >
+                                  <div className={`w-2 h-2 rounded-full mr-1.5 ${user.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                                   {user.isActive ? 'Active' : 'Inactive'}
-                                </Badge>
+                                </div>
                               </TableCell>
                               <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                      <span className="sr-only">Open menu</span>
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => handleSelectUser(user)}>
-                                      <Ship className="mr-2 h-4 w-4" />
-                                      <span>Manage Vessels</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      <span>Edit User</span>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <div className="flex justify-end space-x-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleSelectUser(user)}
+                                    className="h-8 w-8"
+                                  >
+                                    <Ship className="h-4 w-4" />
+                                    <span className="sr-only">Manage vessels</span>
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleEditUser(user)}
+                                    className="h-8 w-8"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                    <span className="sr-only">Edit user</span>
+                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="h-8 w-8"
+                                      >
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">Open menu</span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-40">
+                                      <DropdownMenuLabel>User Actions</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => handleSelectUser(user)}>
+                                        <Ship className="mr-2 h-4 w-4" />
+                                        <span>Vessel Access</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        <span>Edit Details</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem 
+                                        className={user.isActive ? 'text-destructive' : 'text-green-600'}
+                                        onClick={() => updateUserMutation.mutate({
+                                          id: user.id,
+                                          userData: { isActive: !user.isActive }
+                                        })}
+                                      >
+                                        {user.isActive ? (
+                                          <>
+                                            <XCircle className="mr-2 h-4 w-4" />
+                                            <span>Deactivate</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <CheckCircle className="mr-2 h-4 w-4" />
+                                            <span>Activate</span>
+                                          </>
+                                        )}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-4">
-                              No users found matching your filters
+                            <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                              <div className="flex flex-col items-center justify-center">
+                                <UserX className="h-10 w-10 text-muted-foreground/60 mb-2" />
+                                <p>No users found matching the filter criteria.</p>
+                                <Button 
+                                  variant="link" 
+                                  onClick={() => {
+                                    setUserFilter('');
+                                    setUserRoleFilter('all');
+                                    setUserStatusFilter('all');
+                                  }}
+                                >
+                                  Clear filters
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         )}
@@ -773,6 +884,22 @@ const UserAdmin: React.FC = () => {
                   </div>
                 )}
               </CardContent>
+              <CardFooter className="py-3 border-t bg-muted/20 flex justify-between items-center">
+                <div className="text-xs text-muted-foreground">
+                  Showing {filteredUsers?.length || 0} of {users?.length || 0} total users
+                </div>
+                <div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => refetchUsers()}
+                    className="gap-1 h-8"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Refresh
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
           </TabsContent>
           
