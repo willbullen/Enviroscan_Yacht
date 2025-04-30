@@ -616,9 +616,10 @@ const UserAdmin: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={() => setSelectedTab("roles")}
-              className="gap-1.5"
+              className="gap-1.5 font-medium"
+              title="Manage system roles and permissions"
             >
-              <Shield className="h-4 w-4" />
+              <Shield className="h-4 w-4 text-primary" />
               System Roles
             </Button>
             <Button 
@@ -627,7 +628,8 @@ const UserAdmin: React.FC = () => {
                 resetUserForm();
                 setIsAddingUser(true);
               }}
-              className="gap-1.5"
+              className="gap-1.5 font-medium"
+              title="Create a new user account"
             >
               <UserPlus className="h-4 w-4" /> 
               Add New User
@@ -692,12 +694,12 @@ const UserAdmin: React.FC = () => {
                 <div className="p-4 border-y bg-muted/30">
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     <div className="relative md:col-span-6">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-primary/60" />
                       <Input
                         placeholder="Search users by name, username or email..."
                         value={userFilter}
                         onChange={(e) => setUserFilter(e.target.value)}
-                        className="pl-8 h-9"
+                        className="pl-8 h-9 border-primary/20 hover:border-primary/60 transition-colors"
                       />
                       <p className="text-xs text-muted-foreground mt-1 ml-1">
                         Type to filter users
@@ -709,7 +711,7 @@ const UserAdmin: React.FC = () => {
                         value={userRoleFilter}
                         onValueChange={setUserRoleFilter}
                       >
-                        <SelectTrigger id="role-filter" className="h-9">
+                        <SelectTrigger id="role-filter" className="h-9 border-primary/20 hover:border-primary/60 transition-colors font-medium">
                           <SelectValue placeholder="Filter by role" />
                         </SelectTrigger>
                         <SelectContent>
@@ -727,7 +729,7 @@ const UserAdmin: React.FC = () => {
                         value={userStatusFilter}
                         onValueChange={setUserStatusFilter}
                       >
-                        <SelectTrigger id="status-filter" className="h-9">
+                        <SelectTrigger id="status-filter" className="h-9 border-primary/20 hover:border-primary/60 transition-colors font-medium">
                           <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -750,9 +752,10 @@ const UserAdmin: React.FC = () => {
                           setUserRoleFilter('all');
                           setUserStatusFilter('all');
                         }}
-                        className="h-8 gap-1.5"
+                        className="h-8 gap-1.5 border-primary/20 hover:border-primary/60 transition-colors"
+                        title="Reset all filter options"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-3.5 w-3.5 text-primary/70" />
                         Clear Filters
                       </Button>
                     </div>
@@ -766,7 +769,8 @@ const UserAdmin: React.FC = () => {
                           setIsAddingUser(true);
                         }}
                         size="sm"
-                        className="gap-1.5 h-8"
+                        className="gap-1.5 h-8 font-medium"
+                        title="Create a new user account"
                       >
                         <UserPlus className="h-3.5 w-3.5" />
                         Add User
