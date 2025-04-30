@@ -2094,12 +2094,10 @@ const FormsAdministration: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="isActive"
                 checked={newTemplate.isActive}
-                onChange={(e) => setNewTemplate({ ...newTemplate, isActive: e.target.checked })}
-                className="form-checkbox h-4 w-4 text-primary rounded"
+                onCheckedChange={(checked) => setNewTemplate({ ...newTemplate, isActive: !!checked })}
               />
               <Label htmlFor="isActive">Active</Label>
             </div>
@@ -2137,12 +2135,10 @@ const FormsAdministration: React.FC = () => {
               </div>
               
               <div className="flex items-center space-x-2 self-end">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id="isActive"
                   checked={newVersion.isActive}
-                  onChange={(e) => setNewVersion({ ...newVersion, isActive: e.target.checked })}
-                  className="form-checkbox h-4 w-4 text-primary rounded"
+                  onCheckedChange={(checked) => setNewVersion({ ...newVersion, isActive: !!checked })}
                 />
                 <Label htmlFor="isActive">Active</Label>
               </div>
