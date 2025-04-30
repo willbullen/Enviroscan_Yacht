@@ -43,13 +43,14 @@ import {
 } from "@/components/ui/tabs";
 
 // Types
-type VesselFormData = {
+export type VesselFormData = {
   name: string;
   type: string;
   length: string;
   flag: string;
   year: string;
   image: string | null;
+  mmsi?: string;
 };
 
 const VesselAdmin: React.FC = () => {

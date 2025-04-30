@@ -88,6 +88,51 @@ router.get('/vessel-details/:mmsi', async (req, res) => {
   }
 });
 
+// Search for vessels by name, MMSI, or IMO
+router.get('/search-vessels', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+    
+    // If we don't have an API key, return mock data for development
+    if (!AIS_API_KEY) {
+      console.log('No AIS API key provided, returning mock search results');
+      
+      // Simple mock search for development - would be replaced by API call
+      const searchResults = mockVesselDetails.filter(vessel => 
+        vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
+        vessel.mmsi.includes(String(query))
+      );
+      
+      return res.json(searchResults);
+    }
+    
+    // Make the request to the AIS API search endpoint
+    const response = await fetch(`${AIS_API_URL}/search?q=${encodeURIComponent(String(query))}`, {
+      headers: {
+        'Authorization': `ApiKey ${AIS_API_KEY}`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`AIS API returned ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error searching vessels:', error);
+    res.status(500).json({ 
+      error: 'Failed to search vessels',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Mock data for development when no API key is available
 const mockVesselPositions = [
   {

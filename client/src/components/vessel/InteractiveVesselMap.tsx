@@ -49,16 +49,21 @@ interface InteractiveVesselMapProps {
   className?: string;
   selectedVesselId?: number | null; 
   onVesselSelect?: (vesselId: number) => void;
+  allowMapClick?: boolean;
 }
 
-const InteractiveVesselMap = React.forwardRef<{ focusVessel: (vesselId: number) => void }, InteractiveVesselMapProps>(
+const InteractiveVesselMap = React.forwardRef<{ 
+  focusVessel: (vesselId: number) => void;
+  focusPosition: (latitude: number, longitude: number) => void; 
+}, InteractiveVesselMapProps>(
   (props, ref) => {
     const { 
       height = 400, 
       width = '100%', 
       className = '', 
       selectedVesselId = null, 
-      onVesselSelect 
+      onVesselSelect,
+      allowMapClick = false
     } = props;
     
     const { vessels } = useVessel();
