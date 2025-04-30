@@ -39,13 +39,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create API router
   const apiRouter = express.Router();
   
-  // Initialize AIS Stream WebSocket connection
-  try {
-    console.log('Initializing AIS Stream WebSocket connection...');
-    initAisStreamWebsocket();
-  } catch (error) {
-    console.error('Failed to initialize AIS Stream WebSocket:', error);
-  }
+  // Initialize AIS Stream WebSocket connection - now moved to on-demand in /vessel-positions route
+  // We'll initialize the WebSocket only when someone accesses the marine tracker
+  console.log('AIS Stream WebSocket will be initialized on demand')
   
   // =========== User Routes =============
   

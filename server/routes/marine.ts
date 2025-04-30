@@ -12,16 +12,25 @@ const BACKUP_API_URL = 'https://api.aisstream.io/v1';
 // Internal cache for vessel positions received from AIS Stream
 const vesselPositionsCache: Record<string, any> = {};
 
+// Store the global WebSocket instance so we can close it later
+let wsInstance: WebSocket | null = null;
+let wsLastUsed: number = 0; // Timestamp when the WS was last used
+const WS_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Function to initialize AIS Stream WebSocket connection (if needed)
 // AIS Stream primarily uses WebSockets for real-time tracking
 let wsInitialized = false;
 // Initialize and export the function so it can be called from other modules
 export function initAisStreamWebsocket() {
+  // Record the timestamp when the connection was requested
+  wsLastUsed = Date.now();
+  
   if (wsInitialized || !AIS_API_KEY) return;
   
   try {
     // Connect to AIS Stream WebSocket API
     const ws = new WebSocket(AIS_STREAM_WS_URL);
+    wsInstance = ws;
     
     // Handle WebSocket connection open
     ws.on('open', function open() {
@@ -144,9 +153,41 @@ export function initAisStreamWebsocket() {
   }
 }
 
+// Function to close the AIS Stream WebSocket connection after a period of inactivity
+export function closeAisStreamWebsocket() {
+  if (!wsInstance) return;
+  
+  // Check if we should close based on timestamp
+  const currentTime = Date.now();
+  const timeSinceLastUse = currentTime - wsLastUsed;
+  
+  if (timeSinceLastUse > WS_TIMEOUT) {
+    console.log(`AIS Stream WebSocket inactive for ${Math.round(timeSinceLastUse/1000/60)} minutes, closing connection`);
+    
+    try {
+      // Only close if the connection is open
+      if (wsInstance.readyState === WebSocket.OPEN) {
+        wsInstance.close();
+        console.log('AIS Stream WebSocket closed due to inactivity');
+      }
+      
+      wsInitialized = false;
+      wsInstance = null;
+    } catch (error) {
+      console.error('Error closing AIS Stream WebSocket:', error);
+    }
+  }
+}
+
+// Timer to periodically check and close inactive WebSocket connections
+setInterval(closeAisStreamWebsocket, 60 * 1000); // Check every minute
+
 // Get vessel positions from AIS Stream API
 router.get('/vessel-positions', async (req, res) => {
   try {
+    // Record the last time the WebSocket was used
+    wsLastUsed = Date.now();
+    
     // Initialize WebSocket if not already done
     if (!wsInitialized && AIS_API_KEY) {
       initAisStreamWebsocket();
@@ -235,6 +276,9 @@ router.get('/vessel-positions', async (req, res) => {
 // Get vessel details from AIS Stream API
 router.get('/vessel-details/:mmsi', async (req, res) => {
   try {
+    // Record the last time the WebSocket was used
+    wsLastUsed = Date.now();
+    
     const { mmsi } = req.params;
     
     // If we don't have an API key, return mock data for development
@@ -323,6 +367,9 @@ router.get('/vessel-details/:mmsi', async (req, res) => {
 // Search for vessels by name, MMSI, or IMO using AIS Stream
 router.get('/search-vessels', async (req, res) => {
   try {
+    // Record the last time the WebSocket was used
+    wsLastUsed = Date.now();
+    
     const { query } = req.query;
     
     if (!query) {
