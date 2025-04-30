@@ -677,7 +677,7 @@ const FormsAdministration: React.FC = () => {
   const renderCategoriesTable = () => {
     if (formCategoriesQuery.isLoading) {
       return <div className="text-center py-8">
-        <CircularProgress className="mx-auto" />
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
         <p className="mt-2 text-sm text-muted-foreground">Loading categories...</p>
       </div>;
     }
@@ -916,11 +916,35 @@ const FormsAdministration: React.FC = () => {
   // Render form templates table
   const renderTemplatesTable = () => {
     if (formTemplatesQuery.isLoading) {
-      return <div className="text-center py-8">Loading templates...</div>;
+      return <div className="text-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+        <p className="mt-2 text-sm text-muted-foreground">Loading templates...</p>
+      </div>;
     }
     
     if (formTemplatesQuery.isError) {
-      return <div className="text-center py-8 text-destructive">Error loading templates</div>;
+      return <div className="bg-destructive/10 p-4 rounded-md border border-destructive/50 mb-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-destructive">API Error</h4>
+            <p className="text-sm text-muted-foreground">
+              There was an error loading form templates data. Please try again in a moment.
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => {
+                queryClient.invalidateQueries({queryKey: ['/api/ism/form-templates']});
+              }}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>;
     }
     
     const templates = formTemplatesQuery.data as FormTemplate[] || [];
