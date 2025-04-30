@@ -61,15 +61,20 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
+        console.log(`User found: ${JSON.stringify(user)}`);
         if (!user || !(await comparePasswords(password, user.password))) {
+          console.log("Invalid username or password");
           return done(null, false, { message: "Invalid username or password" });
         }
         // Check if the user is active (if the field exists)
-        if (user.isActive === false) {
+        if (user.hasOwnProperty('isActive') && user.isActive === false) {
+          console.log("Account is inactive");
           return done(null, false, { message: "Account is inactive" });
         }
+        console.log("Authentication successful");
         return done(null, user);
       } catch (err) {
+        console.error("Authentication error:", err);
         return done(err);
       }
     }),
@@ -79,16 +84,20 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
+      console.log(`Deserializing user ${id}: ${JSON.stringify(user)}`);
       // If user is deleted, logout
       if (!user) {
+        console.log(`User ${id} not found`);
         return done(null, false);
       }
       // If isActive field exists and user is inactive, logout
-      if (user.isActive === false) {
+      if (user.hasOwnProperty('isActive') && user.isActive === false) {
+        console.log(`User ${id} is inactive`);
         return done(null, false);
       }
       done(null, user);
     } catch (err) {
+      console.error(`Error deserializing user ${id}:`, err);
       done(err, null);
     }
   });
@@ -138,15 +147,21 @@ export function setupAuth(app: Express) {
         if (loginErr) {
           return next(loginErr);
         }
-        return res.status(200).json({
+        // Create response with required fields and optional fields
+        const userResponse: Record<string, any> = {
           id: user.id,
           username: user.username,
           fullName: user.fullName,
-          email: user.email,
           role: user.role,
-          isActive: user.isActive,
-          avatarUrl: user.avatarUrl
-        });
+        };
+        
+        // Add optional fields if they exist
+        if (user.hasOwnProperty('email')) userResponse.email = user.email;
+        if (user.hasOwnProperty('avatarUrl')) userResponse.avatarUrl = user.avatarUrl;
+        if (user.hasOwnProperty('isActive')) userResponse.isActive = user.isActive;
+        
+        console.log("Login successful, returning user:", JSON.stringify(userResponse));
+        return res.status(200).json(userResponse);
       });
     })(req, res, next);
   });
@@ -159,9 +174,17 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
-    const { password, ...user } = req.user as SelectUser;
-    res.json(user);
+    if (!req.isAuthenticated()) {
+      console.log("User not authenticated");
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    // Extract user data and remove sensitive information
+    const user = req.user as SelectUser;
+    const { password, ...safeUserData } = user;
+    
+    console.log("User profile requested:", JSON.stringify(safeUserData));
+    res.json(safeUserData);
   });
 
   // Get user's vessel assignments
