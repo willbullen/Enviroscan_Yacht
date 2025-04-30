@@ -1858,83 +1858,131 @@ const FormsAdministration: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {/* Use fallback data when API has an error */}
-                        {(formVersionsQuery.isError ? (mockVersions as FormTemplateVersion[]) : (formVersionsQuery.data as FormTemplateVersion[] || []))
-                          .filter(version => version.templateId === selectedTemplate.id)
-                          .map(version => (
-                            <TableRow key={version.id}>
-                              <TableCell className="font-medium">{version.versionNumber}</TableCell>
-                              <TableCell>
-                                <Button
-                                  variant={version.isActive ? "success" : "outline"}
-                                  size="sm"
-                                  className={`flex items-center gap-1 ${version.isActive ? "bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 border-0" : "border-gray-200 hover:bg-gray-100"}`}
-                                  onClick={() => updateVersionMutation.mutate({
-                                    ...version,
-                                    isActive: !version.isActive
-                                  })}
-                                  title={version.isActive ? "Click to deactivate version" : "Click to activate version"}
-                                >
-                                  <div className={`w-2 h-2 rounded-full ${version.isActive ? "bg-green-500" : "bg-gray-400"}`}></div>
-                                  {version.isActive ? 'Active' : 'Inactive'}
-                                </Button>
-                              </TableCell>
-                              <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleEditFormStructure(version)}
-                                    className="flex items-center gap-1.5"
-                                    title="Edit form structure and fields"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                    <span>Edit Form</span>
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => {
-                                      // Download structure as JSON
-                                      let structureDef = version.structureDefinition;
-                                      if (typeof structureDef === 'string') {
-                                        try {
-                                          structureDef = JSON.parse(structureDef);
-                                        } catch (error) {
-                                          console.error("Invalid JSON in structure definition", error);
-                                        }
-                                      }
-                                      
-                                      const jsonString = JSON.stringify(structureDef, null, 2);
-                                      const blob = new Blob([jsonString], { type: 'application/json' });
-                                      const url = URL.createObjectURL(blob);
-                                      const a = document.createElement('a');
-                                      a.href = url;
-                                      a.download = `form-template-${selectedTemplate.id}-v${version.versionNumber}.json`;
-                                      document.body.appendChild(a);
-                                      a.click();
-                                      document.body.removeChild(a);
-                                      URL.revokeObjectURL(url);
-                                    }}
-                                    className="flex items-center gap-1.5"
-                                    title="Download form structure as JSON file"
-                                  >
-                                    <Download className="w-4 h-4" />
-                                    <span>Export</span>
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                          
-                        {(!formVersionsQuery.data || (formVersionsQuery.data as FormTemplateVersion[]).filter(v => v.templateId === selectedTemplate.id).length === 0) && (
+                        {/* Get all versions for this template */}
+                        {formVersionsQuery.isLoading ? (
                           <TableRow>
-                            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                              No versions found for this template
+                            <TableCell colSpan={4} className="text-center py-4">
+                              <div className="flex justify-center">
+                                <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                              </div>
                             </TableCell>
                           </TableRow>
+                        ) : formVersionsQuery.isError ? (
+                          // Use fallback data 
+                          mockVersions
+                            .filter(version => version.templateId === selectedTemplate.id)
+                            .slice((versionCurrentPage - 1) * versionItemsPerPage, versionCurrentPage * versionItemsPerPage)
+                            .map(version => (
+                              <TableRow key={version.id}>
+                                <TableCell className="font-medium">{version.versionNumber}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant={version.isActive ? "success" : "outline"}
+                                    size="sm"
+                                    className={`flex items-center gap-1 ${version.isActive ? "bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 border-0" : "border-gray-200 hover:bg-gray-100"}`}
+                                    onClick={() => updateVersionMutation.mutate({
+                                      ...version,
+                                      isActive: !version.isActive
+                                    })}
+                                  >
+                                    <div className={`w-2 h-2 rounded-full ${version.isActive ? "bg-green-500" : "bg-gray-400"}`}></div>
+                                    {version.isActive ? 'Active' : 'Inactive'}
+                                  </Button>
+                                </TableCell>
+                                <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end space-x-2">
+                                    <Button variant="outline" size="sm" onClick={() => handleEditFormStructure(version)}>
+                                      <Edit className="w-4 h-4 mr-1" />Edit Form
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Download className="w-4 h-4 mr-1" />Export
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                        ) : (
+                          // Use API data
+                          (formVersionsQuery.data as FormTemplateVersion[] || [])
+                            .filter(version => version.templateId === selectedTemplate.id)
+                            .slice((versionCurrentPage - 1) * versionItemsPerPage, versionCurrentPage * versionItemsPerPage)
+                            .map(version => (
+                              <TableRow key={version.id}>
+                                <TableCell className="font-medium">{version.versionNumber}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant={version.isActive ? "success" : "outline"}
+                                    size="sm"
+                                    className={`flex items-center gap-1 ${version.isActive ? "bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 border-0" : "border-gray-200 hover:bg-gray-100"}`}
+                                    onClick={() => updateVersionMutation.mutate({
+                                      ...version,
+                                      isActive: !version.isActive
+                                    })}
+                                  >
+                                    <div className={`w-2 h-2 rounded-full ${version.isActive ? "bg-green-500" : "bg-gray-400"}`}></div>
+                                    {version.isActive ? 'Active' : 'Inactive'}
+                                  </Button>
+                                </TableCell>
+                                <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end space-x-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEditFormStructure(version)}
+                                      className="flex items-center gap-1.5"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                      <span>Edit Form</span>
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => {
+                                        // Download structure as JSON
+                                        let structureDef = version.structureDefinition;
+                                        if (typeof structureDef === 'string') {
+                                          try {
+                                            structureDef = JSON.parse(structureDef);
+                                          } catch (error) {
+                                            console.error("Invalid JSON in structure definition", error);
+                                          }
+                                        }
+                                        
+                                        const jsonString = JSON.stringify(structureDef, null, 2);
+                                        const blob = new Blob([jsonString], { type: 'application/json' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `form-template-${selectedTemplate.id}-v${version.versionNumber}.json`;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                        URL.revokeObjectURL(url);
+                                      }}
+                                      className="flex items-center gap-1.5"
+                                    >
+                                      <Download className="w-4 h-4" />
+                                      <span>Export</span>
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
                         )}
+                        
+                        {/* Show empty message if no versions */}
+                        {!formVersionsQuery.isLoading && 
+                          !formVersionsQuery.isError && 
+                          (formVersionsQuery.data as FormTemplateVersion[] || []).filter(v => v.templateId === selectedTemplate.id).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                                No versions found for this template
+                              </TableCell>
+                            </TableRow>
+                          )
+                        }
                       </TableBody>
                     </Table>
                   )}
