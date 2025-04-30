@@ -538,6 +538,10 @@ export class DatabaseStorage implements IStorage {
   
   async deleteVessel(id: number): Promise<boolean> {
     try {
+      // First, delete related records in user_vessel_assignments
+      await db.delete(userVesselAssignments).where(eq(userVesselAssignments.vesselId, id));
+      
+      // Then delete the vessel
       const result = await db.delete(vessels).where(eq(vessels.id, id));
       return result.rowCount ? result.rowCount > 0 : false;
     } catch (error) {
