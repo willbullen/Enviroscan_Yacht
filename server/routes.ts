@@ -29,7 +29,9 @@ import {
   insertFormTemplateVersionSchema,
   insertIsmTaskSchema,
   insertFormSubmissionSchema,
-  insertTaskCommentSchema
+  insertTaskCommentSchema,
+  insertVesselSchema,
+  insertUserVesselAssignmentSchema
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -3513,6 +3515,346 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   }));
+
+  // =========== Vessel Management Routes =============
+  
+  // Get all vessels
+  apiRouter.get("/vessels-management", async (_req: Request, res: Response) => {
+    try {
+      const vessels = await storage.getAllVessels();
+      res.json(vessels);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get vessels" });
+    }
+  });
+  
+  // Get active vessels
+  apiRouter.get("/vessels-management/active", async (_req: Request, res: Response) => {
+    try {
+      const vessels = await storage.getActiveVessels();
+      res.json(vessels);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get active vessels" });
+    }
+  });
+
+  // Get vessel by ID
+  apiRouter.get("/vessels-management/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const vessel = await storage.getVessel(id);
+      
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+      
+      res.json(vessel);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get vessel" });
+    }
+  });
+
+  // Create new vessel (admin only)
+  apiRouter.post("/vessels-management", async (req: Request, res: Response) => {
+    try {
+      // Only admins can create vessels
+      if (req.isAuthenticated() && req.user.role === "admin") {
+        const validatedData = insertVesselSchema.parse(req.body);
+        const vessel = await storage.createVessel(validatedData);
+        
+        // Log activity
+        await storage.createActivityLog({
+          activityType: 'vessel_created',
+          description: `New vessel added: ${vessel.name}`,
+          userId: req.user.id,
+          relatedEntityType: 'vessel',
+          relatedEntityId: vessel.id,
+          metadata: { vesselType: vessel.vesselType }
+        });
+        
+        res.status(201).json(vessel);
+      } else {
+        res.status(403).json({ error: "Only admins can create vessels" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid vessel data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create vessel" });
+    }
+  });
+
+  // Update vessel (admin only)
+  apiRouter.patch("/vessels-management/:id", async (req: Request, res: Response) => {
+    try {
+      // Only admins can update vessels
+      if (req.isAuthenticated() && req.user.role === "admin") {
+        const id = parseInt(req.params.id);
+        const existingVessel = await storage.getVessel(id);
+        
+        if (!existingVessel) {
+          return res.status(404).json({ message: "Vessel not found" });
+        }
+        
+        const updatedVessel = await storage.updateVessel(id, req.body);
+        
+        // Log activity
+        await storage.createActivityLog({
+          activityType: 'vessel_updated',
+          description: `Vessel updated: ${existingVessel.name}`,
+          userId: req.user.id,
+          relatedEntityType: 'vessel',
+          relatedEntityId: id,
+          metadata: { updated: Object.keys(req.body) }
+        });
+        
+        res.json(updatedVessel);
+      } else {
+        res.status(403).json({ error: "Only admins can update vessels" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update vessel" });
+    }
+  });
+
+  // Delete vessel (admin only)
+  apiRouter.delete("/vessels-management/:id", async (req: Request, res: Response) => {
+    try {
+      // Only admins can delete vessels
+      if (req.isAuthenticated() && req.user.role === "admin") {
+        const id = parseInt(req.params.id);
+        const vessel = await storage.getVessel(id);
+        
+        if (!vessel) {
+          return res.status(404).json({ message: "Vessel not found" });
+        }
+        
+        const deleted = await storage.deleteVessel(id);
+        
+        if (!deleted) {
+          return res.status(500).json({ message: "Failed to delete vessel" });
+        }
+        
+        // Log activity
+        await storage.createActivityLog({
+          activityType: 'vessel_deleted',
+          description: `Vessel deleted: ${vessel.name}`,
+          userId: req.user.id,
+          relatedEntityType: 'vessel',
+          relatedEntityId: id,
+          metadata: { vesselType: vessel.vesselType }
+        });
+        
+        res.status(204).send();
+      } else {
+        res.status(403).json({ error: "Only admins can delete vessels" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete vessel" });
+    }
+  });
+
+  // =========== User-Vessel Assignment Routes =============
+  
+  // Get all user-vessel assignments
+  apiRouter.get("/user-vessel-assignments", async (req: Request, res: Response) => {
+    try {
+      // Only admins can see all assignments
+      if (req.isAuthenticated() && req.user.role === "admin") {
+        // In reality, this should have pagination for larger datasets
+        // For now, we'll handle it by filtering by userId or vesselId if provided
+        const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+        const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+        
+        let assignments = [];
+        
+        if (userId) {
+          assignments = await storage.getUserVesselAssignments(userId);
+        } else if (vesselId) {
+          assignments = await storage.getVesselUserAssignments(vesselId);
+        } else {
+          // This would need pagination in a real-world scenario
+          // For now, fetch all (not recommended for production)
+          // We would implement something like:
+          // const { page = 1, limit = 20 } = req.query;
+          // const assignments = await storage.getAllUserVesselAssignments(page, limit);
+          
+          // For now, return a message suggesting to filter
+          return res.status(400).json({ 
+            message: "Please provide either userId or vesselId query parameter to filter assignments" 
+          });
+        }
+        
+        res.json(assignments);
+      } else {
+        res.status(403).json({ error: "Only admins can view all assignments" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user-vessel assignments" });
+    }
+  });
+
+  // Get user-vessel assignment by ID
+  apiRouter.get("/user-vessel-assignments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const assignment = await storage.getUserVesselAssignment(id);
+      
+      if (!assignment) {
+        return res.status(404).json({ message: "User-vessel assignment not found" });
+      }
+      
+      // Check if the requester is an admin or the user in the assignment
+      if (req.isAuthenticated() && (req.user.role === "admin" || req.user.id === assignment.userId)) {
+        res.json(assignment);
+      } else {
+        res.status(403).json({ error: "Not authorized to view this assignment" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user-vessel assignment" });
+    }
+  });
+
+  // Create new user-vessel assignment (admin only)
+  apiRouter.post("/user-vessel-assignments", async (req: Request, res: Response) => {
+    try {
+      // Only admins can create assignments
+      if (req.isAuthenticated() && req.user.role === "admin") {
+        const validatedData = insertUserVesselAssignmentSchema.parse(req.body);
+        
+        // Verify that both user and vessel exist
+        const user = await storage.getUser(validatedData.userId);
+        const vessel = await storage.getVessel(validatedData.vesselId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        if (!vessel) {
+          return res.status(404).json({ message: "Vessel not found" });
+        }
+        
+        // Check if assignment already exists
+        const existingAssignments = await storage.getUserVesselAssignments(validatedData.userId);
+        const alreadyAssigned = existingAssignments.some(a => a.vesselId === validatedData.vesselId);
+        
+        if (alreadyAssigned) {
+          return res.status(400).json({ message: "User is already assigned to this vessel" });
+        }
+        
+        const assignment = await storage.createUserVesselAssignment(validatedData);
+        
+        // Log activity
+        await storage.createActivityLog({
+          activityType: 'user_vessel_assignment_created',
+          description: `User ${user.username} assigned to vessel ${vessel.name} as ${assignment.role}`,
+          userId: req.user.id,
+          relatedEntityType: 'user_vessel_assignment',
+          relatedEntityId: assignment.id,
+          metadata: { 
+            userId: user.id,
+            vesselId: vessel.id,
+            role: assignment.role
+          }
+        });
+        
+        res.status(201).json(assignment);
+      } else {
+        res.status(403).json({ error: "Only admins can create user-vessel assignments" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid assignment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create user-vessel assignment" });
+    }
+  });
+
+  // Update user-vessel assignment (admin only)
+  apiRouter.patch("/user-vessel-assignments/:id", async (req: Request, res: Response) => {
+    try {
+      // Only admins can update assignments
+      if (req.isAuthenticated() && req.user.role === "admin") {
+        const id = parseInt(req.params.id);
+        const existingAssignment = await storage.getUserVesselAssignment(id);
+        
+        if (!existingAssignment) {
+          return res.status(404).json({ message: "User-vessel assignment not found" });
+        }
+        
+        const updatedAssignment = await storage.updateUserVesselAssignment(id, req.body);
+        
+        // Get user and vessel info for logging
+        const user = await storage.getUser(existingAssignment.userId);
+        const vessel = await storage.getVessel(existingAssignment.vesselId);
+        
+        // Log activity
+        await storage.createActivityLog({
+          activityType: 'user_vessel_assignment_updated',
+          description: `Updated assignment of user ${user?.username || 'Unknown'} to vessel ${vessel?.name || 'Unknown'}`,
+          userId: req.user.id,
+          relatedEntityType: 'user_vessel_assignment',
+          relatedEntityId: id,
+          metadata: { 
+            updated: Object.keys(req.body),
+            userId: existingAssignment.userId,
+            vesselId: existingAssignment.vesselId
+          }
+        });
+        
+        res.json(updatedAssignment);
+      } else {
+        res.status(403).json({ error: "Only admins can update user-vessel assignments" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user-vessel assignment" });
+    }
+  });
+
+  // Delete user-vessel assignment (admin only)
+  apiRouter.delete("/user-vessel-assignments/:id", async (req: Request, res: Response) => {
+    try {
+      // Only admins can delete assignments
+      if (req.isAuthenticated() && req.user.role === "admin") {
+        const id = parseInt(req.params.id);
+        const assignment = await storage.getUserVesselAssignment(id);
+        
+        if (!assignment) {
+          return res.status(404).json({ message: "User-vessel assignment not found" });
+        }
+        
+        // Get user and vessel info for logging before deletion
+        const user = await storage.getUser(assignment.userId);
+        const vessel = await storage.getVessel(assignment.vesselId);
+        
+        const deleted = await storage.deleteUserVesselAssignment(id);
+        
+        if (!deleted) {
+          return res.status(500).json({ message: "Failed to delete user-vessel assignment" });
+        }
+        
+        // Log activity
+        await storage.createActivityLog({
+          activityType: 'user_vessel_assignment_deleted',
+          description: `Removed assignment of user ${user?.username || 'Unknown'} from vessel ${vessel?.name || 'Unknown'}`,
+          userId: req.user.id,
+          relatedEntityType: 'user_vessel_assignment',
+          relatedEntityId: id,
+          metadata: { 
+            userId: assignment.userId,
+            vesselId: assignment.vesselId,
+            role: assignment.role
+          }
+        });
+        
+        res.status(204).send();
+      } else {
+        res.status(403).json({ error: "Only admins can delete user-vessel assignments" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user-vessel assignment" });
+    }
+  });
   
   // Register API routes
   app.use("/api", apiRouter);
