@@ -87,16 +87,24 @@ export function initAisStreamWebsocket() {
             const mmsi = vesselPosition.UserID.toString();
             
             // Update vessel cache with the new data format
+            const latitude = vesselPosition.Latitude || 0;
+            const longitude = vesselPosition.Longitude || 0;
+            const speed = vesselPosition.Sog || 0; // Speed over ground
+            const heading = vesselPosition.TrueHeading || 0;
+            
             vesselPositionsCache[mmsi] = {
               mmsi: mmsi,
               vesselId: parseInt(mmsi.slice(-8), 10) % 1000, // Generate vessel ID from MMSI
               name: 'AIS Vessel ' + mmsi.slice(-5), // Most AIS messages don't include name
-              latitude: vesselPosition.Latitude || 0,
-              longitude: vesselPosition.Longitude || 0,
-              speed: vesselPosition.Sog || 0, // Speed over ground
-              heading: vesselPosition.TrueHeading || 0,
+              latitude: latitude,
+              longitude: longitude,
+              speed: speed,
+              heading: heading,
               timestamp: new Date().toISOString()
             };
+            
+            // Update vessel position in database if this MMSI matches any vessels
+            updateVesselPositionInDatabase(mmsi, latitude, longitude, heading, speed);
             
             // Disabled for less verbose logging
             // console.log(`Updated position for vessel MMSI: ${mmsi} (New Format)`);
@@ -113,17 +121,26 @@ export function initAisStreamWebsocket() {
             
             const mmsi = vesselPosition.MMSI.toString();
             
+            // Extract position data
+            const latitude = vesselPosition.Latitude || 0;
+            const longitude = vesselPosition.Longitude || 0;
+            const speed = vesselPosition.SOG || 0;
+            const heading = vesselPosition.Heading || 0;
+            
             // Update vessel cache
             vesselPositionsCache[mmsi] = {
               mmsi: mmsi,
               vesselId: parseInt(mmsi.slice(-8), 10) % 1000, // Generate vessel ID from MMSI
               name: vesselPosition.ShipName || 'Unknown',
-              latitude: vesselPosition.Latitude || 0,
-              longitude: vesselPosition.Longitude || 0,
-              speed: vesselPosition.SOG || 0,
-              heading: vesselPosition.Heading || 0,
+              latitude: latitude,
+              longitude: longitude,
+              speed: speed,
+              heading: heading,
               timestamp: new Date().toISOString()
             };
+            
+            // Update vessel position in database
+            updateVesselPositionInDatabase(mmsi, latitude, longitude, heading, speed);
             
             // Disabled for less verbose logging
             // console.log(`Updated position for vessel MMSI: ${mmsi} (Old Format)`);
@@ -185,6 +202,35 @@ export function closeAisStreamWebsocket() {
 
 // Timer to periodically check and close inactive WebSocket connections
 setInterval(closeAisStreamWebsocket, 60 * 1000); // Check every minute
+
+// Function to update vessel position in database based on MMSI
+async function updateVesselPositionInDatabase(mmsi: string, latitude: number, longitude: number, heading: number, speed: number) {
+  try {
+    // Find vessels in database with matching MMSI
+    const matchingVessels = await db.select()
+      .from(vessels)
+      .where(eq(vessels.mmsi, mmsi));
+    
+    if (matchingVessels.length > 0) {
+      // Update each matching vessel
+      for (const vessel of matchingVessels) {
+        await db.update(vessels)
+          .set({
+            latitude: latitude.toString(),
+            longitude: longitude.toString(),
+            heading,
+            speed,
+            lastPositionUpdate: new Date()
+          })
+          .where(eq(vessels.id, vessel.id));
+        
+        console.log(`Updated database position for vessel: ${vessel.vesselName} (ID: ${vessel.id}, MMSI: ${mmsi})`);
+      }
+    }
+  } catch (error) {
+    console.error('Error updating vessel position in database:', error);
+  }
+}
 
 // Get fleet vessels with AIS data
 router.get('/fleet-vessels', async (req, res) => {
