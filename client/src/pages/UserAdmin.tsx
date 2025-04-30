@@ -63,21 +63,28 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { 
   AlertCircle, 
+  Anchor,
+  ArrowLeft,
+  ArrowUpDown,
+  Check,
+  CheckCircle,
   Edit, 
   MoreHorizontal, 
   Plus, 
   RefreshCw, 
   Trash2, 
-  UserPlus, 
+  UserPlus,
+  UserX,
   Users, 
   Search,
-  Filter,
   Shield,
   Settings,
   Ship,
   FileText,
   UserCog,
-  Info
+  Info,
+  X,
+  XCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
