@@ -517,6 +517,67 @@ router.get('/vessel-details/:mmsi', async (req, res) => {
   }
 });
 
+// Manually update vessel position
+router.post('/update-vessel-position', async (req, res) => {
+  try {
+    const { mmsi, latitude, longitude, heading, speed } = req.body;
+    
+    if (!mmsi || latitude === undefined || longitude === undefined) {
+      return res.status(400).json({ error: 'Missing required parameters', message: 'MMSI, latitude, and longitude are required' });
+    }
+    
+    // Update vessel in database
+    await updateVesselPositionInDatabase(
+      mmsi.toString(), 
+      parseFloat(latitude), 
+      parseFloat(longitude), 
+      heading !== undefined ? parseFloat(heading) : 0, 
+      speed !== undefined ? parseFloat(speed) : 0
+    );
+    
+    // Also update the vessel position cache
+    const existingVessel = vessels ? await db.query.vessels.findFirst({
+      where: eq(vessels.mmsi, mmsi.toString())
+    }) : null;
+    
+    if (existingVessel) {
+      vesselPositionsCache[mmsi.toString()] = {
+        mmsi: mmsi.toString(),
+        vesselId: existingVessel.id,
+        name: existingVessel.vesselName,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        heading: heading !== undefined ? parseFloat(heading) : 0,
+        speed: speed !== undefined ? parseFloat(speed) : 0,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log(`Manually updated position for vessel: ${existingVessel.vesselName} (MMSI: ${mmsi})`);
+      return res.json({ 
+        success: true, 
+        message: `Position updated for vessel: ${existingVessel.vesselName}`,
+        vessel: {
+          id: existingVessel.id,
+          name: existingVessel.vesselName,
+          mmsi: mmsi.toString(),
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
+          heading: heading !== undefined ? parseFloat(heading) : 0,
+          speed: speed !== undefined ? parseFloat(speed) : 0
+        }
+      });
+    } else {
+      return res.status(404).json({ error: 'No vessel found with the provided MMSI' });
+    }
+  } catch (error) {
+    console.error('Error updating vessel position:', error);
+    res.status(500).json({ 
+      error: 'Failed to update vessel position',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Search for vessels by name, MMSI, or IMO using AIS Stream
 router.get('/search-vessels', async (req, res) => {
   try {
