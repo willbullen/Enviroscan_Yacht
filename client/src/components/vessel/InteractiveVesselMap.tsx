@@ -110,13 +110,25 @@ const InteractiveVesselMap = React.forwardRef<{
       setLocalShowAllVessels(showAllVessels);
     }, [showAllVessels]);
     
+    // State to track current map bounds
+    const [mapBounds, setMapBounds] = useState({
+      north: 90,
+      south: -90,
+      east: 180,
+      west: -180
+    });
+
     // Query to fetch vessel positions
     const vesselPositionsQuery = useQuery({
-      queryKey: ['/api/marine/vessel-positions', localShowAllVessels],
+      queryKey: ['/api/marine/vessel-positions', localShowAllVessels, mapBounds],
       queryFn: async () => {
-        const url = localShowAllVessels 
-          ? '/api/marine/vessel-positions?showAll=true' 
+        // Construct URL with map bounds for filtering
+        let url = localShowAllVessels 
+          ? `/api/marine/vessel-positions?showAll=true&north=${mapBounds.north}&south=${mapBounds.south}&east=${mapBounds.east}&west=${mapBounds.west}` 
           : '/api/marine/vessel-positions';
+        
+        console.log(`Fetching vessels in bounds: N:${mapBounds.north.toFixed(4)}, S:${mapBounds.south.toFixed(4)}, E:${mapBounds.east.toFixed(4)}, W:${mapBounds.west.toFixed(4)}`);
+        
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch vessel positions');
@@ -268,8 +280,30 @@ const InteractiveVesselMap = React.forwardRef<{
         }
       }, [selectedVesselId, map]);
       
-      // Handle map clicks if allowMapClick is enabled
+      // Update map bounds and handle map events
       useMapEvents({
+        moveend: (e) => {
+          // Update map bounds when the view changes
+          const map = e.target;
+          const bounds = map.getBounds();
+          setMapBounds({
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest()
+          });
+        },
+        zoomend: (e) => {
+          // Update map bounds when zoom changes
+          const map = e.target;
+          const bounds = map.getBounds();
+          setMapBounds({
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest()
+          });
+        },
         click: (e) => {
           if (allowMapClick) {
             const { lat, lng } = e.latlng;

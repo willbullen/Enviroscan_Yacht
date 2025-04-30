@@ -156,25 +156,41 @@ router.get('/vessel-positions', async (req, res) => {
       return res.json(mockVesselPositions);
     }
     
-    // Check if the request asks for all vessels
+    // Check if the request asks for all vessels within map bounds
     const showAllVessels = req.query.showAll === 'true';
     
-    // If showAllVessels is true, return all vessels in the cache
+    // Get map bounds if provided
+    const bounds = {
+      north: parseFloat(req.query.north as string) || 90,
+      south: parseFloat(req.query.south as string) || -90,
+      east: parseFloat(req.query.east as string) || 180,
+      west: parseFloat(req.query.west as string) || -180
+    };
+    
+    // If showAllVessels is true, return vessels in the cache within map bounds
     if (showAllVessels) {
-      console.log('Returning all vessels from cache, count:', Object.keys(vesselPositionsCache).length);
       // Convert vesselsPositionsCache object to array
       const allVessels = Object.values(vesselPositionsCache);
       
-      // Only return vessels with valid coordinates
+      // Only return vessels with valid coordinates and within map bounds
       const validVessels = allVessels.filter(vessel => 
-        vessel && vessel.latitude && vessel.longitude && 
-        vessel.latitude !== 0 && vessel.longitude !== 0
+        vessel && 
+        vessel.latitude && 
+        vessel.longitude && 
+        vessel.latitude !== 0 && 
+        vessel.longitude !== 0 &&
+        vessel.latitude <= bounds.north &&
+        vessel.latitude >= bounds.south &&
+        vessel.longitude <= bounds.east &&
+        vessel.longitude >= bounds.west
       );
+      
+      console.log(`Returning vessels within bounds, count: ${validVessels.length} (from total ${Object.keys(vesselPositionsCache).length})`);
       
       if (validVessels.length > 0) {
         return res.json(validVessels);
       } else {
-        console.log('No valid vessels in cache, returning mock data');
+        console.log('No valid vessels in cache within bounds, returning mock data');
         return res.json(mockVesselPositions);
       }
     }
