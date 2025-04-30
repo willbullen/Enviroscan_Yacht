@@ -208,7 +208,7 @@ const InteractiveVesselMap = React.forwardRef<{
     // Focus vessel method exposed via ref
     const focusVessel = (vesselId: number) => {
       const vessel = vesselData.find(v => v.id === vesselId);
-      if (vessel && mapRef.current) {
+      if (vessel && mapRef.current && vessel.latitude !== undefined && vessel.longitude !== undefined) {
         // Zoom to vessel position
         mapRef.current.setView([vessel.latitude, vessel.longitude], 13);
         
