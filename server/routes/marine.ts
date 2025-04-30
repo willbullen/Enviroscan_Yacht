@@ -327,19 +327,9 @@ router.get('/search-vessels', async (req, res) => {
       return res.status(400).json({ error: 'Search query is required' });
     }
     
-    // Always return mock data for now until API issue is fixed
     console.log('Searching for vessels with query:', query);
     
-    // Filter mock data to match the search query (name or MMSI)
-    const searchResults = mockVesselDetails.filter(vessel => 
-      vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
-      vessel.mmsi.includes(String(query))
-    );
-    
-    return res.json(searchResults);
-    
-    /* The following code is temporarily disabled due to API connectivity issues
-    // If we have an API key, try to use the real AIS Stream API
+    // If we have an API key, use the real AIS Stream API
     if (AIS_API_KEY) {
       try {
         // Make the request to the AIS Stream API search endpoint
@@ -385,13 +375,25 @@ router.get('/search-vessels', async (req, res) => {
           callsign: vessel.callsign || ''
         })) || [];
         
+        console.log(`Found ${formattedResults.length} vessels matching query "${query}"`);
         return res.json(formattedResults);
       } catch (error) {
         console.error('Error with AIS API, falling back to mock data:', error);
         // Fall back to mock data on error
+        const searchResults = mockVesselDetails.filter(vessel => 
+          vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
+          vessel.mmsi.includes(String(query))
+        );
+        return res.json(searchResults);
       }
+    } else {
+      // No API key provided, use mock data
+      const searchResults = mockVesselDetails.filter(vessel => 
+        vessel.name.toLowerCase().includes(String(query).toLowerCase()) || 
+        vessel.mmsi.includes(String(query))
+      );
+      return res.json(searchResults);
     }
-    */
   } catch (error) {
     console.error('Error searching vessels:', error);
     res.status(500).json({ 
