@@ -99,55 +99,41 @@ const MarineTracker = () => {
   const { toast } = useToast();
   const mapRef = useRef<any>(null);
 
-  // Query to fetch vessel positions
-  const vesselPositionsQuery = useQuery({
-    queryKey: ['/api/marine/vessel-positions'],
+  // Query to fetch vessels with AIS position data directly from our fleet-vessels endpoint
+  const vesselDataQuery = useQuery({
+    queryKey: ['/api/marine/fleet-vessels'],
     refetchInterval: refreshInterval,
   });
 
-  // Combined data (static vessel info + latest positions)
+  // Use the vessels with position data directly from our new endpoint
   const vesselData = React.useMemo(() => {
-    if (!vesselPositionsQuery.data) return vessels.map(v => ({
-      ...v,
-      latitude: 25.7617 + (Math.random() * 0.5), // Default to Miami area for testing
-      longitude: -80.1918 + (Math.random() * 0.5),
-      heading: Math.floor(Math.random() * 360),
-      speed: Math.floor(Math.random() * 15),
-      lastUpdate: new Date().toISOString(),
-    }));
-
-    // Combine static vessel data with position data
-    return vessels.map(vessel => {
-      const positionData = (vesselPositionsQuery.data as any[]).find(
-        (pos: any) => pos.mmsi === vessel.mmsi || pos.vesselId === vessel.id
-      );
-      
-      if (positionData) {
-        return {
-          ...vessel,
-          latitude: positionData.latitude,
-          longitude: positionData.longitude,
-          heading: positionData.heading || 0,
-          speed: positionData.speed || 0,
-          lastUpdate: positionData.timestamp,
-        };
-      }
-      
-      // If no position data, return default values
-      return {
+    // If we have vessel data from the query, use it
+    if (vesselDataQuery.data && Array.isArray(vesselDataQuery.data)) {
+      return vesselDataQuery.data.map(vessel => ({
         ...vessel,
-        latitude: 25.7617 + (Math.random() * 0.5), // Default to Miami area for testing
-        longitude: -80.1918 + (Math.random() * 0.5),
-        heading: Math.floor(Math.random() * 360),
-        speed: Math.floor(Math.random() * 15),
-        lastUpdate: new Date().toISOString(),
-      };
-    });
-  }, [vessels, vesselPositionsQuery.data]);
+        // Use position data if it exists, otherwise use defaults for Miami area
+        latitude: vessel.latitude || 25.7617 + (Math.random() * 0.5),
+        longitude: vessel.longitude || -80.1918 + (Math.random() * 0.5),
+        heading: vessel.heading || Math.floor(Math.random() * 360),
+        speed: vessel.speed || Math.floor(Math.random() * 15),
+        lastUpdate: vessel.timestamp || new Date().toISOString(),
+      }));
+    }
+    
+    // Fallback to vessels from context with default positions
+    return vessels.map(vessel => ({
+      ...vessel,
+      latitude: vessel.latitude || 25.7617 + (Math.random() * 0.5),
+      longitude: vessel.longitude || -80.1918 + (Math.random() * 0.5),
+      heading: vessel.heading || Math.floor(Math.random() * 360),
+      speed: vessel.speed || Math.floor(Math.random() * 15),
+      lastUpdate: vessel.timestamp || new Date().toISOString(),
+    }));
+  }, [vessels, vesselDataQuery.data]);
 
   // Handle refresh controls
   const handleRefresh = () => {
-    vesselPositionsQuery.refetch();
+    vesselDataQuery.refetch();
     toast({
       title: "Refreshing vessel positions",
       description: "Fetching the latest vessel positions from AIS data"
@@ -178,10 +164,10 @@ const MarineTracker = () => {
               variant="outline" 
               size="sm" 
               onClick={handleRefresh}
-              disabled={vesselPositionsQuery.isFetching}
+              disabled={vesselDataQuery.isFetching}
               className="flex items-center gap-1"
             >
-              <RefreshCw className={`h-4 w-4 ${vesselPositionsQuery.isFetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${vesselDataQuery.isFetching ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
             <Button 
@@ -211,7 +197,7 @@ const MarineTracker = () => {
           </div>
         </div>
 
-        {vesselPositionsQuery.isError && (
+        {vesselDataQuery.isError && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
@@ -438,7 +424,7 @@ const MarineTracker = () => {
           <div className="md:col-span-3">
             <Card className="h-[600px]">
               <CardContent className="p-0 h-full">
-                {vesselPositionsQuery.isLoading && !vesselPositionsQuery.data ? (
+                {vesselDataQuery.isLoading && !vesselDataQuery.data ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <Skeleton className="w-full h-full" />
                   </div>
