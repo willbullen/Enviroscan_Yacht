@@ -584,22 +584,32 @@ const UserAdmin: React.FC = () => {
   return (
     <MainLayout title="User Administration">
       <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">User Administration</h1>
-          <div className="space-x-2">
+        <div className="flex flex-col space-y-2 md:flex-row md:justify-between md:items-center mb-4">
+          <div>
+            <h1 className="text-2xl font-bold">User Administration</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage system users, their roles, and vessel assignments
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
             <Button 
               variant="outline" 
               onClick={() => setSelectedTab("roles")}
+              className="gap-1.5"
             >
-              <Shield className="mr-2 h-4 w-4" />
-              View Roles
+              <Shield className="h-4 w-4" />
+              System Roles
             </Button>
-            <Button onClick={() => {
-              resetUserForm();
-              setIsAddingUser(true);
-            }}>
-              <UserPlus className="mr-2 h-4 w-4" /> 
-              Add User
+            <Button 
+              variant="default" 
+              onClick={() => {
+                resetUserForm();
+                setIsAddingUser(true);
+              }}
+              className="gap-1.5"
+            >
+              <UserPlus className="h-4 w-4" /> 
+              Add New User
             </Button>
           </div>
         </div>
