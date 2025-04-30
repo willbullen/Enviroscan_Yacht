@@ -144,6 +144,12 @@ const FormsAdministration: React.FC = () => {
   const [templateSortField, setTemplateSortField] = useState('title');
   const [templateSortDirection, setTemplateSortDirection] = useState('asc');
   
+  // Form guide state
+  const [showLifecycleGuide, setShowLifecycleGuide] = useState(false);
+  const [currentLifecycleStep, setCurrentLifecycleStep] = useState(0);
+  const [showProcessGuide, setShowProcessGuide] = useState(false);
+  const [showActivationGuide, setShowActivationGuide] = useState(false);
+  
   // Form categories state
   const [editingCategory, setEditingCategory] = useState<FormCategory | null>(null);
   const [newCategory, setNewCategory] = useState(FormCategory_DEFAULT);
