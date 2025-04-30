@@ -113,8 +113,7 @@ export function initAisStreamWebsocket() {
             
             console.log(`Updated position for vessel MMSI: ${mmsi} (Old Format)`);
           }
-          
-          console.log(`Updated position for vessel MMSI: ${mmsi}`);
+          // Console log already handled in individual cases
         }
       } catch (error) {
         console.error('Error processing AIS message:', error);
