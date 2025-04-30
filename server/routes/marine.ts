@@ -1,6 +1,9 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import WebSocket from 'ws';
+import { db } from '../db';
+import { vessels } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 const router = express.Router();
 
@@ -181,6 +184,60 @@ export function closeAisStreamWebsocket() {
 
 // Timer to periodically check and close inactive WebSocket connections
 setInterval(closeAisStreamWebsocket, 60 * 1000); // Check every minute
+
+// Get fleet vessels with AIS data
+router.get('/fleet-vessels', async (req, res) => {
+  try {
+    console.log('Fetching fleet vessels from database and AIS data');
+    
+    // Initialize WebSocket if not already done and API key is available
+    if (!wsInitialized && AIS_API_KEY) {
+      console.log('Initializing AIS Stream WebSocket with API key');
+      initAisStreamWebsocket();
+      wsLastUsed = Date.now();
+    }
+    
+    // Fetch vessels from the database
+    const dbVessels = await db.select().from(vessels);
+    console.log(`Found ${dbVessels.length} vessels in database`);
+    
+    // Transform vessels to match our expected format and merge with AIS data
+    const fleetVessels = dbVessels.map(vessel => {
+      const vesselData = {
+        id: vessel.id,
+        name: vessel.vesselName,
+        type: vessel.vesselType,
+        length: vessel.length,
+        mmsi: vessel.mmsi || undefined,
+        callSign: vessel.callSign || undefined,
+        flag: vessel.flagCountry
+      };
+      
+      // If vessel has MMSI and there's position data in the cache, add position data
+      if (vessel.mmsi && vesselPositionsCache[vessel.mmsi]) {
+        const position = vesselPositionsCache[vessel.mmsi];
+        return {
+          ...vesselData,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          speed: position.speed,
+          heading: position.heading,
+          timestamp: position.timestamp
+        };
+      }
+      
+      return vesselData;
+    });
+    
+    res.json(fleetVessels);
+  } catch (error) {
+    console.error('Error fetching fleet vessels:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch fleet vessels',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 // Get vessel positions from AIS Stream API
 router.get('/vessel-positions', async (req, res) => {
