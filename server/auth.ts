@@ -22,8 +22,12 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  // Log for debugging
+  console.log(`Comparing passwords: supplied=${supplied}, stored=${stored}`);
+  
   // Handle plaintext passwords for demo/development
   if (!stored.includes('.')) {
+    console.log(`Using plaintext comparison: ${supplied === stored}`);
     return supplied === stored;
   }
   
@@ -31,7 +35,9 @@ async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  const result = timingSafeEqual(hashedBuf, suppliedBuf);
+  console.log(`Using hash comparison: ${result}`);
+  return result;
 }
 
 export function setupAuth(app: Express) {
