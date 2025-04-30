@@ -7,6 +7,7 @@ import path from "path";
 import { logger } from "./services/logger";
 import { createError, asyncHandler } from "./middleware/errorHandler";
 import marineRouter, { initAisStreamWebsocket } from "./routes/marine";
+import { setupAuth } from "./auth";
 import { 
   insertUserSchema, 
   insertEquipmentSchema, 
@@ -36,6 +37,9 @@ import {
 import { db } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  setupAuth(app);
+  
   // Create API router
   const apiRouter = express.Router();
   
