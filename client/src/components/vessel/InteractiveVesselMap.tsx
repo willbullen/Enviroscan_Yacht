@@ -445,44 +445,47 @@ const InteractiveVesselMap = React.forwardRef<{
           {/* Custom toggle control */}
           <VesselToggleControl />
           
-          {vesselData.map((vessel) => (
-            <Marker 
-              key={`vessel-${vessel.id}-${vessel.mmsi}`}
-              position={[vessel.latitude, vessel.longitude]}
-              icon={createShipIcon(vessel.id, vessel.heading, vessel.isExternal)}
-              eventHandlers={{
-                click: () => handleVesselClick(vessel.id),
-                add: (e) => {
-                  // Store marker reference on initial add only
-                  setMarkerRefs(prev => ({ ...prev, [vessel.id]: e.target }));
-                }
-              }}
-            >
-              <Popup>
-                <div className="p-1">
-                  <div className="text-sm font-medium">
-                    {vessel.name}
-                    {vessel.isExternal && (
-                      <span className="ml-1 px-1 py-0.5 text-xs bg-slate-100 text-slate-700 rounded">External</span>
-                    )}
+          {vesselData.map((vessel) => {
+            // Only render marker if vessel has valid coordinates
+            return vessel.latitude !== undefined && vessel.longitude !== undefined ? (
+              <Marker 
+                key={`vessel-${vessel.id}-${vessel.mmsi}`}
+                position={[vessel.latitude, vessel.longitude]}
+                icon={createShipIcon(vessel.id, vessel.heading, vessel.isExternal)}
+                eventHandlers={{
+                  click: () => handleVesselClick(vessel.id),
+                  add: (e) => {
+                    // Store marker reference on initial add only
+                    setMarkerRefs(prev => ({ ...prev, [vessel.id]: e.target }));
+                  }
+                }}
+              >
+                <Popup>
+                  <div className="p-1">
+                    <div className="text-sm font-medium">
+                      {vessel.name}
+                      {vessel.isExternal && (
+                        <span className="ml-1 px-1 py-0.5 text-xs bg-slate-100 text-slate-700 rounded">External</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {vessel.type}
+                      {!vessel.isExternal && ` • ${vessel.length}m`}
+                    </div>
+                    <div className="text-xs mt-2 grid grid-cols-2 gap-y-1">
+                      <div><span className="font-medium">Position:</span> {vessel.latitude !== undefined ? vessel.latitude.toFixed(4) : 'N/A'}, {vessel.longitude !== undefined ? vessel.longitude.toFixed(4) : 'N/A'}</div>
+                      <div><span className="font-medium">MMSI:</span> {vessel.mmsi || 'N/A'}</div>
+                      <div><span className="font-medium">Speed:</span> {vessel.speed !== undefined ? `${vessel.speed} knots` : 'N/A'}</div>
+                      <div><span className="font-medium">Heading:</span> {vessel.heading !== undefined ? `${vessel.heading}°` : 'N/A'}</div>
+                    </div>
+                    <div className="text-xs mt-2">
+                      <span className="font-medium">Last Update:</span> {new Date(vessel.lastUpdate).toLocaleTimeString()}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {vessel.type}
-                    {!vessel.isExternal && ` • ${vessel.length}m`}
-                  </div>
-                  <div className="text-xs mt-2 grid grid-cols-2 gap-y-1">
-                    <div><span className="font-medium">Position:</span> {vessel.latitude.toFixed(4)}, {vessel.longitude.toFixed(4)}</div>
-                    <div><span className="font-medium">MMSI:</span> {vessel.mmsi}</div>
-                    <div><span className="font-medium">Speed:</span> {vessel.speed} knots</div>
-                    <div><span className="font-medium">Heading:</span> {vessel.heading}°</div>
-                  </div>
-                  <div className="text-xs mt-2">
-                    <span className="font-medium">Last Update:</span> {new Date(vessel.lastUpdate).toLocaleTimeString()}
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                </Popup>
+              </Marker>
+            ) : null;
+          })}
           
           <MapController />
         </MapContainer>
