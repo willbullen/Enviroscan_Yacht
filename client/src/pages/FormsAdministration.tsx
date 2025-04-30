@@ -1902,43 +1902,7 @@ const FormsAdministration: React.FC = () => {
     }
   };
   
-  // Bulk action dialog
-  const renderBulkActionDialog = () => {
-    return (
-      <AlertDialog open={bulkActionOpen} onOpenChange={setBulkActionOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Bulk Action</AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkAction === 'delete' ? (
-                <span className="text-destructive">
-                  Are you sure you want to delete {selectedCategories.length} selected categories? 
-                  This action cannot be undone.
-                </span>
-              ) : bulkAction === 'activate' ? (
-                <span>
-                  Are you sure you want to activate {selectedCategories.length} selected categories?
-                </span>
-              ) : (
-                <span>
-                  Are you sure you want to deactivate {selectedCategories.length} selected categories?
-                </span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setBulkAction('')}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={executeBulkAction}
-              className={bulkAction === 'delete' ? 'bg-destructive hover:bg-destructive/90' : ''}
-            >
-              {bulkAction === 'delete' ? 'Delete' : bulkAction === 'activate' ? 'Activate' : 'Deactivate'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  };
+  // The bulk action dialog is already implemented at the end of the component
       
   return (
     <MainLayout title="Forms Management">
@@ -2065,12 +2029,10 @@ const FormsAdministration: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="isActive"
                 checked={newCategory.isActive}
-                onChange={(e) => setNewCategory({ ...newCategory, isActive: e.target.checked })}
-                className="form-checkbox h-4 w-4 text-primary rounded"
+                onCheckedChange={(checked) => setNewCategory({ ...newCategory, isActive: !!checked })}
               />
               <Label htmlFor="isActive">Active</Label>
             </div>
