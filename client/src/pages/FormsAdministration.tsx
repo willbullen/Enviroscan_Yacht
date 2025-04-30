@@ -89,7 +89,9 @@ import {
   HelpCircle,
   Info,
   FileCheck,
-  CheckCircle
+  CheckCircle,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 
 // Define interfaces for our form data models
@@ -679,6 +681,31 @@ const FormsAdministration: React.FC = () => {
       return <div className="text-center py-8">
         <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
         <p className="mt-2 text-sm text-muted-foreground">Loading categories...</p>
+      </div>;
+    }
+    
+    if (formCategoriesQuery.isError) {
+      return <div className="bg-destructive/10 p-4 rounded-md border border-destructive/50 mb-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-destructive">API Error</h4>
+            <p className="text-sm text-muted-foreground">
+              There was an error loading form categories data. Please try again in a moment.
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => {
+                queryClient.invalidateQueries({queryKey: ['/api/ism/form-categories']});
+              }}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Retry
+            </Button>
+          </div>
+        </div>
       </div>;
     }
     
