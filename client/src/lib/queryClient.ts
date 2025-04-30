@@ -146,7 +146,16 @@ export const getQueryFn: <T>(options: {
             const textResponse = await res.text();
             if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
               // HTML response indicates auth issue or error page
-              if (res.status === 401 || res.status === 403) {
+              if (url === '/api/user' && unauthorizedBehavior === "returnNull") {
+                // Special case for /api/user - return null if we get HTML
+                logApiError({
+                  message: "Authentication required. Please log in.",
+                  status: 401,
+                  url,
+                  method: 'GET'
+                } as ApiError);
+                return null;
+              } else if (res.status === 401 || res.status === 403) {
                 const error = new Error("Authentication required. Please log in.") as ApiError;
                 error.status = res.status;
                 error.url = url;
@@ -166,6 +175,17 @@ export const getQueryFn: <T>(options: {
             return { message: textResponse } as any;
           }
         } catch (parseError) {
+          // Special case for /api/user - return null if we can't parse the response
+          if (url === '/api/user' && unauthorizedBehavior === "returnNull") {
+            logApiError({
+              message: `Failed to parse response: ${(parseError as Error).message}`,
+              status: res.status,
+              url,
+              method: 'GET'
+            } as ApiError);
+            return null;
+          }
+          
           const error = new Error(`Failed to parse response: ${(parseError as Error).message}`) as ApiError;
           error.status = res.status;
           error.url = url;

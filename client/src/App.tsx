@@ -20,45 +20,54 @@ import { VoyagesListPage } from "@/pages/VoyagesListPage";
 import { VoyageDetailsPage } from "@/pages/VoyageDetailsPage";
 import { VoyageCreatePage } from "@/pages/VoyageCreatePage";
 import { VoyageEditPage } from "@/pages/VoyageEditPage";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
+import AuthPage from "@/pages/auth-page";
 
 function App() {
   return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/tasks" component={Tasks} />
-      <Route path="/equipment" component={Equipment} />
-      <Route path="/inventory" component={Inventory} />
-      <Route path="/reports" component={Reports} />
-      <Route path="/calendar" component={Calendar} />
-      <Route path="/predictive-maintenance" component={PredictiveMaintenance} />
-      <Route path="/ism-management" component={ISMManagement} />
-      <Route path="/crew-management" component={CrewManagement} />
-      <Route path="/financial-management" component={FinancialManagement} />
-      <Route path="/forms-administration" component={FormsAdministration} />
-      
-      {/* Admin Routes */}
-      <Route path="/vessels/admin" component={VesselAdmin} />
-      <Route path="/users/admin" component={UserAdmin} />
-      
-      {/* Voyage Planner Routes */}
-      <Route path="/voyages" component={VoyagesListPage} />
-      <Route path="/voyages/new" component={VoyageCreatePage} />
-      <Route path="/voyages/:id/edit" component={VoyageEditPage} />
-      <Route path="/voyages/:id" component={VoyageDetailsPage} />
-      
-      {/* Marine Tracking Routes */}
-      <Route path="/marine-tracker" component={MarineTracker} />
-      
-      {/* Yacht System Routes */}
-      <Route path="/mechanical" component={YachtSystem} />
-      <Route path="/electrical" component={YachtSystem} />
-      <Route path="/navigation" component={YachtSystem} />
-      <Route path="/safety" component={YachtSystem} />
-      
-      {/* Settings and 404 */}
-      <Route path="/settings" component={Settings} />
-      <Route component={NotFound} />
-    </Switch>
+    <AuthProvider>
+      <Switch>
+        {/* Public Routes */}
+        <Route path="/auth" component={AuthPage} />
+        
+        {/* Protected Routes */}
+        <ProtectedRoute path="/" component={Dashboard} />
+        <ProtectedRoute path="/tasks" component={Tasks} />
+        <ProtectedRoute path="/equipment" component={Equipment} />
+        <ProtectedRoute path="/inventory" component={Inventory} />
+        <ProtectedRoute path="/reports" component={Reports} />
+        <ProtectedRoute path="/calendar" component={Calendar} />
+        <ProtectedRoute path="/predictive-maintenance" component={PredictiveMaintenance} />
+        <ProtectedRoute path="/ism-management" component={ISMManagement} />
+        <ProtectedRoute path="/crew-management" component={CrewManagement} />
+        <ProtectedRoute path="/financial-management" component={FinancialManagement} />
+        <ProtectedRoute path="/forms-administration" component={FormsAdministration} />
+        
+        {/* Admin Routes */}
+        <ProtectedRoute path="/vessels/admin" component={VesselAdmin} />
+        <ProtectedRoute path="/users/admin" component={UserAdmin} />
+        
+        {/* Voyage Planner Routes */}
+        <ProtectedRoute path="/voyages" component={VoyagesListPage} />
+        <ProtectedRoute path="/voyages/new" component={VoyageCreatePage} />
+        <ProtectedRoute path="/voyages/:id/edit" component={VoyageEditPage} />
+        <ProtectedRoute path="/voyages/:id" component={VoyageDetailsPage} />
+        
+        {/* Marine Tracking Routes */}
+        <ProtectedRoute path="/marine-tracker" component={MarineTracker} />
+        
+        {/* Yacht System Routes */}
+        <ProtectedRoute path="/mechanical" component={YachtSystem} />
+        <ProtectedRoute path="/electrical" component={YachtSystem} />
+        <ProtectedRoute path="/navigation" component={YachtSystem} />
+        <ProtectedRoute path="/safety" component={YachtSystem} />
+        
+        {/* Settings and 404 */}
+        <ProtectedRoute path="/settings" component={Settings} />
+        <Route component={NotFound} />
+      </Switch>
+    </AuthProvider>
   );
 }
 
