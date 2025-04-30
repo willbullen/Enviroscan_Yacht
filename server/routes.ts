@@ -50,30 +50,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =========== User Routes =============
   
   // Get all users
-  apiRouter.get("/users", async (_req: Request, res: Response) => {
+  apiRouter.get("/users", async (req: Request, res: Response) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Only admins should see all users
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+
       const users = await storage.getAllUsers();
-      res.json(users);
+      
+      // Remove sensitive data before sending to client
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      
+      res.json(safeUsers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get users" });
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to get users" });
     }
   });
   
-  // Get user by ID
+  // Get a single user by ID
   apiRouter.get("/users/:id", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      const user = await storage.getUser(id);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const userId = parseInt(req.params.id);
+      
+      // Users can only view their own profile unless they're an admin
+      if (req.user.id !== userId && req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+
+      const user = await storage.getUser(userId);
       
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ error: "User not found" });
       }
       
-      res.json(user);
+      // Remove sensitive data
+      const { password, ...safeUser } = user;
+      
+      res.json(safeUser);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get user" });
+      console.error(`Error fetching user ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to get user" });
     }
   });
+  
+  // Update a user
+  apiRouter.patch("/users/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const userId = parseInt(req.params.id);
+      
+      // Users can only update their own profile unless they're an admin
+      if (req.user.id !== userId && req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      // Prevent role escalation - only admins can update roles
+      if (req.body.role && req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Only admins can update roles" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, req.body);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Remove sensitive data
+      const { password, ...safeUser } = updatedUser;
+      
+      res.json(safeUser);
+    } catch (error) {
+      console.error(`Error updating user ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+  
+
   
   // =========== Equipment Routes =============
   
