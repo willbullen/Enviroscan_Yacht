@@ -1,0 +1,55 @@
+Improvement Prompts for Admin Pages
+Based on the analysis of the Forms Administration, Vessels Administration, and User Administration pages, here are prompts for improvement across Style/Look & Feel, Intuitiveness, Flow, and Features/Functionality.
+Pages Analyzed:
+/forms-administration
+/vessels/admin
+/users/admin
+Prompts are grouped by category. Prompts applicable to multiple pages are noted.
+1. Style, Look and Feel Enhancement Prompts
+Prompt (All Pages): Ensure WCAG AA Contrast. Review text elements against their backgrounds across all three pages, especially:
+Text on colored buttons (e.g., primary blue, guide buttons).
+Text within status/role badges (Inactive, Active, Administrator, Captain, etc.).
+Placeholder text in search inputs.
+Text/icons on map elements (Vessels page).
+Ensure focus indicators also have sufficient contrast.
+Prompt (All Pages): Standardize Button Styling. Evaluate the different button styles used (solid primary, outline, icon-only, plain text-like filters) and establish a clearer visual hierarchy. Consider making filter buttons (e.g., "All Roles", "All Status" on Users page) look more distinctly interactive like dropdowns.
+Prompt (All Pages): Refine Iconography. Review all icons used (sidebar, header, action buttons, guides) for consistency in style and weight. Ensure icons clearly communicate their purpose, especially where used without text labels.
+Prompt (Forms Admin): Evaluate Guide Button Styling. Assess if the distinct styling for the "Form Management Guides" buttons (Lifecycle Guide, etc.) effectively draws attention or creates visual clutter. Consider integrating them more smoothly into the page structure if they are important.
+Prompt (Vessels Admin): Clarify Action Button Icons. Since this page relies heavily on icon-only buttons for vessel actions (indices 28-36), ensure the icons chosen are universally understood or implement highly visible, immediate tooltips (see Intuitiveness prompts).
+2. Intuitiveness Improvement Prompts
+Prompt (All Pages): Clarify Ambiguous Header/Sidebar Elements.
+"Create New Item?" Button (Index 1): Replace this with a specific label (e.g., "+ Quick Task", "+ New Log Entry") or remove it if redundant. If context-dependent, ensure the label updates dynamically.
+Header Search (Index 21): Add specific placeholder text indicating its scope (e.g., "Search All..." or "Search [Current Module]...").
+Unlabeled Header Button (Index 24): Assign a clear icon (e.g., user profile, notifications) and an accessible label/tooltip.
+Prompt (Forms & Vessels Admin): Consolidate Duplicate "Create" Buttons. Remove the redundant "+ New Category" (Forms) and "+ Add New Vessel" (Vessels) buttons from the header area (indices 22 & 26 respectively). Retain the contextually placed button within the main content area as the single, clear entry point.
+Prompt (Vessels Admin): Provide Immediate Tooltips for Action Icons. Implement clear, descriptive tooltips that appear immediately on hover for all vessel action buttons (indices 28-36) explaining their function (e.g., "Edit Vessel Details", "Delete Vessel", "View Tracking Settings").
+Prompt (Users Admin): Replace "Open menu" with Clearer Actions.
+Option A (Preferred if space allows): Replace the "Open menu" buttons (37-41) with direct action buttons (e.g., [Edit] [Delete] [Change Status]).
+Option B: Keep the menu icon, but ensure the dropdown menu that opens is well-organized, uses clear action labels, and appears instantly on click.
+Prompt (Forms Admin): Clarify Status Change Mechanism. Make the process for activating/deactivating form categories intuitive. Options:
+Add an inline toggle switch within the Status column (as suggested in previous redesign concept).
+Add an "Activate"/"Deactivate" action button.
+Ensure the action is clearly available within the "Edit" flow if managed there.
+Prompt (Forms Admin): Explain Guide Button Interaction. Use tooltips or introductory text to clarify what happens when clicking the "Form Management Guides" buttons (26-28) – e.g., "Open Lifecycle Guide modal", "View Process Overview page".
+Prompt (Users Admin): Clarify "View Roles" Button. Rename the "View Roles" button (26) to be more specific if it differs from navigating to the "Roles" tab (30), e.g., "Manage Role Permissions". If it simply navigates, consider removing it for redundancy.
+3. Flow Optimization Prompts
+Prompt (All Pages): Implement Action Feedback. Provide immediate visual feedback for user actions:
+Display success messages (e.g., toast notifications) after creating, updating, or deleting items.
+Show error messages clearly if an action fails.
+Use loading indicators (e.g., spinners, skeleton screens) when data is being fetched or processed.
+Prompt (All Pages): Add Confirmation Dialogs. Implement confirmation dialogs for destructive actions like deleting categories, vessels, or users (e.g., "Are you sure you want to delete [Item Name]? This action cannot be undone.").
+Prompt (Forms & Users Admin): Guide Inter-Tab Workflow. Provide visual cues or brief instructions to clarify the relationship and typical user journey between related tabs (e.g., Forms: Categories -> Templates -> Builder; Users: Users -> Vessel Assignments -> Roles).
+Prompt (Forms Admin): Streamline Bulk Action Flow. Ensure the "Bulk Actions" button (35) is disabled until at least one category is selected via checkbox. Upon clicking, clearly present the available bulk actions (e.g., Activate Selected, Deactivate Selected, Delete Selected) in a dropdown or modal.
+Prompt (Users Admin): Clarify Status/Role Change Flow. Ensure the workflow for changing a user's status or role is easily discoverable, likely via the actions menu/buttons for each user row.
+Prompt (Vessels Admin): Link List and Map. Implement interaction where clicking a vessel in the list highlights/centers it on the map, and clicking a vessel icon on the map highlights it in the list and potentially shows a detail popup.
+4. Feature and Functionality Enhancement Prompts
+Prompt (All Pages with Tables): Implement Sorting. Add clickable sort icons to relevant column headers (Name, Status, Created Date, Username, Role, etc.) in all tables to allow users to reorder the data.
+Prompt (Forms & Users Admin): Implement Bulk Actions.
+Forms: Add checkboxes per category and enable bulk Activate/Deactivate/Delete actions.
+Users: Add checkboxes per user and enable bulk Activate/Deactivate, Assign Role, Assign Vessel actions.
+Prompt (Vessels & Users Admin): Enhance Filtering/Search.
+Vessels: Add options to filter the fleet list by Type, Flag, or search by Name.
+Users: Ensure Role and Status filters (34, 36) function correctly. Consider adding search specifically for Name or Email in addition to the current user search (32).
+Prompt (Forms Admin): Add Clear Status Activation. Implement a visible and intuitive way to activate/deactivate categories (e.g., toggle switch, dedicated action button).
+Prompt (Users Admin): Add Pagination. If the user list can grow large, implement pagination controls below the table to improve performance and usability.
+Prompt (All Pages): Consider Quick View/Preview. Explore adding a feature to quickly preview details without navigating away (e.g., preview form template content from Forms Admin, view key vessel specs/status from Vessels Admin, see user's key details/assignments from Users Admin).
