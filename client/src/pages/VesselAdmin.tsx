@@ -628,6 +628,14 @@ const VesselAdmin: React.FC = () => {
                                   <div>Length: {vessel.length}</div>
                                   <div>Flag: {vessel.flag || 'Unknown'}</div>
                                   <div>MMSI: {vessel.mmsi || 'Not Set'}</div>
+                                  {vessel.latitude && vessel.longitude && (
+                                    <div className="col-span-2 mt-1 flex items-center gap-1">
+                                      <Navigation className="h-3 w-3 text-primary" />
+                                      <span className="text-primary-foreground/80">
+                                        Position: {vessel.latitude.toFixed(4)}, {vessel.longitude.toFixed(4)}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex gap-1">
