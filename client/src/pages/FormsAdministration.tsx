@@ -1272,6 +1272,23 @@ const FormsAdministration: React.FC = () => {
       updateTemplateMutation.mutate(updatedTemplate);
     };
     
+    // Pagination
+    const startIndex = (templateCurrentPage - 1) * templateItemsPerPage;
+    const endIndex = startIndex + templateItemsPerPage;
+    const paginatedTemplates = sortedTemplates.slice(startIndex, endIndex);
+    const totalTemplates = sortedTemplates.length;
+    
+    // Handle page change
+    const handlePageChange = (page: number) => {
+      setTemplateCurrentPage(page);
+    };
+    
+    // Handle items per page change
+    const handleItemsPerPageChange = (itemsPerPage: number) => {
+      setTemplateItemsPerPage(itemsPerPage);
+      setTemplateCurrentPage(1); // Reset to first page when changing items per page
+    };
+    
     return (
       <>
         <div className="flex justify-between items-center mb-4">
@@ -1293,7 +1310,10 @@ const FormsAdministration: React.FC = () => {
                 type="text"
                 placeholder="Search Templates by title or description..."
                 value={templateFilter}
-                onChange={(e) => setTemplateFilter(e.target.value)}
+                onChange={(e) => {
+                  setTemplateFilter(e.target.value);
+                  setTemplateCurrentPage(1); // Reset to first page when filtering
+                }}
                 className="pl-8"
                 aria-label="Search templates"
               />
@@ -1303,7 +1323,10 @@ const FormsAdministration: React.FC = () => {
           <div>
             <select
               value={templateStatusFilter}
-              onChange={(e) => setTemplateStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setTemplateStatusFilter(e.target.value);
+                setTemplateCurrentPage(1); // Reset to first page when filtering
+              }}
               className="px-3 py-2 rounded-md border border-input bg-background"
             >
               <option value="all">All Status</option>
@@ -1314,7 +1337,10 @@ const FormsAdministration: React.FC = () => {
           <div>
             <select
               value={templateCategoryFilter}
-              onChange={(e) => setTemplateCategoryFilter(parseInt(e.target.value))}
+              onChange={(e) => {
+                setTemplateCategoryFilter(parseInt(e.target.value));
+                setTemplateCurrentPage(1); // Reset to first page when filtering
+              }}
               className="px-3 py-2 rounded-md border border-input bg-background"
             >
               <option value={0}>All Categories</option>
@@ -1382,7 +1408,7 @@ const FormsAdministration: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedTemplates.map(template => (
+            {paginatedTemplates.map(template => (
               <TableRow key={template.id}>
                 <TableCell className="font-medium">{template.title}</TableCell>
                 <TableCell>{categoryMap.get(template.categoryId) || `Category #${template.categoryId}`}</TableCell>
@@ -1452,6 +1478,18 @@ const FormsAdministration: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+        
+        {/* Pagination controls */}
+        {sortedTemplates.length > 0 && (
+          <Pagination
+            totalItems={totalTemplates}
+            itemsPerPage={templateItemsPerPage}
+            currentPage={templateCurrentPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            className="mt-4"
+          />
+        )}
         
         {filteredTemplates.length === 0 && (
           <div className="text-center py-8 text-gray-500">
