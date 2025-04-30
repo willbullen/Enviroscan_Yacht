@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface Vessel {
   id: number;
@@ -24,8 +24,12 @@ interface VesselContextType {
   resetVesselChanged: () => void;
   loading: boolean;
   error: boolean;
-  // We would add more functions here in a real implementation 
-  // such as addVessel, updateVessel, etc.
+  
+  // Add CRUD operations for vessels
+  addVessel: (vesselData: Partial<Vessel>) => Promise<Vessel | null>;
+  updateVessel: (id: number, vesselData: Partial<Vessel>) => Promise<Vessel | null>;
+  deleteVessel: (id: number) => Promise<boolean>;
+  refreshVessels: () => void;
 }
 
 // Default vessel in case we don't have any yet
@@ -43,12 +47,14 @@ export const VesselProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [currentVesselId, setCurrentVesselId] = useState<number>(1);
   const [vesselChanged, setVesselChanged] = useState<boolean>(false);
   const [currentVessel, setCurrentVesselObject] = useState<Vessel>(defaultVessel);
+  const queryClient = useQueryClient();
   
   // Use React Query to fetch vessels from our new API endpoint
   const { 
     data: vesselsData, 
     isLoading, 
-    isError 
+    isError,
+    refetch 
   } = useQuery({
     queryKey: ['/api/marine/fleet-vessels'],
     queryFn: async () => {
@@ -76,6 +82,116 @@ export const VesselProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   
   const resetVesselChanged = () => {
     setVesselChanged(false);
+  };
+  
+  // Refresh all vessel data
+  const refreshVessels = () => {
+    refetch();
+  };
+  
+  // Add a new vessel
+  const addVessel = async (vesselData: Partial<Vessel>): Promise<Vessel | null> => {
+    try {
+      const response = await fetch('/api/vessels-management', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vesselName: vesselData.name,
+          vesselType: vesselData.type || 'Unknown',
+          length: vesselData.length,
+          flagCountry: vesselData.flag || null,
+          mmsi: vesselData.mmsi || null,
+          callSign: vesselData.callSign || null,
+          // Add other fields as needed for your vessel schema
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to add vessel:', errorData);
+        return null;
+      }
+      
+      const newVessel = await response.json();
+      
+      // Update the local state and refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/marine/fleet-vessels'] });
+      
+      return newVessel;
+    } catch (error) {
+      console.error('Error adding vessel:', error);
+      return null;
+    }
+  };
+  
+  // Update an existing vessel
+  const updateVessel = async (id: number, vesselData: Partial<Vessel>): Promise<Vessel | null> => {
+    try {
+      const response = await fetch(`/api/vessels-management/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vesselName: vesselData.name,
+          vesselType: vesselData.type,
+          length: vesselData.length,
+          flagCountry: vesselData.flag,
+          mmsi: vesselData.mmsi,
+          callSign: vesselData.callSign,
+          // Add other fields as needed
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to update vessel:', errorData);
+        return null;
+      }
+      
+      const updatedVessel = await response.json();
+      
+      // Update the local state and refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/marine/fleet-vessels'] });
+      
+      return updatedVessel;
+    } catch (error) {
+      console.error('Error updating vessel:', error);
+      return null;
+    }
+  };
+  
+  // Delete a vessel
+  const deleteVessel = async (id: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/vessels-management/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok && response.status !== 204) {
+        const errorData = await response.json();
+        console.error('Failed to delete vessel:', errorData);
+        return false;
+      }
+      
+      // Update the local state and refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/marine/fleet-vessels'] });
+      
+      // If this was the current vessel, select another one
+      if (id === currentVesselId && vessels.length > 1) {
+        const newVessels = vessels.filter(v => v.id !== id);
+        if (newVessels.length > 0) {
+          setCurrentVessel(newVessels[0].id);
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting vessel:', error);
+      return false;
+    }
   };
 
   // Update vessels state when data is fetched
@@ -106,7 +222,11 @@ export const VesselProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         vesselChanged,
         resetVesselChanged,
         loading: isLoading,
-        error: isError
+        error: isError,
+        addVessel,
+        updateVessel,
+        deleteVessel,
+        refreshVessels
       }}
     >
       {children}
