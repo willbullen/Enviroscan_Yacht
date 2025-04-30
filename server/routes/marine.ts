@@ -58,28 +58,61 @@ export function initAisStreamWebsocket() {
         console.log(`Received message type: ${jsonData?.MessageType || 'unknown'}`);
         
         // Process AIS message
-        if (jsonData && jsonData.MessageType === 'PositionReport' && jsonData.Message) {
-          const vesselPosition = jsonData.Message;
+        if (jsonData && jsonData.MessageType === 'PositionReport') {
+          let vesselPosition;
           
-          // Ensure MMSI exists before processing
-          if (!vesselPosition.MMSI) {
-            console.log('Received position report without MMSI:', vesselPosition);
-            return;
+          // Check if message is in the new format where data is nested in PositionReport object
+          if (jsonData.Message && jsonData.Message.PositionReport) {
+            vesselPosition = jsonData.Message.PositionReport;
+            
+            // Check if MMSI exists in the new format (as UserID)
+            if (!vesselPosition.UserID) {
+              console.log('Position report missing UserID:', vesselPosition);
+              return;
+            }
+            
+            const mmsi = vesselPosition.UserID.toString();
+            
+            // Update vessel cache with the new data format
+            vesselPositionsCache[mmsi] = {
+              mmsi: mmsi,
+              vesselId: parseInt(mmsi.slice(-8), 10) % 1000, // Generate vessel ID from MMSI
+              name: 'AIS Vessel ' + mmsi.slice(-5), // Most AIS messages don't include name
+              latitude: vesselPosition.Latitude || 0,
+              longitude: vesselPosition.Longitude || 0,
+              speed: vesselPosition.Sog || 0, // Speed over ground
+              heading: vesselPosition.TrueHeading || 0,
+              timestamp: new Date().toISOString()
+            };
+            
+            console.log(`Updated position for vessel MMSI: ${mmsi} (New Format)`);
           }
-          
-          const mmsi = vesselPosition.MMSI.toString();
-          
-          // Update vessel cache
-          vesselPositionsCache[mmsi] = {
-            mmsi: mmsi,
-            vesselId: parseInt(mmsi.slice(-8), 10) % 1000, // Generate vessel ID from MMSI
-            name: vesselPosition.ShipName || 'Unknown',
-            latitude: vesselPosition.Latitude || 0,
-            longitude: vesselPosition.Longitude || 0,
-            speed: vesselPosition.SOG || 0,
-            heading: vesselPosition.Heading || 0,
-            timestamp: new Date().toISOString()
-          };
+          // Handle the old format where data is directly in Message
+          else if (jsonData.Message) {
+            vesselPosition = jsonData.Message;
+            
+            // Ensure MMSI exists before processing
+            if (!vesselPosition.MMSI) {
+              console.log('Received position report without MMSI:', vesselPosition);
+              return;
+            }
+            
+            const mmsi = vesselPosition.MMSI.toString();
+            
+            // Update vessel cache
+            vesselPositionsCache[mmsi] = {
+              mmsi: mmsi,
+              vesselId: parseInt(mmsi.slice(-8), 10) % 1000, // Generate vessel ID from MMSI
+              name: vesselPosition.ShipName || 'Unknown',
+              latitude: vesselPosition.Latitude || 0,
+              longitude: vesselPosition.Longitude || 0,
+              speed: vesselPosition.SOG || 0,
+              heading: vesselPosition.Heading || 0,
+              timestamp: new Date().toISOString()
+            };
+            
+            console.log(`Updated position for vessel MMSI: ${mmsi} (Old Format)`);
+          }
           
           console.log(`Updated position for vessel MMSI: ${mmsi}`);
         }
