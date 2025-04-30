@@ -1518,63 +1518,28 @@ const FormsAdministration: React.FC = () => {
     
     return (
       <div className="grid grid-cols-1 gap-6 mt-4">
-        {/* Template selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Select a Template</CardTitle>
-            <CardDescription>
-              Choose a template to view or create a form structure
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map(template => (
-                <Card 
-                  key={template.id} 
-                  className={`cursor-pointer transition-all ${selectedTemplate?.id === template.id ? 'border-primary ring-2 ring-primary' : 'hover:border-primary/50'}`}
-                  onClick={() => setSelectedTemplate(template)}
-                >
-                  <CardHeader className="py-4 px-4 pb-0">
-                    <CardTitle className="text-base">{template.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-2 px-4">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Category: {categoryMap.get(template.categoryId) || `Category #${template.categoryId}`}
-                    </p>
-                    {template.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
-                    )}
-                  </CardContent>
-                  <CardFooter className="py-2 px-4 flex justify-between">
-                    <Badge variant={template.isActive ? "success" : "secondary"}>
-                      {template.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                    <Button variant="outline" size="sm" onClick={(e) => {
-                      e.stopPropagation();
-                      handleCreateVersion(template);
-                    }}>
-                      Create Version
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-              
-              {templates.length === 0 && (
-                <div className="col-span-full text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                  <p>No templates found. Please create a template first.</p>
-                  <Button className="mt-4" onClick={() => {
-                    setEditingTemplate(null);
-                    setNewTemplate(FormTemplate_DEFAULT);
-                    setIsTemplateDialogOpen(true);
-                  }}>
-                    <Plus className="w-4 h-4 mr-2" /> Create Template
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Template selection with data table */}
+        <FormTemplateDataTable 
+          templates={templates} 
+          categories={categories}
+          onSelectTemplate={setSelectedTemplate}
+        />
+        
+        {templates.length === 0 && (
+          <Card className="mt-4">
+            <CardContent className="text-center py-8">
+              <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="text-gray-500">No templates found. Please create a template first.</p>
+              <Button className="mt-4" onClick={() => {
+                setEditingTemplate(null);
+                setNewTemplate(FormTemplate_DEFAULT);
+                setIsTemplateDialogOpen(true);
+              }}>
+                <Plus className="w-4 h-4 mr-2" /> Create Template
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         
         {/* Versions list and Form Builder (if template is selected) */}
         {selectedTemplate && (
