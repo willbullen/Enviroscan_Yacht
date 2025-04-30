@@ -117,7 +117,42 @@ interface Role {
   name: string;
   description: string;
   permissions: string[];
+  pages?: string[]; // Added pages access control
 }
+
+// Available system pages for access control
+const SYSTEM_PAGES = [
+  { id: 'dashboard', name: 'Dashboard', description: 'Main dashboard with overview statistics' },
+  { id: 'vessels', name: 'Vessels', description: 'Vessel management and details' },
+  { id: 'maintenance', name: 'Maintenance', description: 'Equipment maintenance planning and history' },
+  { id: 'inventory', name: 'Inventory', description: 'Inventory management and stock levels' },
+  { id: 'forms', name: 'Forms', description: 'Form management and submissions' },
+  { id: 'crew', name: 'Crew', description: 'Crew management and scheduling' },
+  { id: 'reports', name: 'Reports', description: 'Reports and analytics' },
+  { id: 'ism', name: 'ISM', description: 'ISM document management' },
+  { id: 'marine-tracker', name: 'Marine Tracker', description: 'Real-time vessel tracking' },
+  { id: 'admin', name: 'Administration', description: 'System administration and settings' },
+];
+
+// Available system permissions
+const SYSTEM_PERMISSIONS = [
+  { id: 'all', name: 'All Permissions', description: 'Full access to all system features' },
+  { id: 'manage_vessels', name: 'Manage Vessels', description: 'Create, edit and manage vessel information' },
+  { id: 'view_reports', name: 'View Reports', description: 'View system reports and analytics' },
+  { id: 'assign_tasks', name: 'Assign Tasks', description: 'Assign tasks to crew members' },
+  { id: 'manage_inventory', name: 'Manage Inventory', description: 'Manage vessel inventory and supplies' },
+  { id: 'operate_vessel', name: 'Operate Vessel', description: 'Primary vessel operation permissions' },
+  { id: 'manage_crew', name: 'Manage Crew', description: 'Manage crew assignments and schedules' },
+  { id: 'report_incidents', name: 'Report Incidents', description: 'Create and manage incident reports' },
+  { id: 'manage_maintenance', name: 'Manage Maintenance', description: 'Schedule and oversee maintenance tasks' },
+  { id: 'view_equipment', name: 'View Equipment', description: 'View equipment details and status' },
+  { id: 'update_inventory', name: 'Update Inventory', description: 'Update inventory levels and requests' },
+  { id: 'view_vessel', name: 'View Vessel', description: 'View assigned vessel information' },
+  { id: 'complete_tasks', name: 'Complete Tasks', description: 'View and complete assigned tasks' },
+  { id: 'submit_reports', name: 'Submit Reports', description: 'Submit required operational reports' },
+  { id: 'edit_forms', name: 'Edit Forms', description: 'Create and edit forms and templates' },
+  { id: 'submit_forms', name: 'Submit Forms', description: 'Fill out and submit forms' },
+];
 
 // System default roles
 const SYSTEM_ROLES: Role[] = [
@@ -125,31 +160,36 @@ const SYSTEM_ROLES: Role[] = [
     id: 'admin',
     name: 'Administrator',
     description: 'Full system access with all permissions',
-    permissions: ['all']
+    permissions: ['all'],
+    pages: ['dashboard', 'vessels', 'maintenance', 'inventory', 'forms', 'crew', 'reports', 'ism', 'marine-tracker', 'admin']
   },
   {
     id: 'manager',
     name: 'Fleet Manager',
     description: 'Can manage vessels, view reports, and coordinate operations',
-    permissions: ['manage_vessels', 'view_reports', 'assign_tasks', 'manage_inventory']
+    permissions: ['manage_vessels', 'view_reports', 'assign_tasks', 'manage_inventory'],
+    pages: ['dashboard', 'vessels', 'maintenance', 'inventory', 'forms', 'crew', 'reports', 'marine-tracker']
   },
   {
     id: 'captain',
     name: 'Captain',
     description: 'Primarily responsible for vessel operations and safety',
-    permissions: ['operate_vessel', 'manage_crew', 'report_incidents', 'manage_maintenance']
+    permissions: ['operate_vessel', 'manage_crew', 'report_incidents', 'manage_maintenance'],
+    pages: ['dashboard', 'vessels', 'maintenance', 'forms', 'crew', 'reports', 'marine-tracker']
   },
   {
     id: 'engineer',
     name: 'Chief Engineer',
     description: 'Responsible for technical maintenance and equipment operation',
-    permissions: ['manage_maintenance', 'view_equipment', 'update_inventory']
+    permissions: ['manage_maintenance', 'view_equipment', 'update_inventory'],
+    pages: ['dashboard', 'maintenance', 'inventory', 'forms']
   },
   {
     id: 'crew',
     name: 'Crew Member',
     description: 'Basic access to assigned vessel information and tasks',
-    permissions: ['view_vessel', 'complete_tasks', 'submit_reports']
+    permissions: ['view_vessel', 'complete_tasks', 'submit_reports', 'submit_forms'],
+    pages: ['dashboard', 'maintenance', 'forms']
   }
 ];
 
@@ -172,7 +212,11 @@ const UserAdmin: React.FC = () => {
   
   // Role state
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isRoleEditDialogOpen, setIsRoleEditDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [editedRole, setEditedRole] = useState<Role | null>(null); 
+  const [editingPermissions, setEditingPermissions] = useState<string[]>([]);
+  const [editingPages, setEditingPages] = useState<string[]>([]);
   
   // Filter state
   const [userFilter, setUserFilter] = useState('');
@@ -429,6 +473,85 @@ const UserAdmin: React.FC = () => {
   const handleSelectRole = (role: Role) => {
     setSelectedRole(role);
     setIsRoleDialogOpen(true);
+  };
+  
+  const handleEditRole = (role: Role) => {
+    setEditedRole({...role});
+    setEditingPermissions(role.permissions || []);
+    setEditingPages(role.pages || []);
+    setIsRoleEditDialogOpen(true);
+  };
+  
+  const handleSaveRoleChanges = () => {
+    if (!editedRole) return;
+    
+    // Find the role in the system roles
+    const roleIndex = SYSTEM_ROLES.findIndex(r => r.id === editedRole.id);
+    if (roleIndex !== -1) {
+      // Update the role
+      SYSTEM_ROLES[roleIndex] = {
+        ...SYSTEM_ROLES[roleIndex],
+        permissions: editingPermissions,
+        pages: editingPages
+      };
+      
+      toast({
+        title: "Role Updated",
+        description: `The ${editedRole.name} role has been updated successfully.`,
+        variant: "default"
+      });
+      
+      // Close the dialog
+      setIsRoleEditDialogOpen(false);
+      setEditedRole(null);
+    }
+  };
+  
+  const togglePermission = (permissionId: string) => {
+    if (editingPermissions.includes(permissionId)) {
+      // If permission is 'all', prevent removal for admin roles
+      if (permissionId === 'all' && editedRole?.id === 'admin') {
+        toast({
+          title: "Cannot Remove Permission",
+          description: "The Administrator role must have all permissions.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Remove permission
+      setEditingPermissions(editingPermissions.filter(p => p !== permissionId));
+    } else {
+      // Add permission
+      if (permissionId === 'all') {
+        // If 'all' is added, remove all other permissions
+        setEditingPermissions(['all']);
+      } else {
+        // If another permission is added, remove 'all'
+        const newPermissions = editingPermissions.filter(p => p !== 'all');
+        setEditingPermissions([...newPermissions, permissionId]);
+      }
+    }
+  };
+  
+  const togglePage = (pageId: string) => {
+    if (editingPages.includes(pageId)) {
+      // If this is the admin role, don't allow removing certain critical pages
+      if (editedRole?.id === 'admin' && ['dashboard', 'admin'].includes(pageId)) {
+        toast({
+          title: "Cannot Remove Page Access",
+          description: "The Administrator role must have access to critical system pages.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Remove page
+      setEditingPages(editingPages.filter(p => p !== pageId));
+    } else {
+      // Add page
+      setEditingPages([...editingPages, pageId]);
+    }
   };
 
   // Filter users based on search criteria
@@ -740,9 +863,17 @@ const UserAdmin: React.FC = () => {
           <TabsContent value="roles" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Role Management</CardTitle>
+                <CardTitle className="flex justify-between items-center">
+                  <span>Role Management</span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedTab("users")}>
+                      <Users className="mr-2 h-4 w-4" />
+                      Manage Users
+                    </Button>
+                  </div>
+                </CardTitle>
                 <CardDescription>
-                  View system roles and their permissions. These roles determine what users can access.
+                  View system roles and manage their permissions and page access controls. These roles determine what users can access.
                 </CardDescription>
               </CardHeader>
               
@@ -753,42 +884,117 @@ const UserAdmin: React.FC = () => {
                       <TableRow>
                         <TableHead>Role</TableHead>
                         <TableHead>Description</TableHead>
-                        <TableHead>Permissions</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="hidden md:table-cell">Permissions</TableHead>
+                        <TableHead className="hidden md:table-cell">Page Access</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {SYSTEM_ROLES.map(role => (
                         <TableRow key={role.id}>
                           <TableCell className="font-medium">{role.name}</TableCell>
-                          <TableCell>{role.description}</TableCell>
-                          <TableCell>
+                          <TableCell className="max-w-[200px] truncate">{role.description}</TableCell>
+                          <TableCell className="hidden md:table-cell">
                             <div className="flex flex-wrap gap-1">
                               {role.permissions.includes('all') ? (
                                 <Badge>All permissions</Badge>
                               ) : (
-                                role.permissions.map(permission => (
-                                  <Badge key={permission} variant="outline">
-                                    {permission.replace('_', ' ')}
+                                role.permissions.slice(0, 3).map(permission => (
+                                  <Badge key={permission} variant="outline" className="whitespace-nowrap">
+                                    {permission.replace(/_/g, ' ')}
                                   </Badge>
                                 ))
                               )}
+                              {role.permissions.length > 3 && !role.permissions.includes('all') && (
+                                <Badge variant="outline">+{role.permissions.length - 3} more</Badge>
+                              )}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleSelectRole(role)}
-                            >
-                              <Info className="h-4 w-4 mr-2" />
-                              View Details
-                            </Button>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="flex flex-wrap gap-1">
+                              {role.pages && role.pages.slice(0, 3).map(pageId => {
+                                const page = SYSTEM_PAGES.find(p => p.id === pageId);
+                                return (
+                                  <Badge key={pageId} variant="secondary" className="whitespace-nowrap">
+                                    {page?.name || pageId}
+                                  </Badge>
+                                );
+                              })}
+                              {role.pages && role.pages.length > 3 && (
+                                <Badge variant="secondary">+{role.pages.length - 3} more</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleSelectRole(role)}
+                              >
+                                <Info className="h-4 w-4 mr-2" />
+                                View
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditRole(role)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Understanding Roles & Permissions</CardTitle>
+                <CardDescription>
+                  Learn how roles and permissions work in the system
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border rounded-lg p-4 space-y-2">
+                      <h3 className="text-lg font-medium flex items-center">
+                        <Shield className="h-5 w-5 mr-2 text-primary" />
+                        Roles
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Roles define what a user can do in the system. Each user is assigned a role that determines their permissions and access to different pages.
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-4 space-y-2">
+                      <h3 className="text-lg font-medium flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-primary" />
+                        Permissions
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Permissions control specific actions a user can perform, such as managing vessels, viewing reports, or assigning tasks.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 space-y-2">
+                    <h3 className="text-lg font-medium flex items-center">
+                      <UserCog className="h-5 w-5 mr-2 text-primary" />
+                      Best Practices
+                    </h3>
+                    <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-5">
+                      <li>Assign users the least privileged role needed for their job</li>
+                      <li>The Administrator role should be limited to trusted personnel</li>
+                      <li>Regularly review role assignments to ensure appropriate access</li>
+                      <li>Page access controls which parts of the application users can see</li>
+                    </ul>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1079,28 +1285,35 @@ const UserAdmin: React.FC = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {selectedRole.permissions.map(permission => (
-                        <div key={permission} className="flex items-center gap-2">
-                          <Badge variant="outline">{permission.replace('_', ' ')}</Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {permission === 'manage_vessels' && 'Create, edit and manage vessel information'}
-                            {permission === 'view_reports' && 'View system reports and analytics'}
-                            {permission === 'assign_tasks' && 'Assign tasks to crew members'}
-                            {permission === 'manage_inventory' && 'Manage vessel inventory and supplies'}
-                            {permission === 'operate_vessel' && 'Primary vessel operation permissions'}
-                            {permission === 'manage_crew' && 'Manage crew assignments and schedules'}
-                            {permission === 'report_incidents' && 'Create and manage incident reports'}
-                            {permission === 'manage_maintenance' && 'Schedule and oversee maintenance tasks'}
-                            {permission === 'view_equipment' && 'View equipment details and status'}
-                            {permission === 'update_inventory' && 'Update inventory levels and requests'}
-                            {permission === 'view_vessel' && 'View assigned vessel information'}
-                            {permission === 'complete_tasks' && 'View and complete assigned tasks'}
-                            {permission === 'submit_reports' && 'Submit required operational reports'}
-                          </span>
-                        </div>
-                      ))}
+                      {selectedRole.permissions.map(permission => {
+                        const permInfo = SYSTEM_PERMISSIONS.find(p => p.id === permission);
+                        return (
+                          <div key={permission} className="flex items-center gap-2">
+                            <Badge variant="outline">{permInfo?.name || permission.replace(/_/g, ' ')}</Badge>
+                            <span className="text-sm text-muted-foreground">
+                              {permInfo?.description || ''}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium">Page Access</h3>
+                <div className="mt-2 border rounded-md p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {selectedRole.pages?.map(pageId => {
+                      const page = SYSTEM_PAGES.find(p => p.id === pageId);
+                      return (
+                        <div key={pageId} className="flex items-center gap-2">
+                          <Badge variant="secondary">{page?.name || pageId}</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
               
@@ -1117,14 +1330,150 @@ const UserAdmin: React.FC = () => {
                         : selectedRole.permissions.length
                     }
                   </p>
+                  <p>
+                    <span className="font-medium">Page Access Count:</span> {selectedRole.pages?.length || 0}
+                  </p>
                 </div>
               </div>
             </div>
           )}
           
           <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              handleEditRole(selectedRole!);
+              setIsRoleDialogOpen(false);
+            }}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Role
+            </Button>
             <Button onClick={() => setIsRoleDialogOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Role Edit Dialog */}
+      <Dialog open={isRoleEditDialogOpen} onOpenChange={setIsRoleEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit {editedRole?.name} Role</DialogTitle>
+            <DialogDescription>
+              Configure permissions and page access for this role
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editedRole && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Permissions Section */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-medium">Role Permissions</h3>
+                    <Badge variant="outline" className="ml-2">
+                      {editingPermissions.length} Selected
+                    </Badge>
+                  </div>
+                  
+                  <div className="border rounded-md p-4 h-[400px] overflow-y-auto space-y-3">
+                    {SYSTEM_PERMISSIONS.map(permission => (
+                      <div 
+                        key={permission.id} 
+                        className={`flex items-start space-x-2 p-2 rounded cursor-pointer transition-colors ${
+                          editingPermissions.includes(permission.id) 
+                            ? 'bg-primary/10 border border-primary/20' 
+                            : 'hover:bg-muted'
+                        }`}
+                        onClick={() => togglePermission(permission.id)}
+                      >
+                        <Checkbox 
+                          id={`perm-${permission.id}`} 
+                          checked={editingPermissions.includes(permission.id)}
+                          onCheckedChange={() => togglePermission(permission.id)}
+                          className="mt-1"
+                        />
+                        <div>
+                          <Label 
+                            htmlFor={`perm-${permission.id}`} 
+                            className="font-medium cursor-pointer"
+                          >
+                            {permission.name}
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {permission.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Page Access Section */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-medium">Page Access</h3>
+                    <Badge variant="outline" className="ml-2">
+                      {editingPages.length} Selected
+                    </Badge>
+                  </div>
+                  
+                  <div className="border rounded-md p-4 h-[400px] overflow-y-auto space-y-3">
+                    {SYSTEM_PAGES.map(page => (
+                      <div 
+                        key={page.id} 
+                        className={`flex items-start space-x-2 p-2 rounded cursor-pointer transition-colors ${
+                          editingPages.includes(page.id) 
+                            ? 'bg-primary/10 border border-primary/20' 
+                            : 'hover:bg-muted'
+                        }`}
+                        onClick={() => togglePage(page.id)}
+                      >
+                        <Checkbox 
+                          id={`page-${page.id}`} 
+                          checked={editingPages.includes(page.id)}
+                          onCheckedChange={() => togglePage(page.id)}
+                          className="mt-1"
+                        />
+                        <div>
+                          <Label 
+                            htmlFor={`page-${page.id}`} 
+                            className="font-medium cursor-pointer"
+                          >
+                            {page.name}
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {page.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-muted/50 p-4 rounded-md">
+                <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4" />
+                  About Role Changes
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Changes to role permissions and page access will affect all users with this role.
+                  {editedRole.id === 'admin' && ' Administrator roles must maintain access to all critical system functions.'}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsRoleEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveRoleChanges}
+              className="gap-1"
+            >
+              <Shield className="h-4 w-4" />
+              Save Role Changes
             </Button>
           </DialogFooter>
         </DialogContent>
