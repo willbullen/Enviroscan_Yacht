@@ -520,20 +520,50 @@ const VesselAdmin: React.FC = () => {
                                 </div>
                               </div>
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  setSelectedVesselId(vessel.id);
-                                  if (mapRef.current) {
-                                    mapRef.current.focusVessel(vessel.id);
-                                  }
-                                }} title="View on map">
-                                  <Eye className="h-4 w-4" />
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-8 px-2 text-xs" 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    setSelectedVesselId(vessel.id);
+                                    if (mapRef.current) {
+                                      mapRef.current.focusVessel(vessel.id);
+                                    }
+                                  }} 
+                                  title="View vessel on map"
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-1" />
+                                  <span>View</span>
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEditVessel(vessel.id); }}>
-                                  <Pencil className="h-4 w-4" />
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-8 px-2 text-xs" 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    startEditVessel(vessel.id); 
+                                  }}
+                                  title="Edit vessel details"
+                                >
+                                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                                  <span>Edit</span>
                                 </Button>
-                                <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => e.stopPropagation()}>
-                                  <Trash2 className="h-4 w-4" />
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-8 px-2 text-xs text-destructive hover:text-destructive/90 hover:bg-destructive/10" 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm('Are you sure you want to delete this vessel? This action cannot be undone.')) {
+                                      // Delete vessel action would be here
+                                      console.log('Delete vessel:', vessel.id);
+                                    }
+                                  }}
+                                  title="Delete vessel"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                  <span>Delete</span>
                                 </Button>
                               </div>
                             </div>

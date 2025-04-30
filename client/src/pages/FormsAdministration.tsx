@@ -1911,31 +1911,37 @@ const FormsAdministration: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-1.5 border-primary/30 bg-primary/5 hover:bg-primary/10"
               onClick={() => setShowLifecycleGuide(true)}
+              title="Learn about the form lifecycle process"
             >
-              <ListChecks className="h-4 w-4" />
+              <ListChecks className="h-4 w-4 text-primary" />
               <span>Lifecycle Guide</span>
+              <HelpCircle className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
             </Button>
             
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-1.5 border-primary/30 bg-primary/5 hover:bg-primary/10"
               onClick={() => setShowProcessGuide(true)}
+              title="View the form management process overview"
             >
-              <Info className="h-4 w-4" />
+              <Info className="h-4 w-4 text-primary" />
               <span>Process Overview</span>
+              <HelpCircle className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
             </Button>
             
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-1.5 border-primary/30 bg-primary/5 hover:bg-primary/10"
               onClick={() => setShowActivationGuide(true)}
+              title="Learn how to activate and use form categories"
             >
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle className="h-4 w-4 text-primary" />
               <span>Activation Guide</span>
+              <HelpCircle className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
             </Button>
           </div>
         </div>

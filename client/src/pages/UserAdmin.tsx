@@ -1080,50 +1080,28 @@ const UserAdmin: React.FC = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end space-x-1">
+                            <div className="flex justify-end gap-1">
                               <Button 
                                 variant="ghost" 
-                                size="icon"
+                                size="sm"
                                 onClick={() => handleSelectRole(role)}
-                                className="h-8 w-8"
+                                className="h-8 px-2 text-xs"
+                                title="View role details"
                               >
-                                <Info className="h-4 w-4" />
-                                <span className="sr-only">View details</span>
+                                <Info className="h-3.5 w-3.5 mr-1" />
+                                <span>Details</span>
                               </Button>
                               <Button 
                                 variant="ghost" 
-                                size="icon"
+                                size="sm"
                                 onClick={() => handleEditRole(role)}
-                                className="h-8 w-8"
+                                className="h-8 px-2 text-xs"
+                                disabled={role.id === 'admin'} // Prevent edits to admin role
+                                title="Edit role permissions"
                               >
-                                <Edit className="h-4 w-4" />
-                                <span className="sr-only">Edit role</span>
+                                <Edit className="h-3.5 w-3.5 mr-1" />
+                                <span>Edit</span>
                               </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    disabled={role.id === 'admin'} // Prevent actions on admin role
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">More options</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuLabel>Role Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleEditRole(role)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    <span>Edit Role</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSelectRole(role)}>
-                                    <Info className="mr-2 h-4 w-4" />
-                                    <span>View Details</span>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>
