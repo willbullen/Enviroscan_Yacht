@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
   SheetContent,
@@ -98,6 +99,7 @@ import {
   Info,
   FileCheck,
   CheckCircle,
+  ListFilter,
   Loader2,
   RefreshCw,
   XCircle
@@ -922,9 +924,73 @@ const FormsAdministration: React.FC = () => {
           </div>
         </div>
         
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1.5"
+                  disabled={selectedCategories.length === 0}
+                >
+                  <ListFilter className="h-4 w-4" />
+                  Bulk Actions {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="min-w-[160px]">
+                <DropdownMenuLabel>Category Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setBulkAction('activate');
+                    handleBulkAction();
+                  }}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  <span>Activate Selected</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setBulkAction('deactivate');
+                    handleBulkAction();
+                  }}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  <span>Deactivate Selected</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setBulkAction('delete');
+                    handleBulkAction();
+                  }}
+                  className="text-destructive focus:bg-destructive/10"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Delete Selected</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+          
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={sortedCategories.length > 0 && selectedCategories.length === sortedCategories.length}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedCategories(sortedCategories.map(c => c.id));
+                    } else {
+                      setSelectedCategories([]);
+                    }
+                  }}
+                  aria-label="Select all categories"
+                />
+              </TableHead>
               <TableHead onClick={() => toggleSort('name')} className="cursor-pointer hover:text-primary">
                 <div className="flex items-center">
                   Name
@@ -971,6 +1037,13 @@ const FormsAdministration: React.FC = () => {
           <TableBody>
             {sortedCategories.map(category => (
               <TableRow key={category.id}>
+                <TableCell className="w-12">
+                  <Checkbox
+                    checked={selectedCategories.includes(category.id)}
+                    onCheckedChange={(checked) => handleSelectCategory(category.id, !!checked)}
+                    aria-label={`Select category ${category.name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>{category.description || '-'}</TableCell>
                 <TableCell>
@@ -1827,6 +1900,44 @@ const FormsAdministration: React.FC = () => {
         categoryIds: selectedCategories
       });
     }
+  };
+  
+  // Bulk action dialog
+  const renderBulkActionDialog = () => {
+    return (
+      <AlertDialog open={bulkActionOpen} onOpenChange={setBulkActionOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Bulk Action</AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === 'delete' ? (
+                <span className="text-destructive">
+                  Are you sure you want to delete {selectedCategories.length} selected categories? 
+                  This action cannot be undone.
+                </span>
+              ) : bulkAction === 'activate' ? (
+                <span>
+                  Are you sure you want to activate {selectedCategories.length} selected categories?
+                </span>
+              ) : (
+                <span>
+                  Are you sure you want to deactivate {selectedCategories.length} selected categories?
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBulkAction('')}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeBulkAction}
+              className={bulkAction === 'delete' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              {bulkAction === 'delete' ? 'Delete' : bulkAction === 'activate' ? 'Activate' : 'Deactivate'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
   };
       
   return (
