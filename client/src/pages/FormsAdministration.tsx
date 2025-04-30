@@ -8,6 +8,7 @@ import { FormLifecycleGuide } from "@/components/form-builder/FormLifecycleGuide
 import { FormProcessVisualization } from "@/components/form-builder/FormProcessVisualization";
 import { FormActivationGuide } from "@/components/form-builder/FormActivationGuide";
 import { FormTemplateDataTable } from "@/components/form-builder/FormTemplateDataTable";
+import { Pagination } from "@/components/ui/pagination";
 
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -160,12 +161,20 @@ const FormsAdministration: React.FC = () => {
   const [categoryStatusFilter, setCategoryStatusFilter] = useState('all');
   const [categorySortField, setCategorySortField] = useState('name');
   const [categorySortDirection, setCategorySortDirection] = useState('asc');
+  const [categoryCurrentPage, setCategoryCurrentPage] = useState(1);
+  const [categoryItemsPerPage, setCategoryItemsPerPage] = useState(10);
   
   const [templateFilter, setTemplateFilter] = useState('');
   const [templateStatusFilter, setTemplateStatusFilter] = useState('all');
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState(0);
   const [templateSortField, setTemplateSortField] = useState('title');
   const [templateSortDirection, setTemplateSortDirection] = useState('asc');
+  const [templateCurrentPage, setTemplateCurrentPage] = useState(1);
+  const [templateItemsPerPage, setTemplateItemsPerPage] = useState(10);
+  
+  // Form Builder state for versions pagination
+  const [versionCurrentPage, setVersionCurrentPage] = useState(1);
+  const [versionItemsPerPage, setVersionItemsPerPage] = useState(5);
   
   // Form guide state
   const [showLifecycleGuide, setShowLifecycleGuide] = useState(false);
@@ -835,6 +844,23 @@ const FormsAdministration: React.FC = () => {
       updateCategoryMutation.mutate(updatedCategory);
     };
     
+    // Pagination
+    const startIndex = (categoryCurrentPage - 1) * categoryItemsPerPage;
+    const endIndex = startIndex + categoryItemsPerPage;
+    const paginatedCategories = sortedCategories.slice(startIndex, endIndex);
+    const totalCategories = sortedCategories.length;
+    
+    // Handle page change
+    const handlePageChange = (page: number) => {
+      setCategoryCurrentPage(page);
+    };
+    
+    // Handle items per page change
+    const handleItemsPerPageChange = (itemsPerPage: number) => {
+      setCategoryItemsPerPage(itemsPerPage);
+      setCategoryCurrentPage(1); // Reset to first page when changing items per page
+    };
+    
     return (
       <>
         <div className="flex justify-between items-center mb-4">
@@ -903,7 +929,10 @@ const FormsAdministration: React.FC = () => {
                 type="text"
                 placeholder="Search Categories by name or description..."
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setCategoryCurrentPage(1); // Reset to first page when filtering
+                }}
                 className="pl-8"
                 aria-label="Search categories"
               />
@@ -913,7 +942,10 @@ const FormsAdministration: React.FC = () => {
           <div>
             <select
               value={categoryStatusFilter}
-              onChange={(e) => setCategoryStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setCategoryStatusFilter(e.target.value);
+                setCategoryCurrentPage(1); // Reset to first page when filtering
+              }}
               className="px-3 py-2 rounded-md border border-input bg-background"
             >
               <option value="all">All Status</option>
@@ -979,15 +1011,15 @@ const FormsAdministration: React.FC = () => {
             <TableRow>
               <TableHead className="w-12">
                 <Checkbox
-                  checked={sortedCategories.length > 0 && selectedCategories.length === sortedCategories.length}
+                  checked={paginatedCategories.length > 0 && selectedCategories.length === paginatedCategories.length}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setSelectedCategories(sortedCategories.map(c => c.id));
+                      setSelectedCategories(paginatedCategories.map(c => c.id));
                     } else {
                       setSelectedCategories([]);
                     }
                   }}
-                  aria-label="Select all categories"
+                  aria-label="Select all categories on this page"
                 />
               </TableHead>
               <TableHead onClick={() => toggleSort('name')} className="cursor-pointer hover:text-primary">
@@ -1034,7 +1066,7 @@ const FormsAdministration: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedCategories.map(category => (
+            {paginatedCategories.map(category => (
               <TableRow key={category.id}>
                 <TableCell className="w-12">
                   <Checkbox
@@ -1101,6 +1133,16 @@ const FormsAdministration: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+        
+        {/* Pagination controls */}
+        <Pagination
+          totalItems={totalCategories}
+          itemsPerPage={categoryItemsPerPage}
+          currentPage={categoryCurrentPage}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+          className="mt-4"
+        />
         
         {filteredCategories.length === 0 && (
           <div className="text-center py-8 text-gray-500">
