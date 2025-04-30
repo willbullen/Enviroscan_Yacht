@@ -4,6 +4,9 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { FormBuilderDragDrop } from "@/components/form-builder/FormBuilderDragDrop";
 import { FormField } from "@/components/form-builder/FormFieldItem";
+import { FormLifecycleGuide } from "@/components/form-builder/FormLifecycleGuide";
+import { FormProcessVisualization } from "@/components/form-builder/FormProcessVisualization";
+import { FormActivationGuide } from "@/components/form-builder/FormActivationGuide";
 
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
