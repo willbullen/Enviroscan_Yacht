@@ -121,13 +121,32 @@ const VesselAdmin: React.FC = () => {
   const startAddVessel = () => {
     resetForm();
     setIsAddingVessel(true);
+    setIsSearchingForVessel(false);
+  };
+  
+  const startSearchVessel = () => {
+    resetForm();
+    setIsAddingVessel(true);
+    setIsSearchingForVessel(true);
   };
   
   const cancelAction = () => {
     setIsAddingVessel(false);
     setIsEditingVessel(false);
     setEditingVessel(null);
+    setIsSearchingForVessel(false);
     resetForm();
+  };
+  
+  const handleSelectVessel = (vesselData: VesselFormData) => {
+    setFormData(vesselData);
+    setIsSearchingForVessel(false);
+  };
+  
+  const handleFocusVesselOnMap = (latitude: number, longitude: number) => {
+    if (mapRef.current) {
+      mapRef.current.focusPosition(latitude, longitude, 13);
+    }
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,6 +201,43 @@ const VesselAdmin: React.FC = () => {
                           <p className="text-xs text-muted-foreground mt-1">Enter vessel details below</p>
                         </div>
                         <div className="space-y-4">
+                          {isSearchingForVessel ? (
+                            <div className="border rounded-md p-4 mb-2 bg-muted/20">
+                              <div className="text-sm font-medium mb-2 flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <Search className="h-4 w-4" /> 
+                                  Search Vessel Database
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => setIsSearchingForVessel(false)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <VesselSearchForm 
+                                onSelectVessel={handleSelectVessel} 
+                                onFocusVesselOnMap={handleFocusVesselOnMap}
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-2 mb-4">
+                              <Button 
+                                variant="outline" 
+                                className="w-full flex justify-center items-center gap-2"
+                                onClick={startSearchVessel}
+                              >
+                                <Search className="h-4 w-4" />
+                                <span>Search AIS Database</span>
+                              </Button>
+                              <p className="text-xs text-muted-foreground">
+                                Find vessels using Marine Traffic/AIS data
+                              </p>
+                            </div>
+                          )}
+                          
                           <div className="grid gap-2">
                             <Label htmlFor="name">Vessel Name</Label>
                             <Input

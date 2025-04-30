@@ -50,6 +50,7 @@ interface InteractiveVesselMapProps {
   selectedVesselId?: number | null; 
   onVesselSelect?: (vesselId: number) => void;
   allowMapClick?: boolean;
+  onMapPositionSelect?: (latitude: number, longitude: number) => void;
 }
 
 const InteractiveVesselMap = React.forwardRef<{ 
@@ -63,7 +64,8 @@ const InteractiveVesselMap = React.forwardRef<{
       className = '', 
       selectedVesselId = null, 
       onVesselSelect,
-      allowMapClick = false
+      allowMapClick = false,
+      onMapPositionSelect
     } = props;
     
     const { vessels } = useVessel();
@@ -223,8 +225,10 @@ const InteractiveVesselMap = React.forwardRef<{
               const usePositionLink = document.getElementById('use-position');
               if (usePositionLink) {
                 usePositionLink.addEventListener('click', () => {
-                  // Here you would typically set some state or call a callback
-                  // For now, just close the popup
+                  // Call the onMapPositionSelect callback if provided
+                  if (props.onMapPositionSelect) {
+                    props.onMapPositionSelect(lat, lng);
+                  }
                   newMarker.closePopup();
                 });
               }
