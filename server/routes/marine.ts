@@ -260,7 +260,7 @@ router.get('/fleet-vessels', async (req, res) => {
         flag: vessel.flagCountry
       };
       
-      // If vessel has MMSI and there's position data in the cache, add position data
+      // First check if vessel has position data in the cache
       if (vessel.mmsi && vesselPositionsCache[vessel.mmsi]) {
         const position = vesselPositionsCache[vessel.mmsi];
         return {
@@ -270,6 +270,18 @@ router.get('/fleet-vessels', async (req, res) => {
           speed: position.speed,
           heading: position.heading,
           timestamp: position.timestamp
+        };
+      }
+      
+      // If not in cache, check if vessel has position data in the database
+      if (vessel.latitude && vessel.longitude) {
+        return {
+          ...vesselData,
+          latitude: parseFloat(vessel.latitude),
+          longitude: parseFloat(vessel.longitude),
+          speed: vessel.speed,
+          heading: vessel.heading,
+          timestamp: vessel.lastPositionUpdate ? vessel.lastPositionUpdate.toISOString() : new Date().toISOString()
         };
       }
       

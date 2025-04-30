@@ -21,8 +21,8 @@ async function testVesselPositionUpdate() {
       }
     });
 
-    // Find a vessel with MMSI to test with
-    const testVessel = vessels.find(v => v.mmsi);
+    // For this test, let's use Serenity Dream instead of the first vessel
+    const testVessel = vessels.find(v => v.name === 'Serenity Dream' && v.mmsi);
     
     if (!testVessel) {
       console.log('\nNo vessels with MMSI found for testing. Please add MMSI to at least one vessel.');
