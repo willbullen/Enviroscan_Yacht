@@ -1374,7 +1374,7 @@ const FinancialManagement: React.FC = () => {
                                       <p className="font-medium">{item.name} Budget Details</p>
                                       <p>Period: {new Date(item.periodStart).toLocaleDateString()} to {new Date(item.periodEnd).toLocaleDateString()}</p>
                                       <p>Category: {item.category}</p>
-                                      {item.description && <p>Description: {item.description}</p>}
+                                      {/* Only show description if it exists */}
                                     </div>
                                   </TooltipContent>
                                 </Tooltip>

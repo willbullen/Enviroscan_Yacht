@@ -2024,55 +2024,27 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getFinancialAccountsByVessel(vesselId: number): Promise<FinancialAccount[]> {
-    // Since the database schema hasn't been updated yet, we'll provide some default accounts
-    // This is a temporary solution until the database migration is complete
-    return [
-      {
-        id: 1,
-        accountNumber: "OPER-1001",
-        accountName: "Operating Account",
-        accountType: "asset",
-        category: "operational",
-        description: "Main operating account for vessel expenses",
-        isActive: true,
-        parentAccountId: null,
-        balance: "10000.00",
-        vesselId: vesselId,
-        createdById: 1,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 2, 
-        accountNumber: "MAINT-2001",
-        accountName: "Maintenance Reserve",
-        accountType: "asset",
-        category: "maintenance",
-        description: "Reserve account for vessel maintenance",
-        isActive: true,
-        parentAccountId: null,
-        balance: "25000.00",
-        vesselId: vesselId,
-        createdById: 1,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 3,
-        accountNumber: "FUEL-3001",
-        accountName: "Fuel Account",
-        accountType: "expense",
-        category: "fuel",
-        description: "Account for fuel expenses",
-        isActive: true,
-        parentAccountId: null,
-        balance: "5000.00",
-        vesselId: vesselId,
-        createdById: 1,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    try {
+      console.log(`Fetching financial accounts for vessel ID: ${vesselId}`);
+      const accounts = await db
+        .select()
+        .from(financialAccounts)
+        .where(eq(financialAccounts.vesselId, vesselId));
+      
+      console.log(`Found ${accounts.length} financial accounts for vessel ID: ${vesselId}`);
+      
+      // If no accounts are found, return an empty array
+      if (accounts.length === 0) {
+        console.log(`No financial accounts found for vessel ID: ${vesselId}`);
+        return [];
       }
-    ];
+      
+      return accounts;
+    } catch (error) {
+      console.error(`Error fetching financial accounts for vessel ${vesselId}:`, error);
+      // Return empty array rather than throwing
+      return [];
+    }
   }
   
   async getAllFinancialAccounts(): Promise<FinancialAccount[]> {
