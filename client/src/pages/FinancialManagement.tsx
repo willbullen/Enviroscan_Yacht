@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 import BatchImportDialog from "@/components/BatchImportDialog";
@@ -31,14 +32,26 @@ import {
   Pencil,
   ListTree,
   FileUp,
-  Trash
+  Trash,
+  Euro,
+  Calculator,
+  ChevronRight
 } from "lucide-react";
 import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const FinancialManagement: React.FC = () => {
   // State for view toggle (Card/Grid vs Table view)
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const [activeTab, setActiveTab] = useState("accounts");
+  
+  // Dialog states for adding new items
+  const [showAccountDialog, setShowAccountDialog] = useState(false);
+  const [showExpenseDialog, setShowExpenseDialog] = useState(false);
+  const [showBudgetDialog, setShowBudgetDialog] = useState(false);
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showGenericDialog, setShowGenericDialog] = useState(false);
   
   // Get current vessel from context to filter financial data
   const { currentVessel } = useVessel();
@@ -225,13 +238,134 @@ const FinancialManagement: React.FC = () => {
     }
   };
 
+  // Handle adding new items based on the active tab
+  const handleAddNew = () => {
+    if (!currentVessel) return;
+    
+    switch (activeTab) {
+      case "accounts":
+        setShowAccountDialog(true);
+        break;
+      case "expenses":
+        setShowExpenseDialog(true);
+        break;
+      case "budgets":
+        setShowBudgetDialog(true);
+        break;
+      case "invoices":
+        setShowInvoiceDialog(true);
+        break;
+      default:
+        // For other tabs, show a generic dialog
+        setShowGenericDialog(true);
+    }
+  };
+
+  // Form validation schemas
+  const accountSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    accountNumber: z.string().min(1, "Account number is required"),
+    balance: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
+    type: z.string().min(1, "Account type is required"),
+    description: z.string().optional()
+  });
+
+  const expenseSchema = z.object({
+    description: z.string().min(2, "Description required"),
+    amount: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
+    date: z.string().min(1, "Date is required"),
+    category: z.string().min(1, "Category is required"),
+    paymentMethod: z.string().min(1, "Payment method is required")
+  });
+
+  const budgetSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    amount: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
+    period: z.string().min(1, "Budget period is required"),
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+    category: z.string().min(1, "Category is required")
+  });
+
+  // Form setup
+  const accountForm = useForm({
+    defaultValues: {
+      name: "",
+      accountNumber: "",
+      balance: "0.00",
+      type: "asset",
+      description: ""
+    }
+  });
+
+  const expenseForm = useForm({
+    defaultValues: {
+      description: "",
+      amount: "0.00",
+      date: format(new Date(), "yyyy-MM-dd"),
+      category: "",
+      paymentMethod: "bank_transfer"
+    }
+  });
+
+  const budgetForm = useForm({
+    defaultValues: {
+      name: "",
+      amount: "0.00",
+      period: "monthly",
+      startDate: format(new Date(), "yyyy-MM-dd"),
+      endDate: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), "yyyy-MM-dd"),
+      category: ""
+    }
+  });
+
+  // Form submission handlers
+  const onAccountSubmit = (data: any) => {
+    console.log("New account data:", data);
+    setShowAccountDialog(false);
+    // Here you would call a mutation to create the account
+  };
+
+  const onExpenseSubmit = (data: any) => {
+    console.log("New expense data:", data);
+    setShowExpenseDialog(false);
+    // Here you would call a mutation to create the expense
+  };
+
+  const onBudgetSubmit = (data: any) => {
+    console.log("New budget data:", data);
+    setShowBudgetDialog(false);
+    // Here you would call a mutation to create the budget
+  };
+
   return (
     <MainLayout title="Financial Management">
-      <div className="container mx-auto py-6">
+      <div className="w-full px-4 py-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold tracking-tight">Financial Management</h1>
-            <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+            <div className="flex items-center gap-4">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <FileUp className="h-4 w-4" /> Import
+                  </Button>
+                </DialogTrigger>
+                <BatchImportDialog 
+                  open={true}
+                  onOpenChange={() => {}}
+                  title="Import Financial Data"
+                  description="Upload your financial data as a CSV file. Make sure to follow the template format."
+                  templateFileName="financial_import_template.csv"
+                  templateContent="type,date,amount,description,vesselId,category,reference\nexpense,2025-01-01,100.00,Office supplies,1,Operations,INV12345\nincome,2025-01-02,500.00,Charter fee,1,Revenue,PMT98765"
+                  onImport={(data) => {
+                    console.log("Importing data:", data);
+                    // Handle batch import logic here
+                  }}
+                />
+              </Dialog>
+              <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+            </div>
           </div>
           
           {/* Vessel selector component */}
@@ -242,7 +376,7 @@ const FinancialManagement: React.FC = () => {
           
           <Tabs defaultValue="accounts" onValueChange={setActiveTab} value={activeTab}>
             <div className="flex justify-between items-center">
-              <TabsList className="grid grid-cols-7 w-[700px]">
+              <TabsList className="grid grid-cols-7 w-full max-w-4xl">
                 <TabsTrigger value="accounts" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
                   <DollarSign className="h-4 w-4" /> Accounts
                 </TabsTrigger>
@@ -267,7 +401,7 @@ const FinancialManagement: React.FC = () => {
               </TabsList>
               
               {currentVessel && (
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleAddNew}>
                   <Plus className="h-4 w-4 mr-2" /> Add New
                 </Button>
               )}
@@ -277,6 +411,357 @@ const FinancialManagement: React.FC = () => {
               {renderTabContent()}
             </TabsContent>
           </Tabs>
+          
+          {/* Add New Account Dialog */}
+          <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add New Account</DialogTitle>
+                <DialogDescription>
+                  Create a new financial account for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...accountForm}>
+                <form onSubmit={accountForm.handleSubmit(onAccountSubmit)} className="space-y-4">
+                  <FormField
+                    control={accountForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Operating Account" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={accountForm.control}
+                    name="accountNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. AC12345678" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={accountForm.control}
+                    name="balance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Initial Balance (€)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                            <Input className="pl-6" placeholder="0.00" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={accountForm.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select account type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="asset">Asset</SelectItem>
+                            <SelectItem value="liability">Liability</SelectItem>
+                            <SelectItem value="equity">Equity</SelectItem>
+                            <SelectItem value="income">Income</SelectItem>
+                            <SelectItem value="expense">Expense</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={accountForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Optional description" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Account</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Add New Expense Dialog */}
+          <Dialog open={showExpenseDialog} onOpenChange={setShowExpenseDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Record New Expense</DialogTitle>
+                <DialogDescription>
+                  Add a new expense transaction for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...expenseForm}>
+                <form onSubmit={expenseForm.handleSubmit(onExpenseSubmit)} className="space-y-4">
+                  <FormField
+                    control={expenseForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Fuel Purchase" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={expenseForm.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount (€)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                            <Input className="pl-6" placeholder="0.00" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={expenseForm.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={expenseForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="fuel">Fuel</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="crew">Crew</SelectItem>
+                            <SelectItem value="provisions">Provisions</SelectItem>
+                            <SelectItem value="berthing">Berthing</SelectItem>
+                            <SelectItem value="insurance">Insurance</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={expenseForm.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payment Method</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select payment method" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="cash">Cash</SelectItem>
+                            <SelectItem value="credit_card">Credit Card</SelectItem>
+                            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                            <SelectItem value="check">Check</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Record Expense</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Add New Budget Dialog */}
+          <Dialog open={showBudgetDialog} onOpenChange={setShowBudgetDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Create New Budget</DialogTitle>
+                <DialogDescription>
+                  Set up a new budget for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...budgetForm}>
+                <form onSubmit={budgetForm.handleSubmit(onBudgetSubmit)} className="space-y-4">
+                  <FormField
+                    control={budgetForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Q2 2025 Operating Budget" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={budgetForm.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Amount (€)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                            <Input className="pl-6" placeholder="0.00" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={budgetForm.control}
+                    name="period"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Period</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select period" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="annual">Annual</SelectItem>
+                            <SelectItem value="custom">Custom</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={budgetForm.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={budgetForm.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={budgetForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Budget Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="operations">Operations</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="crew">Crew</SelectItem>
+                            <SelectItem value="docking">Docking & Berthing</SelectItem>
+                            <SelectItem value="admin">Administration</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Budget</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Generic Dialog for other tabs */}
+          <Dialog open={showGenericDialog} onOpenChange={setShowGenericDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}</DialogTitle>
+                <DialogDescription>
+                  This functionality is currently under development.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-6 text-center">
+                <p className="text-muted-foreground">
+                  The ability to add new {activeTab} will be available in an upcoming update.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setShowGenericDialog(false)}>Close</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </MainLayout>
