@@ -1761,43 +1761,7 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
-      case "banking":
-        return (
-          <div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Banking</CardTitle>
-                  <CardDescription>Bank account transactions for {currentVessel.name}</CardDescription>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => setShowBankingDialog(true)}
-                        aria-label="Add a new banking transaction"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                      >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Transaction
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Record a new banking transaction</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No banking transactions found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Bank transactions will appear here once added.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+      // Banking case handled in earlier switch statement
         
       case "budgets":
         return (
