@@ -434,7 +434,6 @@ const FinancialManagement: React.FC = () => {
                           <TableHead className="font-medium">Account Number</TableHead>
                           <TableHead className="font-medium">Name</TableHead>
                           <TableHead className="font-medium">Type</TableHead>
-                          <TableHead className="font-medium">Category</TableHead>
                           <TableHead className="font-medium text-right">Balance</TableHead>
                           <TableHead className="font-medium text-center">Status</TableHead>
                           <TableHead className="w-[80px]"></TableHead>
@@ -446,7 +445,6 @@ const FinancialManagement: React.FC = () => {
                             <TableCell className="font-mono">{account.accountNumber}</TableCell>
                             <TableCell className="font-medium">{account.accountName}</TableCell>
                             <TableCell>{account.accountType}</TableCell>
-                            <TableCell>{account.category}</TableCell>
                             <TableCell className="text-right">
                               €{parseFloat(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </TableCell>
