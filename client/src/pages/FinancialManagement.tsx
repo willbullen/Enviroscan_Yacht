@@ -1850,6 +1850,7 @@ const FinancialManagement: React.FC = () => {
       amount: "0.00",
       date: format(new Date(), "yyyy-MM-dd"),
       category: "",
+      accountId: "",  // Add accountId field to link expense to a financial account
       paymentMethod: "bank_transfer"
     }
   });
@@ -2000,10 +2001,65 @@ const FinancialManagement: React.FC = () => {
     }
   };
 
-  const onExpenseSubmit = (data: any) => {
-    console.log("New expense data:", data);
-    setShowExpenseDialog(false);
-    // Here you would call a mutation to create the expense
+  const onExpenseSubmit = async (data: any) => {
+    if (!currentVessel?.id) {
+      toast({
+        title: "Error",
+        description: "No vessel selected. Please select a vessel first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Format the data for API submission
+      const expenseData = {
+        description: data.description,
+        amount: parseFloat(data.amount),
+        date: data.date,
+        category: data.category,
+        paymentMethod: data.paymentMethod,
+        vesselId: currentVessel.id,
+        accountId: parseInt(data.accountId), // Link to financial account
+        status: "pending",
+        createdById: 5, // Default admin user
+      };
+      
+      console.log("Submitting expense data:", expenseData);
+      
+      // Submit the expense to the API
+      await apiRequest("POST", "/api/expenses", expenseData);
+      
+      // Invalidate expense query cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel.id] });
+      
+      toast({
+        title: "Success",
+        description: "Expense recorded successfully",
+      });
+      
+      // Reset form and close dialog
+      expenseForm.reset({
+        description: "",
+        amount: "0.00",
+        date: format(new Date(), "yyyy-MM-dd"),
+        category: "",
+        accountId: "",
+        paymentMethod: "bank_transfer"
+      });
+      setShowExpenseDialog(false);
+    } catch (error) {
+      console.error("Error creating expense:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record expense. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const onBudgetSubmit = (data: any) => {
@@ -2574,6 +2630,42 @@ const FinancialManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
+                  
+                  {/* Add the account selection field */}
+                  <FormField
+                    control={expenseForm.control}
+                    name="accountId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Financial Account</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select account" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {accounts && accounts.length > 0 ? (
+                              accounts.map((account: { id: number; accountName: string; accountNumber: string }) => (
+                                <SelectItem 
+                                  key={account.id} 
+                                  value={account.id.toString()}
+                                >
+                                  {account.accountName} ({account.accountNumber})
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="" disabled>No accounts available</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Select the financial account to associate with this expense
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={expenseForm.control}
                     name="paymentMethod"
@@ -2598,7 +2690,21 @@ const FinancialManagement: React.FC = () => {
                     )}
                   />
                   <DialogFooter>
-                    <Button type="submit">Record Expense</Button>
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      aria-disabled={isSubmitting}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                          Recording...
+                        </>
+                      ) : (
+                        "Record Expense"
+                      )}
+                    </Button>
                   </DialogFooter>
                 </form>
               </Form>
