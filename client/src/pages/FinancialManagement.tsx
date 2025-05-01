@@ -99,28 +99,6 @@ const FinancialManagement: React.FC = () => {
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
   
-  // Ledger tab state
-  const [selectedAccount, setSelectedAccount] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<string>("30days");
-  const [customStartDate, setCustomStartDate] = useState<string>(
-    format(new Date(new Date().setDate(new Date().getDate() - 30)), "yyyy-MM-dd")
-  );
-  const [customEndDate, setCustomEndDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
-  const [transactionsPage, setTransactionsPage] = useState(1);
-  const transactionsPerPage = 10;
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [ledgerLoading, setLedgerLoading] = useState(false);
-  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
-  const [showJournalDialog, setShowJournalDialog] = useState(false);
-  const [showDepositDialog, setShowDepositDialog] = useState(false);
-  const [showBankingDialog, setShowBankingDialog] = useState(false);
-  const [showPayrollDialog, setShowPayrollDialog] = useState(false);
-  const [showVendorDialog, setShowVendorDialog] = useState(false);
-  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
-  const [showGenericDialog, setShowGenericDialog] = useState(false);
-  
   // State for currently editing item
   const [editingAccount, setEditingAccount] = useState<any>(null);
   
@@ -162,6 +140,166 @@ const FinancialManagement: React.FC = () => {
     queryFn: () => currentVessel?.id ? fetch(`/api/financial-accounts/vessel/${currentVessel.id}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!currentVessel?.id
   });
+  
+  // Ledger tab state
+  const [selectedAccount, setSelectedAccount] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<string>("30days");
+  const [customStartDate, setCustomStartDate] = useState<string>(
+    format(new Date(new Date().setDate(new Date().getDate() - 30)), "yyyy-MM-dd")
+  );
+  const [customEndDate, setCustomEndDate] = useState<string>(
+    format(new Date(), "yyyy-MM-dd")
+  );
+  const [transactionsPage, setTransactionsPage] = useState(1);
+  const transactionsPerPage = 10;
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+  
+  // Create filtered transactions for ledger (moved outside switch statement)
+  const filteredTransactions = React.useMemo(() => {
+    if (!transactions || !Array.isArray(transactions) || activeTab !== "ledger") return [];
+    
+    let startDate, endDate;
+    // Calculate date range based on selection
+    switch (dateRange) {
+      case "30days":
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        endDate = new Date();
+        break;
+      case "thisMonth":
+        startDate = new Date();
+        startDate.setDate(1);
+        endDate = new Date();
+        break;
+      case "lastMonth":
+        startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - 1);
+        startDate.setDate(1);
+        endDate = new Date(startDate);
+        endDate.setMonth(startDate.getMonth() + 1);
+        endDate.setDate(0); // Last day of the previous month
+        break;
+      case "ytd":
+        startDate = new Date(new Date().getFullYear(), 0, 1);
+        endDate = new Date();
+        break;
+      case "custom":
+        startDate = new Date(customStartDate);
+        endDate = new Date(customEndDate);
+        break;
+      default:
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        endDate = new Date();
+    }
+
+    // First filter by date
+    let filtered = transactions.filter(t => {
+      const txDate = new Date(t.transactionDate);
+      return txDate >= startDate && txDate <= endDate;
+    });
+
+    // Then filter by account if not "all"
+    if (selectedAccount !== "all") {
+      filtered = filtered.filter(t => {
+        // For transactions that have accountId directly
+        if (t.accountId && t.accountId.toString() === selectedAccount) {
+          return true;
+        }
+        
+        // For journal entries that have transaction lines with accounts
+        if (t.lines && Array.isArray(t.lines)) {
+          return t.lines.some(line => line.accountId?.toString() === selectedAccount);
+        }
+        
+        return false;
+      });
+    }
+
+    // Sort by date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.transactionDate).getTime();
+      const dateB = new Date(b.transactionDate).getTime();
+      return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    return filtered;
+  }, [transactions, selectedAccount, dateRange, customStartDate, customEndDate, sortDirection, activeTab]);
+  
+  // Calculate pagination values
+  const totalTransactions = filteredTransactions.length;
+  const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+  const paginatedTransactions = React.useMemo(() => {
+    if (activeTab !== "ledger") return [];
+    return filteredTransactions.slice(
+      (transactionsPage - 1) * transactionsPerPage,
+      transactionsPage * transactionsPerPage
+    );
+  }, [filteredTransactions, transactionsPage, activeTab]);
+  
+  // Calculate running balance for each transaction
+  const transactionsWithBalance = React.useMemo(() => {
+    if (activeTab !== "ledger" || !paginatedTransactions.length) return [];
+    let balance = 0;
+    
+    // If we're filtering by account, get the initial balance
+    if (selectedAccount !== "all" && accounts && Array.isArray(accounts)) {
+      const account = accounts.find(a => a.id.toString() === selectedAccount);
+      if (account) {
+        balance = parseFloat(account.balance.toString());
+      }
+    }
+    
+    // Calculate running balance for each transaction
+    return paginatedTransactions.map(transaction => {
+      let amount = 0;
+      
+      // Determine if this is a debit or credit to the selected account
+      if (transaction.transactionType === "expense" || transaction.transactionType === "withdrawal") {
+        amount = -parseFloat(transaction.amount.toString());
+      } else if (transaction.transactionType === "deposit" || transaction.transactionType === "income") {
+        amount = parseFloat(transaction.amount.toString());
+      } else if (transaction.transactionType === "journal" && transaction.lines && Array.isArray(transaction.lines)) {
+        // For journal entries, need to check each line
+        if (selectedAccount !== "all") {
+          // Find the line for this account
+          const line = transaction.lines.find(l => l.accountId?.toString() === selectedAccount);
+          if (line) {
+            amount = line.isDebit 
+              ? parseFloat(line.amount.toString()) 
+              : -parseFloat(line.amount.toString());
+          }
+        } else {
+          // If viewing all accounts, use the net amount
+          transaction.lines.forEach(line => {
+            if (line.isDebit) {
+              amount += parseFloat(line.amount.toString());
+            } else {
+              amount -= parseFloat(line.amount.toString());
+            }
+          });
+        }
+      }
+      
+      balance += amount;
+      
+      return {
+        ...transaction,
+        deposit: amount > 0 ? amount : 0,
+        expense: amount < 0 ? Math.abs(amount) : 0,
+        balance
+      };
+    });
+  }, [paginatedTransactions, selectedAccount, accounts, activeTab]);
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showJournalDialog, setShowJournalDialog] = useState(false);
+  const [showDepositDialog, setShowDepositDialog] = useState(false);
+  const [showBankingDialog, setShowBankingDialog] = useState(false);
+  const [showPayrollDialog, setShowPayrollDialog] = useState(false);
+  const [showVendorDialog, setShowVendorDialog] = useState(false);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [showGenericDialog, setShowGenericDialog] = useState(false);
   
   // Helper function to ensure UI updates after account changes
   const refreshFinancialAccounts = async () => {
@@ -2065,140 +2203,6 @@ const FinancialManagement: React.FC = () => {
         );
       case "ledger":
         // Using component-level state for ledger
-        
-        // Create a filtered transactions based on account and date range
-        const filteredTransactions = React.useMemo(() => {
-          if (!transactions || !Array.isArray(transactions)) return [];
-          
-          let startDate, endDate;
-          // Calculate date range based on selection
-          switch (dateRange) {
-            case "30days":
-              startDate = new Date();
-              startDate.setDate(startDate.getDate() - 30);
-              endDate = new Date();
-              break;
-            case "thisMonth":
-              startDate = new Date();
-              startDate.setDate(1);
-              endDate = new Date();
-              break;
-            case "lastMonth":
-              startDate = new Date();
-              startDate.setMonth(startDate.getMonth() - 1);
-              startDate.setDate(1);
-              endDate = new Date(startDate);
-              endDate.setMonth(startDate.getMonth() + 1);
-              endDate.setDate(0); // Last day of the previous month
-              break;
-            case "ytd":
-              startDate = new Date(new Date().getFullYear(), 0, 1);
-              endDate = new Date();
-              break;
-            case "custom":
-              startDate = new Date(customStartDate);
-              endDate = new Date(customEndDate);
-              break;
-            default:
-              startDate = new Date();
-              startDate.setDate(startDate.getDate() - 30);
-              endDate = new Date();
-          }
-
-          // First filter by date
-          let filtered = transactions.filter(t => {
-            const txDate = new Date(t.transactionDate);
-            return txDate >= startDate && txDate <= endDate;
-          });
-
-          // Then filter by account if not "all"
-          if (selectedAccount !== "all") {
-            filtered = filtered.filter(t => {
-              // For transactions that have accountId directly
-              if (t.accountId && t.accountId.toString() === selectedAccount) {
-                return true;
-              }
-              
-              // For journal entries that have transaction lines with accounts
-              if (t.lines && Array.isArray(t.lines)) {
-                return t.lines.some(line => line.accountId.toString() === selectedAccount);
-              }
-              
-              return false;
-            });
-          }
-
-          // Sort by date
-          filtered.sort((a, b) => {
-            const dateA = new Date(a.transactionDate).getTime();
-            const dateB = new Date(b.transactionDate).getTime();
-            return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
-          });
-
-          return filtered;
-        }, [transactions, selectedAccount, dateRange, customStartDate, customEndDate, sortDirection]);
-        
-        // Calculate pagination values
-        const totalTransactions = filteredTransactions.length;
-        const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
-        const paginatedTransactions = filteredTransactions.slice(
-          (transactionsPage - 1) * transactionsPerPage,
-          transactionsPage * transactionsPerPage
-        );
-        
-        // Calculate running balance for each transaction
-        const transactionsWithBalance = React.useMemo(() => {
-          let balance = 0;
-          
-          // If we're filtering by account, get the initial balance
-          if (selectedAccount !== "all" && accounts && Array.isArray(accounts)) {
-            const account = accounts.find(a => a.id.toString() === selectedAccount);
-            if (account) {
-              balance = parseFloat(account.balance.toString());
-            }
-          }
-          
-          // Calculate running balance for each transaction
-          return paginatedTransactions.map(transaction => {
-            let amount = 0;
-            
-            // Determine if this is a debit or credit to the selected account
-            if (transaction.transactionType === "expense" || transaction.transactionType === "withdrawal") {
-              amount = -parseFloat(transaction.amount.toString());
-            } else if (transaction.transactionType === "deposit" || transaction.transactionType === "income") {
-              amount = parseFloat(transaction.amount.toString());
-            } else if (transaction.transactionType === "journal" && transaction.lines && Array.isArray(transaction.lines)) {
-              // For journal entries, need to check each line
-              if (selectedAccount !== "all") {
-                // Find the line for this account
-                const line = transaction.lines.find(l => l.accountId.toString() === selectedAccount);
-                if (line) {
-                  amount = line.isDebit 
-                    ? parseFloat(line.amount.toString()) 
-                    : -parseFloat(line.amount.toString());
-                }
-              } else {
-                // If viewing all accounts, use the net amount
-                transaction.lines.forEach(line => {
-                  if (line.isDebit) {
-                    amount += parseFloat(line.amount.toString());
-                  } else {
-                    amount -= parseFloat(line.amount.toString());
-                  }
-                });
-              }
-            }
-            
-            balance += amount;
-            
-            return {
-              ...transaction,
-              deposit: amount > 0 ? amount : 0,
-              expense: amount < 0 ? Math.abs(amount) : 0,
-              balance
-            };
-          });
-        }, [paginatedTransactions, selectedAccount, accounts]);
         
         // Handle page change
         const handlePageChange = (newPage: number) => {
