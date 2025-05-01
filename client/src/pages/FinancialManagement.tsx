@@ -108,32 +108,32 @@ const FinancialManagement: React.FC = () => {
   
   // Load vessel-specific financial data
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['/api/financial/transactions', currentVessel?.id],
+    queryKey: ['/api/transactions', currentVessel?.id],
     enabled: !!currentVessel?.id
   });
   
   // Load vessel accounts
   const { data: accounts, isLoading: accountsLoading } = useQuery({
     queryKey: ['/api/financial-accounts/vessel', currentVessel?.id],
-    enabled: !!currentVessel?.id
+    enabled: !!currentVessel?.id && !!currentVessel?.id
   });
   
   // Load vessel expenses
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['/api/financial/expenses', currentVessel?.id],
+    queryKey: ['/api/expenses/vessel', currentVessel?.id],
     enabled: !!currentVessel?.id
   });
   
   // Load vessel budgets
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['/api/financial/budgets/vessel', currentVessel?.id],
+    queryKey: ['/api/budgets/vessel', currentVessel?.id],
     enabled: !!currentVessel?.id
   });
   
-  // Load budget allocations
+  // Load budget allocations for visualization
   const { data: budgetAllocations, isLoading: budgetAllocationsLoading } = useQuery({
-    queryKey: ['/api/financial/budget-allocations', currentVessel?.id],
-    enabled: !!currentVessel?.id && !!budgets?.length
+    queryKey: ['/api/budget-allocations', budgets && budgets.length > 0 ? budgets[0]?.id : null],
+    enabled: !!currentVessel?.id && !!budgets && Array.isArray(budgets) && budgets.length > 0
   });
 
   // Helper function for a simple vessel selector
@@ -533,39 +533,81 @@ const FinancialManagement: React.FC = () => {
         );
         
       case "budgets":
-        // Process real budget data from API
-        const budgetData = budgets ? [...(budgets as any[] || [])] : [];
+        // Check if real budget data is available
+        const hasBudgetData = budgets && Array.isArray(budgets) && budgets.length > 0;
         
-        // Merge budget allocations with expense data to calculate spent amounts
-        const processedBudgetData = budgetData.map(budget => {
-          // Find related expenses for this budget category
-          const categoryExpenses = (expenses as any[] || [])
-            .filter(expense => expense.category === budget.category)
-            .reduce((total, expense) => total + (expense.amount || 0), 0);
-            
-          const spent = categoryExpenses;
-          const remaining = budget.amount - spent;
-          
-          return {
-            id: budget.id,
-            name: budget.name || budget.category,
-            budget: budget.amount,
-            spent: spent,
-            remaining: remaining,
-            periodStart: budget.startDate,
-            periodEnd: budget.endDate,
-            category: budget.category,
-            notes: budget.notes,
-            vesselId: budget.vesselId
-          };
-        });
-        
-        // Fallback to display example data if no budgets are available yet
-        const displayData = processedBudgetData.length > 0 ? processedBudgetData : [
-          { name: 'Fuel', budget: 50000, spent: 32500, remaining: 17500, periodStart: '2025-01-01', periodEnd: '2025-12-31', category: 'Fuel' },
-          { name: 'Maintenance', budget: 75000, spent: 45000, remaining: 30000, periodStart: '2025-01-01', periodEnd: '2025-12-31', category: 'Maintenance' },
-          { name: 'Crew Salaries', budget: 120000, spent: 40000, remaining: 80000, periodStart: '2025-01-01', periodEnd: '2025-12-31', category: 'Personnel' },
-        ];
+        // Prepare consistent budget data for visualization
+        const displayData = hasBudgetData 
+          ? (budgets as any[]).map(budget => {
+              // Find related expenses for this budget category if expenses data exists
+              const categoryExpenses = expenses && Array.isArray(expenses)
+                ? expenses
+                  .filter((expense: any) => expense?.category === budget?.category)
+                  .reduce((total: number, expense: any) => total + (Number(expense?.amount) || 0), 0)
+                : 0;
+              
+              // Calculate remaining amount
+              const budgetAmount = Number(budget.totalAmount) || Number(budget.amount) || 0;
+              const spent = categoryExpenses;
+              const remaining = budgetAmount - spent;
+              
+              return {
+                id: budget.id,
+                name: budget.name || budget.category || "Unnamed Budget",
+                budget: budgetAmount,
+                spent: spent,
+                remaining: remaining,
+                percentUsed: budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0,
+                periodStart: budget.startDate,
+                periodEnd: budget.endDate,
+                category: budget.category || "Uncategorized",
+                notes: budget.notes,
+                currency: budget.currency || "EUR",
+                status: budget.status || "active"
+              };
+            })
+          : [
+              // Fallback display data with type-safe structure
+              { 
+                id: "sample1",
+                name: 'Fuel', 
+                budget: 50000, 
+                spent: 32500, 
+                remaining: 17500, 
+                percentUsed: 65,
+                periodStart: '2025-01-01', 
+                periodEnd: '2025-12-31', 
+                category: 'Fuel',
+                currency: 'EUR',
+                status: 'active'
+              },
+              { 
+                id: "sample2",
+                name: 'Maintenance', 
+                budget: 75000, 
+                spent: 45000, 
+                remaining: 30000, 
+                percentUsed: 60,
+                periodStart: '2025-01-01', 
+                periodEnd: '2025-12-31', 
+                category: 'Maintenance',
+                currency: 'EUR',
+                status: 'active'
+              },
+              { 
+                id: "sample3",
+                name: 'Crew Salaries', 
+                budget: 120000, 
+                spent: 40000, 
+                remaining: 80000, 
+                percentUsed: 33,
+                periodStart: '2025-01-01', 
+                periodEnd: '2025-12-31', 
+                category: 'Personnel',
+                currency: 'EUR',
+                status: 'active'
+              },
+            ];
 
         // Chart data transformation
         const chartData = displayData.map(item => ({
