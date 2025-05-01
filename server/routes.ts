@@ -4430,6 +4430,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(201).json(transaction);
   }));
   
+  // =========== Financial Management - Journal Entries Routes =============
+  
+  // Create a journal entry (uses transactions under the hood)
+  apiRouter.post("/journals", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    // Extract the journal-specific fields
+    const { 
+      date, 
+      reference, 
+      description, 
+      debit, 
+      credit, 
+      account, 
+      vesselId, 
+      status = "posted",
+      createdById 
+    } = req.body;
+    
+    // Validate required fields
+    if (!date || !description || !account || !vesselId) {
+      return res.status(400).json({ 
+        error: "Invalid journal entry data", 
+        details: "Required fields: date, description, account, vesselId" 
+      });
+    }
+    
+    try {
+      // Format as a transaction
+      const transactionData = {
+        transactionType: "journal",
+        transactionDate: new Date(date),
+        amount: Math.max(parseFloat(debit || 0), parseFloat(credit || 0)),
+        currency: "EUR", // Default currency
+        description,
+        vesselId,
+        createdById: createdById || req.user.id,
+      };
+      
+      // Create the transaction first
+      const transaction = await storage.createTransaction(transactionData);
+      
+      // Then create transaction lines for double-entry
+      if (parseFloat(debit) > 0) {
+        await storage.createTransactionLine({
+          transactionId: transaction.id,
+          accountId: parseInt(account),
+          amount: parseFloat(debit),
+          description,
+          isDebit: true,
+        });
+      }
+      
+      if (parseFloat(credit) > 0) {
+        await storage.createTransactionLine({
+          transactionId: transaction.id,
+          accountId: parseInt(account),
+          amount: parseFloat(credit),
+          description,
+          isDebit: false,
+        });
+      }
+      
+      return res.status(201).json({
+        id: transaction.id,
+        date,
+        reference,
+        description,
+        debit,
+        credit,
+        account,
+        status,
+        createdAt: transaction.createdAt
+      });
+    } catch (error) {
+      console.error("Error creating journal entry:", error);
+      return res.status(500).json({ error: "Failed to create journal entry" });
+    }
+  }));
+  
   // Register API routes
   app.use("/api", apiRouter);
   

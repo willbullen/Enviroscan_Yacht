@@ -29,6 +29,7 @@ import {
   budgetAllocations,
   expenses,
   transactions,
+  transactionLines,
   type User,
   type InsertUser,
   type Equipment,
@@ -84,7 +85,9 @@ import {
   type Expense,
   type InsertExpense,
   type Transaction,
-  type InsertTransaction
+  type InsertTransaction,
+  type TransactionLine,
+  type InsertTransactionLine
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
@@ -2290,6 +2293,39 @@ export class DatabaseStorage implements IStorage {
       return result.rowCount ? result.rowCount > 0 : false;
     } catch (error) {
       console.error(`Error deleting transaction ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // =========== Financial Management - Transaction Line operations =============
+  
+  async getTransactionLines(transactionId: number): Promise<TransactionLine[]> {
+    return db
+      .select()
+      .from(transactionLines)
+      .where(eq(transactionLines.transactionId, transactionId));
+  }
+  
+  async createTransactionLine(line: InsertTransactionLine): Promise<TransactionLine> {
+    const [newLine] = await db.insert(transactionLines).values(line).returning();
+    return newLine;
+  }
+  
+  async updateTransactionLine(id: number, line: Partial<TransactionLine>): Promise<TransactionLine | undefined> {
+    const [updatedLine] = await db
+      .update(transactionLines)
+      .set(line)
+      .where(eq(transactionLines.id, id))
+      .returning();
+    return updatedLine;
+  }
+  
+  async deleteTransactionLine(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(transactionLines).where(eq(transactionLines.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting transaction line ${id}:`, error);
       return false;
     }
   }
