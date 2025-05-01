@@ -53,6 +53,10 @@ const FinancialManagement: React.FC = () => {
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showJournalDialog, setShowJournalDialog] = useState(false);
+  const [showBankingDialog, setShowBankingDialog] = useState(false);
+  const [showPayrollDialog, setShowPayrollDialog] = useState(false);
+  const [showVendorDialog, setShowVendorDialog] = useState(false);
   const [showGenericDialog, setShowGenericDialog] = useState(false);
   
   // Get current vessel from context to filter financial data
@@ -167,7 +171,8 @@ const FinancialManagement: React.FC = () => {
     banking: "accountName,bankName,accountNumber,routingNumber,balance,currency,vesselId\nMain Account,Maritime Bank,123456789,987654321,50000.00,EUR,1\nReserve Account,Marine Trust,987654321,123456789,100000.00,EUR,1",
     payroll: "employeeName,position,salary,paymentDate,bankAccount,vesselId,taxCode\nJohn Smith,Captain,8000.00,2025-01-15,GB123456789,1,TAX123\nJane Doe,Chief Engineer,7500.00,2025-01-15,GB987654321,1,TAX456",
     budgets: "name,amount,startDate,endDate,category,vesselId,notes\nQ1 Operating Budget,75000.00,2025-01-01,2025-03-31,Operations,1,First quarter operating expenses\nAnnual Maintenance Budget,120000.00,2025-01-01,2025-12-31,Maintenance,1,Annual maintenance reserve",
-    expenses: "date,amount,category,description,paymentMethod,vesselId,reference\n2025-01-05,1500.00,Fuel,Diesel refill,bank_transfer,1,INV12345\n2025-01-10,350.00,Provisions,Crew food supplies,credit_card,1,REC67890"
+    expenses: "date,amount,category,description,paymentMethod,vesselId,reference\n2025-01-05,1500.00,Fuel,Diesel refill,bank_transfer,1,INV12345\n2025-01-10,350.00,Provisions,Crew food supplies,credit_card,1,REC67890",
+    vendors: "name,contactPerson,email,phone,address,vesselId,category\nMarine Supplies Ltd,John Brown,jbrown@marinesupplies.com,+44123456789,123 Harbor Road London UK,1,Supplies\nEngineering Services Inc,Sarah Johnson,sjohnson@engservices.com,+15559876543,456 Dockside Blvd Miami USA,1,Maintenance"
   };
 
   // Function to create a bulk import button for a specific section
@@ -366,6 +371,24 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
+      case "vendors":
+        return (
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Vendor Management</CardTitle>
+                <CardDescription>Vendors for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No vendors found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Vendors will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
       case "reports":
         return (
           <div>
@@ -409,8 +432,20 @@ const FinancialManagement: React.FC = () => {
       case "budgets":
         setShowBudgetDialog(true);
         break;
-      case "invoices":
-        setShowInvoiceDialog(true);
+      case "journals":
+        setShowJournalDialog(true);
+        break;
+      case "banking":
+        setShowBankingDialog(true);
+        break;
+      case "payroll":
+        setShowPayrollDialog(true);
+        break;
+      case "vendors":
+        setShowVendorDialog(true);
+        break;
+      case "reports":
+        // No add new functionality for reports
         break;
       default:
         // For other tabs, show a generic dialog
@@ -441,6 +476,41 @@ const FinancialManagement: React.FC = () => {
     period: z.string().min(1, "Budget period is required"),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
+    category: z.string().min(1, "Category is required")
+  });
+  
+  const journalSchema = z.object({
+    date: z.string().min(1, "Date is required"),
+    reference: z.string().min(1, "Reference is required"),
+    description: z.string().min(2, "Description must be at least 2 characters"),
+    debit: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
+    credit: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
+    account: z.string().min(1, "Account is required")
+  });
+  
+  const bankingSchema = z.object({
+    accountName: z.string().min(2, "Account name must be at least 2 characters"),
+    bankName: z.string().min(2, "Bank name must be at least 2 characters"),
+    accountNumber: z.string().min(1, "Account number is required"),
+    routingNumber: z.string().min(1, "Routing number is required"),
+    balance: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number")
+  });
+  
+  const payrollSchema = z.object({
+    employeeName: z.string().min(2, "Employee name must be at least 2 characters"),
+    position: z.string().min(1, "Position is required"),
+    salary: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
+    paymentDate: z.string().min(1, "Payment date is required"),
+    bankAccount: z.string().min(1, "Bank account is required"),
+    taxCode: z.string().optional()
+  });
+  
+  const vendorSchema = z.object({
+    name: z.string().min(2, "Vendor name must be at least 2 characters"),
+    contactPerson: z.string().min(2, "Contact person must be at least 2 characters"),
+    email: z.string().email("Must be a valid email address"),
+    phone: z.string().min(5, "Phone number is required"),
+    address: z.string().min(5, "Address is required"),
     category: z.string().min(1, "Category is required")
   });
 
@@ -475,6 +545,49 @@ const FinancialManagement: React.FC = () => {
       category: ""
     }
   });
+  
+  const journalForm = useForm({
+    defaultValues: {
+      date: format(new Date(), "yyyy-MM-dd"),
+      reference: "",
+      description: "",
+      debit: "0.00",
+      credit: "0.00",
+      account: ""
+    }
+  });
+  
+  const bankingForm = useForm({
+    defaultValues: {
+      accountName: "",
+      bankName: "",
+      accountNumber: "",
+      routingNumber: "",
+      balance: "0.00"
+    }
+  });
+  
+  const payrollForm = useForm({
+    defaultValues: {
+      employeeName: "",
+      position: "",
+      salary: "0.00",
+      paymentDate: format(new Date(), "yyyy-MM-dd"),
+      bankAccount: "",
+      taxCode: ""
+    }
+  });
+  
+  const vendorForm = useForm({
+    defaultValues: {
+      name: "",
+      contactPerson: "",
+      email: "",
+      phone: "",
+      address: "",
+      category: ""
+    }
+  });
 
   // Form submission handlers
   const onAccountSubmit = (data: any) => {
@@ -493,6 +606,30 @@ const FinancialManagement: React.FC = () => {
     console.log("New budget data:", data);
     setShowBudgetDialog(false);
     // Here you would call a mutation to create the budget
+  };
+  
+  const onJournalSubmit = (data: any) => {
+    console.log("New journal entry data:", data);
+    setShowJournalDialog(false);
+    // Here you would call a mutation to create the journal entry
+  };
+  
+  const onBankingSubmit = (data: any) => {
+    console.log("New banking data:", data);
+    setShowBankingDialog(false);
+    // Here you would call a mutation to create the banking record
+  };
+  
+  const onPayrollSubmit = (data: any) => {
+    console.log("New payroll data:", data);
+    setShowPayrollDialog(false);
+    // Here you would call a mutation to create the payroll record
+  };
+  
+  const onVendorSubmit = (data: any) => {
+    console.log("New vendor data:", data);
+    setShowVendorDialog(false);
+    // Here you would call a mutation to create the vendor
   };
 
   return (
@@ -514,7 +651,7 @@ const FinancialManagement: React.FC = () => {
           
           <Tabs defaultValue="accounts" onValueChange={setActiveTab} value={activeTab}>
             <div className="flex justify-between items-center">
-              <TabsList className="grid grid-cols-7 w-full max-w-4xl">
+              <TabsList className="grid grid-cols-8 w-full max-w-5xl">
                 <TabsTrigger value="accounts" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
                   <DollarSign className="h-4 w-4" /> Accounts
                 </TabsTrigger>
@@ -532,6 +669,9 @@ const FinancialManagement: React.FC = () => {
                 </TabsTrigger>
                 <TabsTrigger value="expenses" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
                   <CreditCard className="h-4 w-4" /> Expenses
+                </TabsTrigger>
+                <TabsTrigger value="vendors" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                  <Building className="h-4 w-4" /> Vendors
                 </TabsTrigger>
                 <TabsTrigger value="reports" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
                   <FileText className="h-4 w-4" /> Reports
