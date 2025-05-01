@@ -937,7 +937,6 @@ const FormsAdministration: React.FC = () => {
                 aria-label="Search categories"
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1 ml-1">Type to filter form categories</p>
           </div>
           <div>
             <select
