@@ -125,45 +125,109 @@ const FinancialManagement: React.FC = () => {
   const renderFinancialOverview = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-background border-primary/20 border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Total Income</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">€0.00</div>
-            <p className="text-xs text-muted-foreground">For selected vessel</p>
-          </CardContent>
-        </Card>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card 
+                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                onClick={() => setActiveTab("accounts")}
+                tabIndex={0}
+                role="button"
+                aria-label="View income details"
+                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("accounts")}
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-foreground">Total Income</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">€0.00</div>
+                  <p className="text-xs text-muted-foreground">For selected vessel</p>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Click to view detailed income breakdown</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         
-        <Card className="bg-background border-primary/20 border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Total Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">€0.00</div>
-            <p className="text-xs text-muted-foreground">For selected vessel</p>
-          </CardContent>
-        </Card>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card 
+                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                onClick={() => setActiveTab("expenses")}
+                tabIndex={0}
+                role="button"
+                aria-label="View expense details"
+                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("expenses")}
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-foreground">Total Expenses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">€0.00</div>
+                  <p className="text-xs text-muted-foreground">For selected vessel</p>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Click to view detailed expense breakdown</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         
-        <Card className="bg-background border-primary/20 border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Budget Utilization</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">0%</div>
-            <p className="text-xs text-muted-foreground">Of current budget</p>
-          </CardContent>
-        </Card>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card 
+                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                onClick={() => setActiveTab("budgets")}
+                tabIndex={0}
+                role="button"
+                aria-label="View budget utilization details"
+                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("budgets")}
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-foreground">Budget Utilization</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">0%</div>
+                  <p className="text-xs text-muted-foreground">Of current budget</p>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Click to view detailed budget information</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         
-        <Card className="bg-background border-primary/20 border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Open Invoices</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">0</div>
-            <p className="text-xs text-muted-foreground">Awaiting payment</p>
-          </CardContent>
-        </Card>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card 
+                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                onClick={() => setActiveTab("banking")}
+                tabIndex={0}
+                role="button"
+                aria-label="View open invoices"
+                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("banking")}
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-foreground">Open Invoices</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">0</div>
+                  <p className="text-xs text-muted-foreground">Awaiting payment</p>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Click to view invoice details</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     );
   };
@@ -276,14 +340,43 @@ const FinancialManagement: React.FC = () => {
         return (
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Chart of Accounts</CardTitle>
-                <CardDescription>Financial accounts for {currentVessel.name}</CardDescription>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <div>
+                  <CardTitle>Chart of Accounts</CardTitle>
+                  <CardDescription>Financial accounts for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setShowAccountDialog(true)}
+                        className="bg-background text-foreground hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Account
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new financial account</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-md p-4 text-center">
                   <p className="text-muted-foreground">No accounts found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Accounts will appear here once added.</p>
+                  <div className="flex flex-col items-center gap-2 mt-4">
+                    <p className="text-sm text-muted-foreground">Add your first account to get started</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowAccountDialog(true)}
+                      className="mt-2"
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Add Account
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -826,87 +919,185 @@ const FinancialManagement: React.FC = () => {
           <Tabs defaultValue="accounts" onValueChange={setActiveTab} value={activeTab}>
             <div className="flex justify-between items-center">
               <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border">
-                <TabsTrigger 
-                  value="accounts" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <DollarSign className="h-4 w-4" /> Accounts
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="journals" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <ListTree className="h-4 w-4" /> Journals
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="banking" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <Building className="h-4 w-4" /> Banking
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="payroll" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <Users className="h-4 w-4" /> Payroll
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="budgets" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <Wallet className="h-4 w-4" /> Budgets
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="expenses" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <CreditCard className="h-4 w-4" /> Expenses
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="vendors" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <Building className="h-4 w-4" /> Vendors
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="categories" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <ListTree className="h-4 w-4" /> Categories
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="reports" 
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                >
-                  <FileText className="h-4 w-4" /> Reports
-                </TabsTrigger>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="accounts" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="View and manage financial accounts"
+                      >
+                        <DollarSign className="h-4 w-4" /> Accounts
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View and manage financial accounts</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="journals" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Record manual accounting entries"
+                      >
+                        <ListTree className="h-4 w-4" /> Journals
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Record manual accounting entries</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="banking" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Reconcile bank transactions"
+                      >
+                        <Building className="h-4 w-4" /> Banking
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reconcile bank transactions and manage accounts</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="payroll" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Manage crew payroll and compensation"
+                      >
+                        <Users className="h-4 w-4" /> Payroll
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Manage crew payroll and compensation</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="budgets" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Create and track financial budgets"
+                      >
+                        <Wallet className="h-4 w-4" /> Budgets
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create and track financial budgets</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="expenses" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Track and categorize expenses"
+                      >
+                        <CreditCard className="h-4 w-4" /> Expenses
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Track and categorize expenses</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="vendors" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Manage supplier relationships"
+                      >
+                        <Building className="h-4 w-4" /> Vendors
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Manage supplier and vendor relationships</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="categories" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Organize financial categories"
+                      >
+                        <ListTree className="h-4 w-4" /> Categories
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Organize and manage financial categories</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
+                        value="reports" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Generate financial reports"
+                      >
+                        <FileText className="h-4 w-4" /> Reports
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Generate financial statements and reports</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </TabsList>
               
               <div className="flex items-center gap-2">

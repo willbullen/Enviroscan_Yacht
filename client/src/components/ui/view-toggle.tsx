@@ -25,7 +25,8 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onChange }) => {
       type="single"
       value={viewMode}
       onValueChange={handleValueChange}
-      className="border rounded-md"
+      className="border rounded-md bg-background shadow-sm"
+      aria-label="Change view layout"
     >
       <TooltipProvider>
         <Tooltip>
@@ -34,7 +35,7 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onChange }) => {
               value={ViewMode.CARDS} 
               aria-label="Card View" 
               variant="outline"
-              className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 hover:bg-muted/30"
             >
               <Grid2X2 className="h-4 w-4" />
             </ToggleGroupItem>
@@ -50,7 +51,7 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onChange }) => {
               value={ViewMode.LIST} 
               aria-label="List View" 
               variant="outline"
-              className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 hover:bg-muted/30"
             >
               <List className="h-4 w-4" />
             </ToggleGroupItem>
