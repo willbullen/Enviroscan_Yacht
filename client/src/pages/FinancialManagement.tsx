@@ -651,29 +651,29 @@ const FinancialManagement: React.FC = () => {
           
           <Tabs defaultValue="accounts" onValueChange={setActiveTab} value={activeTab}>
             <div className="flex justify-between items-center">
-              <TabsList className="grid grid-cols-8 w-full max-w-5xl">
-                <TabsTrigger value="accounts" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+              <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/50 rounded-md">
+                <TabsTrigger value="accounts" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <DollarSign className="h-4 w-4" /> Accounts
                 </TabsTrigger>
-                <TabsTrigger value="journals" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                <TabsTrigger value="journals" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <ListTree className="h-4 w-4" /> Journals
                 </TabsTrigger>
-                <TabsTrigger value="banking" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                <TabsTrigger value="banking" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <Building className="h-4 w-4" /> Banking
                 </TabsTrigger>
-                <TabsTrigger value="payroll" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                <TabsTrigger value="payroll" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <Users className="h-4 w-4" /> Payroll
                 </TabsTrigger>
-                <TabsTrigger value="budgets" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                <TabsTrigger value="budgets" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <Wallet className="h-4 w-4" /> Budgets
                 </TabsTrigger>
-                <TabsTrigger value="expenses" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                <TabsTrigger value="expenses" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <CreditCard className="h-4 w-4" /> Expenses
                 </TabsTrigger>
-                <TabsTrigger value="vendors" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                <TabsTrigger value="vendors" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <Building className="h-4 w-4" /> Vendors
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                <TabsTrigger value="reports" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <FileText className="h-4 w-4" /> Reports
                 </TabsTrigger>
               </TabsList>
