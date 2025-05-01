@@ -4391,6 +4391,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // =========== Financial Management - Transactions Routes =============
   
+  // Get all transactions
+  apiRouter.get("/transactions", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    // Get optional filters from query params
+    const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+    const transactionType = req.query.type as string | undefined;
+    
+    try {
+      // Get all transactions (or filtered by vessel if vesselId provided)
+      let transactions;
+      if (vesselId) {
+        transactions = await storage.getTransactionsByVessel(vesselId);
+      } else {
+        transactions = await storage.getAllTransactions();
+      }
+      
+      // Apply type filter if provided
+      if (transactionType && transactions) {
+        transactions = transactions.filter(t => t.transactionType === transactionType);
+      }
+      
+      return res.json(transactions || []);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      return res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  }));
+
   // Get transactions by vessel with optional type filter
   apiRouter.get("/transactions/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
