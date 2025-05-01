@@ -178,8 +178,8 @@ const FinancialManagement: React.FC = () => {
     return (
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2 ml-auto mb-4">
-            <FileUp className="h-4 w-4" /> Bulk Import {sectionName}
+          <Button variant="outline" size="sm" className="flex items-center gap-2 mr-2">
+            <FileUp className="h-4 w-4" /> Import {sectionName}
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-lg">
@@ -261,7 +261,6 @@ const FinancialManagement: React.FC = () => {
       case "accounts":
         return (
           <div>
-            {renderBulkImportButton('accounts')}
             <Card>
               <CardHeader>
                 <CardTitle>Chart of Accounts</CardTitle>
@@ -280,7 +279,6 @@ const FinancialManagement: React.FC = () => {
       case "journals":
         return (
           <div>
-            {renderBulkImportButton('journals')}
             <Card>
               <CardHeader>
                 <CardTitle>Journal Entries</CardTitle>
@@ -299,7 +297,6 @@ const FinancialManagement: React.FC = () => {
       case "banking":
         return (
           <div>
-            {renderBulkImportButton('banking')}
             <Card>
               <CardHeader>
                 <CardTitle>Banking</CardTitle>
@@ -318,7 +315,6 @@ const FinancialManagement: React.FC = () => {
       case "payroll":
         return (
           <div>
-            {renderBulkImportButton('payroll')}
             <Card>
               <CardHeader>
                 <CardTitle>Payroll Management</CardTitle>
@@ -337,7 +333,6 @@ const FinancialManagement: React.FC = () => {
       case "expenses":
         return (
           <div>
-            {renderBulkImportButton('expenses')}
             <Card>
               <CardHeader>
                 <CardTitle>Expense Tracking</CardTitle>
@@ -356,7 +351,6 @@ const FinancialManagement: React.FC = () => {
       case "budgets":
         return (
           <div>
-            {renderBulkImportButton('budgets')}
             <Card>
               <CardHeader>
                 <CardTitle>Budget Management</CardTitle>
@@ -544,11 +538,17 @@ const FinancialManagement: React.FC = () => {
                 </TabsTrigger>
               </TabsList>
               
-              {currentVessel && (
-                <Button variant="outline" size="sm" onClick={handleAddNew}>
-                  <Plus className="h-4 w-4 mr-2" /> Add New
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {currentVessel && activeTab !== "reports" && (
+                  renderBulkImportButton(activeTab)
+                )}
+                
+                {currentVessel && (
+                  <Button variant="outline" size="sm" onClick={handleAddNew}>
+                    <Plus className="h-4 w-4 mr-2" /> Add New
+                  </Button>
+                )}
+              </div>
             </div>
             
             <TabsContent value={activeTab} className="mt-6">
