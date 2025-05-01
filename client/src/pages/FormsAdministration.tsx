@@ -1107,24 +1107,24 @@ const FormsAdministration: React.FC = () => {
                   <div className="flex justify-end space-x-2">
                     <Button 
                       variant="outline" 
-                      size="sm" 
+                      size="icon"
                       onClick={() => handleEditCategory(category)}
-                      className="flex items-center"
+                      className="h-8 w-8"
+                      title="Edit category"
                     >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 
-                      size="sm"
-                      className="text-destructive hover:text-destructive border-destructive hover:bg-destructive/10"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive border-destructive hover:bg-destructive/10"
                       onClick={() => {
                         setCategoryToDelete(category);
                         setIsCategoryDeleteDialogOpen(true);
                       }}
+                      title="Delete category"
                     >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Delete
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -1443,33 +1443,33 @@ const FormsAdministration: React.FC = () => {
                   <div className="flex justify-end space-x-2">
                     <Button 
                       variant="outline" 
-                      size="sm" 
+                      size="icon"
                       onClick={() => handleEditTemplate(template)}
-                      className="flex items-center"
+                      className="h-8 w-8"
+                      title="Edit template"
                     >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 
-                      size="sm"
+                      size="icon"
                       onClick={() => handleCreateVersion(template)}
-                      className="flex items-center"
+                      className="h-8 w-8"
+                      title="Create new version"
                     >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Version
+                      <Plus className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 
-                      size="sm"
-                      className="text-destructive hover:text-destructive border-destructive hover:bg-destructive/10"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive border-destructive hover:bg-destructive/10"
                       onClick={() => {
                         setTemplateToDelete(template);
                         setIsTemplateDeleteDialogOpen(true);
                       }}
+                      title="Delete template"
                     >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Delete
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -1891,11 +1891,22 @@ const FormsAdministration: React.FC = () => {
                                 <TableCell>{new Date(version.createdAt).toLocaleDateString()}</TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end space-x-2">
-                                    <Button variant="outline" size="sm" onClick={() => handleEditFormStructure(version)}>
-                                      <Edit className="w-4 h-4 mr-1" />Edit Form
+                                    <Button 
+                                      variant="outline" 
+                                      size="icon" 
+                                      onClick={() => handleEditFormStructure(version)}
+                                      className="h-8 w-8"
+                                      title="Edit form structure"
+                                    >
+                                      <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
-                                      <Download className="w-4 h-4 mr-1" />Export
+                                    <Button 
+                                      variant="outline" 
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      title="Export form structure"
+                                    >
+                                      <Download className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -1937,7 +1948,7 @@ const FormsAdministration: React.FC = () => {
                                     </Button>
                                     <Button 
                                       variant="outline" 
-                                      size="sm"
+                                      size="icon"
                                       onClick={() => {
                                         // Download structure as JSON
                                         let structureDef = version.structureDefinition;
@@ -1960,10 +1971,10 @@ const FormsAdministration: React.FC = () => {
                                         document.body.removeChild(a);
                                         URL.revokeObjectURL(url);
                                       }}
-                                      className="flex items-center gap-1.5"
+                                      className="h-8 w-8"
+                                      title="Export form structure as JSON"
                                     >
                                       <Download className="w-4 h-4" />
-                                      <span>Export</span>
                                     </Button>
                                   </div>
                                 </TableCell>
