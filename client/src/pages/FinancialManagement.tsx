@@ -1761,8 +1761,6 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
-      // Banking case handled in earlier switch statement
-        
       case "budgets":
         return (
           <div>
@@ -1801,119 +1799,11 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
-      case "expenses":
-        return (
-          <div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Expenses</CardTitle>
-                  <CardDescription>Expense transactions for {currentVessel.name}</CardDescription>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => setShowExpenseDialog(true)}
-                        aria-label="Record a new expense"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                      >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Expense
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Record a new expense</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No expenses found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Expenses will appear here once added.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+      // Expenses case handled in earlier switch statement
         
-      case "vendors":
-        return (
-          <div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Vendors</CardTitle>
-                  <CardDescription>Manage vendor relationships for {currentVessel.name}</CardDescription>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => setShowVendorDialog(true)}
-                        aria-label="Add a new vendor"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                      >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Vendor
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add a new vendor</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No vendors found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Vendors will appear here once added.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+      // Vendors case handled in earlier switch statement
         
-      case "categories":
-        return (
-          <div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Financial Categories</CardTitle>
-                  <CardDescription>Manage financial categories for {currentVessel.name}</CardDescription>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => setShowCategoryDialog(true)}
-                        aria-label="Add a new financial category"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                      >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Category
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Create a new financial category</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No financial categories found.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Categories will appear here once added.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+      // Categories case handled in earlier switch statement
         
       // Payroll case handled in earlier switch statement
         
