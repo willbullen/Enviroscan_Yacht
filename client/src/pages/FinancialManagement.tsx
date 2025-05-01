@@ -1004,7 +1004,6 @@ const FinancialManagement: React.FC = () => {
                               valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
                               showTooltip={true}
                               showLabel={true}
-                              labelPosition="inside"
                               aria-label="Pie chart showing budget allocation by category"
                             />
                             <div className="mt-2">
@@ -1027,7 +1026,6 @@ const FinancialManagement: React.FC = () => {
                               valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
                               showTooltip={true}
                               showLabel={true}
-                              labelPosition="inside"
                               aria-label="Pie chart showing spending by category"
                             />
                             <div className="mt-2">
@@ -1062,7 +1060,14 @@ const FinancialManagement: React.FC = () => {
                                 yAxisWidth={60}
                                 showLegend={true}
                                 showAnimation={true}
+                                showGridLines={true}
+                                showTooltip={true}
+                                startEndOnly={false}
+                                aria-label="Bar chart comparing budgeted amounts to actual spending by category"
                               />
+                              <p className="text-xs text-center text-muted-foreground mt-3">
+                                Interactive budget comparison chart. Hover over bars to see exact values.
+                              </p>
                             </TabPanel>
                             <TabPanel>
                               <Table className="mt-2">
@@ -1202,6 +1207,10 @@ const FinancialManagement: React.FC = () => {
                                   yAxisWidth={60}
                                   showAnimation={true}
                                   curveType="natural"
+                                  connectNulls={true}
+                                  showGridLines={true}
+                                  showTooltip={true}
+                                  aria-label="Line chart showing monthly expense trends by category"
                                 />
                               )}
                               <p className="text-xs text-center text-muted-foreground mt-4">
@@ -1230,6 +1239,10 @@ const FinancialManagement: React.FC = () => {
                                   showLegend={true}
                                   yAxisWidth={60}
                                   showAnimation={true}
+                                  showGridLines={true}
+                                  showTooltip={true}
+                                  startEndOnly={false}
+                                  aria-label="Bar chart comparing budgeted amounts to actual spending by month"
                                 />
                               )}
                               <p className="text-xs text-center text-muted-foreground mt-4">
