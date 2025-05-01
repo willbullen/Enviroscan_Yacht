@@ -1798,8 +1798,8 @@ const FinancialManagement: React.FC = () => {
       case "budgets":
         setShowBudgetDialog(true);
         break;
-      case "journals":
-        setShowJournalDialog(true);
+      case "deposits":
+        setShowDepositDialog(true);
         break;
       case "banking":
         setShowBankingDialog(true);
@@ -1857,6 +1857,16 @@ const FinancialManagement: React.FC = () => {
     debit: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
     credit: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
     account: z.string().min(1, "Account is required")
+  });
+  
+  const depositSchema = z.object({
+    date: z.string().min(1, "Date is required"),
+    accountId: z.string().min(1, "Account is required"),
+    amount: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, "Amount must be greater than zero"),
+    description: z.string().min(2, "Description must be at least 2 characters"),
+    reference: z.string().optional(),
+    depositType: z.string().min(1, "Deposit type is required"),
+    depositMethod: z.string().min(1, "Deposit method is required")
   });
   
   const bankingSchema = z.object({
@@ -1936,6 +1946,19 @@ const FinancialManagement: React.FC = () => {
       debit: "0.00",
       credit: "0.00",
       account: ""
+    }
+  });
+  
+  const depositForm = useForm({
+    resolver: zodResolver(depositSchema),
+    defaultValues: {
+      date: format(new Date(), "yyyy-MM-dd"),
+      accountId: "",
+      amount: "0.00",
+      description: "",
+      reference: "",
+      depositType: "income",
+      depositMethod: "bank_transfer"
     }
   });
   
@@ -2196,6 +2219,94 @@ const FinancialManagement: React.FC = () => {
       toast({
         title: "Error",
         description: "Failed to create journal entry. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const onDepositSubmit = async (data: any) => {
+    if (!currentVessel?.id) {
+      toast({
+        title: "Error",
+        description: "No vessel selected. Please select a vessel first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      // First create a transaction
+      const transactionData = {
+        transactionType: "deposit",
+        transactionDate: new Date(data.date).toISOString(),
+        amount: parseFloat(data.amount),
+        currency: "EUR",
+        description: data.description,
+        vesselId: currentVessel.id,
+        accountId: parseInt(data.accountId)
+      };
+      
+      console.log("Creating deposit transaction:", transactionData);
+      
+      // Submit the transaction to create it first
+      const transactionResponse = await apiRequest("POST", "/api/transactions", transactionData);
+      const transaction = await transactionResponse.json();
+      
+      if (!transaction || !transaction.id) {
+        throw new Error("Failed to create transaction");
+      }
+      
+      // Format the deposit data for API submission
+      const depositData = {
+        transactionId: transaction.id,
+        description: data.description,
+        depositDate: new Date(data.date).toISOString(),
+        vesselId: currentVessel.id,
+        depositMethod: data.depositMethod,
+        amount: parseFloat(data.amount),
+        status: "completed",
+        depositType: data.depositType,
+        accountId: parseInt(data.accountId),
+        reference: data.reference || ''
+      };
+      
+      console.log("Submitting deposit data:", depositData);
+      
+      // Submit the deposit to the API
+      await apiRequest("POST", "/api/deposits", depositData);
+      
+      // Refresh financial data
+      await refreshFinancialAccounts();
+      
+      // Invalidate query caches to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/deposits/vessel', currentVessel.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel.id] });
+      
+      toast({
+        title: "Success",
+        description: "Deposit recorded successfully",
+      });
+      
+      // Reset form and close dialog
+      depositForm.reset({
+        date: format(new Date(), "yyyy-MM-dd"),
+        accountId: "",
+        amount: "0.00",
+        description: "",
+        reference: "",
+        depositType: "income",
+        depositMethod: "bank_transfer"
+      });
+      setShowDepositDialog(false);
+    } catch (error) {
+      console.error("Error creating deposit:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record deposit. Please try again.",
         variant: "destructive"
       });
     } finally {
