@@ -298,10 +298,10 @@ export interface IStorage {
   deleteTransaction(id: number): Promise<boolean>;
   
   // Transaction Line operations
-  getTransactionLines(transactionId: number): Promise<TransactionLine[]>;
-  getTransactionLinesByTransactionIds(transactionIds: number[]): Promise<TransactionLine[]>;
-  createTransactionLine(line: InsertTransactionLine): Promise<TransactionLine>;
-  updateTransactionLine(id: number, line: Partial<TransactionLine>): Promise<TransactionLine | undefined>;
+  getTransactionLines(transactionId: number): Promise<typeof transactionLines.$inferSelect[]>;
+  getTransactionLinesByTransactionIds(transactionIds: number[]): Promise<typeof transactionLines.$inferSelect[]>;
+  createTransactionLine(line: z.infer<typeof insertTransactionLineSchema>): Promise<typeof transactionLines.$inferSelect>;
+  updateTransactionLine(id: number, line: Partial<typeof transactionLines.$inferSelect>): Promise<typeof transactionLines.$inferSelect | undefined>;
   deleteTransactionLine(id: number): Promise<boolean>;
 }
 

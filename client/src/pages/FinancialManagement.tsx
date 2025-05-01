@@ -1761,43 +1761,7 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
-      case "budgets":
-        return (
-          <div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Budgets</CardTitle>
-                  <CardDescription>Financial budgets for {currentVessel.name}</CardDescription>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => setShowBudgetDialog(true)}
-                        aria-label="Create a new budget"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                      >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Budget
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Create a new budget</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No budgets found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Budgets will appear here once added.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+      // Budgets case handled in earlier switch statement
         
       // Expenses case handled in earlier switch statement
         
