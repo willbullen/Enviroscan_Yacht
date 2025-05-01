@@ -108,37 +108,32 @@ const FinancialManagement: React.FC = () => {
   
   // Load vessel-specific financial data
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
-    queryKey: [`/api/transactions`, currentVessel?.id],
-    queryFn: () => [],
+    queryKey: ['/api/financial/transactions', currentVessel?.id],
     enabled: !!currentVessel?.id
   });
   
   // Load vessel accounts
   const { data: accounts, isLoading: accountsLoading } = useQuery({
-    queryKey: [`/api/accounts`, currentVessel?.id],
-    queryFn: () => [],
+    queryKey: ['/api/financial-accounts/vessel', currentVessel?.id],
     enabled: !!currentVessel?.id
   });
   
   // Load vessel expenses
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: [`/api/expenses`, currentVessel?.id],
-    queryFn: () => [],
-    enabled: !!currentVessel?.id
-  });
-  
-  // Load vessel income
-  const { data: income, isLoading: incomeLoading } = useQuery({
-    queryKey: [`/api/income`, currentVessel?.id],
-    queryFn: () => [],
+    queryKey: ['/api/financial/expenses', currentVessel?.id],
     enabled: !!currentVessel?.id
   });
   
   // Load vessel budgets
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: [`/api/budgets`, currentVessel?.id],
-    queryFn: () => [],
+    queryKey: ['/api/financial/budgets/vessel', currentVessel?.id],
     enabled: !!currentVessel?.id
+  });
+  
+  // Load budget allocations
+  const { data: budgetAllocations, isLoading: budgetAllocationsLoading } = useQuery({
+    queryKey: ['/api/financial/budget-allocations', currentVessel?.id],
+    enabled: !!currentVessel?.id && !!budgets?.length
   });
 
   // Helper function for a simple vessel selector
@@ -365,7 +360,7 @@ const FinancialManagement: React.FC = () => {
       );
     }
     
-    const isLoading = transactionsLoading || accountsLoading || expensesLoading || incomeLoading || budgetsLoading;
+    const isLoading = transactionsLoading || accountsLoading || expensesLoading || budgetsLoading || budgetAllocationsLoading;
     
     if (isLoading) {
       return (
