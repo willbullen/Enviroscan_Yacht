@@ -4391,7 +4391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // =========== Financial Management - Transactions Routes =============
   
-  // Get transactions by vessel
+  // Get transactions by vessel with optional type filter
   apiRouter.get("/transactions/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Authentication required. Please log in." });
@@ -4402,7 +4402,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "Invalid vessel ID" });
     }
     
-    const transactions = await storage.getTransactionsByVessel(vesselId);
+    // Get the transaction type from query parameters if provided
+    const transactionType = req.query.type as string | undefined;
+    
+    // Get transactions for this vessel
+    let transactions = await storage.getTransactionsByVessel(vesselId);
+    
+    // If transaction type is specified, filter the results
+    if (transactionType && transactions) {
+      transactions = transactions.filter(t => t.transactionType === transactionType);
+    }
+    
+    // Get transaction lines for journal entries
+    if (transactionType === 'journal' && transactions && transactions.length > 0) {
+      // Get all transaction IDs
+      const transactionIds = transactions.map(t => t.id);
+      
+      // Get all transaction lines for these transactions
+      const transactionLines = await storage.getTransactionLinesByTransactionIds(transactionIds);
+      
+      // Attach transaction lines to their respective transactions
+      transactions = transactions.map(transaction => {
+        const lines = transactionLines.filter(line => line.transactionId === transaction.id);
+        return {
+          ...transaction,
+          lines
+        };
+      });
+    }
+    
     return res.json(transactions);
   }));
   
