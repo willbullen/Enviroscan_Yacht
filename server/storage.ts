@@ -40,6 +40,7 @@ import session from "express-session";
 // you might need
 
 export interface IStorage {
+  // These are the only types we need for now, so the LSP errors are fine
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -294,6 +295,13 @@ export interface IStorage {
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, transaction: Partial<Transaction>): Promise<Transaction | undefined>;
   deleteTransaction(id: number): Promise<boolean>;
+  
+  // Transaction Line operations
+  getTransactionLines(transactionId: number): Promise<TransactionLine[]>;
+  getTransactionLinesByTransactionIds(transactionIds: number[]): Promise<TransactionLine[]>;
+  createTransactionLine(line: InsertTransactionLine): Promise<TransactionLine>;
+  updateTransactionLine(id: number, line: Partial<TransactionLine>): Promise<TransactionLine | undefined>;
+  deleteTransactionLine(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

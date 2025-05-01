@@ -2306,6 +2306,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(transactionLines.transactionId, transactionId));
   }
   
+  async getTransactionLinesByTransactionIds(transactionIds: number[]): Promise<TransactionLine[]> {
+    if (!transactionIds || transactionIds.length === 0) {
+      return [];
+    }
+    
+    return db
+      .select()
+      .from(transactionLines)
+      .where(sql`${transactionLines.transactionId} IN (${transactionIds.join(',')})`);
+  }
+  
   async createTransactionLine(line: InsertTransactionLine): Promise<TransactionLine> {
     const [newLine] = await db.insert(transactionLines).values(line).returning();
     return newLine;
