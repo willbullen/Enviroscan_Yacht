@@ -109,6 +109,10 @@ const FinancialManagement: React.FC = () => {
   // State for currently editing item
   const [editingAccount, setEditingAccount] = useState<any>(null);
   
+  // State for cash flow chart
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<string>("12months");
+  
   // Get current vessel from context to filter financial data
   const { currentVessel } = useVessel();
   
@@ -241,6 +245,88 @@ const FinancialManagement: React.FC = () => {
       });
   };
   
+  // Function to process transaction data for the cash flow chart
+  const getCashFlowData = (transactionData: any[] | null, accountId: string | null, timeRangeMonths: number = 12) => {
+    if (!transactionData || !Array.isArray(transactionData) || transactionData.length === 0) {
+      return {
+        chartData: Array.from({ length: timeRangeMonths }, (_, i) => {
+          const date = new Date();
+          date.setMonth(date.getMonth() - (timeRangeMonths - 1) + i);
+          return {
+            month: date.toLocaleString('en-US', { month: 'short' }),
+            moneyIn: 0,
+            moneyOut: 0
+          };
+        }),
+        totalBalance: 0
+      };
+    }
+    
+    // Filter transactions by account if accountId is provided
+    const filteredTransactions = accountId 
+      ? transactionData.filter(t => t.accountId?.toString() === accountId)
+      : transactionData;
+    
+    // Get date range for chart
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(endDate.getMonth() - (timeRangeMonths - 1));
+    
+    // Initialize data structure for all months in range
+    const monthsData: Record<string, { moneyIn: number, moneyOut: number }> = {};
+    
+    // Initialize all months
+    for (let i = 0; i < timeRangeMonths; i++) {
+      const date = new Date(startDate);
+      date.setMonth(startDate.getMonth() + i);
+      const monthYear = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      monthsData[monthYear] = { moneyIn: 0, moneyOut: 0 };
+    }
+    
+    // Process transactions
+    let totalIn = 0;
+    let totalOut = 0;
+    
+    filteredTransactions.forEach(transaction => {
+      if (!transaction.transactionDate) return;
+      
+      const date = new Date(transaction.transactionDate);
+      
+      // Skip transactions outside our time range
+      if (date < startDate || date > endDate) return;
+      
+      const monthYear = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      const amount = Number(transaction.amount) || 0;
+      
+      // Categorize transaction as money in or out
+      if (transaction.transactionType === 'deposit' || transaction.transactionType === 'income') {
+        monthsData[monthYear].moneyIn += amount;
+        totalIn += amount;
+      } else if (transaction.transactionType === 'expense' || transaction.transactionType === 'withdrawal') {
+        monthsData[monthYear].moneyOut += amount;
+        totalOut += amount;
+      }
+    });
+    
+    // Convert to array and sort chronologically
+    const chartData = Object.keys(monthsData)
+      .sort((a, b) => {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateA.getTime() - dateB.getTime();
+      })
+      .map(month => ({
+        month,
+        moneyIn: monthsData[month].moneyIn,
+        moneyOut: monthsData[month].moneyOut
+      }));
+    
+    return {
+      chartData,
+      totalBalance: totalIn - totalOut
+    };
+  };
+
   const getMonthlyBudgetComparisonData = (budgetData: any[] | null, expenseData: any[] | null) => {
     if (!budgetData || !Array.isArray(budgetData) || budgetData.length === 0 ||
         !expenseData || !Array.isArray(expenseData) || expenseData.length === 0) {
