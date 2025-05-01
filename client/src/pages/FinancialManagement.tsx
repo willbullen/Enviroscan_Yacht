@@ -142,6 +142,12 @@ const FinancialManagement: React.FC = () => {
     enabled: !!currentVessel?.id
   });
   
+  // Helper function to ensure UI updates after account changes
+  const refreshFinancialAccounts = async () => {
+    // Force a refresh of the accounts list
+    await refetchAccounts();
+  };
+  
   // Load vessel expenses - need vessel ID parameter in URL
   const { data: expenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['/api/expenses/vessel', currentVessel?.id],
@@ -2228,9 +2234,6 @@ const FinancialManagement: React.FC = () => {
           description: `${data.name} has been updated in your chart of accounts`,
           variant: "default"
         });
-        
-        // Invalidate the query to refresh the accounts list
-        queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
       } else {
         // Make API call to create a new account
         const result = await apiRequest(
@@ -2245,10 +2248,10 @@ const FinancialManagement: React.FC = () => {
           description: `${data.name} has been added to your chart of accounts`,
           variant: "default"
         });
-        
-        // Invalidate the query to refresh the accounts list
-        queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
       }
+      
+      // Directly refresh accounts data to ensure UI is updated
+      await refreshFinancialAccounts();
       
       // Reset the form and close the dialog
       setShowAccountDialog(false);
@@ -2325,10 +2328,12 @@ const FinancialManagement: React.FC = () => {
       // Submit the expense to the API
       await apiRequest("POST", "/api/expenses", expenseData);
       
-      // Invalidate relevant query caches to refresh data
+      // Directly refresh the accounts data to ensure UI is updated
+      await refreshFinancialAccounts();
+      
+      // Invalidate other query caches to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
       
       toast({
         title: "Success",
