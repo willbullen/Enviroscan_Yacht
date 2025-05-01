@@ -346,6 +346,9 @@ export class MemStorage implements IStorage {
   private formSubmissions: Map<number, FormSubmission> = new Map<number, FormSubmission>();
   private taskComments: Map<number, TaskComment> = new Map<number, TaskComment>();
   
+  // Financial Management maps
+  private deposits: Map<number, Deposit> = new Map<number, Deposit>();
+  
   // ISM Task Management - Form Categories operations
   async getFormCategory(id: number): Promise<FormCategory | undefined> {
     return this.formCategories.get(id);
@@ -725,6 +728,9 @@ export class MemStorage implements IStorage {
     this.ismTasks = new Map();
     this.formSubmissions = new Map();
     this.taskComments = new Map();
+    
+    // Initialize Financial Management maps
+    this.deposits = new Map();
     
     this.userCurrentId = 1;
     this.equipmentCurrentId = 1;
