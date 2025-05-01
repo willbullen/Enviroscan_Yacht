@@ -37,7 +37,8 @@ import {
   insertBudgetSchema,
   insertBudgetAllocationSchema,
   insertExpenseSchema,
-  insertTransactionSchema
+  insertTransactionSchema,
+  InsertDeposit
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -4490,85 +4491,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(201).json(transaction);
   }));
   
-  // =========== Financial Management - Journal Entries Routes =============
+  // =========== Financial Management - Deposits Routes =============
   
-  // Create a journal entry (uses transactions under the hood)
-  apiRouter.post("/journals", asyncHandler(async (req: Request, res: Response) => {
+  // Get all deposits
+  apiRouter.get("/deposits", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Authentication required. Please log in." });
     }
     
-    // Extract the journal-specific fields
-    const { 
-      date, 
-      reference, 
-      description, 
-      debit, 
-      credit, 
-      account, 
-      vesselId, 
-      status = "posted",
-      createdById 
-    } = req.body;
+    const deposits = await storage.getAllDeposits();
+    return res.json(deposits);
+  }));
+  
+  // Get deposits by vessel
+  apiRouter.get("/deposits/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
     
-    // Validate required fields
-    if (!date || !description || !account || !vesselId) {
-      return res.status(400).json({ 
-        error: "Invalid journal entry data", 
-        details: "Required fields: date, description, account, vesselId" 
-      });
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    console.log(`Fetching deposits for vessel ID: ${vesselId}`);
+    const deposits = await storage.getDepositsByVessel(vesselId);
+    console.log(`Found ${deposits.length} deposits for vessel ID: ${vesselId}`);
+    return res.json(deposits);
+  }));
+  
+  // Get deposits by account
+  apiRouter.get("/deposits/account/:accountId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const accountId = parseInt(req.params.accountId);
+    if (isNaN(accountId)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    console.log(`Fetching deposits for account ID: ${accountId}`);
+    const deposits = await storage.getDepositsByAccount(accountId);
+    console.log(`Found ${deposits.length} deposits for account ID: ${accountId}`);
+    return res.json(deposits);
+  }));
+  
+  // Create a new deposit
+  apiRouter.post("/deposits", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
     }
     
     try {
-      // Format as a transaction
-      const transactionData = {
-        transactionType: "journal",
-        transactionDate: new Date(date),
-        amount: Math.max(parseFloat(debit || 0), parseFloat(credit || 0)),
-        currency: "EUR", // Default currency
-        description,
-        vesselId,
-        createdById: createdById || req.user.id,
-      };
-      
-      // Create the transaction first
-      const transaction = await storage.createTransaction(transactionData);
-      
-      // Then create transaction lines for double-entry
-      if (parseFloat(debit) > 0) {
-        await storage.createTransactionLine({
-          transactionId: transaction.id,
-          accountId: parseInt(account),
-          amount: parseFloat(debit),
-          description,
-          isDebit: true,
-        });
-      }
-      
-      if (parseFloat(credit) > 0) {
-        await storage.createTransactionLine({
-          transactionId: transaction.id,
-          accountId: parseInt(account),
-          amount: parseFloat(credit),
-          description,
-          isDebit: false,
-        });
-      }
-      
-      return res.status(201).json({
-        id: transaction.id,
-        date,
-        reference,
-        description,
-        debit,
-        credit,
-        account,
-        status,
-        createdAt: transaction.createdAt
-      });
+      const depositData = req.body as InsertDeposit;
+      const newDeposit = await storage.createDeposit(depositData);
+      return res.status(201).json(newDeposit);
     } catch (error) {
-      console.error("Error creating journal entry:", error);
-      return res.status(500).json({ error: "Failed to create journal entry" });
+      console.error("Error creating deposit:", error);
+      return res.status(500).json({ error: "Failed to create deposit" });
+    }
+  }));
+  
+  // Bulk create deposits
+  apiRouter.post("/deposits/bulk", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    try {
+      const depositsData = req.body as InsertDeposit[];
+      if (!Array.isArray(depositsData)) {
+        return res.status(400).json({ error: "Invalid data format. Expected an array of deposits." });
+      }
+      
+      const newDeposits = [];
+      for (const depositData of depositsData) {
+        const newDeposit = await storage.createDeposit(depositData);
+        newDeposits.push(newDeposit);
+      }
+      
+      return res.status(201).json(newDeposits);
+    } catch (error) {
+      console.error("Error bulk creating deposits:", error);
+      return res.status(500).json({ error: "Failed to create deposits" });
+    }
+  }));
+  
+  // Update a deposit
+  apiRouter.put("/deposits/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const depositId = parseInt(req.params.id);
+    if (isNaN(depositId)) {
+      return res.status(400).json({ error: "Invalid deposit ID" });
+    }
+    
+    try {
+      const depositData = req.body as Partial<InsertDeposit>;
+      const updatedDeposit = await storage.updateDeposit(depositId, depositData);
+      if (!updatedDeposit) {
+        return res.status(404).json({ error: "Deposit not found" });
+      }
+      return res.json(updatedDeposit);
+    } catch (error) {
+      console.error(`Error updating deposit ${depositId}:`, error);
+      return res.status(500).json({ error: "Failed to update deposit" });
+    }
+  }));
+  
+  // Delete a deposit
+  apiRouter.delete("/deposits/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const depositId = parseInt(req.params.id);
+    if (isNaN(depositId)) {
+      return res.status(400).json({ error: "Invalid deposit ID" });
+    }
+    
+    try {
+      const success = await storage.deleteDeposit(depositId);
+      if (!success) {
+        return res.status(404).json({ error: "Deposit not found or could not be deleted" });
+      }
+      return res.json({ message: "Deposit deleted successfully" });
+    } catch (error) {
+      console.error(`Error deleting deposit ${depositId}:`, error);
+      return res.status(500).json({ error: "Failed to delete deposit" });
     }
   }));
   
