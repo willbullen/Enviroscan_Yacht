@@ -545,9 +545,14 @@ const FinancialManagement: React.FC = () => {
               </TabsList>
               
               {currentVessel && (
-                <Button variant="outline" size="sm" onClick={handleAddNew}>
-                  <Plus className="h-4 w-4 mr-2" /> Add New
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleAddNew}>
+                    <Plus className="h-4 w-4 mr-2" /> Add New
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <FileUp className="h-4 w-4 mr-2" /> Bulk Import Accounts
+                  </Button>
+                </div>
               )}
             </div>
             
