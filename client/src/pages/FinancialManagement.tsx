@@ -187,7 +187,11 @@ const FinancialManagement: React.FC = () => {
     return (
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2 mr-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2 mr-2 bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+          >
             <FileUp className="h-4 w-4" /> Import {sectionName}
           </Button>
         </DialogTrigger>
@@ -819,32 +823,86 @@ const FinancialManagement: React.FC = () => {
           
           <Tabs defaultValue="accounts" onValueChange={setActiveTab} value={activeTab}>
             <div className="flex justify-between items-center">
-              <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/50 rounded-md">
-                <TabsTrigger value="accounts" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+              <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border">
+                <TabsTrigger 
+                  value="accounts" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <DollarSign className="h-4 w-4" /> Accounts
                 </TabsTrigger>
-                <TabsTrigger value="journals" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="journals" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <ListTree className="h-4 w-4" /> Journals
                 </TabsTrigger>
-                <TabsTrigger value="banking" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="banking" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <Building className="h-4 w-4" /> Banking
                 </TabsTrigger>
-                <TabsTrigger value="payroll" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="payroll" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <Users className="h-4 w-4" /> Payroll
                 </TabsTrigger>
-                <TabsTrigger value="budgets" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="budgets" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <Wallet className="h-4 w-4" /> Budgets
                 </TabsTrigger>
-                <TabsTrigger value="expenses" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="expenses" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <CreditCard className="h-4 w-4" /> Expenses
                 </TabsTrigger>
-                <TabsTrigger value="vendors" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="vendors" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <Building className="h-4 w-4" /> Vendors
                 </TabsTrigger>
-                <TabsTrigger value="categories" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="categories" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <ListTree className="h-4 w-4" /> Categories
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                <TabsTrigger 
+                  value="reports" 
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                            data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                            data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                >
                   <FileText className="h-4 w-4" /> Reports
                 </TabsTrigger>
               </TabsList>
@@ -855,7 +913,12 @@ const FinancialManagement: React.FC = () => {
                 )}
                 
                 {currentVessel && (
-                  <Button variant="outline" size="sm" onClick={handleAddNew}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleAddNew}
+                    className="bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                  >
                     <Plus className="h-4 w-4 mr-2" /> Add New
                   </Button>
                 )}
