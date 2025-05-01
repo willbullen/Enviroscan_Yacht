@@ -307,6 +307,25 @@ const FinancialManagement: React.FC = () => {
     await refetchAccounts();
   };
   
+  // Event handlers for ledger tab
+  const handlePageChange = (newPage: number) => {
+    setTransactionsPage(newPage);
+  };
+  
+  const handleDateRangeChange = (value: string) => {
+    setDateRange(value);
+    setTransactionsPage(1); // Reset to first page when changing filters
+  };
+  
+  const handleAccountChange = (value: string) => {
+    setSelectedAccount(value);
+    setTransactionsPage(1); // Reset to first page when changing filters
+  };
+  
+  const handleSortDirectionChange = () => {
+    setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+  };
+  
   // Load vessel expenses - need vessel ID parameter in URL
   const { data: expenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['/api/expenses/vessel', currentVessel?.id],
@@ -2202,29 +2221,7 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
       case "ledger":
-        // Using component-level state for ledger
-        
-        // Handle page change
-        const handlePageChange = (newPage: number) => {
-          setTransactionsPage(newPage);
-        };
-        
-        // Handle date range change
-        const handleDateRangeChange = (value: string) => {
-          setDateRange(value);
-          setTransactionsPage(1); // Reset to first page when changing filters
-        };
-        
-        // Handle account selection change
-        const handleAccountChange = (value: string) => {
-          setSelectedAccount(value);
-          setTransactionsPage(1); // Reset to first page when changing filters
-        };
-        
-        // Handle sort direction change
-        const handleSortDirectionChange = () => {
-          setSortDirection(prev => prev === "asc" ? "desc" : "asc");
-        };
+        // Using component-level state for ledger (handlers moved outside switch statement)
         
         return (
           <div className="space-y-6">
