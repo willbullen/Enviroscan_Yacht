@@ -104,6 +104,9 @@ const FinancialManagement: React.FC = () => {
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [showGenericDialog, setShowGenericDialog] = useState(false);
   
+  // State for currently editing item
+  const [editingAccount, setEditingAccount] = useState<any>(null);
+  
   // Get current vessel from context to filter financial data
   const { currentVessel } = useVessel();
   
@@ -458,7 +461,24 @@ const FinancialManagement: React.FC = () => {
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8"
+                                        onClick={() => {
+                                          // Set the account to edit and populate form values
+                                          setEditingAccount(account);
+                                          accountForm.reset({
+                                            name: account.accountName,
+                                            accountNumber: account.accountNumber,
+                                            balance: account.balance.toString(),
+                                            type: account.accountType,
+                                            description: account.description || ""
+                                          });
+                                          // Open the dialog
+                                          setShowAccountDialog(true);
+                                        }}
+                                      >
                                         <Pencil className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -1263,20 +1283,39 @@ const FinancialManagement: React.FC = () => {
   const onAccountSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
-      // Simulate API call
-      console.log("New account data:", data);
       
-      // Simulate server processing time
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if we're editing or creating
+      if (editingAccount) {
+        // Simulate API call for updating
+        console.log("Updating account data:", {...editingAccount, ...data});
+        
+        // Simulate server processing time
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Success handling for update
+        toast({
+          title: "Account updated successfully",
+          description: `${data.name} has been updated in your chart of accounts`,
+          variant: "default"
+        });
+      } else {
+        // Simulate API call for creating
+        console.log("New account data:", data);
+        
+        // Simulate server processing time
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Success handling for creation
+        toast({
+          title: "Account created successfully",
+          description: `${data.name} has been added to your chart of accounts`,
+          variant: "default"
+        });
+      }
       
-      // Success handling
-      toast({
-        title: "Account created successfully",
-        description: `${data.name} has been added to your chart of accounts`,
-        variant: "default"
-      });
-      
+      // Reset the form and close the dialog
       setShowAccountDialog(false);
+      setEditingAccount(null);
       accountForm.reset({
         name: "",
         accountNumber: "",
@@ -1285,15 +1324,17 @@ const FinancialManagement: React.FC = () => {
         description: ""
       });
       
-      // Here you would call a mutation to create the account
-      // Example:
+      // Here you would call a mutation to create/update the account
+      // Example for create:
       // const result = await createAccount({ ...data, vesselId: currentVessel?.id });
+      // Example for update:
+      // const result = await updateAccount(editingAccount.id, { ...data });
       
     } catch (error) {
-      console.error("Error creating account:", error);
+      console.error("Error with account operation:", error);
       toast({
-        title: "Error creating account",
-        description: "There was a problem creating the account. Please try again.",
+        title: `Error ${editingAccount ? "updating" : "creating"} account`,
+        description: `There was a problem ${editingAccount ? "updating" : "creating"} the account. Please try again.`,
         variant: "destructive"
       });
     } finally {
