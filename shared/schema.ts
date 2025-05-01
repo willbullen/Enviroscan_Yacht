@@ -505,6 +505,7 @@ export const financialAccounts = pgTable("financial_accounts", {
   isActive: boolean("is_active").default(true),
   parentAccountId: integer("parent_account_id"), // Self-reference to support parent-child relationships
   balance: decimal("balance", { precision: 12, scale: 2 }).default("0").notNull(),
+  vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
   createdById: integer("created_by_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
