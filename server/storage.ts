@@ -24,7 +24,13 @@ import {
   formTemplateVersions, type FormTemplateVersion, type InsertFormTemplateVersion,
   ismTasks, type IsmTask, type InsertIsmTask,
   formSubmissions, type FormSubmission, type InsertFormSubmission,
-  taskComments, type TaskComment, type InsertTaskComment
+  taskComments, type TaskComment, type InsertTaskComment,
+  // Financial Management imports
+  financialAccounts, type FinancialAccount, type InsertFinancialAccount,
+  budgets, type Budget, type InsertBudget,
+  budgetAllocations, type BudgetAllocation, type InsertBudgetAllocation,
+  expenses, type Expense, type InsertExpense,
+  transactions, type Transaction, type InsertTransaction
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
@@ -246,6 +252,48 @@ export interface IStorage {
   createTaskComment(comment: InsertTaskComment): Promise<TaskComment>;
   updateTaskComment(id: number, comment: Partial<TaskComment>): Promise<TaskComment | undefined>;
   deleteTaskComment(id: number): Promise<boolean>;
+  
+  // Financial Account operations
+  getFinancialAccount(id: number): Promise<FinancialAccount | undefined>;
+  getFinancialAccountsByVessel(vesselId: number): Promise<FinancialAccount[]>;
+  getAllFinancialAccounts(): Promise<FinancialAccount[]>;
+  getFinancialAccountByCategory(category: string): Promise<FinancialAccount[]>;
+  createFinancialAccount(account: InsertFinancialAccount): Promise<FinancialAccount>;
+  updateFinancialAccount(id: number, account: Partial<FinancialAccount>): Promise<FinancialAccount | undefined>;
+  deleteFinancialAccount(id: number): Promise<boolean>;
+  
+  // Budget operations
+  getBudget(id: number): Promise<Budget | undefined>;
+  getBudgetsByVessel(vesselId: number): Promise<Budget[]>;
+  getActiveBudgets(): Promise<Budget[]>;
+  createBudget(budget: InsertBudget): Promise<Budget>;
+  updateBudget(id: number, budget: Partial<Budget>): Promise<Budget | undefined>;
+  deleteBudget(id: number): Promise<boolean>;
+  
+  // Budget Allocation operations
+  getBudgetAllocation(id: number): Promise<BudgetAllocation | undefined>;
+  getBudgetAllocationsByBudget(budgetId: number): Promise<BudgetAllocation[]>;
+  getBudgetAllocationsByAccount(accountId: number): Promise<BudgetAllocation[]>;
+  createBudgetAllocation(allocation: InsertBudgetAllocation): Promise<BudgetAllocation>;
+  updateBudgetAllocation(id: number, allocation: Partial<BudgetAllocation>): Promise<BudgetAllocation | undefined>;
+  deleteBudgetAllocation(id: number): Promise<boolean>;
+  
+  // Expense operations
+  getExpense(id: number): Promise<Expense | undefined>;
+  getExpensesByVessel(vesselId: number): Promise<Expense[]>;
+  getExpensesByBudget(budgetId: number): Promise<Expense[]>;
+  getExpensesByAccount(accountId: number): Promise<Expense[]>;
+  getExpensesByCategory(category: string): Promise<Expense[]>;
+  createExpense(expense: InsertExpense): Promise<Expense>;
+  updateExpense(id: number, expense: Partial<Expense>): Promise<Expense | undefined>;
+  deleteExpense(id: number): Promise<boolean>;
+  
+  // Transaction operations
+  getTransaction(id: number): Promise<Transaction | undefined>;
+  getTransactionsByVessel(vesselId: number): Promise<Transaction[]>;
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  updateTransaction(id: number, transaction: Partial<Transaction>): Promise<Transaction | undefined>;
+  deleteTransaction(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

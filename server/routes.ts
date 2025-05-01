@@ -32,7 +32,12 @@ import {
   insertFormSubmissionSchema,
   insertTaskCommentSchema,
   insertVesselSchema,
-  insertUserVesselAssignmentSchema
+  insertUserVesselAssignmentSchema,
+  insertFinancialAccountSchema,
+  insertBudgetSchema,
+  insertBudgetAllocationSchema,
+  insertExpenseSchema,
+  insertTransactionSchema
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -3966,6 +3971,464 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete user-vessel assignment" });
     }
   });
+  
+  // =========== Financial Management - Financial Accounts Routes =============
+  
+  // Get all financial accounts
+  apiRouter.get("/financial-accounts", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const accounts = await storage.getAllFinancialAccounts();
+    return res.json(accounts);
+  }));
+  
+  // Get financial accounts by vessel
+  apiRouter.get("/financial-accounts/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    const accounts = await storage.getFinancialAccountsByVessel(vesselId);
+    return res.json(accounts);
+  }));
+  
+  // Get financial accounts by category
+  apiRouter.get("/financial-accounts/category/:category", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const { category } = req.params;
+    const accounts = await storage.getFinancialAccountByCategory(category);
+    return res.json(accounts);
+  }));
+  
+  // Get a financial account by ID
+  apiRouter.get("/financial-accounts/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    const account = await storage.getFinancialAccount(id);
+    if (!account) {
+      return res.status(404).json({ error: "Account not found" });
+    }
+    
+    return res.json(account);
+  }));
+  
+  // Create a financial account
+  apiRouter.post("/financial-accounts", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const validationResult = insertFinancialAccountSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid account data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    // Add the created_by_id to the data
+    const accountData = {
+      ...validationResult.data,
+      createdById: req.user.id
+    };
+    
+    const account = await storage.createFinancialAccount(accountData);
+    return res.status(201).json(account);
+  }));
+  
+  // Update a financial account
+  apiRouter.patch("/financial-accounts/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    const account = await storage.getFinancialAccount(id);
+    if (!account) {
+      return res.status(404).json({ error: "Account not found" });
+    }
+    
+    const updatedAccount = await storage.updateFinancialAccount(id, req.body);
+    return res.json(updatedAccount);
+  }));
+  
+  // Delete a financial account
+  apiRouter.delete("/financial-accounts/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    const account = await storage.getFinancialAccount(id);
+    if (!account) {
+      return res.status(404).json({ error: "Account not found" });
+    }
+    
+    const success = await storage.deleteFinancialAccount(id);
+    if (success) {
+      return res.status(204).send();
+    } else {
+      return res.status(500).json({ error: "Failed to delete account" });
+    }
+  }));
+  
+  // =========== Financial Management - Budgets Routes =============
+  
+  // Get all budgets
+  apiRouter.get("/budgets", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const budgets = await storage.getActiveBudgets();
+    return res.json(budgets);
+  }));
+  
+  // Get budgets by vessel
+  apiRouter.get("/budgets/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    const budgets = await storage.getBudgetsByVessel(vesselId);
+    return res.json(budgets);
+  }));
+  
+  // Get a budget by ID
+  apiRouter.get("/budgets/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid budget ID" });
+    }
+    
+    const budget = await storage.getBudget(id);
+    if (!budget) {
+      return res.status(404).json({ error: "Budget not found" });
+    }
+    
+    return res.json(budget);
+  }));
+  
+  // Create a budget
+  apiRouter.post("/budgets", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const validationResult = insertBudgetSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid budget data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    // Add the created_by_id to the data
+    const budgetData = {
+      ...validationResult.data,
+      createdById: req.user.id
+    };
+    
+    const budget = await storage.createBudget(budgetData);
+    return res.status(201).json(budget);
+  }));
+  
+  // Update a budget
+  apiRouter.patch("/budgets/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid budget ID" });
+    }
+    
+    const budget = await storage.getBudget(id);
+    if (!budget) {
+      return res.status(404).json({ error: "Budget not found" });
+    }
+    
+    const updatedBudget = await storage.updateBudget(id, req.body);
+    return res.json(updatedBudget);
+  }));
+  
+  // Delete a budget
+  apiRouter.delete("/budgets/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid budget ID" });
+    }
+    
+    const budget = await storage.getBudget(id);
+    if (!budget) {
+      return res.status(404).json({ error: "Budget not found" });
+    }
+    
+    const success = await storage.deleteBudget(id);
+    if (success) {
+      return res.status(204).send();
+    } else {
+      return res.status(500).json({ error: "Failed to delete budget" });
+    }
+  }));
+  
+  // =========== Financial Management - Budget Allocations Routes =============
+  
+  // Get budget allocations by budget
+  apiRouter.get("/budget-allocations/budget/:budgetId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const budgetId = parseInt(req.params.budgetId);
+    if (isNaN(budgetId)) {
+      return res.status(400).json({ error: "Invalid budget ID" });
+    }
+    
+    const allocations = await storage.getBudgetAllocationsByBudget(budgetId);
+    return res.json(allocations);
+  }));
+  
+  // Get budget allocations by account
+  apiRouter.get("/budget-allocations/account/:accountId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const accountId = parseInt(req.params.accountId);
+    if (isNaN(accountId)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    const allocations = await storage.getBudgetAllocationsByAccount(accountId);
+    return res.json(allocations);
+  }));
+  
+  // Create a budget allocation
+  apiRouter.post("/budget-allocations", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const validationResult = insertBudgetAllocationSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid budget allocation data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    // Add the created_by_id to the data
+    const allocationData = {
+      ...validationResult.data,
+      createdById: req.user.id
+    };
+    
+    const allocation = await storage.createBudgetAllocation(allocationData);
+    return res.status(201).json(allocation);
+  }));
+  
+  // Update a budget allocation
+  apiRouter.patch("/budget-allocations/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid allocation ID" });
+    }
+    
+    const allocation = await storage.getBudgetAllocation(id);
+    if (!allocation) {
+      return res.status(404).json({ error: "Budget allocation not found" });
+    }
+    
+    const updatedAllocation = await storage.updateBudgetAllocation(id, req.body);
+    return res.json(updatedAllocation);
+  }));
+  
+  // =========== Financial Management - Expenses Routes =============
+  
+  // Get expenses by vessel
+  apiRouter.get("/expenses/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    const expenses = await storage.getExpensesByVessel(vesselId);
+    return res.json(expenses);
+  }));
+  
+  // Get expenses by budget
+  apiRouter.get("/expenses/budget/:budgetId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const budgetId = parseInt(req.params.budgetId);
+    if (isNaN(budgetId)) {
+      return res.status(400).json({ error: "Invalid budget ID" });
+    }
+    
+    const expenses = await storage.getExpensesByBudget(budgetId);
+    return res.json(expenses);
+  }));
+  
+  // Get expenses by account
+  apiRouter.get("/expenses/account/:accountId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const accountId = parseInt(req.params.accountId);
+    if (isNaN(accountId)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    const expenses = await storage.getExpensesByAccount(accountId);
+    return res.json(expenses);
+  }));
+  
+  // Get expenses by category
+  apiRouter.get("/expenses/category/:category", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const { category } = req.params;
+    const expenses = await storage.getExpensesByCategory(category);
+    return res.json(expenses);
+  }));
+  
+  // Create an expense
+  apiRouter.post("/expenses", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const validationResult = insertExpenseSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid expense data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    // Add the created_by_id to the data
+    const expenseData = {
+      ...validationResult.data,
+      createdById: req.user.id
+    };
+    
+    const expense = await storage.createExpense(expenseData);
+    return res.status(201).json(expense);
+  }));
+  
+  // Update an expense
+  apiRouter.patch("/expenses/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid expense ID" });
+    }
+    
+    const expense = await storage.getExpense(id);
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+    
+    const updatedExpense = await storage.updateExpense(id, req.body);
+    return res.json(updatedExpense);
+  }));
+  
+  // =========== Financial Management - Transactions Routes =============
+  
+  // Get transactions by vessel
+  apiRouter.get("/transactions/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    const transactions = await storage.getTransactionsByVessel(vesselId);
+    return res.json(transactions);
+  }));
+  
+  // Create a transaction
+  apiRouter.post("/transactions", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const validationResult = insertTransactionSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid transaction data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    // Add the created_by_id to the data
+    const transactionData = {
+      ...validationResult.data,
+      createdById: req.user.id
+    };
+    
+    const transaction = await storage.createTransaction(transactionData);
+    return res.status(201).json(transaction);
+  }));
   
   // Register API routes
   app.use("/api", apiRouter);
