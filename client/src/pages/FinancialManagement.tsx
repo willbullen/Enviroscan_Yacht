@@ -807,8 +807,9 @@ const FinancialManagement: React.FC = () => {
 
   return (
     <MainLayout title="Financial Management">
-      <div className="w-full px-4 py-6">
-        <div className="space-y-6">
+      <TooltipProvider>
+        <div className="w-full px-4 py-6">
+          <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold tracking-tight">Financial Management</h1>
             <div className="flex items-center gap-4">
@@ -914,30 +915,32 @@ const FinancialManagement: React.FC = () => {
                 )}
                 
                 {currentVessel && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleAddNew}
-                        className="bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> 
-                        {activeTab === "accounts" && "New Account"}
-                        {activeTab === "journals" && "New Journal Entry"}
-                        {activeTab === "banking" && "New Banking Record"}
-                        {activeTab === "payroll" && "New Payroll Entry"}
-                        {activeTab === "budgets" && "New Budget"}
-                        {activeTab === "expenses" && "New Expense"}
-                        {activeTab === "vendors" && "New Vendor"}
-                        {activeTab === "categories" && "New Category"}
-                        {activeTab === "reports" && "Generate Report"}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Create a new {activeTab.slice(0, -1)}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleAddNew}
+                          className="bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> 
+                          {activeTab === "accounts" && "New Account"}
+                          {activeTab === "journals" && "New Journal Entry"}
+                          {activeTab === "banking" && "New Banking Record"}
+                          {activeTab === "payroll" && "New Payroll Entry"}
+                          {activeTab === "budgets" && "New Budget"}
+                          {activeTab === "expenses" && "New Expense"}
+                          {activeTab === "vendors" && "New Vendor"}
+                          {activeTab === "categories" && "New Category"}
+                          {activeTab === "reports" && "Generate Report"}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Create a new {activeTab.slice(0, -1)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
             </div>
@@ -1860,6 +1863,7 @@ const FinancialManagement: React.FC = () => {
           </Dialog>
         </div>
       </div>
+      </TooltipProvider>
     </MainLayout>
   );
 };
