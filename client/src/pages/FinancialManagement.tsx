@@ -35,7 +35,9 @@ import {
   Trash,
   Euro,
   Calculator,
-  ChevronRight
+  ChevronRight,
+  Download,
+  Upload
 } from "lucide-react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -351,18 +353,58 @@ const FinancialManagement: React.FC = () => {
                     <FileUp className="h-4 w-4" /> Import
                   </Button>
                 </DialogTrigger>
-                <BatchImportDialog 
-                  open={true}
-                  onOpenChange={() => {}}
-                  title="Import Financial Data"
-                  description="Upload your financial data as a CSV file. Make sure to follow the template format."
-                  templateFileName="financial_import_template.csv"
-                  templateContent="type,date,amount,description,vesselId,category,reference\nexpense,2025-01-01,100.00,Office supplies,1,Operations,INV12345\nincome,2025-01-02,500.00,Charter fee,1,Revenue,PMT98765"
-                  onImport={(data) => {
-                    console.log("Importing data:", data);
-                    // Handle batch import logic here
-                  }}
-                />
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Import Financial Data</DialogTitle>
+                    <DialogDescription>
+                      Upload your financial data as a CSV file. Make sure to follow the template format.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="flex flex-col gap-4 py-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm text-muted-foreground">
+                        Use our template to ensure your data is formatted correctly.
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          const template = "type,date,amount,description,vesselId,category,reference\nexpense,2025-01-01,100.00,Office supplies,1,Operations,INV12345\nincome,2025-01-02,500.00,Charter fee,1,Revenue,PMT98765";
+                          const blob = new Blob([template], { type: 'text/csv' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = "financial_import_template.csv";
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Template
+                      </Button>
+                    </div>
+                    
+                    <div className="border-2 border-dashed rounded-md p-6 text-center">
+                      <div className="space-y-2">
+                        <div className="flex justify-center">
+                          <Upload className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                        <h3 className="font-medium">Drag and drop your CSV file here</h3>
+                        <p className="text-sm text-muted-foreground">or</p>
+                        <Button variant="secondary">Select file</Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button variant="outline" type="button">Cancel</Button>
+                    <Button type="button" disabled>Import Data</Button>
+                  </DialogFooter>
+                </DialogContent>
               </Dialog>
               <ViewToggle viewMode={viewMode} onChange={setViewMode} />
             </div>
