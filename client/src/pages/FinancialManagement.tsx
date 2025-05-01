@@ -753,7 +753,7 @@ const FinancialManagement: React.FC = () => {
 
   // Function to render tab content based on active tab
   // Define which tabs have basic implementations
-  const implementedTabs = ['accounts', 'journals', 'reports'];
+  const implementedTabs = ['accounts', 'journals', 'ledger', 'reports'];
   
   const renderTabContent = () => {
     if (!currentVessel) {
