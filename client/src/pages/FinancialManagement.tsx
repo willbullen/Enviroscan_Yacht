@@ -434,110 +434,222 @@ const FinancialManagement: React.FC = () => {
   // Function to render financial overview cards
   const renderFinancialOverview = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card 
-                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
-                onClick={() => setActiveTab("accounts")}
-                tabIndex={0}
-                role="button"
-                aria-label="View income details"
-                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("accounts")}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-foreground">Total Income</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">€0.00</div>
-                  <p className="text-xs text-muted-foreground">For selected vessel</p>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Click to view detailed income breakdown</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      <div className="space-y-6 mb-6">
+        {/* First row - Cash Flow Trends Chart and Summary Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Cash Flow Trends Chart - Takes up 2/3 of width on larger screens */}
+          <div className="lg:col-span-2">
+            <Card className="border-primary/20 h-full">
+              <CardHeader className="flex flex-row justify-between items-center pb-2">
+                <div>
+                  <CardTitle className="text-lg">Cash Flow Trends</CardTitle>
+                  <CardDescription>
+                    Track money in and out of your accounts
+                  </CardDescription>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Select 
+                    value={selectedAccountId || "all"} 
+                    onValueChange={(value) => setSelectedAccountId(value === "all" ? null : value)}
+                    aria-label="Select account to view"
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="All accounts" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All accounts</SelectItem>
+                      {accounts && Array.isArray(accounts) && accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id.toString()}>
+                          {account.accountName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select 
+                    value={timeRange} 
+                    onValueChange={(value) => setTimeRange(value)}
+                    aria-label="Select time range"
+                  >
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="12 months" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3months">3 months</SelectItem>
+                      <SelectItem value="6months">6 months</SelectItem>
+                      <SelectItem value="12months">12 months</SelectItem>
+                      <SelectItem value="ytd">Year to date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {transactionsLoading ? (
+                  <div className="h-[200px] flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+                    <span>Loading chart data...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground">Account Balance</h4>
+                        <div className="flex items-baseline mt-1">
+                          <span className="text-2xl font-bold">
+                            €{getCashFlowData(transactions, selectedAccountId, timeRange === "3months" ? 3 : timeRange === "6months" ? 6 : 12).totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-sm text-muted-foreground ml-2">
+                            {selectedAccountId && accounts ? `for ${accounts.find((a) => a.id.toString() === selectedAccountId)?.accountName || 'selected account'}` : 'for all accounts'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
+                          <span className="text-sm text-muted-foreground">Money In</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-rose-500 mr-2"></div>
+                          <span className="text-sm text-muted-foreground">Money Out</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="h-[180px] mt-2">
+                      <LineChart
+                        className="h-full"
+                        data={getCashFlowData(transactions, selectedAccountId, timeRange === "3months" ? 3 : timeRange === "6months" ? 6 : 12).chartData}
+                        index="month"
+                        categories={["moneyIn", "moneyOut"]}
+                        colors={["emerald", "rose"]}
+                        valueFormatter={(number) => `€${number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                        showLegend={false}
+                        yAxisWidth={60}
+                        showAnimation={true}
+                        curveType="natural"
+                        connectNulls={true}
+                        showGridLines={true}
+                        showTooltip={true}
+                        aria-label="Line chart showing cash flow trends"
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Financial summary cards stacked vertically */}
+          <div className="flex flex-col gap-4">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card 
+                    className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                    onClick={() => setActiveTab("accounts")}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="View income details"
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab("accounts")}
+                  >
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-foreground">Total Income</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-foreground">€0.00</div>
+                      <p className="text-xs text-muted-foreground">For selected vessel</p>
+                    </CardContent>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Click to view detailed income breakdown</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card 
+                    className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                    onClick={() => setActiveTab("expenses")}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="View expense details"
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab("expenses")}
+                  >
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-foreground">Total Expenses</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-foreground">€0.00</div>
+                      <p className="text-xs text-muted-foreground">For selected vessel</p>
+                    </CardContent>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Click to view detailed expense breakdown</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card 
+                    className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                    onClick={() => setActiveTab("budgets")}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="View budget utilization details"
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab("budgets")}
+                  >
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-foreground">Budget Utilization</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-foreground">0%</div>
+                      <p className="text-xs text-muted-foreground">Of current budget</p>
+                    </CardContent>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Click to view detailed budget information</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card 
-                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
-                onClick={() => setActiveTab("expenses")}
-                tabIndex={0}
-                role="button"
-                aria-label="View expense details"
-                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("expenses")}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-foreground">Total Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">€0.00</div>
-                  <p className="text-xs text-muted-foreground">For selected vessel</p>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Click to view detailed expense breakdown</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card 
-                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
-                onClick={() => setActiveTab("budgets")}
-                tabIndex={0}
-                role="button"
-                aria-label="View budget utilization details"
-                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("budgets")}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-foreground">Budget Utilization</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">0%</div>
-                  <p className="text-xs text-muted-foreground">Of current budget</p>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Click to view detailed budget information</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card 
-                className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
-                onClick={() => setActiveTab("banking")}
-                tabIndex={0}
-                role="button"
-                aria-label="View open invoices"
-                onKeyDown={(e) => e.key === 'Enter' && setActiveTab("banking")}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-foreground">Open Invoices</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">0</div>
-                  <p className="text-xs text-muted-foreground">Awaiting payment</p>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Click to view invoice details</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {/* Second row - Additional cards if needed */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Card 
+                  className="bg-background border-primary/20 border cursor-pointer hover:bg-muted/20 hover:border-primary/50 transition-colors"
+                  onClick={() => setActiveTab("banking")}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="View open invoices"
+                  onKeyDown={(e) => e.key === 'Enter' && setActiveTab("banking")}
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-foreground">Open Invoices</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground">0</div>
+                    <p className="text-xs text-muted-foreground">Awaiting payment</p>
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to view invoice details</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
     );
   };
