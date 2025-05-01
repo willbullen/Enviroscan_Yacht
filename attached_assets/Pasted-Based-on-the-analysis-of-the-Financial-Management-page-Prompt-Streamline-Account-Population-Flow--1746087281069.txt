@@ -1,0 +1,20 @@
+Based on the analysis of the Financial Management page:
+Prompt: Streamline Account Population Flow.
+If manual account creation is added, ensure a smooth flow from clicking "+ Add Account" to filling details and seeing the new account appear in the Chart of Accounts.
+For the "Import Accounts" (36) flow, guide the user clearly through file selection, mapping fields (if necessary), previewing data, and confirming the import. Provide clear feedback on success or errors during import.
+Prompt: Implement Consistent Action Feedback. Provide immediate and clear feedback for all actions within the financial module:
+Show success messages (e.g., "Transaction saved successfully", "Account imported") via toast notifications.
+Display validation errors clearly near the relevant input fields if forms are used.
+Use loading indicators (spinners, skeleton loaders) when fetching data for tables (accounts, transactions) or processing actions (saving, importing, generating reports).
+Prompt: Add Confirmation Dialogs for Critical Actions. Implement confirmation steps before executing potentially destructive or irreversible actions, such as:
+Deleting accounts, transactions, budgets, vendors.
+Confirming large data imports.
+Potentially before finalizing payroll runs.
+Prompt: Optimize Drill-Down from Summary Cards. If summary cards are made interactive, ensure a seamless flow:
+Clicking a card (e.g., "Total Expenses") should navigate the user directly to the relevant tab (e.g., "Expenses" - 32) with appropriate filters pre-applied (e.g., date range for the summary period).
+Prompt: Guide Inter-Tab Navigation. While tabs allow switching sections, consider subtle guides for common workflows. For example, after creating a vendor in the "Vendors" tab (33), prompt or make it easy to immediately record an expense related to that vendor in the "Expenses" tab (32).
+Prompt: Refine Reporting Flow. Ensure the flow for generating reports via the "Reports" tab (35) is intuitive:
+Clear selection of report type.
+Easy configuration of parameters (date range, filters).
+Obvious options for viewing, exporting (PDF, CSV), or printing the report.
+Prompt: Visualize Transaction Entry/Editing Flow. Within tabs like "Journals" (28) or "Expenses" (32), design a clear and efficient flow for adding new transactions and editing existing ones, likely involving forms or modals with logical field grouping and clear save/cancel actions.

@@ -19,7 +19,12 @@ import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 import BatchImportDialog from "@/components/BatchImportDialog";
 import { useVessel } from "@/contexts/VesselContext";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 import { 
+  AlertCircle,
+  CheckCircle,
   DollarSign, 
   Wallet, 
   CreditCard, 
@@ -40,16 +45,21 @@ import {
   Calculator,
   ChevronRight,
   Download,
-  Upload
+  Upload,
+  X,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const FinancialManagement: React.FC = () => {
   // State for view toggle (Card/Grid vs Table view)
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const [activeTab, setActiveTab] = useState("accounts");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
   // Dialog states for adding new items
   const [showAccountDialog, setShowAccountDialog] = useState(false);
