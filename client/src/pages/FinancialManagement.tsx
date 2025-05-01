@@ -1578,10 +1578,57 @@ const FinancialManagement: React.FC = () => {
     // Here you would call a mutation to create the budget
   };
   
-  const onJournalSubmit = (data: any) => {
-    console.log("New journal entry data:", data);
-    setShowJournalDialog(false);
-    // Here you would call a mutation to create the journal entry
+  const onJournalSubmit = async (data: any) => {
+    if (!currentVessel?.id) {
+      toast({
+        title: "Error",
+        description: "No vessel selected. Please select a vessel first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Format the data for API submission
+      const journalData = {
+        ...data,
+        vesselId: currentVessel.id,
+        date: data.date,
+        debit: parseFloat(data.debit),
+        credit: parseFloat(data.credit),
+        // Add additional fields needed for the API
+        status: "posted",
+        createdById: 5, // Current admin user ID
+      };
+
+      // Submit the journal entry to the API
+      await apiRequest(`/api/journals`, {
+        method: "POST",
+        data: journalData
+      });
+      
+      // Invalidate journal query cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/journals'] });
+      
+      toast({
+        title: "Success",
+        description: "Journal entry created successfully",
+      });
+      
+      journalForm.reset();
+      setShowJournalDialog(false);
+    } catch (error) {
+      console.error("Error creating journal entry:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create journal entry. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const onBankingSubmit = (data: any) => {
