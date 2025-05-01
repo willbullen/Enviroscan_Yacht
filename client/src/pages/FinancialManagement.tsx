@@ -3652,6 +3652,170 @@ const FinancialManagement: React.FC = () => {
               </Form>
             </DialogContent>
           </Dialog>
+
+          {/* Deposit Dialog */}
+          <Dialog open={showDepositDialog} onOpenChange={setShowDepositDialog}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>New Deposit</DialogTitle>
+                <DialogDescription>
+                  Record a new deposit to an account
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...depositForm}>
+                <form onSubmit={depositForm.handleSubmit(onDepositSubmit)} className="space-y-4">
+                  <FormField
+                    control={depositForm.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={depositForm.control}
+                    name="accountId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an account" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {accounts && accounts.length > 0 ? (
+                              accounts.map((account: any) => (
+                                <SelectItem key={account.id} value={account.id.toString()}>
+                                  {account.accountName}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-accounts" disabled>
+                                No accounts available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={depositForm.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount (€)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                            <Input className="pl-6" placeholder="0.00" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={depositForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Enter description..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={depositForm.control}
+                    name="reference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference Number (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter reference number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={depositForm.control}
+                      name="depositType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="income">Income</SelectItem>
+                              <SelectItem value="transfer">Transfer</SelectItem>
+                              <SelectItem value="investment">Investment</SelectItem>
+                              <SelectItem value="refund">Refund</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={depositForm.control}
+                      name="depositMethod"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Method</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select method" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                              <SelectItem value="cash">Cash</SelectItem>
+                              <SelectItem value="check">Check</SelectItem>
+                              <SelectItem value="credit_card">Credit Card</SelectItem>
+                              <SelectItem value="wire_transfer">Wire Transfer</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={isSubmitting} className="w-full">
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Create Deposit'
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       </TooltipProvider>
