@@ -873,8 +873,7 @@ const FinancialManagement: React.FC = () => {
       toast({
         title: "Account created successfully",
         description: `${data.name} has been added to your chart of accounts`,
-        variant: "default",
-        icon: <CheckCircle className="h-4 w-4 text-green-500" />
+        variant: "default"
       });
       
       setShowAccountDialog(false);
@@ -895,8 +894,7 @@ const FinancialManagement: React.FC = () => {
       toast({
         title: "Error creating account",
         description: "There was a problem creating the account. Please try again.",
-        variant: "destructive",
-        icon: <AlertCircle className="h-4 w-4 text-red-500" />
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -1206,8 +1204,17 @@ const FinancialManagement: React.FC = () => {
                       <FormItem>
                         <FormLabel>Account Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Operating Account" {...field} />
+                          <Input 
+                            placeholder="e.g. Operating Account" 
+                            aria-label="Account name"
+                            aria-describedby="account-name-description"
+                            className="focus-visible:ring-2 focus-visible:ring-primary/30"
+                            {...field} 
+                          />
                         </FormControl>
+                        <FormDescription id="account-name-description" className="text-xs text-muted-foreground">
+                          A descriptive name for this financial account
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1219,8 +1226,17 @@ const FinancialManagement: React.FC = () => {
                       <FormItem>
                         <FormLabel>Account Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. AC12345678" {...field} />
+                          <Input 
+                            placeholder="e.g. AC12345678" 
+                            aria-label="Account number"
+                            aria-describedby="account-number-description"
+                            className="focus-visible:ring-2 focus-visible:ring-primary/30"
+                            {...field} 
+                          />
                         </FormControl>
+                        <FormDescription id="account-number-description" className="text-xs text-muted-foreground">
+                          A unique reference code for this account
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1278,8 +1294,30 @@ const FinancialManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  <DialogFooter>
-                    <Button type="submit">Create Account</Button>
+                  <DialogFooter className="flex items-center justify-between gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setShowAccountDialog(false)}
+                      disabled={isSubmitting}
+                      className="text-foreground hover:bg-muted/20 hover:text-foreground/80"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 focus:ring-offset-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        'Create Account'
+                      )}
+                    </Button>
                   </DialogFooter>
                 </form>
               </Form>
