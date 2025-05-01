@@ -22,6 +22,7 @@ import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Card as TremorCard,
   Text,
@@ -112,28 +113,37 @@ const FinancialManagement: React.FC = () => {
     enabled: !!currentVessel?.id
   });
   
-  // Load vessel accounts
+  // Load vessel accounts - need vessel ID parameter in URL
   const { data: accounts, isLoading: accountsLoading } = useQuery({
     queryKey: ['/api/financial-accounts/vessel', currentVessel?.id],
-    enabled: !!currentVessel?.id && !!currentVessel?.id
+    queryFn: () => currentVessel?.id ? fetch(`/api/financial-accounts/vessel/${currentVessel.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!currentVessel?.id
   });
   
-  // Load vessel expenses
+  // Load vessel expenses - need vessel ID parameter in URL
   const { data: expenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['/api/expenses/vessel', currentVessel?.id],
+    queryFn: () => currentVessel?.id ? fetch(`/api/expenses/vessel/${currentVessel.id}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!currentVessel?.id
   });
   
-  // Load vessel budgets
+  // Load vessel budgets - need vessel ID parameter in URL
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
     queryKey: ['/api/budgets/vessel', currentVessel?.id],
+    queryFn: () => currentVessel?.id ? fetch(`/api/budgets/vessel/${currentVessel.id}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!currentVessel?.id
   });
   
-  // Load budget allocations for visualization
+  // Load budget allocations for the first budget if it exists
   const { data: budgetAllocations, isLoading: budgetAllocationsLoading } = useQuery({
-    queryKey: ['/api/budget-allocations', budgets && budgets.length > 0 ? budgets[0]?.id : null],
-    enabled: !!currentVessel?.id && !!budgets && Array.isArray(budgets) && budgets.length > 0
+    queryKey: ['/api/budget-allocations', budgets && Array.isArray(budgets) && budgets.length > 0 ? budgets[0]?.id : null],
+    queryFn: () => {
+      if (budgets && Array.isArray(budgets) && budgets.length > 0 && budgets[0]?.id) {
+        return fetch(`/api/budget-allocations/budget/${budgets[0].id}`).then(res => res.json());
+      }
+      return Promise.resolve([]);
+    },
+    enabled: !!currentVessel?.id && !!budgets && Array.isArray(budgets) && budgets.length > 0 && !!budgets[0]?.id
   });
 
   // Helper function for a simple vessel selector
