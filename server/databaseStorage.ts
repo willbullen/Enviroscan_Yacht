@@ -30,6 +30,7 @@ import {
   expenses,
   transactions,
   transactionLines,
+  deposits,
   type User,
   type InsertUser,
   type Equipment,
@@ -87,7 +88,9 @@ import {
   type Transaction,
   type InsertTransaction,
   type TransactionLine,
-  type InsertTransactionLine
+  type InsertTransactionLine,
+  type Deposit,
+  type InsertDeposit
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
@@ -2058,6 +2061,49 @@ export class DatabaseStorage implements IStorage {
       .where(eq(financialAccounts.category, category));
   }
   
+  // =========== Deposit Methods =============
+  async getDeposit(id: number): Promise<Deposit | undefined> {
+    const [deposit] = await db.select().from(deposits).where(eq(deposits.id, id));
+    return deposit || undefined;
+  }
+
+  async getAllDeposits(): Promise<Deposit[]> {
+    return db.select().from(deposits);
+  }
+
+  async getDepositsByVessel(vesselId: number): Promise<Deposit[]> {
+    return db.select().from(deposits).where(eq(deposits.vesselId, vesselId));
+  }
+
+  async getDepositsByAccount(accountId: number): Promise<Deposit[]> {
+    return db.select().from(deposits).where(eq(deposits.accountId, accountId));
+  }
+
+  async createDeposit(deposit: InsertDeposit): Promise<Deposit> {
+    const [newDeposit] = await db.insert(deposits).values(deposit).returning();
+    return newDeposit;
+  }
+
+  async updateDeposit(id: number, depositUpdate: Partial<InsertDeposit>): Promise<Deposit> {
+    const [updatedDeposit] = await db
+      .update(deposits)
+      .set(depositUpdate)
+      .where(eq(deposits.id, id))
+      .returning();
+    return updatedDeposit;
+  }
+
+  async deleteDeposit(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(deposits).where(eq(deposits.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting deposit:", error);
+      return false;
+    }
+  }
+
+  // =========== Financial Account Methods =============
   async createFinancialAccount(account: InsertFinancialAccount): Promise<FinancialAccount> {
     const [newAccount] = await db.insert(financialAccounts).values(account).returning();
     return newAccount;
