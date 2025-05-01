@@ -359,12 +359,13 @@ const FinancialManagement: React.FC = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
-                        variant="outline" 
+                        variant="default" 
                         size="sm"
                         onClick={() => setShowAccountDialog(true)}
-                        className="bg-background text-foreground hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="Add a new financial account"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                       >
-                        <Plus className="h-4 w-4 mr-2" /> Add Account
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -379,12 +380,13 @@ const FinancialManagement: React.FC = () => {
                   <div className="flex flex-col items-center gap-2 mt-4">
                     <p className="text-sm text-muted-foreground">Add your first account to get started</p>
                     <Button 
-                      variant="outline" 
+                      variant="default" 
                       size="sm"
                       onClick={() => setShowAccountDialog(true)}
-                      className="mt-2"
+                      aria-label="Add a new financial account"
+                      className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                     >
-                      <Plus className="h-4 w-4 mr-2" /> Add Account
+                      <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
                     </Button>
                   </div>
                 </div>
@@ -397,9 +399,29 @@ const FinancialManagement: React.FC = () => {
         return (
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Journal Entries</CardTitle>
-                <CardDescription>Financial journals for {currentVessel.name}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Journal Entries</CardTitle>
+                  <CardDescription>Financial journals for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => {/* TODO: Implement journal creation dialog */}}
+                        aria-label="Create a new journal entry"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Journal
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new journal entry</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-md p-4 text-center">
@@ -451,9 +473,29 @@ const FinancialManagement: React.FC = () => {
         return (
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Expense Tracking</CardTitle>
-                <CardDescription>Expenses for {currentVessel.name}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Expense Tracking</CardTitle>
+                  <CardDescription>Expenses for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowExpenseDialog(true)}
+                        aria-label="Record a new expense"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Expense
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Record a new expense transaction</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-md p-4 text-center">
@@ -469,9 +511,29 @@ const FinancialManagement: React.FC = () => {
         return (
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Budget Management</CardTitle>
-                <CardDescription>Budgets for {currentVessel.name}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Budget Management</CardTitle>
+                  <CardDescription>Budgets for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowBudgetDialog(true)}
+                        aria-label="Create a new budget"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Budget
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new financial budget</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-md p-4 text-center">
@@ -487,9 +549,29 @@ const FinancialManagement: React.FC = () => {
         return (
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Vendor Management</CardTitle>
-                <CardDescription>Vendors for {currentVessel.name}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Vendor Management</CardTitle>
+                  <CardDescription>Vendors for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowVendorDialog(true)}
+                        aria-label="Add a new vendor"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Vendor
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Add a new vendor or supplier</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-md p-4 text-center">

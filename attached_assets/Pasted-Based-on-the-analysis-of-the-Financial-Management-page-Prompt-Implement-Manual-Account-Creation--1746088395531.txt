@@ -1,0 +1,17 @@
+Based on the analysis of the Financial Management page:
+Prompt: Implement Manual Account Creation. Add a primary action button (e.g., "+ Add Account") on the "Accounts" tab (27) to allow users to manually create new accounts in the Chart of Accounts, complementing the "Import Accounts" (36) feature.
+Prompt: Enable Core Transaction Management. Implement the necessary UI and backend logic for managing transactions within the relevant tabs:
+Journals (28): Allow creation, viewing, editing, and deletion of manual journal entries.
+Expenses (32): Allow recording, viewing, editing, categorizing, and deleting expenses.
+Banking (29): Implement features for viewing bank transactions (potentially via import/feed) and reconciling them against recorded entries.
+Payroll (30): Develop functionality for processing payroll runs, recording payments, and generating related reports.
+Prompt: Implement Data Display (Tables/Lists). For sections like Accounts, Journals, Expenses, Vendors, etc., implement data tables or lists to display the relevant records once data is populated. Ensure these tables are clear, readable, and include relevant columns.
+Prompt: Add Sorting Capabilities to Data Tables. Implement sorting functionality on key columns within all data tables (Chart of Accounts, transaction lists, vendor lists, etc.) to allow users to easily reorder data (e.g., sort accounts by name/number, sort transactions by date/amount).
+Prompt: Add Filtering and Searching within Tables. Enhance data exploration by adding:
+Filtering options relevant to each section (e.g., filter transactions by date range, category, status; filter accounts by type).
+Contextual search bars within each tab to search the specific data being viewed (e.g., search expenses by description/vendor, search accounts by name/number).
+Prompt: Enable Editing and Deletion. Provide clear mechanisms (e.g., "Edit" and "Delete" buttons per row in tables, or actions within a detail view) for modifying or removing existing records (accounts, transactions, budgets, vendors, etc.), incorporating confirmation dialogs for deletions.
+Prompt: Clarify and Implement View Toggles. Define the scope of the Card/List view toggles (25, 26) and implement the corresponding views for the relevant data (e.g., Chart of Accounts, potentially transaction lists).
+Prompt: Implement Budget Management Functionality. Within the "Budgets" tab (31), allow users to create budgets (e.g., by category, period), view budget allocations, and track actual spending against the budget.
+Prompt: Develop Vendor Management. Within the "Vendors" tab (33), allow users to add, view, edit, and delete vendor information (name, contact details, payment terms).
+Prompt: Build Out Reporting Capabilities. Within the "Reports" tab (35), implement standard financial reports (e.g., Profit & Loss, Balance Sheet, Cash Flow Statement, Expense by Category/Vendor) with options for date range selection and export.
