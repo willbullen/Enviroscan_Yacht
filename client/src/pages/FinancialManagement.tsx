@@ -160,6 +160,83 @@ const FinancialManagement: React.FC = () => {
     );
   };
   
+  // Template CSV data for each section
+  const templateData = {
+    accounts: "accountName,accountNumber,balance,type,vesselId,description\nOperating Account,AC12345,10000.00,asset,1,Main operating account\nFuel Fund,AC67890,5000.00,liability,1,Reserved for fuel expenses",
+    journals: "date,reference,description,debit,credit,account,vesselId\n2025-01-01,JE001,Monthly crew payment,5000.00,0.00,Crew Expenses,1\n2025-01-01,JE001,Monthly crew payment,0.00,5000.00,Operating Account,1",
+    banking: "accountName,bankName,accountNumber,routingNumber,balance,currency,vesselId\nMain Account,Maritime Bank,123456789,987654321,50000.00,EUR,1\nReserve Account,Marine Trust,987654321,123456789,100000.00,EUR,1",
+    payroll: "employeeName,position,salary,paymentDate,bankAccount,vesselId,taxCode\nJohn Smith,Captain,8000.00,2025-01-15,GB123456789,1,TAX123\nJane Doe,Chief Engineer,7500.00,2025-01-15,GB987654321,1,TAX456",
+    budgets: "name,amount,startDate,endDate,category,vesselId,notes\nQ1 Operating Budget,75000.00,2025-01-01,2025-03-31,Operations,1,First quarter operating expenses\nAnnual Maintenance Budget,120000.00,2025-01-01,2025-12-31,Maintenance,1,Annual maintenance reserve",
+    expenses: "date,amount,category,description,paymentMethod,vesselId,reference\n2025-01-05,1500.00,Fuel,Diesel refill,bank_transfer,1,INV12345\n2025-01-10,350.00,Provisions,Crew food supplies,credit_card,1,REC67890"
+  };
+
+  // Function to create a bulk import button for a specific section
+  const renderBulkImportButton = (section: string) => {
+    const template = templateData[section as keyof typeof templateData] || "";
+    const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
+    
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="flex items-center gap-2 ml-auto mb-4">
+            <FileUp className="h-4 w-4" /> Bulk Import {sectionName}
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Import {sectionName} Data</DialogTitle>
+            <DialogDescription>
+              Upload your {section} data as a CSV file. Make sure to follow the template format.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-muted-foreground">
+                Use our template to ensure your data is formatted correctly.
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2"
+                onClick={() => {
+                  const blob = new Blob([template], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${section}_import_template.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <Download className="h-4 w-4" />
+                Download Template
+              </Button>
+            </div>
+            
+            <div className="border-2 border-dashed rounded-md p-6 text-center">
+              <div className="space-y-2">
+                <div className="flex justify-center">
+                  <Upload className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <h3 className="font-medium">Drag and drop your CSV file here</h3>
+                <p className="text-sm text-muted-foreground">or</p>
+                <Button variant="secondary">Select file</Button>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" type="button">Cancel</Button>
+            <Button type="button" disabled>Import Data</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   // Function to render tab content based on active tab
   const renderTabContent = () => {
     if (!currentVessel) {
@@ -183,50 +260,134 @@ const FinancialManagement: React.FC = () => {
     switch (activeTab) {
       case "accounts":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Chart of Accounts</CardTitle>
-              <CardDescription>Financial accounts for {currentVessel.name}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-md p-4 text-center">
-                <p className="text-muted-foreground">No accounts found for this vessel.</p>
-                <p className="text-sm text-muted-foreground mt-2">Accounts will appear here once added.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            {renderBulkImportButton('accounts')}
+            <Card>
+              <CardHeader>
+                <CardTitle>Chart of Accounts</CardTitle>
+                <CardDescription>Financial accounts for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No accounts found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Accounts will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "journals":
+        return (
+          <div>
+            {renderBulkImportButton('journals')}
+            <Card>
+              <CardHeader>
+                <CardTitle>Journal Entries</CardTitle>
+                <CardDescription>Financial journals for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No journals found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Journals will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "banking":
+        return (
+          <div>
+            {renderBulkImportButton('banking')}
+            <Card>
+              <CardHeader>
+                <CardTitle>Banking</CardTitle>
+                <CardDescription>Bank accounts for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No banking information found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Banking information will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "payroll":
+        return (
+          <div>
+            {renderBulkImportButton('payroll')}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payroll Management</CardTitle>
+                <CardDescription>Crew payroll for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No payroll information found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Payroll information will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         );
         
       case "expenses":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Tracking</CardTitle>
-              <CardDescription>Expenses for {currentVessel.name}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-md p-4 text-center">
-                <p className="text-muted-foreground">No expenses found for this vessel.</p>
-                <p className="text-sm text-muted-foreground mt-2">Expenses will appear here once added.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            {renderBulkImportButton('expenses')}
+            <Card>
+              <CardHeader>
+                <CardTitle>Expense Tracking</CardTitle>
+                <CardDescription>Expenses for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No expenses found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Expenses will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         );
         
       case "budgets":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Budget Management</CardTitle>
-              <CardDescription>Budgets for {currentVessel.name}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-md p-4 text-center">
-                <p className="text-muted-foreground">No budgets found for this vessel.</p>
-                <p className="text-sm text-muted-foreground mt-2">Budgets will appear here once added.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            {renderBulkImportButton('budgets')}
+            <Card>
+              <CardHeader>
+                <CardTitle>Budget Management</CardTitle>
+                <CardDescription>Budgets for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No budgets found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Budgets will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "reports":
+        return (
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Financial Reports</CardTitle>
+                <CardDescription>Financial reports for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No reports available for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Reports will be generated based on financial data.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         );
         
       default:
@@ -347,65 +508,6 @@ const FinancialManagement: React.FC = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold tracking-tight">Financial Management</h1>
             <div className="flex items-center gap-4">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <FileUp className="h-4 w-4" /> Import
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>Import Financial Data</DialogTitle>
-                    <DialogDescription>
-                      Upload your financial data as a CSV file. Make sure to follow the template format.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="flex flex-col gap-4 py-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm text-muted-foreground">
-                        Use our template to ensure your data is formatted correctly.
-                      </span>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex items-center gap-2"
-                        onClick={() => {
-                          const template = "type,date,amount,description,vesselId,category,reference\nexpense,2025-01-01,100.00,Office supplies,1,Operations,INV12345\nincome,2025-01-02,500.00,Charter fee,1,Revenue,PMT98765";
-                          const blob = new Blob([template], { type: 'text/csv' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = "financial_import_template.csv";
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          URL.revokeObjectURL(url);
-                        }}
-                      >
-                        <Download className="h-4 w-4" />
-                        Download Template
-                      </Button>
-                    </div>
-                    
-                    <div className="border-2 border-dashed rounded-md p-6 text-center">
-                      <div className="space-y-2">
-                        <div className="flex justify-center">
-                          <Upload className="h-10 w-10 text-muted-foreground" />
-                        </div>
-                        <h3 className="font-medium">Drag and drop your CSV file here</h3>
-                        <p className="text-sm text-muted-foreground">or</p>
-                        <Button variant="secondary">Select file</Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button variant="outline" type="button">Cancel</Button>
-                    <Button type="button" disabled>Import Data</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
               <ViewToggle viewMode={viewMode} onChange={setViewMode} />
             </div>
           </div>
