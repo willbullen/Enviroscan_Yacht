@@ -1317,7 +1317,6 @@ const FormsAdministration: React.FC = () => {
                 aria-label="Search templates"
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1 ml-1">Type to filter form templates</p>
           </div>
           <div>
             <select
