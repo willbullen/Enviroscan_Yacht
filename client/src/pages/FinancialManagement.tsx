@@ -98,6 +98,20 @@ const FinancialManagement: React.FC = () => {
   const [showAccountDialog, setShowAccountDialog] = useState(false);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
+  
+  // Ledger tab state
+  const [selectedAccount, setSelectedAccount] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<string>("30days");
+  const [customStartDate, setCustomStartDate] = useState<string>(
+    format(new Date(new Date().setDate(new Date().getDate() - 30)), "yyyy-MM-dd")
+  );
+  const [customEndDate, setCustomEndDate] = useState<string>(
+    format(new Date(), "yyyy-MM-dd")
+  );
+  const [transactionsPage, setTransactionsPage] = useState(1);
+  const transactionsPerPage = 10;
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [ledgerLoading, setLedgerLoading] = useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [showJournalDialog, setShowJournalDialog] = useState(false);
   const [showDepositDialog, setShowDepositDialog] = useState(false);
@@ -2050,19 +2064,7 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
       case "ledger":
-        // State hooks for ledger filters
-        const [selectedAccount, setSelectedAccount] = useState<string>("all");
-        const [dateRange, setDateRange] = useState<string>("30days");
-        const [customStartDate, setCustomStartDate] = useState<string>(
-          format(new Date(new Date().setDate(new Date().getDate() - 30)), "yyyy-MM-dd")
-        );
-        const [customEndDate, setCustomEndDate] = useState<string>(
-          format(new Date(), "yyyy-MM-dd")
-        );
-        const [transactionsPage, setTransactionsPage] = useState(1);
-        const transactionsPerPage = 10;
-        const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-        const [loading, setLoading] = useState(false);
+        // Using component-level state for ledger
         
         // Create a filtered transactions based on account and date range
         const filteredTransactions = React.useMemo(() => {
@@ -2316,7 +2318,7 @@ const FinancialManagement: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {loading ? (
+                        {ledgerLoading ? (
                           <TableRow>
                             <TableCell colSpan={6} className="text-center py-6">
                               <Loader2 className="h-6 w-6 animate-spin mx-auto" />
