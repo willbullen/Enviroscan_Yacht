@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 import BatchImportDialog from "@/components/BatchImportDialog";
+import { useVessel } from "@/contexts/VesselContext";
 import { 
   DollarSign, 
   Wallet, 
@@ -26,8 +27,7 @@ import {
   Building, 
   Receipt, 
   Users, 
-  Globe, 
-  ArrowLeftRight,
+  Ship,
   Pencil,
   ListTree,
   FileUp,
@@ -40,9 +40,8 @@ const FinancialManagement: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const [activeTab, setActiveTab] = useState("accounts");
   
-  // Mock data for additional features (double-entry accounting, multi-currency, etc.)
-  const [selectedCurrency, setSelectedCurrency] = useState("USD");
-  const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
+  // Get current vessel from context
+  const { currentVessel } = useVessel();
 
   // Mock data for account categories and subcategories
   const mockAccountCategories = [
