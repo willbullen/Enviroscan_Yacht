@@ -1002,7 +1002,16 @@ const FinancialManagement: React.FC = () => {
                               colors={["blue", "cyan", "amber", "emerald", "violet", "indigo", "rose"]}
                               showAnimation={true}
                               valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                              showTooltip={true}
+                              showLabel={true}
+                              labelPosition="inside"
+                              aria-label="Pie chart showing budget allocation by category"
                             />
+                            <div className="mt-2">
+                              <p className="text-xs text-center text-muted-foreground">
+                                Click on segments to focus on specific categories
+                              </p>
+                            </div>
                           </TremorCard>
                         </Col>
                         <Col>
@@ -1016,7 +1025,16 @@ const FinancialManagement: React.FC = () => {
                               colors={["blue", "cyan", "amber", "emerald", "violet", "indigo", "rose"]}
                               showAnimation={true}
                               valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                              showTooltip={true}
+                              showLabel={true}
+                              labelPosition="inside"
+                              aria-label="Pie chart showing spending by category"
                             />
+                            <div className="mt-2">
+                              <p className="text-xs text-center text-muted-foreground">
+                                Hover over segments to see detailed spending information
+                              </p>
+                            </div>
                           </TremorCard>
                         </Col>
                       </Grid>
