@@ -527,6 +527,9 @@ const FinancialManagement: React.FC = () => {
   };
 
   // Function to render tab content based on active tab
+  // Define which tabs have basic implementations
+  const implementedTabs = ['accounts', 'journals', 'reports'];
+  
   const renderTabContent = () => {
     if (!currentVessel) {
       return (
@@ -1742,6 +1745,234 @@ const FinancialManagement: React.FC = () => {
                 <div className="border rounded-md p-4 text-center">
                   <p className="text-muted-foreground">No reports available for this vessel.</p>
                   <p className="text-sm text-muted-foreground mt-2">Reports will be generated based on financial data.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "banking":
+        return (
+          <div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Banking</CardTitle>
+                  <CardDescription>Bank account transactions for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowBankingDialog(true)}
+                        aria-label="Add a new banking transaction"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Transaction
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Record a new banking transaction</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No banking transactions found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Bank transactions will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "budgets":
+        return (
+          <div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Budgets</CardTitle>
+                  <CardDescription>Financial budgets for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowBudgetDialog(true)}
+                        aria-label="Create a new budget"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Budget
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new budget</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No budgets found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Budgets will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "expenses":
+        return (
+          <div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Expenses</CardTitle>
+                  <CardDescription>Expense transactions for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowExpenseDialog(true)}
+                        aria-label="Record a new expense"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Expense
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Record a new expense</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No expenses found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Expenses will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "vendors":
+        return (
+          <div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Vendors</CardTitle>
+                  <CardDescription>Manage vendor relationships for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowVendorDialog(true)}
+                        aria-label="Add a new vendor"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Vendor
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Add a new vendor</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No vendors found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Vendors will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "categories":
+        return (
+          <div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Financial Categories</CardTitle>
+                  <CardDescription>Manage financial categories for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowCategoryDialog(true)}
+                        aria-label="Add a new financial category"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Category
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new financial category</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No financial categories found.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Categories will appear here once added.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
+      case "payroll":
+        return (
+          <div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Payroll</CardTitle>
+                  <CardDescription>Manage crew payroll for {currentVessel.name}</CardDescription>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowPayrollDialog(true)}
+                        aria-label="Create a new payroll entry"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Payroll Entry
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new payroll entry</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-md p-4 text-center">
+                  <p className="text-muted-foreground">No payroll entries found for this vessel.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Payroll entries will appear here once added.</p>
                 </div>
               </CardContent>
             </Card>
