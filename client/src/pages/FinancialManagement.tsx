@@ -2646,21 +2646,22 @@ const FinancialManagement: React.FC = () => {
               setActiveTab(value);
             }} 
             value={activeTab}
+            className="mb-6"
           >
-            <div className="flex justify-between items-center">
-              <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border">
+            <div className="flex justify-between items-center mb-2">
+              <TabsList className="inline-flex h-auto items-center justify-between w-full p-1.5 bg-muted/30 rounded-lg border border-border gap-1">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="accounts" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
-                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
-                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        className="flex-1 flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-md transition-all
+                                  data-[state=active]:bg-primary/15 data-[state=active]:text-primary 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary"
                         aria-label="View and manage financial accounts"
                       >
-                        <DollarSign className="h-4 w-4" /> Accounts
+                        <DollarSign className="h-5 w-5" /> 
+                        <span className="text-xs font-medium">Accounts</span>
                       </TabsTrigger>
                     </TooltipTrigger>
                     <TooltipContent>
