@@ -348,6 +348,12 @@ export class MemStorage implements IStorage {
   
   // Financial Management maps
   private deposits: Map<number, Deposit> = new Map<number, Deposit>();
+  private financialAccounts: Map<number, FinancialAccount> = new Map<number, FinancialAccount>();
+  private transactions: Map<number, Transaction> = new Map<number, Transaction>();
+  private transactionLines: Map<number, TransactionLine> = new Map<number, TransactionLine>();
+  private expenses: Map<number, Expense> = new Map<number, Expense>();
+  private budgets: Map<number, Budget> = new Map<number, Budget>();
+  private budgetAllocations: Map<number, BudgetAllocation> = new Map<number, BudgetAllocation>();
   
   // ISM Task Management - Form Categories operations
   async getFormCategory(id: number): Promise<FormCategory | undefined> {
@@ -753,7 +759,15 @@ export class MemStorage implements IStorage {
     this.ismTaskCurrentId = 1;
     this.formSubmissionCurrentId = 1;
     this.taskCommentCurrentId = 1;
+    
+    // Financial Management IDs
     this.depositCurrentId = 1;
+    this.financialAccountCurrentId = 1;
+    this.transactionCurrentId = 1;
+    this.transactionLineCurrentId = 1;
+    this.expenseCurrentId = 1;
+    this.budgetCurrentId = 1;
+    this.budgetAllocationCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeData();
