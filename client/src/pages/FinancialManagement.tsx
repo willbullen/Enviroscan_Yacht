@@ -163,6 +163,154 @@ const FinancialManagement: React.FC = () => {
     },
     enabled: !!currentVessel?.id && !!budgets && Array.isArray(budgets) && budgets.length > 0 && !!budgets[0]?.id
   });
+  
+  // Data processing functions for budget visualization
+  const getUniqueCategories = (expenseData: any[] | null) => {
+    if (!expenseData || !Array.isArray(expenseData) || expenseData.length === 0) {
+      return ['No Data'];
+    }
+    
+    // Extract unique categories and sort by frequency
+    const categories = expenseData
+      .map(expense => expense.category || 'Uncategorized')
+      .reduce((acc: Record<string, number>, category) => {
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {});
+    
+    // Return the top categories sorted by frequency
+    return Object.keys(categories)
+      .sort((a, b) => categories[b] - categories[a]);
+  };
+  
+  const getMonthlySpendingData = (expenseData: any[] | null) => {
+    if (!expenseData || !Array.isArray(expenseData) || expenseData.length === 0) {
+      return [{ month: 'No Data', value: 0 }];
+    }
+    
+    // Group expenses by month and category
+    const monthlyData: Record<string, Record<string, number>> = {};
+    const allCategories = getUniqueCategories(expenseData);
+    
+    // Process each expense
+    expenseData.forEach(expense => {
+      if (!expense.date) return;
+      
+      const date = new Date(expense.date);
+      const monthYear = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      const category = expense.category || 'Uncategorized';
+      const amount = Number(expense.amount) || 0;
+      
+      // Initialize month if not exists
+      if (!monthlyData[monthYear]) {
+        monthlyData[monthYear] = {};
+        // Initialize all categories with 0
+        allCategories.forEach(cat => {
+          monthlyData[monthYear][cat] = 0;
+        });
+      }
+      
+      // Add expense amount to category
+      monthlyData[monthYear][category] = (monthlyData[monthYear][category] || 0) + amount;
+    });
+    
+    // Sort months chronologically and convert to array format
+    return Object.keys(monthlyData)
+      .sort((a, b) => {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateA.getTime() - dateB.getTime();
+      })
+      .map(month => {
+        return {
+          month,
+          ...monthlyData[month]
+        };
+      });
+  };
+  
+  const getMonthlyBudgetComparisonData = (budgetData: any[] | null, expenseData: any[] | null) => {
+    if (!budgetData || !Array.isArray(budgetData) || budgetData.length === 0 ||
+        !expenseData || !Array.isArray(expenseData) || expenseData.length === 0) {
+      return [{ month: 'No Data', Budget: 0, Actual: 0 }];
+    }
+    
+    // Calculate total budget
+    const totalBudget = budgetData.reduce((sum, budget) => 
+      sum + (Number(budget.totalAmount) || Number(budget.amount) || 0), 0);
+      
+    // Monthly budget (assumed to be evenly distributed for simplicity)
+    const monthCount = 12; // Default to annual budget
+    const monthlyBudget = totalBudget / monthCount;
+    
+    // Group expenses by month
+    const monthlyExpenses: Record<string, number> = {};
+    
+    // Process each expense
+    expenseData.forEach(expense => {
+      if (!expense.date) return;
+      
+      const date = new Date(expense.date);
+      const monthYear = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      const amount = Number(expense.amount) || 0;
+      
+      // Initialize or add to month
+      monthlyExpenses[monthYear] = (monthlyExpenses[monthYear] || 0) + amount;
+    });
+    
+    // Sort months chronologically and convert to array format
+    return Object.keys(monthlyExpenses)
+      .sort((a, b) => {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateA.getTime() - dateB.getTime();
+      })
+      .map(month => {
+        return {
+          month,
+          Budget: monthlyBudget,
+          Actual: monthlyExpenses[month]
+        };
+      });
+  };
+  
+  const getCategoryBreakdownData = (expenseData: any[] | null) => {
+    if (!expenseData || !Array.isArray(expenseData) || expenseData.length === 0) {
+      return [{ category: 'No Data', budgeted: 0, spent: 0 }];
+    }
+    
+    // Group expenses by category
+    const categoryExpenses: Record<string, number> = {};
+    const categories = getUniqueCategories(expenseData);
+    
+    // Calculate total spent per category
+    expenseData.forEach(expense => {
+      const category = expense.category || 'Uncategorized';
+      const amount = Number(expense.amount) || 0;
+      
+      categoryExpenses[category] = (categoryExpenses[category] || 0) + amount;
+    });
+    
+    // Find corresponding budget amounts from budgets data
+    const categoryBudgets: Record<string, number> = {};
+    
+    // Use the budgets data directly if available, otherwise use placeholder
+    if (budgets && Array.isArray(budgets) && budgets.length > 0) {
+      budgets.forEach(budget => {
+        const category = budget.category || 'Uncategorized';
+        const amount = Number(budget.totalAmount) || Number(budget.amount) || 0;
+        
+        categoryBudgets[category] = (categoryBudgets[category] || 0) + amount;
+      });
+    }
+    
+    // Create data array with all categories
+    return categories.map(category => ({
+      category,
+      budgeted: categoryBudgets[category] || 0,
+      spent: categoryExpenses[category] || 0
+    }));
+  };
 
   // Helper function for a simple vessel selector
   const renderVesselSelector = () => {
@@ -1007,141 +1155,361 @@ const FinancialManagement: React.FC = () => {
                     <div className="mb-6">
                       <h3 className="text-lg font-medium mb-4">Monthly Spending Trends</h3>
                       <TremorCard>
-                        <Text>Spending by Month</Text>
-                        <LineChart
-                          className="h-80 mt-6"
-                          data={[
-                            {
-                              month: "Jan",
-                              Operations: 5000,
-                              Maintenance: 2000,
-                              Fuel: 3500,
-                              Crew: 7500
-                            },
-                            {
-                              month: "Feb",
-                              Operations: 4800,
-                              Maintenance: 3200,
-                              Fuel: 4000,
-                              Crew: 7500
-                            },
-                            {
-                              month: "Mar",
-                              Operations: 6500,
-                              Maintenance: 4800,
-                              Fuel: 4500,
-                              Crew: 7500
-                            },
-                            {
-                              month: "Apr",
-                              Operations: 8200,
-                              Maintenance: 7200,
-                              Fuel: 5800,
-                              Crew: 7500
-                            }
-                          ]}
-                          index="month"
-                          categories={["Operations", "Maintenance", "Fuel", "Crew"]}
-                          colors={["blue", "emerald", "amber", "indigo"]}
-                          valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
-                          yAxisWidth={60}
-                          showLegend={true}
-                          showAnimation={true}
-                          curveType="natural"
-                        />
-                        <p className="text-xs text-center text-muted-foreground mt-2">
-                          This visualization shows the spending trends for major budget categories over time
-                        </p>
+                        <TabGroup>
+                          <TabList className="mb-4">
+                            <Tab>Line Chart</Tab>
+                            <Tab>Bar Chart</Tab>
+                            <Tab>Interactive View</Tab>
+                          </TabList>
+                          <TabPanels>
+                            <TabPanel>
+                              <Text>Spending by Month & Category (Real-time Data)</Text>
+                              {(!expenses || !Array.isArray(expenses) || expenses.length === 0) ? (
+                                <div className="h-80 flex items-center justify-center flex-col p-6 border border-dashed rounded-md mt-4">
+                                  <Receipt className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                                  <p className="text-muted-foreground text-center">No expense data available for this period</p>
+                                  <p className="text-sm text-muted-foreground text-center mt-2">
+                                    Add expenses to see spending trends over time
+                                  </p>
+                                </div>
+                              ) : (
+                                <LineChart
+                                  className="h-80 mt-6"
+                                  data={getMonthlySpendingData(expenses)}
+                                  index="month"
+                                  categories={getUniqueCategories(expenses).slice(0, 6)}
+                                  colors={["blue", "emerald", "amber", "rose", "violet", "indigo"]}
+                                  valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                                  showLegend={true}
+                                  yAxisWidth={60}
+                                  showAnimation={true}
+                                  curveType="natural"
+                                />
+                              )}
+                              <p className="text-xs text-center text-muted-foreground mt-4">
+                                This visualization shows actual spending trends for major budget categories over time
+                              </p>
+                            </TabPanel>
+                            <TabPanel>
+                              <Text>Budget vs. Actual by Month</Text>
+                              {(!expenses || !Array.isArray(expenses) || expenses.length === 0 || 
+                                !budgets || !Array.isArray(budgets) || budgets.length === 0) ? (
+                                <div className="h-80 flex items-center justify-center flex-col p-6 border border-dashed rounded-md mt-4">
+                                  <BarChart4 className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                                  <p className="text-muted-foreground text-center">No expense or budget data available for comparison</p>
+                                  <p className="text-sm text-muted-foreground text-center mt-2">
+                                    Add expenses and budgets to compare spending against allocations
+                                  </p>
+                                </div>
+                              ) : (
+                                <BarChart
+                                  className="h-80 mt-6"
+                                  data={getMonthlyBudgetComparisonData(budgets, expenses)}
+                                  index="month"
+                                  categories={["Budget", "Actual"]}
+                                  colors={["blue", "amber"]}
+                                  valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                                  showLegend={true}
+                                  yAxisWidth={60}
+                                  showAnimation={true}
+                                />
+                              )}
+                              <p className="text-xs text-center text-muted-foreground mt-4">
+                                Compare monthly spending against allocated budgets
+                              </p>
+                            </TabPanel>
+                            <TabPanel>
+                              <Text>Category Breakdown Over Time</Text>
+                              {(!expenses || !Array.isArray(expenses) || expenses.length === 0) ? (
+                                <div className="h-80 flex items-center justify-center flex-col p-6 border border-dashed rounded-md mt-4">
+                                  <Calculator className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                                  <p className="text-muted-foreground text-center">No expense data to display</p>
+                                  <p className="text-sm text-muted-foreground text-center mt-2">
+                                    Add expenses to generate detailed category breakdown
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="mt-4">
+                                  <ResponsiveContainer width="100%" height={400}>
+                                    <RechartsBarChart
+                                      data={getCategoryBreakdownData(expenses)}
+                                      margin={{
+                                        top: 20,
+                                        right: 30,
+                                        left: 20,
+                                        bottom: 60,
+                                      }}
+                                    >
+                                      <CartesianGrid strokeDasharray="3 3" />
+                                      <XAxis 
+                                        dataKey="category" 
+                                        angle={-45} 
+                                        textAnchor="end" 
+                                        height={70}
+                                        tick={{ fontSize: 12 }}
+                                      />
+                                      <YAxis 
+                                        tickFormatter={(value) => `€${value}`}
+                                        tick={{ fontSize: 12 }}
+                                      />
+                                      <RechartsTooltip 
+                                        formatter={(value) => [`€${value.toLocaleString()}`, 'Amount']}
+                                        labelFormatter={(label) => `Category: ${label}`}
+                                      />
+                                      <Legend />
+                                      <Bar 
+                                        dataKey="budgeted" 
+                                        name="Budget Allocated" 
+                                        fill="#3b82f6"
+                                        radius={[4, 4, 0, 0]}
+                                      />
+                                      <Bar 
+                                        dataKey="spent" 
+                                        name="Actual Spending" 
+                                        fill="#f59e0b"
+                                        radius={[4, 4, 0, 0]}
+                                      />
+                                    </RechartsBarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              )}
+                              <p className="text-xs text-center text-muted-foreground mt-4">
+                                This visualization compares budget allocation against actual spending by category
+                              </p>
+                            </TabPanel>
+                          </TabPanels>
+                        </TabGroup>
                       </TremorCard>
                     </div>
 
-                    {/* Budget utilization progress - interactive version */}
+                    {/* Budget utilization progress - enhanced interactive version */}
                     <div>
-                      <h3 className="text-lg font-medium mb-4">Budget Utilization Progress</h3>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                        <h3 className="text-lg font-medium mb-2 md:mb-0">Budget Utilization Progress</h3>
+                        <div className="flex items-center gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1 text-sm px-2 py-1 bg-muted/30 rounded-md cursor-help">
+                                  <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-muted-foreground text-xs">What do colors mean?</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs p-4">
+                                <h4 className="font-medium mb-2">Budget Status Indicators</h4>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                    <span>Good (under 70% used)</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                                    <span>Warning (70-90% used)</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <span>Critical (over 90% used)</span>
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs h-8"
+                            onClick={() => setShowBudgetDialog(true)}
+                            aria-label="Create new budget"
+                          >
+                            <Plus className="h-3.5 w-3.5 mr-1" />
+                            New Budget
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* No data state */}
+                      {(!chartData || chartData.length === 0) && (
+                        <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg">
+                          <Wallet className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                          <h4 className="text-lg font-medium mb-2">No Budget Data Available</h4>
+                          <p className="text-sm text-muted-foreground text-center max-w-md mb-4">
+                            Create budgets to track spending against allocations and visualize your financial data.
+                            Well-organized budgets help maintain financial clarity across vessel operations.
+                          </p>
+                          <Button
+                            onClick={() => setShowBudgetDialog(true)}
+                            className="text-sm"
+                            aria-label="Create your first budget"
+                          >
+                            <Plus className="h-4 w-4 mr-1.5" />
+                            Create Your First Budget
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Budget data visualization */}
                       <div className="space-y-6">
-                        {chartData.map((item, index) => (
-                          <div key={index} className="mb-6 bg-muted/10 p-4 rounded-lg border border-muted hover:border-primary/30 transition-colors">
-                            <div className="flex justify-between items-center mb-2">
+                        {chartData && chartData.map((item, index) => (
+                          <div 
+                            key={index} 
+                            className="mb-6 bg-card p-5 rounded-lg border border-muted shadow-sm hover:border-primary/40 transition-colors"
+                            tabIndex={0}
+                            role="region"
+                            aria-label={`Budget for ${item.name} in the ${item.category} category`}
+                          >
+                            <div className="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-3">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="font-medium text-foreground flex items-center cursor-help">
-                                      {item.name}
-                                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                                    <div className="font-medium flex items-center cursor-help">
+                                      <h4 className="text-base font-semibold">{item.name}</h4>
+                                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                                         {item.category}
                                       </span>
                                     </div>
                                   </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Period: {new Date(item.periodStart).toLocaleDateString()} to {new Date(item.periodEnd).toLocaleDateString()}</p>
+                                  <TooltipContent side="top" align="start">
+                                    <div className="space-y-1 text-sm">
+                                      <p className="font-medium">{item.name} Budget Details</p>
+                                      <p>Period: {new Date(item.periodStart).toLocaleDateString()} to {new Date(item.periodEnd).toLocaleDateString()}</p>
+                                      <p>Category: {item.category}</p>
+                                      {item.description && <p>Description: {item.description}</p>}
+                                    </div>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              <div className="flex items-center gap-2">
+                              
+                              <div className="flex items-center gap-3">
                                 <div 
-                                  className={`text-sm font-semibold px-2 py-1 rounded ${
+                                  className={`text-sm font-medium px-3 py-1 rounded-full ${
                                     item.percentUsed >= 90 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
                                     item.percentUsed >= 70 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 
                                     'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
                                   }`}
                                   role="status"
-                                  aria-label={`Budget utilization: ${item.percentUsed}%`}
+                                  aria-label={`Budget is ${item.percentUsed}% utilized`}
                                 >
-                                  {item.percentUsed}% Used
+                                  <span className="flex items-center gap-1.5">
+                                    {item.percentUsed >= 90 ? (
+                                      <AlertCircle className="h-3.5 w-3.5" />
+                                    ) : item.percentUsed >= 70 ? (
+                                      <AlertCircle className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <CheckCircle className="h-3.5 w-3.5" />
+                                    )}
+                                    {item.percentUsed}% Used
+                                  </span>
                                 </div>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="h-7 text-xs"
-                                  aria-label={`View transactions for ${item.name}`}
-                                >
-                                  <FileText className="h-3 w-3 mr-1" />
-                                  Details
-                                </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        className="h-8 text-xs font-medium"
+                                        aria-label={`View transactions for ${item.name} budget`}
+                                      >
+                                        <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                        View Details
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p>View all transactions related to this budget</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-3 gap-3 mb-3 mt-2">
-                              <div className="bg-muted/20 p-2 rounded-md text-center">
-                                <span className="text-xs text-muted-foreground block">Total Budget</span>
-                                <span className="text-base font-bold text-foreground">€{item.Budget.toLocaleString()}</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                              <div className="bg-muted/20 p-3 rounded-md text-center flex flex-col justify-between">
+                                <span className="text-xs text-muted-foreground mb-1">Total Budget</span>
+                                <span className="text-base font-bold text-primary">€{item.Budget.toLocaleString()}</span>
                               </div>
-                              <div className="bg-muted/20 p-2 rounded-md text-center">
-                                <span className="text-xs text-muted-foreground block">Spent</span>
+                              <div className="bg-muted/20 p-3 rounded-md text-center flex flex-col justify-between">
+                                <span className="text-xs text-muted-foreground mb-1">Spent</span>
                                 <span className={`text-base font-bold ${
                                   item.percentUsed >= 90 ? 'text-red-600 dark:text-red-400' : 
                                   item.percentUsed >= 70 ? 'text-amber-600 dark:text-amber-400' : 
                                   'text-emerald-600 dark:text-emerald-400'
                                 }`}>€{item.Spent.toLocaleString()}</span>
                               </div>
-                              <div className="bg-muted/20 p-2 rounded-md text-center">
-                                <span className="text-xs text-muted-foreground block">Remaining</span>
-                                <span className="text-base font-bold text-blue-600 dark:text-blue-400">€{item.Remaining.toLocaleString()}</span>
+                              <div className="bg-muted/20 p-3 rounded-md text-center flex flex-col justify-between">
+                                <span className="text-xs text-muted-foreground mb-1">Remaining</span>
+                                <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">€{item.Remaining.toLocaleString()}</span>
                               </div>
                             </div>
                             
-                            <div className="relative pt-1">
-                              <div 
-                                className="overflow-hidden h-4 mb-1 text-xs flex rounded-full bg-muted"
-                                role="progressbar" 
-                                aria-valuenow={item.percentUsed} 
-                                aria-valuemin={0} 
-                                aria-valuemax={100}
-                              >
+                            {/* Enhanced progress bar with labels */}
+                            <div className="mt-4">
+                              <div className="flex mb-1 items-center justify-between">
+                                <span className="text-xs text-muted-foreground">Budget Period</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(item.periodStart).toLocaleDateString()} - {new Date(item.periodEnd).toLocaleDateString()}
+                                </span>
+                              </div>
+                              
+                              <div className="relative">
                                 <div 
-                                  style={{ width: `${item.percentUsed}%` }} 
-                                  className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${
-                                    item.percentUsed >= 90 ? 'bg-red-500' : 
-                                    item.percentUsed >= 70 ? 'bg-amber-500' : 
-                                    'bg-emerald-500'
-                                  }`}
+                                  className="overflow-hidden h-5 mb-2 text-xs flex rounded-md bg-muted"
+                                  role="progressbar" 
+                                  aria-valuenow={item.percentUsed} 
+                                  aria-valuemin={0} 
+                                  aria-valuemax={100}
                                 >
-                                  <span className="text-[10px] font-semibold">{item.percentUsed}%</span>
+                                  <div 
+                                    style={{ width: `${item.percentUsed}%` }} 
+                                    className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ease-in-out ${
+                                      item.percentUsed >= 90 ? 'bg-red-500' : 
+                                      item.percentUsed >= 70 ? 'bg-amber-500' : 
+                                      'bg-emerald-500'
+                                    }`}
+                                  >
+                                    {item.percentUsed > 10 && (
+                                      <span className="text-xs font-medium px-2">€{item.Spent.toLocaleString()} of €{item.Budget.toLocaleString()}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {item.percentUsed <= 10 && (
+                                  <span className="text-xs text-muted-foreground">€{item.Spent.toLocaleString()} of €{item.Budget.toLocaleString()}</span>
+                                )}
+                                
+                                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                  <span>0%</span>
+                                  <span>25%</span>
+                                  <span>50%</span>
+                                  <span>75%</span>
+                                  <span>100%</span>
                                 </div>
                               </div>
-                              <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>{new Date(item.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                <span>{new Date(item.periodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                              
+                              {/* Spending rate indicator */}
+                              <div className="mt-4 p-3 bg-muted/10 rounded-md">
+                                <h5 className="text-xs font-medium mb-2 text-foreground flex items-center">
+                                  <DollarSign className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                                  Spending Rate Analysis
+                                </h5>
+                                <div className="flex items-center gap-1 mb-2">
+                                  <div className={`h-1.5 flex-1 rounded-l-full ${
+                                    item.percentUsed <= 33 ? 'bg-emerald-500' : 'bg-muted'
+                                  }`}></div>
+                                  <div className={`h-1.5 flex-1 ${
+                                    item.percentUsed > 33 && item.percentUsed <= 66 ? 'bg-blue-500' : 'bg-muted'
+                                  }`}></div>
+                                  <div className={`h-1.5 flex-1 rounded-r-full ${
+                                    item.percentUsed > 66 ? 'bg-amber-500' : 'bg-muted'
+                                  }`}></div>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.percentUsed <= 33 ? (
+                                    "Spending rate: Within expected levels for this budget period"
+                                  ) : item.percentUsed <= 66 ? (
+                                    "Spending rate: Progressing at expected pace - within projections"
+                                  ) : (
+                                    "Spending rate: Higher than expected - monitor closely"
+                                  )}
+                                </p>
                               </div>
                             </div>
                           </div>
