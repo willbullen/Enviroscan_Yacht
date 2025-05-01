@@ -22,6 +22,36 @@ import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import {
+  Card as TremorCard,
+  Text,
+  Metric,
+  CategoryBar,
+  DonutChart,
+  BarChart,
+  ProgressBar,
+  LineChart,
+  Tab,
+  TabGroup,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Grid,
+  Col
+} from "@tremor/react";
+import {
+  PieChart,
+  Pie,
+  ResponsiveContainer, 
+  Cell, 
+  Legend,
+  Tooltip as RechartsTooltip,
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid
+} from "recharts";
 import { 
   AlertCircle,
   CheckCircle,
@@ -508,6 +538,42 @@ const FinancialManagement: React.FC = () => {
         );
         
       case "budgets":
+        // Sample data - in a real implementation, this would come from API
+        const sampleBudgetData = [
+          { name: 'Fuel', budget: 50000, spent: 32500, remaining: 17500, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
+          { name: 'Maintenance', budget: 75000, spent: 45000, remaining: 30000, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
+          { name: 'Crew Salaries', budget: 120000, spent: 40000, remaining: 80000, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
+          { name: 'Provisions', budget: 25000, spent: 8500, remaining: 16500, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
+          { name: 'Insurance', budget: 35000, spent: 35000, remaining: 0, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
+          { name: 'Docking Fees', budget: 18000, spent: 6000, remaining: 12000, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
+        ];
+
+        // Chart data transformation
+        const chartData = sampleBudgetData.map(item => ({
+          name: item.name,
+          Budget: item.budget,
+          Spent: item.spent,
+          Remaining: item.remaining,
+          percentUsed: Math.round((item.spent / item.budget) * 100),
+        }));
+
+        // Pie chart data
+        const pieData = sampleBudgetData.map(item => ({
+          name: item.name,
+          value: item.budget,
+        }));
+
+        // Spending by category chart data
+        const spendingData = sampleBudgetData.map(item => ({
+          name: item.name,
+          value: item.spent,
+        }));
+
+        const COLORS = [
+          '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a855f7', '#ec4899', 
+          '#8b5cf6', '#22c55e', '#06b6d4', '#f43f5e'
+        ];
+
         return (
           <div>
             <Card>
@@ -536,10 +602,134 @@ const FinancialManagement: React.FC = () => {
                 </TooltipProvider>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No budgets found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Budgets will appear here once added.</p>
-                </div>
+                {sampleBudgetData.length === 0 ? (
+                  <div className="border rounded-md p-4 text-center">
+                    <p className="text-muted-foreground">No budgets found for this vessel.</p>
+                    <p className="text-sm text-muted-foreground mt-2">Budgets will appear here once added.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Overall budget summary */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-4">Budget Overview</h3>
+                      <Grid numItemsLg={2} numItemsMd={2} numItemsSm={1} className="gap-6">
+                        <Col>
+                          <TremorCard className="mx-auto">
+                            <Text>Budget Allocation by Category</Text>
+                            <DonutChart
+                              className="mt-4 h-40"
+                              data={pieData}
+                              category="value"
+                              index="name"
+                              colors={["blue", "cyan", "amber", "emerald", "violet", "indigo", "rose"]}
+                              showAnimation={true}
+                              valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                            />
+                          </TremorCard>
+                        </Col>
+                        <Col>
+                          <TremorCard className="mx-auto">
+                            <Text>Spending by Category</Text>
+                            <DonutChart
+                              className="mt-4 h-40"
+                              data={spendingData}
+                              category="value"
+                              index="name"
+                              colors={["blue", "cyan", "amber", "emerald", "violet", "indigo", "rose"]}
+                              showAnimation={true}
+                              valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                            />
+                          </TremorCard>
+                        </Col>
+                      </Grid>
+                    </div>
+
+                    {/* Budget vs Actual Spending Comparison */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-4">Budget vs. Actual Spending</h3>
+                      <TremorCard>
+                        <TabGroup>
+                          <TabList className="mb-4">
+                            <Tab>Bar Chart</Tab>
+                            <Tab>Table View</Tab>
+                          </TabList>
+                          <TabPanels>
+                            <TabPanel>
+                              <BarChart
+                                className="h-80 mt-4"
+                                data={chartData}
+                                index="name"
+                                categories={["Budget", "Spent"]}
+                                colors={["blue", "amber"]}
+                                valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                                yAxisWidth={60}
+                                showLegend={true}
+                                showAnimation={true}
+                              />
+                            </TabPanel>
+                            <TabPanel>
+                              <Table className="mt-2">
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead className="text-right">Budget</TableHead>
+                                    <TableHead className="text-right">Spent</TableHead>
+                                    <TableHead className="text-right">Remaining</TableHead>
+                                    <TableHead className="text-right">% Used</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {chartData.map((item, index) => (
+                                    <TableRow key={index}>
+                                      <TableCell className="font-medium">{item.name}</TableCell>
+                                      <TableCell className="text-right">€{item.Budget.toLocaleString()}</TableCell>
+                                      <TableCell className="text-right">€{item.Spent.toLocaleString()}</TableCell>
+                                      <TableCell className="text-right">€{item.Remaining.toLocaleString()}</TableCell>
+                                      <TableCell className="text-right">
+                                        <div className="flex items-center justify-end">
+                                          <span className={`mr-2 ${item.percentUsed >= 90 ? 'text-red-500' : item.percentUsed >= 70 ? 'text-amber-500' : 'text-green-500'}`}>
+                                            {item.percentUsed}%
+                                          </span>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </TabPanel>
+                          </TabPanels>
+                        </TabGroup>
+                      </TremorCard>
+                    </div>
+
+                    {/* Budget utilization progress */}
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">Budget Utilization Progress</h3>
+                      {chartData.map((item, index) => (
+                        <div key={index} className="mb-4">
+                          <div className="flex justify-between items-center mb-1">
+                            <div className="font-medium text-sm">{item.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              €{item.Spent.toLocaleString()} of €{item.Budget.toLocaleString()}
+                            </div>
+                          </div>
+                          <div className="w-full">
+                            <ProgressBar 
+                              value={item.percentUsed} 
+                              color={item.percentUsed >= 90 ? 'red' : item.percentUsed >= 70 ? 'amber' : 'emerald'} 
+                              tooltip={`${item.percentUsed}% of budget used`}
+                              showAnimation={true}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <div>0%</div>
+                            <div>100%</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

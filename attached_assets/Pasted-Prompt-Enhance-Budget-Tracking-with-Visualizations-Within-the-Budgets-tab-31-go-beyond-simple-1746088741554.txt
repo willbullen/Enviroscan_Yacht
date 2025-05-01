@@ -1,0 +1,10 @@
+Prompt: Enhance Budget Tracking with Visualizations. Within the "Budgets" tab (31), go beyond simple number tracking. Implement visual comparisons of budget allocations versus actual spending (e.g., progress bars, variance indicators) directly within the budget view or dedicated reports.
+Prompt: Introduce Bank Reconciliation Tools. Develop a dedicated feature, likely within the "Banking" tab (29), to facilitate bank reconciliation. Allow users to import bank statements (e.g., OFX, CSV) and provide an interface to match statement lines with transactions recorded in the system, flagging discrepancies.
+Prompt: Enable Customizable Financial Reports. Expand the "Reports" tab (35) beyond standard templates. Provide a report builder interface allowing users to select data sources, columns, filters, grouping, and sorting options to create and save custom report formats tailored to specific needs.
+Prompt: Develop an Expense Approval Workflow. Implement a system for expense management that includes submission, approval, and rejection steps. Allow users to submit expense claims (potentially with receipt attachments), route them to designated approvers based on rules (e.g., amount, department), and track the approval status.
+Prompt: Add Multi-Vessel Consolidated Reporting. If the application manages multiple vessels, provide an option to generate consolidated financial reports (e.g., combined P&L, aggregated expenses) across selected vessels or the entire fleet, in addition to individual vessel reports.
+Prompt: Integrate Advanced Data Visualizations. Enhance financial insights by incorporating more charts and graphs beyond the initial summary cards. Consider adding visualizations for:
+Expense breakdown by category/vendor (pie/bar charts).
+Income/Expense trends over time (line charts).
+Budget utilization across different categories.
+Prompt: Implement a Financial Audit Trail. Introduce a secure log that records key financial events and changes (e.g., transaction creation/modification/deletion, budget adjustments, account changes), including user, timestamp, and details of the change, to enhance accountability and traceability.
