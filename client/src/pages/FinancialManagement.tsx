@@ -1951,43 +1951,7 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
-      case "payroll":
-        return (
-          <div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Payroll</CardTitle>
-                  <CardDescription>Manage crew payroll for {currentVessel.name}</CardDescription>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => setShowPayrollDialog(true)}
-                        aria-label="Create a new payroll entry"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                      >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Payroll Entry
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Create a new payroll entry</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No payroll entries found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Payroll entries will appear here once added.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+      // Payroll case handled in earlier switch statement
         
       default:
         return (
