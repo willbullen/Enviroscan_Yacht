@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import {
   Calendar, 
   Plus, 
   Building, 
+  ChevronDown,
   Receipt, 
   Users, 
   Ship,
@@ -557,6 +559,15 @@ const FinancialManagement: React.FC = () => {
     address: z.string().min(5, "Address is required"),
     category: z.string().min(1, "Category is required")
   });
+  
+  const categorySchema = z.object({
+    name: z.string().min(2, "Category name must be at least 2 characters"),
+    code: z.string().min(1, "Code is required"),
+    description: z.string().optional(),
+    parentCategoryId: z.string().nullable(),
+    level: z.string(),
+    isActive: z.boolean().default(true)
+  });
 
   // Form setup
   const accountForm = useForm({
@@ -632,6 +643,17 @@ const FinancialManagement: React.FC = () => {
       category: ""
     }
   });
+  
+  const categoryForm = useForm({
+    defaultValues: {
+      name: "",
+      code: "",
+      description: "",
+      parentCategoryId: null as string | null,
+      level: "1",
+      isActive: true
+    }
+  });
 
   // Form submission handlers
   const onAccountSubmit = (data: any) => {
@@ -674,6 +696,12 @@ const FinancialManagement: React.FC = () => {
     console.log("New vendor data:", data);
     setShowVendorDialog(false);
     // Here you would call a mutation to create the vendor
+  };
+  
+  const onCategorySubmit = (data: any) => {
+    console.log("New category data:", data);
+    setShowCategoryDialog(false);
+    // Here you would call a mutation to create the category
   };
 
   return (
@@ -1518,6 +1546,137 @@ const FinancialManagement: React.FC = () => {
                   />
                   <DialogFooter>
                     <Button type="submit">Create Vendor</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Add New Category Dialog */}
+          <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add Financial Category</DialogTitle>
+                <DialogDescription>
+                  Create a new financial category for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...categoryForm}>
+                <form onSubmit={categoryForm.handleSubmit(onCategorySubmit)} className="space-y-4">
+                  <FormField
+                    control={categoryForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Fuel Expenses" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={categoryForm.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. FUE" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={categoryForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="e.g. All fuel related expenses" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={categoryForm.control}
+                    name="parentCategoryId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Parent Category (Optional)</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select parent category (optional)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="null">None (Top-level category)</SelectItem>
+                            <SelectItem value="1">Fuel Expenses</SelectItem>
+                            <SelectItem value="2">Maintenance</SelectItem>
+                            <SelectItem value="3">Crew Expenses</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          If this is a subcategory, select a parent category. Otherwise, leave as "None".
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={categoryForm.control}
+                    name="level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category Level</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">Level 1 (Top-level)</SelectItem>
+                            <SelectItem value="2">Level 2 (Subcategory)</SelectItem>
+                            <SelectItem value="3">Level 3 (Sub-subcategory)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={categoryForm.control}
+                    name="isActive"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Active Category
+                          </FormLabel>
+                          <FormDescription>
+                            Inactive categories won't appear in selection menus.
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Category</Button>
                   </DialogFooter>
                 </form>
               </Form>
