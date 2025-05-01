@@ -31,7 +31,8 @@ import {
   budgetAllocations, type BudgetAllocation, type InsertBudgetAllocation,
   expenses, type Expense, type InsertExpense, 
   transactions, type Transaction, type InsertTransaction,
-  transactionLines, type TransactionLine, type InsertTransactionLine
+  transactionLines, type TransactionLine, type InsertTransactionLine,
+  deposits, type Deposit, type InsertDeposit
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
