@@ -1263,9 +1263,14 @@ const FinancialManagement: React.FC = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Account Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          aria-label="Select account type"
+                          aria-describedby="account-type-description"
+                        >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="focus-visible:ring-2 focus-visible:ring-primary/30">
                               <SelectValue placeholder="Select account type" />
                             </SelectTrigger>
                           </FormControl>
@@ -1277,6 +1282,9 @@ const FinancialManagement: React.FC = () => {
                             <SelectItem value="expense">Expense</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormDescription id="account-type-description" className="text-xs text-muted-foreground">
+                          Determines how this account is categorized in financial reports
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1288,8 +1296,17 @@ const FinancialManagement: React.FC = () => {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Optional description" {...field} />
+                          <Textarea 
+                            placeholder="Optional description" 
+                            aria-label="Account description"
+                            aria-describedby="description-help"
+                            className="focus-visible:ring-2 focus-visible:ring-primary/30 min-h-[80px]"
+                            {...field} 
+                          />
                         </FormControl>
+                        <FormDescription id="description-help" className="text-xs text-muted-foreground">
+                          Additional details about this account's purpose or usage
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1300,19 +1317,21 @@ const FinancialManagement: React.FC = () => {
                       variant="outline" 
                       onClick={() => setShowAccountDialog(false)}
                       disabled={isSubmitting}
-                      className="text-foreground hover:bg-muted/20 hover:text-foreground/80"
+                      aria-label="Cancel account creation"
+                      className="text-foreground hover:bg-muted/20 hover:text-foreground/80 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit" 
                       disabled={isSubmitting}
-                      className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 focus:ring-offset-2"
+                      aria-label={isSubmitting ? "Creating account, please wait" : "Create new financial account"}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating...
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                          <span>Creating...</span>
                         </>
                       ) : (
                         'Create Account'
