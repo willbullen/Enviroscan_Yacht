@@ -57,6 +57,7 @@ const FinancialManagement: React.FC = () => {
   const [showBankingDialog, setShowBankingDialog] = useState(false);
   const [showPayrollDialog, setShowPayrollDialog] = useState(false);
   const [showVendorDialog, setShowVendorDialog] = useState(false);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [showGenericDialog, setShowGenericDialog] = useState(false);
   
   // Get current vessel from context to filter financial data
@@ -172,7 +173,8 @@ const FinancialManagement: React.FC = () => {
     payroll: "employeeName,position,salary,paymentDate,bankAccount,vesselId,taxCode\nJohn Smith,Captain,8000.00,2025-01-15,GB123456789,1,TAX123\nJane Doe,Chief Engineer,7500.00,2025-01-15,GB987654321,1,TAX456",
     budgets: "name,amount,startDate,endDate,category,vesselId,notes\nQ1 Operating Budget,75000.00,2025-01-01,2025-03-31,Operations,1,First quarter operating expenses\nAnnual Maintenance Budget,120000.00,2025-01-01,2025-12-31,Maintenance,1,Annual maintenance reserve",
     expenses: "date,amount,category,description,paymentMethod,vesselId,reference\n2025-01-05,1500.00,Fuel,Diesel refill,bank_transfer,1,INV12345\n2025-01-10,350.00,Provisions,Crew food supplies,credit_card,1,REC67890",
-    vendors: "name,contactPerson,email,phone,address,vesselId,category\nMarine Supplies Ltd,John Brown,jbrown@marinesupplies.com,+44123456789,123 Harbor Road London UK,1,Supplies\nEngineering Services Inc,Sarah Johnson,sjohnson@engservices.com,+15559876543,456 Dockside Blvd Miami USA,1,Maintenance"
+    vendors: "name,contactPerson,email,phone,address,vesselId,category\nMarine Supplies Ltd,John Brown,jbrown@marinesupplies.com,+44123456789,123 Harbor Road London UK,1,Supplies\nEngineering Services Inc,Sarah Johnson,sjohnson@engservices.com,+15559876543,456 Dockside Blvd Miami USA,1,Maintenance",
+    categories: "name,code,description,parentCategoryId,level,vesselId,isActive\nFuel Expenses,FUE,All fuel related expenses,null,1,1,true\nDiesel,DSL,Diesel fuel costs,1,2,1,true\nGasoline,GSL,Gasoline costs,1,2,1,true\nMaintenance,MNT,Maintenance and repairs,null,1,1,true\nParts,PRT,Replacement parts,2,2,1,true\nLabor,LBR,Labor costs for maintenance,2,2,1,true"
   };
 
   // Function to create a bulk import button for a specific section
@@ -389,6 +391,45 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
+      case "categories":
+        return (
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Financial Categories</CardTitle>
+                <CardDescription>Category structure for {currentVessel.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium mb-2">Multi-Tier Category System</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Organize your financial data with a hierarchical category system. Categories can have multiple levels to help with detailed financial reporting.
+                  </p>
+                  
+                  <div className="border rounded-md overflow-hidden">
+                    <div className="bg-muted/30 p-2 border-b flex items-center justify-between">
+                      <span className="font-medium">Category Structure</span>
+                      <div>
+                        <Button variant="ghost" size="sm" className="h-8 gap-1">
+                          <ChevronDown className="h-4 w-4" />
+                          <span>Expand All</span>
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4">
+                      <div className="border rounded-md p-4 text-center">
+                        <p className="text-muted-foreground">No categories found for this vessel.</p>
+                        <p className="text-sm text-muted-foreground mt-2">Categories will appear here once added.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+        
       case "reports":
         return (
           <div>
@@ -443,6 +484,9 @@ const FinancialManagement: React.FC = () => {
         break;
       case "vendors":
         setShowVendorDialog(true);
+        break;
+      case "categories": 
+        setShowCategoryDialog(true);
         break;
       case "reports":
         // No add new functionality for reports
@@ -672,6 +716,9 @@ const FinancialManagement: React.FC = () => {
                 </TabsTrigger>
                 <TabsTrigger value="vendors" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <Building className="h-4 w-4" /> Vendors
+                </TabsTrigger>
+                <TabsTrigger value="categories" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
+                  <ListTree className="h-4 w-4" /> Categories
                 </TabsTrigger>
                 <TabsTrigger value="reports" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium">
                   <FileText className="h-4 w-4" /> Reports
