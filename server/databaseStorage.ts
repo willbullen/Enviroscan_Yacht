@@ -2245,6 +2245,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(transactions.vesselId, vesselId));
   }
   
+  async getAllTransactions(): Promise<Transaction[]> {
+    return db
+      .select()
+      .from(transactions);
+  }
+  
   async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
     const [newTransaction] = await db.insert(transactions).values(transaction).returning();
     return newTransaction;

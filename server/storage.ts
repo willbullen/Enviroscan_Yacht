@@ -292,6 +292,7 @@ export interface IStorage {
   // Transaction operations
   getTransaction(id: number): Promise<Transaction | undefined>;
   getTransactionsByVessel(vesselId: number): Promise<Transaction[]>;
+  getAllTransactions(): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, transaction: Partial<Transaction>): Promise<Transaction | undefined>;
   deleteTransaction(id: number): Promise<boolean>;
