@@ -1046,6 +1046,436 @@ const FinancialManagement: React.FC = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          
+          {/* Add New Journal Entry Dialog */}
+          <Dialog open={showJournalDialog} onOpenChange={setShowJournalDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add Journal Entry</DialogTitle>
+                <DialogDescription>
+                  Create a new journal entry for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...journalForm}>
+                <form onSubmit={journalForm.handleSubmit(onJournalSubmit)} className="space-y-4">
+                  <FormField
+                    control={journalForm.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={journalForm.control}
+                    name="reference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. JE001" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={journalForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Monthly crew payment" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={journalForm.control}
+                      name="debit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Debit Amount (€)</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                              <Input className="pl-6" placeholder="0.00" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={journalForm.control}
+                      name="credit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Credit Amount (€)</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                              <Input className="pl-6" placeholder="0.00" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={journalForm.control}
+                    name="account"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select account" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="operating_account">Operating Account</SelectItem>
+                            <SelectItem value="crew_expenses">Crew Expenses</SelectItem>
+                            <SelectItem value="maintenance_expenses">Maintenance Expenses</SelectItem>
+                            <SelectItem value="fuel_expenses">Fuel Expenses</SelectItem>
+                            <SelectItem value="berthing_expenses">Berthing Expenses</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Journal Entry</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Add New Banking Dialog */}
+          <Dialog open={showBankingDialog} onOpenChange={setShowBankingDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add Bank Account</DialogTitle>
+                <DialogDescription>
+                  Create a new bank account for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...bankingForm}>
+                <form onSubmit={bankingForm.handleSubmit(onBankingSubmit)} className="space-y-4">
+                  <FormField
+                    control={bankingForm.control}
+                    name="accountName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Main Account" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={bankingForm.control}
+                    name="bankName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bank Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Maritime Bank" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={bankingForm.control}
+                      name="accountNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Account Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 123456789" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={bankingForm.control}
+                      name="routingNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Routing Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 987654321" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={bankingForm.control}
+                    name="balance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Initial Balance (€)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                            <Input className="pl-6" placeholder="0.00" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Bank Account</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Add New Payroll Dialog */}
+          <Dialog open={showPayrollDialog} onOpenChange={setShowPayrollDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add Payroll Record</DialogTitle>
+                <DialogDescription>
+                  Create a new payroll record for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...payrollForm}>
+                <form onSubmit={payrollForm.handleSubmit(onPayrollSubmit)} className="space-y-4">
+                  <FormField
+                    control={payrollForm.control}
+                    name="employeeName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Employee Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. John Smith" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={payrollForm.control}
+                    name="position"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Position</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select position" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="captain">Captain</SelectItem>
+                            <SelectItem value="chief_engineer">Chief Engineer</SelectItem>
+                            <SelectItem value="first_officer">First Officer</SelectItem>
+                            <SelectItem value="deck_hand">Deck Hand</SelectItem>
+                            <SelectItem value="steward">Steward</SelectItem>
+                            <SelectItem value="chef">Chef</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={payrollForm.control}
+                    name="salary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Salary (€)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2">€</span>
+                            <Input className="pl-6" placeholder="0.00" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={payrollForm.control}
+                    name="paymentDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payment Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={payrollForm.control}
+                    name="bankAccount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bank Account</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. GB123456789" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={payrollForm.control}
+                    name="taxCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tax Code (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. TAX123" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Payroll Record</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Add New Vendor Dialog */}
+          <Dialog open={showVendorDialog} onOpenChange={setShowVendorDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add Vendor</DialogTitle>
+                <DialogDescription>
+                  Create a new vendor for {currentVessel?.name}.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...vendorForm}>
+                <form onSubmit={vendorForm.handleSubmit(onVendorSubmit)} className="space-y-4">
+                  <FormField
+                    control={vendorForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vendor Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Marine Supplies Ltd" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={vendorForm.control}
+                    name="contactPerson"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contact Person</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. John Brown" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={vendorForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="e.g. contact@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={vendorForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. +44123456789" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={vendorForm.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="e.g. 123 Harbor Road, London, UK" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={vendorForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="supplies">Supplies</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="fuel">Fuel</SelectItem>
+                            <SelectItem value="provisions">Provisions</SelectItem>
+                            <SelectItem value="services">Services</SelectItem>
+                            <SelectItem value="insurance">Insurance</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Vendor</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </MainLayout>
