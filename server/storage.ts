@@ -705,6 +705,12 @@ export class MemStorage implements IStorage {
   private formSubmissionCurrentId: number = 1;
   private taskCommentCurrentId: number = 1;
   private depositCurrentId: number = 1;
+  private financialAccountCurrentId: number = 1;
+  private transactionCurrentId: number = 1;
+  private transactionLineCurrentId: number = 1;
+  private expenseCurrentId: number = 1;
+  private budgetCurrentId: number = 1;
+  private budgetAllocationCurrentId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -737,6 +743,12 @@ export class MemStorage implements IStorage {
     
     // Initialize Financial Management maps
     this.deposits = new Map();
+    this.financialAccounts = new Map();
+    this.transactions = new Map();
+    this.transactionLines = new Map();
+    this.expenses = new Map();
+    this.budgets = new Map();
+    this.budgetAllocations = new Map();
     
     this.userCurrentId = 1;
     this.equipmentCurrentId = 1;
@@ -2744,6 +2756,223 @@ export class MemStorage implements IStorage {
     taskComments.forEach(comment => {
       this.createTaskComment(comment as InsertTaskComment);
     });
+  }
+  
+  // Deposit operations
+  async getDeposit(id: number): Promise<Deposit | undefined> {
+    return this.deposits.get(id);
+  }
+  
+  async getDepositsByVessel(vesselId: number): Promise<Deposit[]> {
+    return Array.from(this.deposits.values()).filter(
+      (deposit) => deposit.vesselId === vesselId
+    );
+  }
+  
+  async getDepositsByAccount(accountId: number): Promise<Deposit[]> {
+    return Array.from(this.deposits.values()).filter(
+      (deposit) => deposit.accountId === accountId
+    );
+  }
+  
+  async createDeposit(deposit: InsertDeposit): Promise<Deposit> {
+    const id = this.depositCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    const newDeposit: Deposit = { 
+      ...deposit, 
+      id, 
+      createdAt, 
+      updatedAt 
+    };
+    
+    this.deposits.set(id, newDeposit);
+    return newDeposit;
+  }
+  
+  async createBulkDeposits(deposits: InsertDeposit[]): Promise<Deposit[]> {
+    const createdDeposits: Deposit[] = [];
+    
+    for (const deposit of deposits) {
+      const newDeposit = await this.createDeposit(deposit);
+      createdDeposits.push(newDeposit);
+    }
+    
+    return createdDeposits;
+  }
+  
+  async updateDeposit(id: number, depositUpdate: Partial<Deposit>): Promise<Deposit | undefined> {
+    const existingDeposit = this.deposits.get(id);
+    if (!existingDeposit) return undefined;
+    
+    const updatedDeposit = { 
+      ...existingDeposit, 
+      ...depositUpdate,
+      updatedAt: new Date()
+    };
+    
+    this.deposits.set(id, updatedDeposit);
+    return updatedDeposit;
+  }
+  
+  async deleteDeposit(id: number): Promise<boolean> {
+    return this.deposits.delete(id);
+  }
+  
+  // Financial Account operations
+  async getFinancialAccount(id: number): Promise<FinancialAccount | undefined> {
+    return this.financialAccounts.get(id);
+  }
+  
+  async getFinancialAccountsByVessel(vesselId: number): Promise<FinancialAccount[]> {
+    return Array.from(this.financialAccounts.values()).filter(
+      (account) => account.vesselId === vesselId
+    );
+  }
+  
+  async getAllFinancialAccounts(): Promise<FinancialAccount[]> {
+    return Array.from(this.financialAccounts.values());
+  }
+  
+  async getFinancialAccountByCategory(category: string): Promise<FinancialAccount[]> {
+    return Array.from(this.financialAccounts.values()).filter(
+      (account) => account.category === category
+    );
+  }
+  
+  async createFinancialAccount(account: InsertFinancialAccount): Promise<FinancialAccount> {
+    const id = this.financialAccountCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    const newAccount: FinancialAccount = { 
+      ...account, 
+      id, 
+      createdAt, 
+      updatedAt 
+    };
+    
+    this.financialAccounts.set(id, newAccount);
+    return newAccount;
+  }
+  
+  async updateFinancialAccount(id: number, accountUpdate: Partial<FinancialAccount>): Promise<FinancialAccount | undefined> {
+    const existingAccount = this.financialAccounts.get(id);
+    if (!existingAccount) return undefined;
+    
+    const updatedAccount = { 
+      ...existingAccount, 
+      ...accountUpdate,
+      updatedAt: new Date()
+    };
+    
+    this.financialAccounts.set(id, updatedAccount);
+    return updatedAccount;
+  }
+  
+  async deleteFinancialAccount(id: number): Promise<boolean> {
+    return this.financialAccounts.delete(id);
+  }
+  
+  // Transaction operations
+  async getTransaction(id: number): Promise<Transaction | undefined> {
+    return this.transactions.get(id);
+  }
+  
+  async getTransactionsByVessel(vesselId: number): Promise<Transaction[]> {
+    return Array.from(this.transactions.values()).filter(
+      (transaction) => transaction.vesselId === vesselId
+    );
+  }
+  
+  async getAllTransactions(): Promise<Transaction[]> {
+    return Array.from(this.transactions.values());
+  }
+  
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const id = this.transactionCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    const newTransaction: Transaction = { 
+      ...transaction, 
+      id, 
+      createdAt, 
+      updatedAt 
+    };
+    
+    this.transactions.set(id, newTransaction);
+    return newTransaction;
+  }
+  
+  async updateTransaction(id: number, transactionUpdate: Partial<Transaction>): Promise<Transaction | undefined> {
+    const existingTransaction = this.transactions.get(id);
+    if (!existingTransaction) return undefined;
+    
+    const updatedTransaction = { 
+      ...existingTransaction, 
+      ...transactionUpdate,
+      updatedAt: new Date()
+    };
+    
+    this.transactions.set(id, updatedTransaction);
+    return updatedTransaction;
+  }
+  
+  async deleteTransaction(id: number): Promise<boolean> {
+    return this.transactions.delete(id);
+  }
+  
+  // Transaction Line operations
+  async getTransactionLine(id: number): Promise<TransactionLine | undefined> {
+    return this.transactionLines.get(id);
+  }
+  
+  async getTransactionLines(transactionId: number): Promise<TransactionLine[]> {
+    return Array.from(this.transactionLines.values()).filter(
+      (line) => line.transactionId === transactionId
+    );
+  }
+  
+  async getTransactionLinesByTransactionIds(transactionIds: number[]): Promise<TransactionLine[]> {
+    return Array.from(this.transactionLines.values()).filter(
+      (line) => transactionIds.includes(line.transactionId)
+    );
+  }
+  
+  async createTransactionLine(line: InsertTransactionLine): Promise<TransactionLine> {
+    const id = this.transactionLineCurrentId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    const newLine: TransactionLine = { 
+      ...line, 
+      id, 
+      createdAt, 
+      updatedAt 
+    };
+    
+    this.transactionLines.set(id, newLine);
+    return newLine;
+  }
+  
+  async updateTransactionLine(id: number, lineUpdate: Partial<TransactionLine>): Promise<TransactionLine | undefined> {
+    const existingLine = this.transactionLines.get(id);
+    if (!existingLine) return undefined;
+    
+    const updatedLine = { 
+      ...existingLine, 
+      ...lineUpdate,
+      updatedAt: new Date()
+    };
+    
+    this.transactionLines.set(id, updatedLine);
+    return updatedLine;
+  }
+  
+  async deleteTransactionLine(id: number): Promise<boolean> {
+    return this.transactionLines.delete(id);
   }
 }
 
