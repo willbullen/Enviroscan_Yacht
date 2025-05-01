@@ -515,7 +515,7 @@ const FinancialManagement: React.FC = () => {
                       <Button 
                         variant="default" 
                         size="sm"
-                        onClick={() => {/* TODO: Implement journal creation dialog */}}
+                        onClick={() => setShowJournalDialog(true)}
                         aria-label="Create a new journal entry"
                         className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                       >
