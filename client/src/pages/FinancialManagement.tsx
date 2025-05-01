@@ -99,6 +99,7 @@ const FinancialManagement: React.FC = () => {
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [showJournalDialog, setShowJournalDialog] = useState(false);
+  const [showDepositDialog, setShowDepositDialog] = useState(false);
   const [showBankingDialog, setShowBankingDialog] = useState(false);
   const [showPayrollDialog, setShowPayrollDialog] = useState(false);
   const [showVendorDialog, setShowVendorDialog] = useState(false);
@@ -680,14 +681,14 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
         
-      case "journals":
+      case "deposits":
         return (
           <div>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Journal Entries</CardTitle>
-                  <CardDescription>Financial journals for {currentVessel.name}</CardDescription>
+                  <CardTitle>Deposits</CardTitle>
+                  <CardDescription>Account deposits for {currentVessel.name}</CardDescription>
                 </div>
                 <TooltipProvider>
                   <Tooltip>
@@ -695,15 +696,15 @@ const FinancialManagement: React.FC = () => {
                       <Button 
                         variant="default" 
                         size="sm"
-                        onClick={() => setShowJournalDialog(true)}
-                        aria-label="Create a new journal entry"
+                        onClick={() => setShowDepositDialog(true)}
+                        aria-label="Create a new deposit"
                         className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                       >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Journal
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Deposit
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Create a new journal entry</p>
+                      <p>Create a new deposit transaction</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -712,12 +713,12 @@ const FinancialManagement: React.FC = () => {
                 {journalsLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-                    <span>Loading journal entries...</span>
+                    <span>Loading deposits...</span>
                   </div>
                 ) : !journals || !Array.isArray(journals) || journals.length === 0 ? (
                   <div className="border rounded-md p-4 text-center">
-                    <p className="text-muted-foreground">No journals found for this vessel.</p>
-                    <p className="text-sm text-muted-foreground mt-2">Journals will appear here once added.</p>
+                    <p className="text-muted-foreground">No deposits found for this vessel.</p>
+                    <p className="text-sm text-muted-foreground mt-2">Deposits will appear here once added.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
