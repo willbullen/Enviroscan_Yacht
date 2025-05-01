@@ -124,42 +124,42 @@ const FinancialManagement: React.FC = () => {
   const renderFinancialOverview = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
+        <Card className="bg-background border-primary/20 border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">Total Income</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€0.00</div>
+            <div className="text-2xl font-bold text-foreground">€0.00</div>
             <p className="text-xs text-muted-foreground">For selected vessel</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-background border-primary/20 border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">Total Expenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€0.00</div>
+            <div className="text-2xl font-bold text-foreground">€0.00</div>
             <p className="text-xs text-muted-foreground">For selected vessel</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-background border-primary/20 border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Budget Utilization</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">Budget Utilization</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0%</div>
+            <div className="text-2xl font-bold text-foreground">0%</div>
             <p className="text-xs text-muted-foreground">Of current budget</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-background border-primary/20 border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Open Invoices</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">Open Invoices</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold text-foreground">0</div>
             <p className="text-xs text-muted-foreground">Awaiting payment</p>
           </CardContent>
         </Card>
