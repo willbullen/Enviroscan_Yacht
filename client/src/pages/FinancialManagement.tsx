@@ -40,8 +40,15 @@ const FinancialManagement: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
   const [activeTab, setActiveTab] = useState("accounts");
   
-  // Get current vessel from context
+  // Get current vessel from context to filter financial data
   const { currentVessel } = useVessel();
+  
+  // Load vessel-specific financial data
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: [`/api/transactions`, currentVessel.id],
+    queryFn: () => [],
+    enabled: !!currentVessel.id
+  });
 
   // Mock data for account categories and subcategories
   const mockAccountCategories = [
@@ -186,14 +193,7 @@ const FinancialManagement: React.FC = () => {
     }
   ];
   
-  // Mock data for currency exchange rates
-  const mockExchangeRates = [
-    { from: "USD", to: "EUR", rate: 0.93, date: new Date(2025, 3, 15) },
-    { from: "USD", to: "GBP", rate: 0.79, date: new Date(2025, 3, 15) },
-    { from: "USD", to: "JPY", rate: 153.45, date: new Date(2025, 3, 15) },
-    { from: "EUR", to: "USD", rate: 1.07, date: new Date(2025, 3, 15) },
-    { from: "GBP", to: "USD", rate: 1.27, date: new Date(2025, 3, 15) },
-  ];
+  // Removed currency exchange rates as requested
 
   // Mock data for payroll
   const mockPayrollData = [
@@ -916,8 +916,7 @@ const FinancialManagement: React.FC = () => {
           return <DataTable columns={journalEntryColumns} data={mockJournalEntries} />;
         case "banking":
           return <DataTable columns={bankAccountColumns} data={mockBankAccounts} />;
-        case "currencies":
-          return <DataTable columns={exchangeRateColumns} data={mockExchangeRates} />;
+        // Removing currencies as requested
         case "payroll":
           return <DataTable columns={payrollColumns} data={mockPayrollData} />;
         case "budgets":
@@ -940,7 +939,7 @@ const FinancialManagement: React.FC = () => {
           {activeTab === "accounts" && renderAccountCards()}
           {activeTab === "journals" && renderJournalEntryCards()}
           {activeTab === "banking" && renderBankAccountCards()}
-          {activeTab === "currencies" && renderExchangeRateCards()}
+          {/* Removed currencies as requested */}
           {activeTab === "payroll" && renderPayrollCards()}
           {activeTab === "budgets" && renderBudgetCards()}
           {activeTab === "expenses" && renderExpenseCards()}
@@ -1032,17 +1031,7 @@ April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insuran
             <Plus className="h-4 w-4 mr-2" /> New Bank Account
           </Button>
         );
-      case "currencies":
-        return (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowCurrencyConverter(!showCurrencyConverter)}>
-              <ArrowLeftRight className="h-4 w-4 mr-2" /> Convert
-            </Button>
-            <Button onClick={() => setShowNewRateDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" /> New Rate
-            </Button>
-          </div>
-        );
+      // Removed currencies case
       case "payroll":
         return (
           <div className="flex gap-2">
@@ -1109,117 +1098,7 @@ April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insuran
     }
   };
 
-  // Currency Converter Dialog
-  const CurrencyConverterDialog = () => {
-    const [amount, setAmount] = useState<number>(1);
-    const [fromCurrency, setFromCurrency] = useState<string>("USD");
-    const [toCurrency, setToCurrency] = useState<string>("EUR");
-    const [result, setResult] = useState<number | null>(null);
-    
-    const handleConvert = () => {
-      const rate = mockExchangeRates.find(
-        r => r.from === fromCurrency && r.to === toCurrency
-      );
-      
-      if (rate) {
-        setResult(amount * rate.rate);
-      } else {
-        // Try to find reverse rate and invert it
-        const reverseRate = mockExchangeRates.find(
-          r => r.from === toCurrency && r.to === fromCurrency
-        );
-        
-        if (reverseRate) {
-          setResult(amount / reverseRate.rate);
-        } else {
-          setResult(null);
-        }
-      }
-    };
-    
-    const uniqueCurrencies = Array.from(
-      new Set(mockExchangeRates.flatMap(rate => [rate.from, rate.to]))
-    );
-    
-    return (
-      <Dialog open={showCurrencyConverter} onOpenChange={setShowCurrencyConverter}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Currency Converter</DialogTitle>
-            <DialogDescription>
-              Convert between currencies using latest exchange rates.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amount" className="text-right">
-                Amount
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                className="col-span-3"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fromCurrency" className="text-right">
-                From
-              </Label>
-              <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueCurrencies.map(currency => (
-                    <SelectItem key={currency} value={currency}>
-                      {currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="toCurrency" className="text-right">
-                To
-              </Label>
-              <Select value={toCurrency} onValueChange={setToCurrency}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueCurrencies.map(currency => (
-                    <SelectItem key={currency} value={currency}>
-                      {currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {result !== null && (
-              <div className="mt-2 text-center font-bold text-lg">
-                {amount.toFixed(2)} {fromCurrency} = {result.toFixed(2)} {toCurrency}
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter className="flex gap-2 flex-row items-center">
-            <Button variant="outline" onClick={() => setShowCurrencyConverter(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleConvert}>
-              Convert
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  };
+  // Removed Currency Converter Dialog as requested
   
   // State for managing the category dialogs
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
@@ -2793,9 +2672,7 @@ April 2025,4,Sarah Johnson,Chef,9000.00,USD,5,26.00,500.00,400.00,Health Insuran
                 <TabsTrigger value="payroll" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
                   <Users className="h-4 w-4" /> Payroll
                 </TabsTrigger>
-                <TabsTrigger value="currencies" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                  <Globe className="h-4 w-4" /> Currencies
-                </TabsTrigger>
+                {/* Removing Currencies tab as requested */}
                 <TabsTrigger value="reports" className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
                   <FileText className="h-4 w-4" /> Reports
                 </TabsTrigger>
