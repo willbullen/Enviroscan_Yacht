@@ -1284,13 +1284,30 @@ const FinancialManagement: React.FC = () => {
     try {
       setIsSubmitting(true);
       
+      if (!currentVessel?.id) {
+        throw new Error("No vessel selected");
+      }
+      
+      // Convert form data to match API schema
+      const accountData = {
+        accountName: data.name,
+        accountNumber: data.accountNumber,
+        balance: data.balance,
+        accountType: data.type,
+        description: data.description,
+        category: "operational", // Default category
+        isActive: true,
+        vesselId: currentVessel.id
+      };
+      
       // Check if we're editing or creating
       if (editingAccount) {
-        // Simulate API call for updating
-        console.log("Updating account data:", {...editingAccount, ...data});
-        
-        // Simulate server processing time
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Make API call to update the account
+        const result = await apiRequest(
+          'PATCH',
+          `/api/financial-accounts/${editingAccount.id}`,
+          accountData
+        );
         
         // Success handling for update
         toast({
@@ -1298,12 +1315,16 @@ const FinancialManagement: React.FC = () => {
           description: `${data.name} has been updated in your chart of accounts`,
           variant: "default"
         });
-      } else {
-        // Simulate API call for creating
-        console.log("New account data:", data);
         
-        // Simulate server processing time
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Invalidate the query to refresh the accounts list
+        queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
+      } else {
+        // Make API call to create a new account
+        const result = await apiRequest(
+          'POST',
+          '/api/financial-accounts',
+          accountData
+        );
         
         // Success handling for creation
         toast({
@@ -1311,6 +1332,9 @@ const FinancialManagement: React.FC = () => {
           description: `${data.name} has been added to your chart of accounts`,
           variant: "default"
         });
+        
+        // Invalidate the query to refresh the accounts list
+        queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
       }
       
       // Reset the form and close the dialog
@@ -1323,12 +1347,6 @@ const FinancialManagement: React.FC = () => {
         type: "asset",
         description: ""
       });
-      
-      // Here you would call a mutation to create/update the account
-      // Example for create:
-      // const result = await createAccount({ ...data, vesselId: currentVessel?.id });
-      // Example for update:
-      // const result = await updateAccount(editingAccount.id, { ...data });
       
     } catch (error) {
       console.error("Error with account operation:", error);
