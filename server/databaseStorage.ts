@@ -24,6 +24,11 @@ import {
   ismTasks,
   formSubmissions,
   taskComments,
+  financialAccounts,
+  budgets,
+  budgetAllocations,
+  expenses,
+  transactions,
   type User,
   type InsertUser,
   type Equipment,
@@ -69,7 +74,17 @@ import {
   type FormSubmission,
   type InsertFormSubmission,
   type TaskComment,
-  type InsertTaskComment
+  type InsertTaskComment,
+  type FinancialAccount,
+  type InsertFinancialAccount,
+  type Budget,
+  type InsertBudget,
+  type BudgetAllocation,
+  type InsertBudgetAllocation,
+  type Expense,
+  type InsertExpense,
+  type Transaction,
+  type InsertTransaction
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
@@ -1996,5 +2011,241 @@ export class DatabaseStorage implements IStorage {
   async deleteTaskComment(id: number): Promise<boolean> {
     const result = await db.delete(taskComments).where(eq(taskComments.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // =========== Financial Management - Financial Accounts operations =============
+  
+  async getFinancialAccount(id: number): Promise<FinancialAccount | undefined> {
+    const [account] = await db.select().from(financialAccounts).where(eq(financialAccounts.id, id));
+    return account || undefined;
+  }
+  
+  async getFinancialAccountsByVessel(vesselId: number): Promise<FinancialAccount[]> {
+    return db
+      .select()
+      .from(financialAccounts)
+      .where(eq(financialAccounts.vesselId, vesselId));
+  }
+  
+  async getAllFinancialAccounts(): Promise<FinancialAccount[]> {
+    return db.select().from(financialAccounts);
+  }
+  
+  async getFinancialAccountByCategory(category: string): Promise<FinancialAccount[]> {
+    return db
+      .select()
+      .from(financialAccounts)
+      .where(eq(financialAccounts.category, category));
+  }
+  
+  async createFinancialAccount(account: InsertFinancialAccount): Promise<FinancialAccount> {
+    const [newAccount] = await db.insert(financialAccounts).values(account).returning();
+    return newAccount;
+  }
+  
+  async updateFinancialAccount(id: number, account: Partial<FinancialAccount>): Promise<FinancialAccount | undefined> {
+    const [updatedAccount] = await db
+      .update(financialAccounts)
+      .set(account)
+      .where(eq(financialAccounts.id, id))
+      .returning();
+    return updatedAccount;
+  }
+  
+  async deleteFinancialAccount(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(financialAccounts).where(eq(financialAccounts.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting financial account ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // =========== Financial Management - Budget operations =============
+  
+  async getBudget(id: number): Promise<Budget | undefined> {
+    const [budget] = await db.select().from(budgets).where(eq(budgets.id, id));
+    return budget || undefined;
+  }
+  
+  async getBudgetsByVessel(vesselId: number): Promise<Budget[]> {
+    return db
+      .select()
+      .from(budgets)
+      .where(eq(budgets.vesselId, vesselId));
+  }
+  
+  async getActiveBudgets(): Promise<Budget[]> {
+    return db
+      .select()
+      .from(budgets)
+      .where(eq(budgets.status, "active"));
+  }
+  
+  async createBudget(budget: InsertBudget): Promise<Budget> {
+    const [newBudget] = await db.insert(budgets).values(budget).returning();
+    return newBudget;
+  }
+  
+  async updateBudget(id: number, budget: Partial<Budget>): Promise<Budget | undefined> {
+    const [updatedBudget] = await db
+      .update(budgets)
+      .set(budget)
+      .where(eq(budgets.id, id))
+      .returning();
+    return updatedBudget;
+  }
+  
+  async deleteBudget(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(budgets).where(eq(budgets.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting budget ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // =========== Financial Management - Budget Allocation operations =============
+  
+  async getBudgetAllocation(id: number): Promise<BudgetAllocation | undefined> {
+    const [allocation] = await db.select().from(budgetAllocations).where(eq(budgetAllocations.id, id));
+    return allocation || undefined;
+  }
+  
+  async getBudgetAllocationsByBudget(budgetId: number): Promise<BudgetAllocation[]> {
+    return db
+      .select()
+      .from(budgetAllocations)
+      .where(eq(budgetAllocations.budgetId, budgetId));
+  }
+  
+  async getBudgetAllocationsByAccount(accountId: number): Promise<BudgetAllocation[]> {
+    return db
+      .select()
+      .from(budgetAllocations)
+      .where(eq(budgetAllocations.accountId, accountId));
+  }
+  
+  async createBudgetAllocation(allocation: InsertBudgetAllocation): Promise<BudgetAllocation> {
+    const [newAllocation] = await db.insert(budgetAllocations).values(allocation).returning();
+    return newAllocation;
+  }
+  
+  async updateBudgetAllocation(id: number, allocation: Partial<BudgetAllocation>): Promise<BudgetAllocation | undefined> {
+    const [updatedAllocation] = await db
+      .update(budgetAllocations)
+      .set(allocation)
+      .where(eq(budgetAllocations.id, id))
+      .returning();
+    return updatedAllocation;
+  }
+  
+  async deleteBudgetAllocation(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(budgetAllocations).where(eq(budgetAllocations.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting budget allocation ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // =========== Financial Management - Expense operations =============
+  
+  async getExpense(id: number): Promise<Expense | undefined> {
+    const [expense] = await db.select().from(expenses).where(eq(expenses.id, id));
+    return expense || undefined;
+  }
+  
+  async getExpensesByVessel(vesselId: number): Promise<Expense[]> {
+    return db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.vesselId, vesselId));
+  }
+  
+  async getExpensesByBudget(budgetId: number): Promise<Expense[]> {
+    return db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.budgetId, budgetId));
+  }
+  
+  async getExpensesByAccount(accountId: number): Promise<Expense[]> {
+    return db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.accountId, accountId));
+  }
+  
+  async getExpensesByCategory(category: string): Promise<Expense[]> {
+    return db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.category, category));
+  }
+  
+  async createExpense(expense: InsertExpense): Promise<Expense> {
+    const [newExpense] = await db.insert(expenses).values(expense).returning();
+    return newExpense;
+  }
+  
+  async updateExpense(id: number, expense: Partial<Expense>): Promise<Expense | undefined> {
+    const [updatedExpense] = await db
+      .update(expenses)
+      .set(expense)
+      .where(eq(expenses.id, id))
+      .returning();
+    return updatedExpense;
+  }
+  
+  async deleteExpense(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(expenses).where(eq(expenses.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting expense ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // =========== Financial Management - Transaction operations =============
+  
+  async getTransaction(id: number): Promise<Transaction | undefined> {
+    const [transaction] = await db.select().from(transactions).where(eq(transactions.id, id));
+    return transaction || undefined;
+  }
+  
+  async getTransactionsByVessel(vesselId: number): Promise<Transaction[]> {
+    return db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.vesselId, vesselId));
+  }
+  
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const [newTransaction] = await db.insert(transactions).values(transaction).returning();
+    return newTransaction;
+  }
+  
+  async updateTransaction(id: number, transaction: Partial<Transaction>): Promise<Transaction | undefined> {
+    const [updatedTransaction] = await db
+      .update(transactions)
+      .set(transaction)
+      .where(eq(transactions.id, id))
+      .returning();
+    return updatedTransaction;
+  }
+  
+  async deleteTransaction(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(transactions).where(eq(transactions.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting transaction ${id}:`, error);
+      return false;
+    }
   }
 }
