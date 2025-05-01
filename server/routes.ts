@@ -4422,20 +4422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
-  // Get transactions by vessel with optional type filter
-  apiRouter.get("/transactions", asyncHandler(async (req: Request, res: Response) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Authentication required. Please log in." });
-    }
-    
-    try {
-      const transactions = await storage.getAllTransactions();
-      res.json(transactions);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      res.status(500).json({ error: "Failed to fetch transactions" });
-    }
-  }));
+  // This endpoint was consolidated with the main /transactions endpoint above
 
   apiRouter.get("/transactions/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {

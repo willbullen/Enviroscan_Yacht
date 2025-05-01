@@ -29,12 +29,14 @@ import {
   financialAccounts, type FinancialAccount, type InsertFinancialAccount,
   budgets, type Budget, type InsertBudget,
   budgetAllocations, type BudgetAllocation, type InsertBudgetAllocation,
-  expenses, type Expense, type InsertExpense,
-  transactions, type Transaction, type InsertTransaction
+  expenses, type Expense, type InsertExpense, 
+  transactions, type Transaction, type InsertTransaction,
+  transactionLines, type TransactionLine, type InsertTransactionLine
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
 import session from "express-session";
+import { z } from "zod";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -298,10 +300,10 @@ export interface IStorage {
   deleteTransaction(id: number): Promise<boolean>;
   
   // Transaction Line operations
-  getTransactionLines(transactionId: number): Promise<typeof transactionLines.$inferSelect[]>;
-  getTransactionLinesByTransactionIds(transactionIds: number[]): Promise<typeof transactionLines.$inferSelect[]>;
-  createTransactionLine(line: z.infer<typeof insertTransactionLineSchema>): Promise<typeof transactionLines.$inferSelect>;
-  updateTransactionLine(id: number, line: Partial<typeof transactionLines.$inferSelect>): Promise<typeof transactionLines.$inferSelect | undefined>;
+  getTransactionLines(transactionId: number): Promise<TransactionLine[]>;
+  getTransactionLinesByTransactionIds(transactionIds: number[]): Promise<TransactionLine[]>;
+  createTransactionLine(line: InsertTransactionLine): Promise<TransactionLine>;
+  updateTransactionLine(id: number, line: Partial<TransactionLine>): Promise<TransactionLine | undefined>;
   deleteTransactionLine(id: number): Promise<boolean>;
 }
 
