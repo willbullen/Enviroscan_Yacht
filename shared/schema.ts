@@ -693,6 +693,35 @@ export const insertExpenseLineSchema = createInsertSchema(expenseLines).omit({
 export type InsertExpenseLine = z.infer<typeof insertExpenseLineSchema>;
 export type ExpenseLine = typeof expenseLines.$inferSelect;
 
+// Deposits - for tracking money deposits to accounts
+export const deposits = pgTable("deposits", {
+  id: serial("id").primaryKey(),
+  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
+  vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
+  depositDate: timestamp("deposit_date").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
+  exchangeRate: decimal("exchange_rate", { precision: 10, scale: 6 }).default("1.0"),
+  description: text("description").notNull(),
+  depositType: text("deposit_type").notNull(), // cash, check, wire, electronic, other
+  depositNumber: text("deposit_number"), // Check number, wire confirmation, etc.
+  depositedBy: integer("deposited_by").references(() => users.id),
+  notes: text("notes"),
+  status: text("status").default("completed").notNull(), // pending, completed, rejected, cancelled
+  attachments: json("attachments"), // Scanned copies of deposit slips, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDepositSchema = createInsertSchema(deposits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertDeposit = z.infer<typeof insertDepositSchema>;
+export type Deposit = typeof deposits.$inferSelect;
+
 // Invoices
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),

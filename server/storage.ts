@@ -291,6 +291,15 @@ export interface IStorage {
   updateExpense(id: number, expense: Partial<Expense>): Promise<Expense | undefined>;
   deleteExpense(id: number): Promise<boolean>;
   
+  // Deposit operations
+  getDeposit(id: number): Promise<Deposit | undefined>;
+  getDepositsByVessel(vesselId: number): Promise<Deposit[]>;
+  getDepositsByAccount(accountId: number): Promise<Deposit[]>;
+  createDeposit(deposit: InsertDeposit): Promise<Deposit>;
+  createBulkDeposits(deposits: InsertDeposit[]): Promise<Deposit[]>;
+  updateDeposit(id: number, deposit: Partial<Deposit>): Promise<Deposit | undefined>;
+  deleteDeposit(id: number): Promise<boolean>;
+  
   // Transaction operations
   getTransaction(id: number): Promise<Transaction | undefined>;
   getTransactionsByVessel(vesselId: number): Promise<Transaction[]>;
@@ -685,6 +694,7 @@ export class MemStorage implements IStorage {
   private ismTaskCurrentId: number = 1;
   private formSubmissionCurrentId: number = 1;
   private taskCommentCurrentId: number = 1;
+  private depositCurrentId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -736,6 +746,7 @@ export class MemStorage implements IStorage {
     this.ismTaskCurrentId = 1;
     this.formSubmissionCurrentId = 1;
     this.taskCommentCurrentId = 1;
+    this.depositCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeData();
