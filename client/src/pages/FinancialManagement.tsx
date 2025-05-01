@@ -410,21 +410,73 @@ const FinancialManagement: React.FC = () => {
                 </TooltipProvider>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No accounts found for this vessel.</p>
-                  <div className="flex flex-col items-center gap-2 mt-4">
-                    <p className="text-sm text-muted-foreground">Add your first account to get started</p>
-                    <Button 
-                      variant="default" 
-                      size="sm"
-                      onClick={() => setShowAccountDialog(true)}
-                      aria-label="Add a new financial account"
-                      className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                    >
-                      <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
-                    </Button>
+                {(!accounts || !Array.isArray(accounts) || accounts.length === 0) ? (
+                  <div className="border rounded-md p-4 text-center">
+                    <p className="text-muted-foreground">No accounts found for this vessel.</p>
+                    <div className="flex flex-col items-center gap-2 mt-4">
+                      <p className="text-sm text-muted-foreground">Add your first account to get started</p>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowAccountDialog(true)}
+                        aria-label="Add a new financial account"
+                        className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-6">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-muted/50">
+                          <TableHead className="font-medium">Account Number</TableHead>
+                          <TableHead className="font-medium">Name</TableHead>
+                          <TableHead className="font-medium">Type</TableHead>
+                          <TableHead className="font-medium">Category</TableHead>
+                          <TableHead className="font-medium text-right">Balance</TableHead>
+                          <TableHead className="font-medium text-center">Status</TableHead>
+                          <TableHead className="w-[80px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {accounts.map((account) => (
+                          <TableRow key={account.id} className="hover:bg-muted/50">
+                            <TableCell className="font-mono">{account.accountNumber}</TableCell>
+                            <TableCell className="font-medium">{account.accountName}</TableCell>
+                            <TableCell>{account.accountType}</TableCell>
+                            <TableCell>{account.category}</TableCell>
+                            <TableCell className="text-right">
+                              €{parseFloat(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant={account.isActive ? "default" : "secondary"} className="px-2 py-0.5 text-xs">
+                                {account.isActive ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-end gap-2">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Edit account</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
