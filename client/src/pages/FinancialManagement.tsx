@@ -533,37 +533,68 @@ const FinancialManagement: React.FC = () => {
         );
         
       case "budgets":
-        // Sample data - in a real implementation, this would come from API
-        const sampleBudgetData = [
-          { name: 'Fuel', budget: 50000, spent: 32500, remaining: 17500, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
-          { name: 'Maintenance', budget: 75000, spent: 45000, remaining: 30000, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
-          { name: 'Crew Salaries', budget: 120000, spent: 40000, remaining: 80000, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
-          { name: 'Provisions', budget: 25000, spent: 8500, remaining: 16500, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
-          { name: 'Insurance', budget: 35000, spent: 35000, remaining: 0, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
-          { name: 'Docking Fees', budget: 18000, spent: 6000, remaining: 12000, periodStart: '2025-01-01', periodEnd: '2025-12-31' },
+        // Process real budget data from API
+        const budgetData = budgets ? [...(budgets as any[] || [])] : [];
+        
+        // Merge budget allocations with expense data to calculate spent amounts
+        const processedBudgetData = budgetData.map(budget => {
+          // Find related expenses for this budget category
+          const categoryExpenses = (expenses as any[] || [])
+            .filter(expense => expense.category === budget.category)
+            .reduce((total, expense) => total + (expense.amount || 0), 0);
+            
+          const spent = categoryExpenses;
+          const remaining = budget.amount - spent;
+          
+          return {
+            id: budget.id,
+            name: budget.name || budget.category,
+            budget: budget.amount,
+            spent: spent,
+            remaining: remaining,
+            periodStart: budget.startDate,
+            periodEnd: budget.endDate,
+            category: budget.category,
+            notes: budget.notes,
+            vesselId: budget.vesselId
+          };
+        });
+        
+        // Fallback to display example data if no budgets are available yet
+        const displayData = processedBudgetData.length > 0 ? processedBudgetData : [
+          { name: 'Fuel', budget: 50000, spent: 32500, remaining: 17500, periodStart: '2025-01-01', periodEnd: '2025-12-31', category: 'Fuel' },
+          { name: 'Maintenance', budget: 75000, spent: 45000, remaining: 30000, periodStart: '2025-01-01', periodEnd: '2025-12-31', category: 'Maintenance' },
+          { name: 'Crew Salaries', budget: 120000, spent: 40000, remaining: 80000, periodStart: '2025-01-01', periodEnd: '2025-12-31', category: 'Personnel' },
         ];
 
         // Chart data transformation
-        const chartData = sampleBudgetData.map(item => ({
+        const chartData = displayData.map(item => ({
+          id: item.id,
           name: item.name,
           Budget: item.budget,
           Spent: item.spent,
           Remaining: item.remaining,
-          percentUsed: Math.round((item.spent / item.budget) * 100),
+          percentUsed: item.budget > 0 ? Math.round((item.spent / item.budget) * 100) : 0,
+          category: item.category,
+          periodStart: item.periodStart,
+          periodEnd: item.periodEnd
         }));
 
-        // Pie chart data
-        const pieData = sampleBudgetData.map(item => ({
+        // Pie chart data for budget allocation
+        const pieData = displayData.map(item => ({
           name: item.name,
           value: item.budget,
+          category: item.category
         }));
 
         // Spending by category chart data
-        const spendingData = sampleBudgetData.map(item => ({
+        const spendingData = displayData.map(item => ({
           name: item.name,
           value: item.spent,
+          category: item.category
         }));
 
+        // Colors for consistent visual representation
         const COLORS = [
           '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a855f7', '#ec4899', 
           '#8b5cf6', '#22c55e', '#06b6d4', '#f43f5e'
@@ -597,7 +628,7 @@ const FinancialManagement: React.FC = () => {
                 </TooltipProvider>
               </CardHeader>
               <CardContent>
-                {sampleBudgetData.length === 0 ? (
+                {displayData.length === 0 ? (
                   <div className="border rounded-md p-4 text-center">
                     <p className="text-muted-foreground">No budgets found for this vessel.</p>
                     <p className="text-sm text-muted-foreground mt-2">Budgets will appear here once added.</p>
