@@ -546,6 +546,9 @@ const FinancialManagement: React.FC = () => {
       );
     }
     
+    // Log the active tab to troubleshoot tab switching
+    console.log(`Rendering content for tab: ${activeTab}`);
+    
     switch (activeTab) {
       case "accounts":
         return (
@@ -2218,7 +2221,14 @@ const FinancialManagement: React.FC = () => {
           {/* Financial overview section */}
           {currentVessel && renderFinancialOverview()}
           
-          <Tabs defaultValue="accounts" onValueChange={setActiveTab} value={activeTab}>
+          <Tabs 
+            defaultValue="accounts" 
+            onValueChange={(value) => {
+              console.log(`Tab changed to: ${value}`);
+              setActiveTab(value);
+            }} 
+            value={activeTab}
+          >
             <div className="flex justify-between items-center">
               <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border">
                 <TooltipProvider>
