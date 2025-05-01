@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, real, json, decimal, date } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -650,7 +651,10 @@ export const expenses = pgTable("expenses", {
   status: text("status").notNull(), // draft, submitted, approved, paid
   receiptUrl: text("receipt_url"), // URL to receipt image/document
   notes: text("notes"),
-  category: text("category").notNull(), // maintenance, fuel, crew, provisions, etc.
+  // Category field as a text field - will use this until database migration is done
+  category: text("category").notNull(), // Current implementation, to be replaced with categoryId in future migration
+  // Category relationship planned for later implementation - commented out to prevent errors
+  // categoryId: integer("category_id").references(() => financialCategories.id),
   accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
   budgetId: integer("budget_id").references(() => budgets.id),
   approvedById: integer("approved_by_id").references(() => users.id),
@@ -932,6 +936,40 @@ export type InsertPayrollDeduction = z.infer<typeof insertPayrollDeductionSchema
 export type PayrollDeduction = typeof payrollDeductions.$inferSelect;
 
 // Financial reports
+// Financial categories for expense classification
+export const financialCategories = pgTable("financial_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  code: text("code").notNull().unique(),
+  description: text("description"),
+  parentCategoryId: integer("parent_category_id"),
+  level: integer("level").default(1).notNull(), // For hierarchical categorization
+  isActive: boolean("is_active").default(true),
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Add self-referential relation after table creation to avoid circular reference errors
+export const financialCategoriesRelations = relations(financialCategories, ({ one }) => ({
+  parentCategory: one(financialCategories, {
+    fields: [financialCategories.parentCategoryId],
+    references: [financialCategories.id],
+  }),
+  createdBy: one(users, {
+    fields: [financialCategories.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const insertFinancialCategorySchema = createInsertSchema(financialCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertFinancialCategory = z.infer<typeof insertFinancialCategorySchema>;
+export type FinancialCategory = typeof financialCategories.$inferSelect;
+
 export const financialReports = pgTable("financial_reports", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
