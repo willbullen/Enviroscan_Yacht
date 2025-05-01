@@ -22,7 +22,7 @@ import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Card as TremorCard,
   Text,
@@ -613,81 +613,97 @@ const FinancialManagement: React.FC = () => {
         );
         
       case "budgets":
+        // If we don't have budget or expense data yet, show loading state
+        if (budgetsLoading || expensesLoading) {
+          return (
+            <div className="p-8 text-center border rounded-md">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">Loading budget data for {currentVessel.name}...</p>
+            </div>
+          );
+        }
+        
         // Check if real budget data is available
         const hasBudgetData = budgets && Array.isArray(budgets) && budgets.length > 0;
         
-        // Prepare consistent budget data for visualization
-        const displayData = hasBudgetData 
-          ? (budgets as any[]).map(budget => {
-              // Find related expenses for this budget category if expenses data exists
-              const categoryExpenses = expenses && Array.isArray(expenses)
-                ? expenses
-                  .filter((expense: any) => expense?.category === budget?.category)
-                  .reduce((total: number, expense: any) => total + (Number(expense?.amount) || 0), 0)
-                : 0;
-              
-              // Calculate remaining amount
-              const budgetAmount = Number(budget.totalAmount) || Number(budget.amount) || 0;
-              const spent = categoryExpenses;
-              const remaining = budgetAmount - spent;
-              
-              return {
-                id: budget.id,
-                name: budget.name || budget.category || "Unnamed Budget",
-                budget: budgetAmount,
-                spent: spent,
-                remaining: remaining,
-                percentUsed: budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0,
-                periodStart: budget.startDate,
-                periodEnd: budget.endDate,
-                category: budget.category || "Uncategorized",
-                notes: budget.notes,
-                currency: budget.currency || "EUR",
-                status: budget.status || "active"
-              };
-            })
-          : [
-              // Fallback display data with type-safe structure
-              { 
-                id: "sample1",
-                name: 'Fuel', 
-                budget: 50000, 
-                spent: 32500, 
-                remaining: 17500, 
-                percentUsed: 65,
-                periodStart: '2025-01-01', 
-                periodEnd: '2025-12-31', 
-                category: 'Fuel',
-                currency: 'EUR',
-                status: 'active'
-              },
-              { 
-                id: "sample2",
-                name: 'Maintenance', 
-                budget: 75000, 
-                spent: 45000, 
-                remaining: 30000, 
-                percentUsed: 60,
-                periodStart: '2025-01-01', 
-                periodEnd: '2025-12-31', 
-                category: 'Maintenance',
-                currency: 'EUR',
-                status: 'active'
-              },
-              { 
-                id: "sample3",
-                name: 'Crew Salaries', 
-                budget: 120000, 
-                spent: 40000, 
-                remaining: 80000, 
-                percentUsed: 33,
-                periodStart: '2025-01-01', 
-                periodEnd: '2025-12-31', 
-                category: 'Personnel',
-                currency: 'EUR',
-                status: 'active'
-              },
-            ];
+        // If no budget data, show empty state with proper guidance
+        if (!hasBudgetData) {
+          return (
+            <div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Budget Management</CardTitle>
+                    <CardDescription>No budgets configured for {currentVessel.name}</CardDescription>
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => setShowBudgetDialog(true)}
+                          aria-label="Create a new budget"
+                          className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                        >
+                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Budget
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Create a new financial budget</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardHeader>
+                <CardContent>
+                  <div className="border rounded-md p-8 text-center">
+                    <Wallet className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Budget Data Available</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create budgets to track and manage spending for different categories.
+                    </p>
+                    <Button 
+                      onClick={() => setShowBudgetDialog(true)}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Create Your First Budget
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        }
+        
+        // Prepare consistent budget data for visualization from real API data
+        const displayData = (budgets as any[]).map(budget => {
+          // Find related expenses for this budget category if expenses data exists
+          const categoryExpenses = expenses && Array.isArray(expenses)
+            ? expenses
+              .filter((expense: any) => expense?.category === budget?.category)
+              .reduce((total: number, expense: any) => total + (Number(expense?.amount) || 0), 0)
+            : 0;
+          
+          // Calculate remaining amount
+          const budgetAmount = Number(budget.totalAmount) || Number(budget.amount) || 0;
+          const spent = categoryExpenses;
+          const remaining = budgetAmount - spent;
+          
+          return {
+            id: budget.id,
+            name: budget.name || budget.category || "Unnamed Budget",
+            budget: budgetAmount,
+            spent: spent,
+            remaining: remaining,
+            percentUsed: budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0,
+            periodStart: budget.startDate,
+            periodEnd: budget.endDate,
+            category: budget.category || "Uncategorized",
+            notes: budget.notes,
+            currency: budget.currency || "EUR",
+            status: budget.status || "active"
+          };
+        });
 
         // Chart data transformation
         const chartData = displayData.map(item => ({
@@ -800,6 +816,7 @@ const FinancialManagement: React.FC = () => {
                           <TabList className="mb-4">
                             <Tab>Bar Chart</Tab>
                             <Tab>Table View</Tab>
+                            <Tab>Interactive View</Tab>
                           </TabList>
                           <TabPanels>
                             <TabPanel>
@@ -845,36 +862,225 @@ const FinancialManagement: React.FC = () => {
                                 </TableBody>
                               </Table>
                             </TabPanel>
+                            <TabPanel>
+                              <div className="space-y-6">
+                                {chartData.map((item, index) => (
+                                  <div key={index} className="border rounded-lg p-4 hover:bg-muted/20 transition-colors">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                                      <div>
+                                        <h4 className="font-bold">{item.name}</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                          Period: {new Date(item.periodStart).toLocaleDateString()} to {new Date(item.periodEnd).toLocaleDateString()}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-2 md:mt-0">
+                                        <Badge 
+                                          className={`px-2 py-1 ${
+                                            item.percentUsed >= 90 ? 'bg-red-500' : 
+                                            item.percentUsed >= 70 ? 'bg-amber-500' : 
+                                            'bg-green-500'
+                                          }`}
+                                          aria-label={`Budget utilization: ${item.percentUsed}%`}
+                                        >
+                                          {item.percentUsed}% Used
+                                        </Badge>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          aria-label={`View details for ${item.name} budget`}
+                                          className="text-xs"
+                                        >
+                                          Details
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                      <div className="rounded-md p-2 bg-muted/20 text-center">
+                                        <p className="text-xs text-muted-foreground">Total Budget</p>
+                                        <p className="text-lg font-bold text-primary">€{item.Budget.toLocaleString()}</p>
+                                      </div>
+                                      <div className="rounded-md p-2 bg-muted/20 text-center">
+                                        <p className="text-xs text-muted-foreground">Spent</p>
+                                        <p className="text-lg font-bold text-amber-500">€{item.Spent.toLocaleString()}</p>
+                                      </div>
+                                      <div className="rounded-md p-2 bg-muted/20 text-center">
+                                        <p className="text-xs text-muted-foreground">Remaining</p>
+                                        <p className="text-lg font-bold text-emerald-500">€{item.Remaining.toLocaleString()}</p>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="h-3 w-full bg-muted rounded overflow-hidden">
+                                        <div 
+                                          className={`h-full ${
+                                            item.percentUsed >= 90 ? 'bg-red-500' : 
+                                            item.percentUsed >= 70 ? 'bg-amber-500' : 
+                                            'bg-emerald-500'
+                                          }`} 
+                                          style={{ width: `${item.percentUsed}%` }}
+                                          role="progressbar"
+                                          aria-valuenow={item.percentUsed}
+                                          aria-valuemin={0}
+                                          aria-valuemax={100}
+                                        ></div>
+                                      </div>
+                                      <div className="flex justify-between text-xs mt-1">
+                                        <span>€0</span>
+                                        <span>€{item.Budget.toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </TabPanel>
                           </TabPanels>
                         </TabGroup>
                       </TremorCard>
                     </div>
+                    
+                    {/* Monthly spending trend visualization */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-4">Monthly Spending Trends</h3>
+                      <TremorCard>
+                        <Text>Spending by Month</Text>
+                        <LineChart
+                          className="h-80 mt-6"
+                          data={[
+                            {
+                              month: "Jan",
+                              Operations: 5000,
+                              Maintenance: 2000,
+                              Fuel: 3500,
+                              Crew: 7500
+                            },
+                            {
+                              month: "Feb",
+                              Operations: 4800,
+                              Maintenance: 3200,
+                              Fuel: 4000,
+                              Crew: 7500
+                            },
+                            {
+                              month: "Mar",
+                              Operations: 6500,
+                              Maintenance: 4800,
+                              Fuel: 4500,
+                              Crew: 7500
+                            },
+                            {
+                              month: "Apr",
+                              Operations: 8200,
+                              Maintenance: 7200,
+                              Fuel: 5800,
+                              Crew: 7500
+                            }
+                          ]}
+                          index="month"
+                          categories={["Operations", "Maintenance", "Fuel", "Crew"]}
+                          colors={["blue", "emerald", "amber", "indigo"]}
+                          valueFormatter={(number) => `€${new Intl.NumberFormat('en-US').format(number)}`}
+                          yAxisWidth={60}
+                          showLegend={true}
+                          showAnimation={true}
+                          curveType="natural"
+                        />
+                        <p className="text-xs text-center text-muted-foreground mt-2">
+                          This visualization shows the spending trends for major budget categories over time
+                        </p>
+                      </TremorCard>
+                    </div>
 
-                    {/* Budget utilization progress */}
+                    {/* Budget utilization progress - interactive version */}
                     <div>
                       <h3 className="text-lg font-medium mb-4">Budget Utilization Progress</h3>
-                      {chartData.map((item, index) => (
-                        <div key={index} className="mb-4">
-                          <div className="flex justify-between items-center mb-1">
-                            <div className="font-medium text-sm">{item.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              €{item.Spent.toLocaleString()} of €{item.Budget.toLocaleString()}
+                      <div className="space-y-6">
+                        {chartData.map((item, index) => (
+                          <div key={index} className="mb-6 bg-muted/10 p-4 rounded-lg border border-muted hover:border-primary/30 transition-colors">
+                            <div className="flex justify-between items-center mb-2">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="font-medium text-foreground flex items-center cursor-help">
+                                      {item.name}
+                                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                                        {item.category}
+                                      </span>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Period: {new Date(item.periodStart).toLocaleDateString()} to {new Date(item.periodEnd).toLocaleDateString()}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className={`text-sm font-semibold px-2 py-1 rounded ${
+                                    item.percentUsed >= 90 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
+                                    item.percentUsed >= 70 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 
+                                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                  }`}
+                                  role="status"
+                                  aria-label={`Budget utilization: ${item.percentUsed}%`}
+                                >
+                                  {item.percentUsed}% Used
+                                </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  aria-label={`View transactions for ${item.name}`}
+                                >
+                                  <FileText className="h-3 w-3 mr-1" />
+                                  Details
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-3 mb-3 mt-2">
+                              <div className="bg-muted/20 p-2 rounded-md text-center">
+                                <span className="text-xs text-muted-foreground block">Total Budget</span>
+                                <span className="text-base font-bold text-foreground">€{item.Budget.toLocaleString()}</span>
+                              </div>
+                              <div className="bg-muted/20 p-2 rounded-md text-center">
+                                <span className="text-xs text-muted-foreground block">Spent</span>
+                                <span className={`text-base font-bold ${
+                                  item.percentUsed >= 90 ? 'text-red-600 dark:text-red-400' : 
+                                  item.percentUsed >= 70 ? 'text-amber-600 dark:text-amber-400' : 
+                                  'text-emerald-600 dark:text-emerald-400'
+                                }`}>€{item.Spent.toLocaleString()}</span>
+                              </div>
+                              <div className="bg-muted/20 p-2 rounded-md text-center">
+                                <span className="text-xs text-muted-foreground block">Remaining</span>
+                                <span className="text-base font-bold text-blue-600 dark:text-blue-400">€{item.Remaining.toLocaleString()}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="relative pt-1">
+                              <div 
+                                className="overflow-hidden h-4 mb-1 text-xs flex rounded-full bg-muted"
+                                role="progressbar" 
+                                aria-valuenow={item.percentUsed} 
+                                aria-valuemin={0} 
+                                aria-valuemax={100}
+                              >
+                                <div 
+                                  style={{ width: `${item.percentUsed}%` }} 
+                                  className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${
+                                    item.percentUsed >= 90 ? 'bg-red-500' : 
+                                    item.percentUsed >= 70 ? 'bg-amber-500' : 
+                                    'bg-emerald-500'
+                                  }`}
+                                >
+                                  <span className="text-[10px] font-semibold">{item.percentUsed}%</span>
+                                </div>
+                              </div>
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>{new Date(item.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                <span>{new Date(item.periodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                              </div>
                             </div>
                           </div>
-                          <div className="w-full">
-                            <ProgressBar 
-                              value={item.percentUsed} 
-                              color={item.percentUsed >= 90 ? 'red' : item.percentUsed >= 70 ? 'amber' : 'emerald'} 
-                              tooltip={`${item.percentUsed}% of budget used`}
-                              showAnimation={true}
-                            />
-                          </div>
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <div>0%</div>
-                            <div>100%</div>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
