@@ -39,7 +39,11 @@ const VesselSelector = ({ currentVesselId = 1, onVesselChange }: VesselSelectorP
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2 px-2">
+        <Button 
+          variant="ghost" 
+          className="flex items-center gap-2 px-2 hover:bg-accent/50 hover:text-accent-foreground"
+          aria-label="Switch vessel context"
+        >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
@@ -48,7 +52,8 @@ const VesselSelector = ({ currentVesselId = 1, onVesselChange }: VesselSelectorP
           <span className="font-medium text-sm">
             {loading ? 'Loading vessels...' : currentVessel.name}
           </span>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+          <ChevronDown className="h-4 w-4 opacity-80" />
+          <span className="sr-only">Click to select a different vessel</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[240px]">

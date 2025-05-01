@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
@@ -913,14 +914,30 @@ const FinancialManagement: React.FC = () => {
                 )}
                 
                 {currentVessel && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAddNew}
-                    className="bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> Add New
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleAddNew}
+                        className="bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> 
+                        {activeTab === "accounts" && "New Account"}
+                        {activeTab === "journals" && "New Journal Entry"}
+                        {activeTab === "banking" && "New Banking Record"}
+                        {activeTab === "payroll" && "New Payroll Entry"}
+                        {activeTab === "budgets" && "New Budget"}
+                        {activeTab === "expenses" && "New Expense"}
+                        {activeTab === "vendors" && "New Vendor"}
+                        {activeTab === "categories" && "New Category"}
+                        {activeTab === "reports" && "Generate Report"}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new {activeTab.slice(0, -1)}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             </div>

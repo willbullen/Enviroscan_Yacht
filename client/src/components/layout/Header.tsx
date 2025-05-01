@@ -49,14 +49,15 @@ const Header: React.FC<HeaderProps> = ({ title, isMobile, onMenuClick }) => {
             <h1 className="font-semibold text-lg md:text-xl">{title}</h1>
           </div>
 
-          {/* Add search input with clear placeholder */}
+          {/* Search input with specific placeholder text */}
           <div className="hidden md:flex items-center relative max-w-xs mx-4 flex-1">
             <div className="relative w-full">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input 
                 type="search" 
-                placeholder={`Search ${title}...`}
-                className="pl-9 h-9 pr-4 w-full focus-visible:ring-primary/30" 
+                placeholder={title === "Financial Management" ? "Search Finances..." : `Search ${title}...`}
+                className="pl-9 h-9 pr-4 w-full focus-visible:ring-primary/30"
+                aria-label={`Search ${title} content`}
               />
             </div>
           </div>

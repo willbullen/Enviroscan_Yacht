@@ -1,0 +1,13 @@
+Based on the analysis of the Financial Management page:
+Prompt (Application-Wide): Clarify Persistent Ambiguous Elements. Address the recurring ambiguous elements present on this page and others:
+"Create New Item?" Button (1): Define its specific function with a clear label (e.g., "+ New Transaction", "+ Quick Expense") or remove it if redundant for this page.
+Header Search (20): Provide specific placeholder text (e.g., "Search Finances..." or "Search All...") to clarify its scope.
+Unlabeled Header Button (23): Assign a clear icon and accessible label (e.g., User Profile, Notifications).
+Prompt: Clarify Vessel Selector Interaction. Make the function of the vessel display ("M/Y TAKNM" - 21) explicit. If it's a selector:
+Add a dropdown indicator (e.g., a chevron icon).
+Use a tooltip: "Switch Vessel Context".
+Ensure the page clearly updates or indicates data refresh upon switching.
+Prompt: Define Scope of Card/List View Toggles. Add a label or tooltip to the Card/List view toggles (25, 26) indicating precisely what content they affect (e.g., "Toggle Account View: Card/List", "Toggle Transaction View: Card/List"). Ensure the active view state is clearly indicated.
+Prompt: Provide Clear Path for Manual Account Creation. If manual account creation is supported, make the action clearly visible on the "Accounts" tab, especially in the empty state. Add a dedicated "+ Add Account" button alongside or near the "Import Accounts" button (36).
+Prompt: Indicate Clickability of Summary Cards. If the summary cards (Total Income, Total Expenses, etc.) are designed for drill-down, provide visual cues on hover (e.g., background change, pointer cursor) to indicate they are interactive links.
+Prompt: Offer Context/Tooltips for Financial Tabs. Consider adding brief tooltips or subtle subtext to the navigation tabs (27-35) explaining the primary purpose of each section (e.g., "Journals: Record manual accounting entries", "Banking: Reconcile bank transactions"), especially for users less familiar with accounting terms.
