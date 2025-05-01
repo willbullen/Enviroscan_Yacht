@@ -768,109 +768,52 @@ const FinancialManagement: React.FC = () => {
         return (
           <div className="space-y-6">
             <Card>
-              <CardHeader className="flex flex-row justify-between items-center border-b pb-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <Wallet className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Financial Accounts</CardTitle>
-                    <CardDescription>Manage accounts for {currentVessel.name}</CardDescription>
-                  </div>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <div>
+                  <CardTitle>Chart of Accounts</CardTitle>
+                  <CardDescription>Financial accounts for {currentVessel.name}</CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {}}
-                          aria-label="Export accounts data"
-                          className="border-primary/20 hover:bg-muted/20 hover:border-primary/50 transition-colors"
-                        >
-                          <Download className="h-4 w-4 mr-2" aria-hidden="true" /> Export
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Export accounts data</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="default" 
-                          size="sm"
-                          onClick={() => setShowAccountDialog(true)}
-                          aria-label="Add a new financial account"
-                          className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                        >
-                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Create a new financial account</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowAccountDialog(true)}
+                        aria-label="Add a new financial account"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create a new financial account</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardHeader>
               <CardContent>
                 {(!accounts || !Array.isArray(accounts) || accounts.length === 0) ? (
-                  <div className="border rounded-md p-6 text-center bg-muted/5">
-                    <div className="flex flex-col items-center gap-3 mt-2 mb-4">
-                      <div className="p-3 bg-muted/20 rounded-full">
-                        <DollarSign className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="text-lg font-medium">No accounts found</h3>
-                      <p className="text-sm text-muted-foreground max-w-md">
-                        Financial accounts are needed to track income, expenses, and other financial activities for this vessel.
-                      </p>
+                  <div className="border rounded-md p-4 text-center">
+                    <p className="text-muted-foreground">No accounts found for this vessel.</p>
+                    <div className="flex flex-col items-center gap-2 mt-4">
+                      <p className="text-sm text-muted-foreground">Add your first account to get started</p>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => setShowAccountDialog(true)}
+                        aria-label="Add a new financial account"
+                        className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
+                      </Button>
                     </div>
-                    <Button 
-                      variant="default" 
-                      size="sm"
-                      onClick={() => setShowAccountDialog(true)}
-                      aria-label="Add a new financial account"
-                      className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
-                    >
-                      <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Your First Account
-                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          placeholder="Search accounts..." 
-                          className="w-[250px]" 
-                          aria-label="Search accounts"
-                        />
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <ListTree className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Filter accounts</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      
-                      <div className="text-sm text-muted-foreground">
-                        Showing {accounts.length} account{accounts.length !== 1 ? 's' : ''}
-                      </div>
-                    </div>
-                    
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-muted/50 bg-muted/10">
+                        <TableRow className="hover:bg-muted/50">
                           <TableHead className="font-medium">Account Number</TableHead>
                           <TableHead className="font-medium">Name</TableHead>
                           <TableHead className="font-medium">Type</TableHead>
@@ -884,21 +827,17 @@ const FinancialManagement: React.FC = () => {
                           <TableRow key={account.id} className="hover:bg-muted/50">
                             <TableCell className="font-mono">{account.accountNumber}</TableCell>
                             <TableCell className="font-medium">{account.accountName}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="capitalize">
-                                {account.accountType}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
+                            <TableCell>{account.accountType}</TableCell>
+                            <TableCell className="text-right">
                               €{parseFloat(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </TableCell>
                             <TableCell className="text-center">
-                              <Badge variant={account.isActive ? "success" : "secondary"} className="px-2 py-0.5 text-xs">
+                              <Badge variant={account.isActive ? "default" : "secondary"} className="px-2 py-0.5 text-xs">
                                 {account.isActive ? "Active" : "Inactive"}
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center justify-end gap-1">
+                              <div className="flex items-center justify-end gap-2">
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -928,39 +867,122 @@ const FinancialManagement: React.FC = () => {
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
-                                
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                      >
-                                        <Trash className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Delete account</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
                               </div>
                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                    
-                    <div className="mt-4 text-sm text-muted-foreground text-center">
-                      <p>
-                        Add, edit, or remove accounts to track vessel finances. Each account can be used for different financial purposes.
-                      </p>
-                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
+            
+            {/* Cash Flow Trend Chart */}
+            {accounts && Array.isArray(accounts) && accounts.length > 0 && (
+              <Card className="border-primary/20">
+                <CardHeader className="flex flex-row justify-between items-center">
+                  <div>
+                    <CardTitle className="text-lg">Cash Flow Trends</CardTitle>
+                    <CardDescription>
+                      Track money in and out of your accounts
+                    </CardDescription>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select 
+                      value={selectedAccountId || "all"} 
+                      onValueChange={(value) => setSelectedAccountId(value === "all" ? null : value)}
+                      aria-label="Select account to view"
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="All accounts" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All accounts</SelectItem>
+                        {accounts.map((account) => (
+                          <SelectItem key={account.id} value={account.id.toString()}>
+                            {account.accountName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select 
+                      value={timeRange} 
+                      onValueChange={(value) => setTimeRange(value)}
+                      aria-label="Select time range"
+                    >
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue placeholder="12 months" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3months">3 months</SelectItem>
+                        <SelectItem value="6months">6 months</SelectItem>
+                        <SelectItem value="12months">12 months</SelectItem>
+                        <SelectItem value="ytd">Year to date</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {transactionsLoading ? (
+                    <div className="h-[350px] flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+                      <span>Loading chart data...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center mb-4">
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground">Account Balance</h4>
+                          <div className="flex items-baseline mt-1">
+                            <span className="text-2xl font-bold">
+                              €{getCashFlowData(transactions, selectedAccountId, timeRange === "3months" ? 3 : timeRange === "6months" ? 6 : 12).totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-sm text-muted-foreground ml-2">
+                              {selectedAccountId ? `for ${accounts.find((a) => a.id.toString() === selectedAccountId)?.accountName || 'selected account'}` : 'for all accounts'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
+                            <span className="text-sm text-muted-foreground">Money In</span>
+                          </div>
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 rounded-full bg-rose-500 mr-2"></div>
+                            <span className="text-sm text-muted-foreground">Money Out</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="h-[300px] mt-4">
+                        <LineChart
+                          className="h-full"
+                          data={getCashFlowData(transactions, selectedAccountId, timeRange === "3months" ? 3 : timeRange === "6months" ? 6 : 12).chartData}
+                          index="month"
+                          categories={["moneyIn", "moneyOut"]}
+                          colors={["emerald", "rose"]}
+                          valueFormatter={(number) => `€${number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                          showLegend={false}
+                          yAxisWidth={60}
+                          showAnimation={true}
+                          curveType="natural"
+                          connectNulls={true}
+                          showGridLines={true}
+                          showTooltip={true}
+                          aria-label="Line chart showing cash flow trends"
+                        />
+                      </div>
+                      <p className="text-xs text-center text-muted-foreground mt-4">
+                        This visualization shows actual cash flow trends over time, including deposits, withdrawals, income, and expenses.
+                      </p>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
         
@@ -2646,22 +2668,21 @@ const FinancialManagement: React.FC = () => {
               setActiveTab(value);
             }} 
             value={activeTab}
-            className="mb-6"
           >
-            <div className="flex justify-between items-center mb-2">
-              <TabsList className="inline-flex h-auto items-center justify-between w-full p-1.5 bg-muted/30 rounded-lg border border-border gap-1">
+            <div className="flex justify-between items-center">
+              <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="accounts" 
-                        className="flex-1 flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-md transition-all
-                                  data-[state=active]:bg-primary/15 data-[state=active]:text-primary 
-                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="View and manage financial accounts"
                       >
-                        <DollarSign className="h-5 w-5" /> 
-                        <span className="text-xs font-medium">Accounts</span>
+                        <DollarSign className="h-4 w-4" /> Accounts
                       </TabsTrigger>
                     </TooltipTrigger>
                     <TooltipContent>
