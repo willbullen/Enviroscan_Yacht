@@ -1777,7 +1777,9 @@ const FinancialManagement: React.FC = () => {
     amount: z.string().refine(val => !isNaN(parseFloat(val)), "Must be a valid number"),
     date: z.string().min(1, "Date is required"),
     category: z.string().min(1, "Category is required"),
-    paymentMethod: z.string().min(1, "Payment method is required")
+    accountId: z.string().min(1, "Account is required"),
+    paymentMethod: z.string().min(1, "Payment method is required"),
+    referenceNumber: z.string().optional()
   });
 
   const budgetSchema = z.object({
@@ -1851,7 +1853,8 @@ const FinancialManagement: React.FC = () => {
       date: format(new Date(), "yyyy-MM-dd"),
       category: "",
       accountId: "",  // Add accountId field to link expense to a financial account
-      paymentMethod: "bank_transfer"
+      paymentMethod: "bank_transfer",
+      referenceNumber: ""
     }
   });
 
@@ -2045,6 +2048,7 @@ const FinancialManagement: React.FC = () => {
         status: "submitted",
         category: data.category,
         accountId: parseInt(data.accountId), // Link to financial account
+        referenceNumber: data.referenceNumber, // Include reference number for invoices/receipts
       };
       
       console.log("Submitting expense data:", expenseData);
@@ -2069,7 +2073,8 @@ const FinancialManagement: React.FC = () => {
         date: format(new Date(), "yyyy-MM-dd"),
         category: "",
         accountId: "",
-        paymentMethod: "bank_transfer"
+        paymentMethod: "bank_transfer",
+        referenceNumber: ""
       });
       setShowExpenseDialog(false);
     } catch (error) {
@@ -2683,6 +2688,22 @@ const FinancialManagement: React.FC = () => {
                         </Select>
                         <FormDescription>
                           Select the financial account to associate with this expense
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={expenseForm.control}
+                    name="referenceNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. INV-12345" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Invoice or receipt number for this expense
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
