@@ -1604,10 +1604,7 @@ const FinancialManagement: React.FC = () => {
       };
 
       // Submit the journal entry to the API
-      await apiRequest(`/api/journals`, {
-        method: "POST",
-        data: journalData
-      });
+      await apiRequest("POST", `/api/journals`, journalData);
       
       // Invalidate journal query cache to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/journals'] });
@@ -2414,11 +2411,30 @@ const FinancialManagement: React.FC = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="operating_account">Operating Account</SelectItem>
-                            <SelectItem value="crew_expenses">Crew Expenses</SelectItem>
-                            <SelectItem value="maintenance_expenses">Maintenance Expenses</SelectItem>
-                            <SelectItem value="fuel_expenses">Fuel Expenses</SelectItem>
-                            <SelectItem value="berthing_expenses">Berthing Expenses</SelectItem>
+                            {/* Show loading or empty state appropriately */}
+                            {accountsLoading ? (
+                              <div className="flex items-center justify-center py-2">
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <span className="text-sm">Loading accounts...</span>
+                              </div>
+                            ) : accounts?.length ? (
+                              <>
+                                {accounts.map((account: any) => (
+                                  <SelectItem 
+                                    key={account.id} 
+                                    value={account.id.toString()}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <span>{account.accountName}</span>
+                                    <span className="text-xs text-muted-foreground ml-1">({account.accountNumber})</span>
+                                  </SelectItem>
+                                ))}
+                              </>
+                            ) : (
+                              <div className="py-2 text-center">
+                                <span className="text-sm text-muted-foreground">No accounts found. Please create an account first.</span>
+                              </div>
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
