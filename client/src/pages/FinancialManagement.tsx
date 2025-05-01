@@ -55,6 +55,7 @@ import {
 } from "recharts";
 import { 
   AlertCircle,
+  Banknote,
   CheckCircle,
   DollarSign, 
   Wallet, 
@@ -2277,18 +2278,18 @@ const FinancialManagement: React.FC = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <TabsTrigger 
-                        value="journals" 
+                        value="deposits" 
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
                                   data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                        aria-label="Record manual accounting entries"
+                        aria-label="Manage account deposits"
                       >
-                        <ListTree className="h-4 w-4" /> Journals
+                        <Banknote className="h-4 w-4" /> Deposits
                       </TabsTrigger>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Record manual accounting entries</p>
+                      <p>Track and manage deposits to accounts</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -2451,7 +2452,7 @@ const FinancialManagement: React.FC = () => {
                         >
                           <Plus className="h-4 w-4 mr-2" /> 
                           {activeTab === "accounts" && "New Account"}
-                          {activeTab === "journals" && "New Journal Entry"}
+                          {activeTab === "deposits" && "New Deposit"}
                           {activeTab === "banking" && "New Banking Record"}
                           {activeTab === "payroll" && "New Payroll Entry"}
                           {activeTab === "budgets" && "New Budget"}
