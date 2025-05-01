@@ -2014,17 +2014,37 @@ const FinancialManagement: React.FC = () => {
     try {
       setIsSubmitting(true);
       
-      // Format the data for API submission
-      const expenseData = {
-        description: data.description,
+      // First create a transaction
+      const transactionData = {
+        transactionType: "expense",
+        transactionDate: new Date(data.date).toISOString(),
         amount: parseFloat(data.amount),
-        date: data.date,
-        category: data.category,
-        paymentMethod: data.paymentMethod,
+        currency: "EUR",
+        description: data.description,
         vesselId: currentVessel.id,
+      };
+      
+      console.log("Creating transaction:", transactionData);
+      
+      // Submit the transaction to create it first
+      const transactionResponse = await apiRequest("POST", "/api/transactions", transactionData);
+      const transaction = await transactionResponse.json();
+      
+      if (!transaction || !transaction.id) {
+        throw new Error("Failed to create transaction");
+      }
+      
+      // Format the expense data for API submission
+      const expenseData = {
+        transactionId: transaction.id,
+        description: data.description,
+        expenseDate: new Date(data.date).toISOString(),
+        vesselId: currentVessel.id,
+        paymentMethod: data.paymentMethod,
+        total: parseFloat(data.amount),
+        status: "submitted",
+        category: data.category,
         accountId: parseInt(data.accountId), // Link to financial account
-        status: "pending",
-        createdById: 5, // Default admin user
       };
       
       console.log("Submitting expense data:", expenseData);
@@ -2032,8 +2052,10 @@ const FinancialManagement: React.FC = () => {
       // Submit the expense to the API
       await apiRequest("POST", "/api/expenses", expenseData);
       
-      // Invalidate expense query cache to refresh data
+      // Invalidate relevant query caches to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
       
       toast({
         title: "Success",
