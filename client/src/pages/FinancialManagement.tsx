@@ -860,10 +860,47 @@ const FinancialManagement: React.FC = () => {
   });
 
   // Form submission handlers
-  const onAccountSubmit = (data: any) => {
-    console.log("New account data:", data);
-    setShowAccountDialog(false);
-    // Here you would call a mutation to create the account
+  const onAccountSubmit = async (data: any) => {
+    try {
+      setIsSubmitting(true);
+      // Simulate API call
+      console.log("New account data:", data);
+      
+      // Simulate server processing time
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Success handling
+      toast({
+        title: "Account created successfully",
+        description: `${data.name} has been added to your chart of accounts`,
+        variant: "default",
+        icon: <CheckCircle className="h-4 w-4 text-green-500" />
+      });
+      
+      setShowAccountDialog(false);
+      accountForm.reset({
+        name: "",
+        accountNumber: "",
+        balance: "0.00",
+        type: "asset",
+        description: ""
+      });
+      
+      // Here you would call a mutation to create the account
+      // Example:
+      // const result = await createAccount({ ...data, vesselId: currentVessel?.id });
+      
+    } catch (error) {
+      console.error("Error creating account:", error);
+      toast({
+        title: "Error creating account",
+        description: "There was a problem creating the account. Please try again.",
+        variant: "destructive",
+        icon: <AlertCircle className="h-4 w-4 text-red-500" />
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const onExpenseSubmit = (data: any) => {
