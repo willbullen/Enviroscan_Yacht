@@ -1627,13 +1627,19 @@ const FinancialManagement: React.FC = () => {
             </TabsContent>
           </Tabs>
           
-          {/* Add New Account Dialog */}
-          <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
+          {/* Account Dialog (Add/Edit) */}
+          <Dialog open={showAccountDialog} onOpenChange={(open) => {
+            setShowAccountDialog(open);
+            if (!open) setEditingAccount(null); // Reset editing state when dialog closes
+          }}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Add New Account</DialogTitle>
+                <DialogTitle>{editingAccount ? 'Edit Account' : 'Add New Account'}</DialogTitle>
                 <DialogDescription>
-                  Create a new financial account for {currentVessel?.name}.
+                  {editingAccount 
+                    ? `Update financial account for ${currentVessel?.name}.`
+                    : `Create a new financial account for ${currentVessel?.name}.`
+                  }
                 </DialogDescription>
               </DialogHeader>
               <Form {...accountForm}>
@@ -1766,16 +1772,19 @@ const FinancialManagement: React.FC = () => {
                     <Button 
                       type="submit" 
                       disabled={isSubmitting}
-                      aria-label={isSubmitting ? "Creating account, please wait" : "Create new financial account"}
+                      aria-label={isSubmitting 
+                        ? `${editingAccount ? 'Updating' : 'Creating'} account, please wait` 
+                        : `${editingAccount ? 'Update' : 'Create'} financial account`
+                      }
                       className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                     >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                          <span>Creating...</span>
+                          <span>{editingAccount ? 'Updating...' : 'Creating...'}</span>
                         </>
                       ) : (
-                        'Create Account'
+                        editingAccount ? 'Update Account' : 'Create Account'
                       )}
                     </Button>
                   </DialogFooter>
