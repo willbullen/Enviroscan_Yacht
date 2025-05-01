@@ -392,7 +392,7 @@ const FinancialManagement: React.FC = () => {
             </Card>
           </div>
         );
-        
+      
       case "categories":
         return (
           <div>
@@ -403,28 +403,124 @@ const FinancialManagement: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
-                  <h3 className="text-sm font-medium mb-2">Multi-Tier Category System</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Organize your financial data with a hierarchical category system. Categories can have multiple levels to help with detailed financial reporting.
-                  </p>
-                  
-                  <div className="border rounded-md overflow-hidden">
-                    <div className="bg-muted/30 p-2 border-b flex items-center justify-between">
-                      <span className="font-medium">Category Structure</span>
-                      <div>
-                        <Button variant="ghost" size="sm" className="h-8 gap-1">
-                          <ChevronDown className="h-4 w-4" />
-                          <span>Expand All</span>
-                        </Button>
+                  <h3 className="text-lg font-medium mb-2">Category Hierarchy</h3>
+                  <div className="border rounded-md p-6">
+                    <div className="space-y-2">
+                      {/* Top level category */}
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="cat1" />
+                        <div className="flex flex-1 items-center justify-between">
+                          <label htmlFor="cat1" className="font-medium">Fuel Expenses (FUE)</label>
+                          <Badge variant="outline">Level 1</Badge>
+                        </div>
+                      </div>
+                      
+                      {/* Second level categories */}
+                      <div className="ml-6 pl-6 border-l space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox id="cat1-1" />
+                          <div className="flex flex-1 items-center justify-between">
+                            <label htmlFor="cat1-1">Diesel (DSL)</label>
+                            <Badge variant="outline">Level 2</Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox id="cat1-2" />
+                          <div className="flex flex-1 items-center justify-between">
+                            <label htmlFor="cat1-2">Gasoline (GSL)</label>
+                            <Badge variant="outline">Level 2</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Another top level category */}
+                      <div className="flex items-center gap-2 mt-4">
+                        <Checkbox id="cat2" />
+                        <div className="flex flex-1 items-center justify-between">
+                          <label htmlFor="cat2" className="font-medium">Maintenance (MNT)</label>
+                          <Badge variant="outline">Level 1</Badge>
+                        </div>
+                      </div>
+                      
+                      {/* Its subcategories */}
+                      <div className="ml-6 pl-6 border-l space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox id="cat2-1" />
+                          <div className="flex flex-1 items-center justify-between">
+                            <label htmlFor="cat2-1">Parts (PRT)</label>
+                            <Badge variant="outline">Level 2</Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox id="cat2-2" />
+                          <div className="flex flex-1 items-center justify-between">
+                            <label htmlFor="cat2-2">Labor (LBR)</label>
+                            <Badge variant="outline">Level 2</Badge>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="p-4">
-                      <div className="border rounded-md p-4 text-center">
-                        <p className="text-muted-foreground">No categories found for this vessel.</p>
-                        <p className="text-sm text-muted-foreground mt-2">Categories will appear here once added.</p>
-                      </div>
-                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Category Details</h3>
+                  <div className="border rounded-md">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Code</TableHead>
+                          <TableHead>Level</TableHead>
+                          <TableHead>Parent</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>Fuel Expenses</TableCell>
+                          <TableCell>FUE</TableCell>
+                          <TableCell>1</TableCell>
+                          <TableCell>-</TableCell>
+                          <TableCell><Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge></TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="pl-8">Diesel</TableCell>
+                          <TableCell>DSL</TableCell>
+                          <TableCell>2</TableCell>
+                          <TableCell>Fuel Expenses</TableCell>
+                          <TableCell><Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge></TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="pl-8">Gasoline</TableCell>
+                          <TableCell>GSL</TableCell>
+                          <TableCell>2</TableCell>
+                          <TableCell>Fuel Expenses</TableCell>
+                          <TableCell><Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge></TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Maintenance</TableCell>
+                          <TableCell>MNT</TableCell>
+                          <TableCell>1</TableCell>
+                          <TableCell>-</TableCell>
+                          <TableCell><Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge></TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="pl-8">Parts</TableCell>
+                          <TableCell>PRT</TableCell>
+                          <TableCell>2</TableCell>
+                          <TableCell>Maintenance</TableCell>
+                          <TableCell><Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge></TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="pl-8">Labor</TableCell>
+                          <TableCell>LBR</TableCell>
+                          <TableCell>2</TableCell>
+                          <TableCell>Maintenance</TableCell>
+                          <TableCell><Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               </CardContent>
