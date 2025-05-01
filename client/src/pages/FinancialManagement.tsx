@@ -2049,6 +2049,375 @@ const FinancialManagement: React.FC = () => {
             </Card>
           </div>
         );
+      case "ledger":
+        // State hooks for ledger filters
+        const [selectedAccount, setSelectedAccount] = useState<string>("all");
+        const [dateRange, setDateRange] = useState<string>("30days");
+        const [customStartDate, setCustomStartDate] = useState<string>(
+          format(new Date(new Date().setDate(new Date().getDate() - 30)), "yyyy-MM-dd")
+        );
+        const [customEndDate, setCustomEndDate] = useState<string>(
+          format(new Date(), "yyyy-MM-dd")
+        );
+        const [transactionsPage, setTransactionsPage] = useState(1);
+        const transactionsPerPage = 10;
+        const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+        const [loading, setLoading] = useState(false);
+        
+        // Create a filtered transactions based on account and date range
+        const filteredTransactions = React.useMemo(() => {
+          if (!transactions || !Array.isArray(transactions)) return [];
+          
+          let startDate, endDate;
+          // Calculate date range based on selection
+          switch (dateRange) {
+            case "30days":
+              startDate = new Date();
+              startDate.setDate(startDate.getDate() - 30);
+              endDate = new Date();
+              break;
+            case "thisMonth":
+              startDate = new Date();
+              startDate.setDate(1);
+              endDate = new Date();
+              break;
+            case "lastMonth":
+              startDate = new Date();
+              startDate.setMonth(startDate.getMonth() - 1);
+              startDate.setDate(1);
+              endDate = new Date(startDate);
+              endDate.setMonth(startDate.getMonth() + 1);
+              endDate.setDate(0); // Last day of the previous month
+              break;
+            case "ytd":
+              startDate = new Date(new Date().getFullYear(), 0, 1);
+              endDate = new Date();
+              break;
+            case "custom":
+              startDate = new Date(customStartDate);
+              endDate = new Date(customEndDate);
+              break;
+            default:
+              startDate = new Date();
+              startDate.setDate(startDate.getDate() - 30);
+              endDate = new Date();
+          }
+
+          // First filter by date
+          let filtered = transactions.filter(t => {
+            const txDate = new Date(t.transactionDate);
+            return txDate >= startDate && txDate <= endDate;
+          });
+
+          // Then filter by account if not "all"
+          if (selectedAccount !== "all") {
+            filtered = filtered.filter(t => {
+              // For transactions that have accountId directly
+              if (t.accountId && t.accountId.toString() === selectedAccount) {
+                return true;
+              }
+              
+              // For journal entries that have transaction lines with accounts
+              if (t.lines && Array.isArray(t.lines)) {
+                return t.lines.some(line => line.accountId.toString() === selectedAccount);
+              }
+              
+              return false;
+            });
+          }
+
+          // Sort by date
+          filtered.sort((a, b) => {
+            const dateA = new Date(a.transactionDate).getTime();
+            const dateB = new Date(b.transactionDate).getTime();
+            return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+          });
+
+          return filtered;
+        }, [transactions, selectedAccount, dateRange, customStartDate, customEndDate, sortDirection]);
+        
+        // Calculate pagination values
+        const totalTransactions = filteredTransactions.length;
+        const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+        const paginatedTransactions = filteredTransactions.slice(
+          (transactionsPage - 1) * transactionsPerPage,
+          transactionsPage * transactionsPerPage
+        );
+        
+        // Calculate running balance for each transaction
+        const transactionsWithBalance = React.useMemo(() => {
+          let balance = 0;
+          
+          // If we're filtering by account, get the initial balance
+          if (selectedAccount !== "all" && accounts && Array.isArray(accounts)) {
+            const account = accounts.find(a => a.id.toString() === selectedAccount);
+            if (account) {
+              balance = parseFloat(account.balance.toString());
+            }
+          }
+          
+          // Calculate running balance for each transaction
+          return paginatedTransactions.map(transaction => {
+            let amount = 0;
+            
+            // Determine if this is a debit or credit to the selected account
+            if (transaction.transactionType === "expense" || transaction.transactionType === "withdrawal") {
+              amount = -parseFloat(transaction.amount.toString());
+            } else if (transaction.transactionType === "deposit" || transaction.transactionType === "income") {
+              amount = parseFloat(transaction.amount.toString());
+            } else if (transaction.transactionType === "journal" && transaction.lines && Array.isArray(transaction.lines)) {
+              // For journal entries, need to check each line
+              if (selectedAccount !== "all") {
+                // Find the line for this account
+                const line = transaction.lines.find(l => l.accountId.toString() === selectedAccount);
+                if (line) {
+                  amount = line.isDebit 
+                    ? parseFloat(line.amount.toString()) 
+                    : -parseFloat(line.amount.toString());
+                }
+              } else {
+                // If viewing all accounts, use the net amount
+                transaction.lines.forEach(line => {
+                  if (line.isDebit) {
+                    amount += parseFloat(line.amount.toString());
+                  } else {
+                    amount -= parseFloat(line.amount.toString());
+                  }
+                });
+              }
+            }
+            
+            balance += amount;
+            
+            return {
+              ...transaction,
+              deposit: amount > 0 ? amount : 0,
+              expense: amount < 0 ? Math.abs(amount) : 0,
+              balance
+            };
+          });
+        }, [paginatedTransactions, selectedAccount, accounts]);
+        
+        // Handle page change
+        const handlePageChange = (newPage: number) => {
+          setTransactionsPage(newPage);
+        };
+        
+        // Handle date range change
+        const handleDateRangeChange = (value: string) => {
+          setDateRange(value);
+          setTransactionsPage(1); // Reset to first page when changing filters
+        };
+        
+        // Handle account selection change
+        const handleAccountChange = (value: string) => {
+          setSelectedAccount(value);
+          setTransactionsPage(1); // Reset to first page when changing filters
+        };
+        
+        // Handle sort direction change
+        const handleSortDirectionChange = () => {
+          setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+        };
+        
+        return (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <div>
+                  <CardTitle>Account Ledger</CardTitle>
+                  <CardDescription>Transactions ledger for {currentVessel.name}</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Filters */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="w-full sm:w-1/2">
+                      <Label htmlFor="account-select">Select Account:</Label>
+                      <Select 
+                        value={selectedAccount} 
+                        onValueChange={handleAccountChange}
+                      >
+                        <SelectTrigger id="account-select" className="w-full">
+                          <SelectValue placeholder="All Accounts" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Accounts</SelectItem>
+                          {accounts && accounts.map(account => (
+                            <SelectItem key={account.id} value={account.id.toString()}>
+                              {account.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="w-full sm:w-1/2">
+                      <Label htmlFor="date-range">Select Period:</Label>
+                      <Select 
+                        value={dateRange} 
+                        onValueChange={handleDateRangeChange}
+                      >
+                        <SelectTrigger id="date-range" className="w-full">
+                          <SelectValue placeholder="Select date range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="30days">Last 30 Days</SelectItem>
+                          <SelectItem value="thisMonth">This Month</SelectItem>
+                          <SelectItem value="lastMonth">Last Month</SelectItem>
+                          <SelectItem value="ytd">Year to Date</SelectItem>
+                          <SelectItem value="custom">Custom Range</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  {/* Custom date range inputs */}
+                  {dateRange === "custom" && (
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="w-full sm:w-1/2">
+                        <Label htmlFor="start-date">Start Date:</Label>
+                        <Input 
+                          id="start-date" 
+                          type="date" 
+                          value={customStartDate}
+                          onChange={(e) => setCustomStartDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="w-full sm:w-1/2">
+                        <Label htmlFor="end-date">End Date:</Label>
+                        <Input 
+                          id="end-date" 
+                          type="date" 
+                          value={customEndDate}
+                          onChange={(e) => setCustomEndDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Transactions Table */}
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead 
+                            className="cursor-pointer"
+                            onClick={handleSortDirectionChange}
+                          >
+                            Date {sortDirection === "asc" ? "↑" : "↓"}
+                          </TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Vendor</TableHead>
+                          <TableHead className="text-right">Deposit (€)</TableHead>
+                          <TableHead className="text-right">Expense (€)</TableHead>
+                          <TableHead className="text-right">Balance (€)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6">
+                              <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                              <span className="text-sm text-muted-foreground mt-2 block">Loading transactions...</span>
+                            </TableCell>
+                          </TableRow>
+                        ) : transactionsWithBalance.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6">
+                              <div className="text-center">
+                                <p className="text-muted-foreground">No transactions found for the selected account and period.</p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          transactionsWithBalance.map(transaction => (
+                            <TableRow key={transaction.id}>
+                              <TableCell>
+                                {format(new Date(transaction.transactionDate), "MMM dd, yyyy")}
+                              </TableCell>
+                              <TableCell>
+                                {transaction.category || transaction.transactionType}
+                              </TableCell>
+                              <TableCell>
+                                {transaction.vendor || "-"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {transaction.deposit > 0 ? `€${transaction.deposit.toFixed(2)}` : "-"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {transaction.expense > 0 ? `€${transaction.expense.toFixed(2)}` : "-"}
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                €{transaction.balance.toFixed(2)}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {(transactionsPage - 1) * transactionsPerPage + 1} to {Math.min(transactionsPage * transactionsPerPage, totalTransactions)} of {totalTransactions}
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(transactionsPage - 1)}
+                          disabled={transactionsPage === 1}
+                        >
+                          Previous
+                        </Button>
+                        <div className="flex items-center space-x-1">
+                          {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                            // Calculate page numbers to show (centered around current page)
+                            let pageNum = i + 1;
+                            if (totalPages > 5) {
+                              if (transactionsPage > 3) {
+                                pageNum = transactionsPage - 3 + i;
+                              }
+                              if (transactionsPage > totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              }
+                            }
+                            
+                            if (pageNum > 0 && pageNum <= totalPages) {
+                              return (
+                                <Button
+                                  key={pageNum}
+                                  variant={transactionsPage === pageNum ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => handlePageChange(pageNum)}
+                                >
+                                  {pageNum}
+                                </Button>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(transactionsPage + 1)}
+                          disabled={transactionsPage === totalPages}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
         
       case "reports":
         return (
@@ -2117,6 +2486,9 @@ const FinancialManagement: React.FC = () => {
         break;
       case "categories": 
         setShowCategoryDialog(true);
+        break;
+      case "ledger":
+        setShowJournalDialog(true);
         break;
       case "reports":
         // No add new functionality for reports
@@ -2835,6 +3207,26 @@ const FinancialManagement: React.FC = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <TabsTrigger 
+                        value="ledger" 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                                  data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                        aria-label="View account ledger entries"
+                      >
+                        <Calculator className="h-4 w-4" /> Ledger
+                      </TabsTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View account ledger entries and transactions</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TabsTrigger 
                         value="reports" 
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
                                   data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
@@ -2876,6 +3268,7 @@ const FinancialManagement: React.FC = () => {
                           {activeTab === "expenses" && "New Expense"}
                           {activeTab === "vendors" && "New Vendor"}
                           {activeTab === "categories" && "New Category"}
+                          {activeTab === "ledger" && "New Entry"}
                           {activeTab === "reports" && "Generate Report"}
                         </Button>
                       </TooltipTrigger>
