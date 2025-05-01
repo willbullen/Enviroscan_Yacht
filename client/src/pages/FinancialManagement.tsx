@@ -116,6 +116,21 @@ const FinancialManagement: React.FC = () => {
     enabled: !!currentVessel?.id
   });
   
+  // Load journal entries - fetch transactions of type 'journal'
+  const { data: journals, isLoading: journalsLoading } = useQuery({
+    queryKey: ['/api/transactions', 'journal', currentVessel?.id],
+    queryFn: () => {
+      if (!currentVessel?.id) return Promise.resolve([]);
+      return fetch(`/api/transactions/vessel/${currentVessel.id}?type=journal`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching journal entries:", err);
+          return [];
+        });
+    },
+    enabled: !!currentVessel?.id
+  });
+  
   // Load vessel accounts - need vessel ID parameter in URL
   const { data: accounts, isLoading: accountsLoading } = useQuery({
     queryKey: ['/api/financial-accounts/vessel', currentVessel?.id],
@@ -529,10 +544,61 @@ const FinancialManagement: React.FC = () => {
                 </TooltipProvider>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No journals found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Journals will appear here once added.</p>
-                </div>
+                {journalsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+                    <span>Loading journal entries...</span>
+                  </div>
+                ) : !journals || !Array.isArray(journals) || journals.length === 0 ? (
+                  <div className="border rounded-md p-4 text-center">
+                    <p className="text-muted-foreground">No journals found for this vessel.</p>
+                    <p className="text-sm text-muted-foreground mt-2">Journals will appear here once added.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-muted/50">
+                          <TableHead className="font-medium">Date</TableHead>
+                          <TableHead className="font-medium">Reference</TableHead>
+                          <TableHead className="font-medium">Description</TableHead>
+                          <TableHead className="font-medium text-right">Debit (€)</TableHead>
+                          <TableHead className="font-medium text-right">Credit (€)</TableHead>
+                          <TableHead className="font-medium">Account</TableHead>
+                          <TableHead className="font-medium text-center">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {journals.map((journal: any) => {
+                          // Find the account name from the accounts list
+                          const accountName = accounts?.find((a: any) => a.id === Number(journal.accountId))?.accountName || 'Unknown Account';
+                          
+                          return (
+                            <TableRow key={journal.id} className="hover:bg-muted/50">
+                              <TableCell>
+                                {journal.transactionDate ? format(new Date(journal.transactionDate), 'yyyy-MM-dd') : 'N/A'}
+                              </TableCell>
+                              <TableCell>{journal.reference || journal.id}</TableCell>
+                              <TableCell className="max-w-xs truncate">{journal.description}</TableCell>
+                              <TableCell className="text-right">
+                                {journal.isDebit ? new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(journal.amount || 0) : '0.00'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {!journal.isDebit ? new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(journal.amount || 0) : '0.00'}
+                              </TableCell>
+                              <TableCell>{accountName}</TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={journal.status === 'posted' ? 'default' : 'secondary'} className="px-2 py-0.5 text-xs">
+                                  {journal.status || 'Draft'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
