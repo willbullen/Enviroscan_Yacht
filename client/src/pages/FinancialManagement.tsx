@@ -132,7 +132,11 @@ const FinancialManagement: React.FC = () => {
   });
   
   // Load vessel accounts - need vessel ID parameter in URL
-  const { data: accounts, isLoading: accountsLoading } = useQuery({
+  const { 
+    data: accounts, 
+    isLoading: accountsLoading,
+    refetch: refetchAccounts 
+  } = useQuery({
     queryKey: ['/api/financial-accounts/vessel', currentVessel?.id],
     queryFn: () => currentVessel?.id ? fetch(`/api/financial-accounts/vessel/${currentVessel.id}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!currentVessel?.id
