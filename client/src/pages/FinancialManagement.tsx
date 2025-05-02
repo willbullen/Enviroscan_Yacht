@@ -1879,7 +1879,7 @@ const FinancialManagement: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={(e) => {
+          <form onSubmit={async (e) => {
             e.preventDefault();
             
             // Create a new expense transaction
@@ -1890,28 +1890,52 @@ const FinancialManagement: React.FC = () => {
               transactionDate: formData.get('transactionDate') as string,
               amount: parseFloat(formData.get('amount') as string),
               description: formData.get('description') as string,
-              payee: formData.get('payee') as string,
+              vendorId: parseInt(formData.get('payee') as string),
               accountId: parseInt(formData.get('accountId') as string),
               category: formData.get('category') as string,
               status: formData.get('status') as string,
               currency: formData.get('currency') as string || 'USD',
             };
             
-            // Log the expense data (this would normally be sent to the API)
-            console.log("Expense data to submit:", expenseData);
-            
-            // Show success toast
-            toast({
-              title: "Expense recorded",
-              description: `$${expenseData.amount.toFixed(2)} expense has been added.`,
-              variant: "default",
-            });
-            
-            // Close the dialog
-            setShowExpenseDialog(false);
-            
-            // Refresh transactions data
-            queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
+            // Send the expense data to the API
+            try {
+              const response = await fetch('/api/transactions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(expenseData),
+              });
+              
+              if (!response.ok) {
+                throw new Error('Failed to save transaction');
+              }
+              
+              await response.json();
+              
+              // Show success toast
+              toast({
+                title: "Expense recorded",
+                description: `$${expenseData.amount.toFixed(2)} expense has been added.`,
+                variant: "default",
+              });
+              
+              // Close the dialog
+              setShowExpenseDialog(false);
+              
+              // Refresh transactions data
+              queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
+              
+              // Refresh vendors data to ensure we have the latest
+              queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
+            } catch (error) {
+              console.error('Failed to save transaction:', error);
+              toast({
+                title: "Error",
+                description: "Failed to save transaction. Please try again.",
+                variant: "destructive",
+              });
+            }
           }}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
