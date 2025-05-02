@@ -3295,7 +3295,7 @@ const FinancialManagement: React.FC = () => {
             value={activeTab}
           >
             <div className="flex justify-between items-center">
-              <TabsList className="inline-flex h-12 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border">
+              <TabsList className="inline-flex h-14 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border shadow-sm overflow-x-auto">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -3341,11 +3341,13 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="banking" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Reconcile bank transactions"
+                        onClick={() => setActiveTab("banking")}
                       >
                         <Building className="h-4 w-4" /> Banking
                       </TabsTrigger>
@@ -3381,11 +3383,13 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="budgets" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Create and track financial budgets"
+                        onClick={() => setActiveTab("budgets")}
                       >
                         <Wallet className="h-4 w-4" /> Budgets
                       </TabsTrigger>
@@ -3401,11 +3405,13 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="expenses" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Track and categorize expenses"
+                        onClick={() => setActiveTab("expenses")}
                       >
                         <CreditCard className="h-4 w-4" /> Expenses
                       </TabsTrigger>
@@ -3441,11 +3447,13 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="categories" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Organize financial categories"
+                        onClick={() => setActiveTab("categories")}
                       >
                         <ListTree className="h-4 w-4" /> Categories
                       </TabsTrigger>
