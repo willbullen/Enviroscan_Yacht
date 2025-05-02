@@ -3342,15 +3342,16 @@ const FinancialManagement: React.FC = () => {
             value={activeTab}
           >
             <div className="flex justify-between items-center">
-              <TabsList className="inline-flex h-14 items-center justify-between w-full max-w-5xl p-1 bg-muted/80 rounded-md border border-border shadow-sm overflow-x-auto">
+              <TabsList className="flex flex-wrap h-auto items-center justify-center w-full max-w-5xl p-1 gap-1 bg-muted/80 rounded-md border border-border shadow-sm">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="accounts" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="View and manage financial accounts"
                       >
@@ -3368,9 +3369,10 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="deposits" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Manage account deposits"
                       >
@@ -3388,7 +3390,7 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="banking" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
                                   data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
                                   hover:bg-muted/50 transition-colors
@@ -3410,9 +3412,10 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="payroll" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Manage crew payroll and compensation"
                       >
@@ -3430,7 +3433,7 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="budgets" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
                                   data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
                                   hover:bg-muted/50 transition-colors
@@ -3452,7 +3455,7 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="expenses" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
                                   data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
                                   hover:bg-muted/50 transition-colors
@@ -3474,9 +3477,10 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="vendors" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Manage supplier relationships"
                       >
@@ -3494,7 +3498,7 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="categories" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-sm text-foreground/80 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
                                   data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
                                   hover:bg-muted/50 transition-colors
@@ -3516,9 +3520,10 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="ledger" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="View account ledger entries"
                       >
