@@ -147,6 +147,15 @@ const FinancialManagement: React.FC = () => {
     enabled: !!currentVessel?.id
   });
   
+  // Fetch vendors for dropdown selection
+  const { data: vendors, isLoading: vendorsLoading } = useQuery({
+    queryKey: ['/api/vendors'],
+    queryFn: () => fetch('/api/vendors').then(res => res.json()).catch(err => {
+      console.error("Error fetching vendors:", err);
+      return [];
+    })
+  });
+  
   // Load journal entries - fetch transactions of type 'journal'
   const { data: journals, isLoading: journalsLoading } = useQuery({
     queryKey: ['/api/transactions', 'journal', currentVessel?.id],
@@ -182,6 +191,12 @@ const FinancialManagement: React.FC = () => {
   const [showVendorDialog, setShowVendorDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [showGenericDialog, setShowGenericDialog] = useState(false);
+  const [showQuickAddVendorDialog, setShowQuickAddVendorDialog] = useState(false);
+  
+  // State for new vendor when quick adding
+  const [newVendorName, setNewVendorName] = useState("");
+  const [newVendorType, setNewVendorType] = useState("supplier");
+  const [isAddingVendor, setIsAddingVendor] = useState(false);
   
   // Helper function to ensure UI updates after account changes
   const refreshFinancialAccounts = async () => {
@@ -305,6 +320,65 @@ const FinancialManagement: React.FC = () => {
   const onExpenseSubmit = async (data: any) => {
     console.log("Submitting expense data:", data);
     setShowExpenseDialog(false);
+  };
+  
+  // Handle adding a new vendor quickly
+  const handleQuickAddVendor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAddingVendor(true);
+    
+    try {
+      // Create the new vendor
+      const response = await fetch('/api/vendors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newVendorName,
+          type: newVendorType,
+          status: 'active',
+          contactName: '',
+          email: '',
+          phone: '',
+          address: '',
+          notes: `Created during expense entry for ${currentVessel?.name}`
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create vendor');
+      }
+      
+      const newVendor = await response.json();
+      
+      // Show success toast
+      toast({
+        title: "Vendor Added",
+        description: `${newVendorName} has been added to the vendors list.`,
+        variant: "default",
+      });
+      
+      // Reset form and close dialog
+      setNewVendorName("");
+      setNewVendorType("supplier");
+      setShowQuickAddVendorDialog(false);
+      
+      // Refresh vendors list
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
+      
+      return newVendor;
+    } catch (error) {
+      console.error("Error adding vendor:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add vendor. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsAddingVendor(false);
+    }
   };
 
   const onBudgetSubmit = async (data: any) => {
@@ -1918,14 +1992,36 @@ const FinancialManagement: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-2">
-                  <Label htmlFor="payee">Vendor/Payee</Label>
-                  <Input 
-                    id="payee" 
-                    name="payee" 
-                    type="text" 
-                    placeholder="Enter vendor or payee name" 
-                    required
-                  />
+                  <div className="flex justify-between items-baseline">
+                    <Label htmlFor="payee">Vendor/Payee</Label>
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      size="sm" 
+                      className="h-auto p-0 text-xs"
+                      onClick={() => setShowQuickAddVendorDialog(true)}
+                    >
+                      + Add New
+                    </Button>
+                  </div>
+                  <Select name="payee" defaultValue="">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select vendor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vendors && Array.isArray(vendors) && vendors.length > 0 ? (
+                        vendors.map((vendor: any) => (
+                          <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                            {vendor.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          No vendors found
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="flex flex-col space-y-2">
@@ -2339,6 +2435,67 @@ const FinancialManagement: React.FC = () => {
                 Cancel
               </Button>
               <Button type="submit">Create Budget</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Quick Add Vendor Dialog */}
+      <Dialog open={showQuickAddVendorDialog} onOpenChange={setShowQuickAddVendorDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5 text-primary" />
+              Add New Vendor
+            </DialogTitle>
+            <DialogDescription>
+              Quickly add a new vendor to use in your transactions.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleQuickAddVendor}>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="vendorName">Vendor Name</Label>
+                <Input 
+                  id="vendorName" 
+                  name="vendorName" 
+                  value={newVendorName}
+                  onChange={(e) => setNewVendorName(e.target.value)}
+                  placeholder="Enter vendor name" 
+                  required
+                />
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="vendorType">Vendor Type</Label>
+                <Select 
+                  value={newVendorType} 
+                  onValueChange={setNewVendorType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vendor type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="supplier">Supplier</SelectItem>
+                    <SelectItem value="service-provider">Service Provider</SelectItem>
+                    <SelectItem value="contractor">Contractor</SelectItem>
+                    <SelectItem value="marina">Marina/Port</SelectItem>
+                    <SelectItem value="fuel">Fuel Provider</SelectItem>
+                    <SelectItem value="insurance">Insurance</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowQuickAddVendorDialog(false)} disabled={isAddingVendor}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isAddingVendor}>
+                {isAddingVendor && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Add Vendor
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
