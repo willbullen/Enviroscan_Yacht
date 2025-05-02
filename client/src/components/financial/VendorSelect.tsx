@@ -1,144 +1,75 @@
-import React, { useState } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { useVendors, type Vendor } from "@/contexts/VendorContext";
-import { VendorDialog } from "./VendorDialog";
+import { useQuery } from "@tanstack/react-query";
 
 interface VendorSelectProps {
-  value: number | null;
-  onValueChange: (value: number | null) => void;
-  placeholder?: string;
-  disabled?: boolean;
+  value: string;
+  onValueChange: (value: string) => void;
+  onAddNewClick: () => void;
   className?: string;
-  triggerClassName?: string;
 }
 
-export function VendorSelect({
-  value,
-  onValueChange,
-  placeholder = "Select vendor",
-  disabled = false,
-  className,
-  triggerClassName,
+export function VendorSelect({ 
+  value, 
+  onValueChange, 
+  onAddNewClick,
+  className 
 }: VendorSelectProps) {
-  const [open, setOpen] = useState(false);
-  const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
-  const { activeVendors, isLoading, refetchVendors } = useVendors();
-
-  // Find selected vendor from the value
-  const selectedVendor = activeVendors.find(vendor => vendor.id === value);
-
-  // Handle new vendor creation success
-  const handleVendorSuccess = () => {
-    refetchVendors();
-  };
-
-  // Group vendors by category
-  const groupedVendors: Record<string, Vendor[]> = activeVendors.reduce(
-    (acc, vendor) => {
-      const category = vendor.category || "Uncategorized";
-      if (!acc[category]) {
-        acc[category] = [];
+  // Fetch vendors
+  const { data: vendors, isLoading } = useQuery({
+    queryKey: ['/api/vendors'],
+    queryFn: async () => {
+      const response = await fetch('/api/vendors');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vendors');
       }
-      acc[category].push(vendor);
-      return acc;
-    },
-    {} as Record<string, Vendor[]>
-  );
-
-  // Sort categories for display
-  const sortedCategories = Object.keys(groupedVendors).sort((a, b) => {
-    if (a === "Uncategorized") return 1;
-    if (b === "Uncategorized") return -1;
-    return a.localeCompare(b);
+      return response.json();
+    }
   });
 
   return (
-    <div className={className}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("w-full justify-between", triggerClassName)}
-            disabled={disabled}
+    <div className="flex flex-col space-y-2">
+      <div className="flex justify-between items-baseline">
+        <div className="flex-1">
+          <Select 
+            value={value || undefined}
+            onValueChange={onValueChange}
           >
-            {selectedVendor ? selectedVendor.name : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0 w-[300px]">
-          <Command>
-            <CommandInput placeholder="Search vendor..." />
-            <CommandList>
-              <CommandEmpty>
-                {isLoading 
-                  ? "Loading vendors..." 
-                  : "No vendor found. Add a new one?"}
-              </CommandEmpty>
-              
-              {sortedCategories.map((category) => (
-                <CommandGroup key={category} heading={category}>
-                  {groupedVendors[category].map((vendor) => (
-                    <CommandItem
-                      key={vendor.id}
-                      value={vendor.name}
-                      onSelect={() => {
-                        onValueChange(vendor.id);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === vendor.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {vendor.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
-              
-              <CommandSeparator />
-              
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => {
-                    setOpen(false);
-                    setVendorDialogOpen(true);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add new vendor
-                </CommandItem>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-      
-      <VendorDialog 
-        open={vendorDialogOpen} 
-        onOpenChange={setVendorDialogOpen} 
-        onSuccess={handleVendorSuccess}
-      />
+            <SelectTrigger id="vendor-select-trigger" className={className}>
+              <SelectValue placeholder="Select vendor" />
+            </SelectTrigger>
+            <SelectContent>
+              {isLoading ? (
+                <div className="p-2 text-sm text-center text-muted-foreground">
+                  Loading vendors...
+                </div>
+              ) : vendors && Array.isArray(vendors) && vendors.length > 0 ? (
+                vendors.map((vendor: any) => (
+                  <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                    {vendor.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-2 text-sm text-center text-muted-foreground">
+                  No vendors found
+                </div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button 
+          type="button" 
+          variant="link" 
+          size="sm" 
+          className="h-auto p-0 ml-2 text-xs"
+          onClick={onAddNewClick}
+        >
+          + Add New
+        </Button>
+      </div>
     </div>
   );
 }
+
+export default VendorSelect;

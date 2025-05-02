@@ -39,6 +39,8 @@ import BatchImportDialog from "@/components/BatchImportDialog";
 import CashFlowTrendsChart from "@/components/financial/CashFlowTrendsChart";
 import { VendorTable } from "@/components/financial/VendorTable";
 import { VendorDialog } from "@/components/financial/VendorDialog";
+import { VendorSelect } from "@/components/financial/VendorSelect";
+import { AccountSelect } from "@/components/financial/AccountSelect";
 import { AccountDialog } from "@/components/financial/AccountDialog";
 import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -128,8 +130,8 @@ const FinancialManagement: React.FC = () => {
   // State for currently editing item
   const [editingAccount, setEditingAccount] = useState<any>(null);
   
-  // State for cash flow chart
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  // State for cash flow chart and form selections
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [timeRange, setTimeRange] = useState<string>("12months");
   
   // Get current vessel from context to filter financial data
@@ -2002,43 +2004,15 @@ const FinancialManagement: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    <Label htmlFor="payee">Vendor/Payee</Label>
-                    <Button 
-                      type="button" 
-                      variant="link" 
-                      size="sm" 
-                      className="h-auto p-0 text-xs"
-                      onClick={() => setShowQuickAddVendorDialog(true)}
-                    >
-                      + Add New
-                    </Button>
-                  </div>
-                  <Select 
-                    name="payee" 
-                    value={selectedVendorId || undefined}
+                  <Label htmlFor="payee">Vendor/Payee</Label>
+                  <VendorSelect
+                    value={selectedVendorId}
                     onValueChange={(value) => {
                       console.log("Selected vendor ID:", value);
                       setSelectedVendorId(value);
                     }}
-                  >
-                    <SelectTrigger id="vendor-select-trigger">
-                      <SelectValue placeholder="Select vendor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {vendors && Array.isArray(vendors) && vendors.length > 0 ? (
-                        vendors.map((vendor: any) => (
-                          <SelectItem key={vendor.id} value={vendor.id.toString()}>
-                            {vendor.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="p-2 text-sm text-center text-muted-foreground">
-                          No vendors found
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                    onAddNewClick={() => setShowQuickAddVendorDialog(true)}
+                  />
                 </div>
                 
                 <div className="flex flex-col space-y-2">
