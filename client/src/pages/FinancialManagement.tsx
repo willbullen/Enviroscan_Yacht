@@ -129,7 +129,16 @@ const FinancialManagement: React.FC = () => {
   
   // Load vessel-specific financial data
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['/api/transactions', currentVessel?.id],
+    queryKey: ['/api/transactions/vessel', currentVessel?.id],
+    queryFn: () => {
+      if (!currentVessel?.id) return Promise.resolve([]);
+      return fetch(`/api/transactions/vessel/${currentVessel.id}`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching vessel transactions:", err);
+          return [];
+        });
+    },
     enabled: !!currentVessel?.id
   });
   
@@ -426,8 +435,8 @@ const FinancialManagement: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {accounts && accounts.length > 0 ? (
-                    accounts.map((account) => (
+                  {accounts && Array.isArray(accounts) && accounts.length > 0 ? (
+                    accounts.map((account: any) => (
                       <TableRow key={account.id}>
                         <TableCell className="font-medium">{account.name}</TableCell>
                         <TableCell>{`${account.type} - ${account.subtype}`}</TableCell>
@@ -539,8 +548,8 @@ const FinancialManagement: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {journals && journals.length > 0 ? (
-                    journals.map((entry, index) => (
+                  {journals && Array.isArray(journals) && journals.length > 0 ? (
+                    journals.map((entry: any, index: number) => (
                       <TableRow key={entry.id || index}>
                         <TableCell>{format(new Date(entry.date || new Date()), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{entry.reference || '-'}</TableCell>
@@ -636,10 +645,10 @@ const FinancialManagement: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions && transactions.filter(t => t.transactionType === 'expense').length > 0 ? (
+                  {transactions && Array.isArray(transactions) && transactions.filter((t: any) => t.transactionType === 'expense').length > 0 ? (
                     transactions
-                      .filter(t => t.transactionType === 'expense')
-                      .map((expense) => (
+                      .filter((t: any) => t.transactionType === 'expense')
+                      .map((expense: any) => (
                         <TableRow key={expense.id}>
                           <TableCell>{format(new Date(expense.transactionDate || new Date()), 'MMM dd, yyyy')}</TableCell>
                           <TableCell>{expense.payee || '-'}</TableCell>
@@ -738,10 +747,10 @@ const FinancialManagement: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions && transactions.filter(t => t.transactionType === 'deposit').length > 0 ? (
+                  {transactions && Array.isArray(transactions) && transactions.filter((t: any) => t.transactionType === 'deposit').length > 0 ? (
                     transactions
-                      .filter(t => t.transactionType === 'deposit')
-                      .map((deposit) => (
+                      .filter((t: any) => t.transactionType === 'deposit')
+                      .map((deposit: any) => (
                         <TableRow key={deposit.id}>
                           <TableCell>{format(new Date(deposit.transactionDate || new Date()), 'MMM dd, yyyy')}</TableCell>
                           <TableCell>{deposit.payee || '-'}</TableCell>
@@ -903,7 +912,7 @@ const FinancialManagement: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Accounts</SelectItem>
-                    {accounts && accounts.map(account => (
+                    {accounts && Array.isArray(accounts) && accounts.map((account: any) => (
                       <SelectItem key={account.id} value={account.id.toString()}>
                         {account.name}
                       </SelectItem>
