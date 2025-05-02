@@ -39,6 +39,7 @@ import BatchImportDialog from "@/components/BatchImportDialog";
 import CashFlowTrendsChart from "@/components/financial/CashFlowTrendsChart";
 import { VendorTable } from "@/components/financial/VendorTable";
 import { VendorDialog } from "@/components/financial/VendorDialog";
+import { AccountDialog } from "@/components/financial/AccountDialog";
 import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -1834,28 +1835,15 @@ const FinancialManagement: React.FC = () => {
       </div>
       
       {/* Account Dialog (Add/Edit) */}
-      <Dialog open={showAccountDialog} onOpenChange={(open) => {
-        setShowAccountDialog(open);
-        if (!open) setEditingAccount(null); // Reset editing state when dialog closes
-      }}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{editingAccount ? 'Edit Account' : 'Add New Account'}</DialogTitle>
-            <DialogDescription>
-              {editingAccount 
-                ? `Update financial account for ${currentVessel?.name}.`
-                : `Create a new financial account for ${currentVessel?.name}.`
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...accountForm}>
-            <form onSubmit={accountForm.handleSubmit(onAccountSubmit)} className="space-y-4">
-              {/* Form fields for account creation/editing */}
-              {/* Other dialogs will follow this pattern */}
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <AccountDialog 
+        open={showAccountDialog} 
+        onOpenChange={(open) => {
+          setShowAccountDialog(open);
+          if (!open) setEditingAccount(null); // Reset editing state when dialog closes
+        }}
+        account={editingAccount}
+        onSuccess={refreshFinancialAccounts}
+      />
             
       {/* Add New Expense Dialog */}
       <Dialog open={showExpenseDialog} onOpenChange={setShowExpenseDialog}>
