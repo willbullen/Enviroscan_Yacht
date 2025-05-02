@@ -3342,7 +3342,7 @@ const FinancialManagement: React.FC = () => {
             value={activeTab}
           >
             <div className="flex justify-between items-center">
-              <TabsList className="flex flex-wrap h-auto items-center justify-center w-full max-w-5xl p-1 gap-1 bg-muted/80 rounded-md border border-border shadow-sm">
+              <TabsList className="flex flex-wrap h-auto items-center justify-start w-full max-w-5xl p-2 gap-1 bg-muted/80 rounded-md border border-border shadow-sm">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -3483,6 +3483,7 @@ const FinancialManagement: React.FC = () => {
                                   hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Manage supplier relationships"
+                        onClick={() => setActiveTab("vendors")}
                       >
                         <Building className="h-4 w-4" /> Vendors
                       </TabsTrigger>
@@ -3526,6 +3527,7 @@ const FinancialManagement: React.FC = () => {
                                   hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="View account ledger entries"
+                        onClick={() => setActiveTab("ledger")}
                       >
                         <Calculator className="h-4 w-4" /> Ledger
                       </TabsTrigger>
@@ -3541,11 +3543,13 @@ const FinancialManagement: React.FC = () => {
                     <TooltipTrigger asChild>
                       <TabsTrigger 
                         value="reports" 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-sm text-foreground/80 
-                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow 
+                        className="flex items-center justify-center gap-2 px-4 py-3 m-1 rounded-md text-foreground/80 
+                                  data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md
                                   data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:border-primary 
+                                  hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Generate financial reports"
+                        onClick={() => setActiveTab("reports")}
                       >
                         <FileText className="h-4 w-4" /> Reports
                       </TabsTrigger>
