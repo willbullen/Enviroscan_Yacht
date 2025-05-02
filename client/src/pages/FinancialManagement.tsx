@@ -1970,9 +1970,9 @@ const FinancialManagement: React.FC = () => {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <div className="p-2 text-sm text-center text-muted-foreground">
                           No vendors found
-                        </SelectItem>
+                        </div>
                       )}
                     </SelectContent>
                   </Select>
