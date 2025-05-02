@@ -3354,6 +3354,7 @@ const FinancialManagement: React.FC = () => {
                                   hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="View and manage financial accounts"
+                        onClick={() => setActiveTab("accounts")}
                       >
                         <DollarSign className="h-4 w-4" /> Accounts
                       </TabsTrigger>
@@ -3375,6 +3376,7 @@ const FinancialManagement: React.FC = () => {
                                   hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Manage account deposits"
+                        onClick={() => setActiveTab("deposits")}
                       >
                         <Banknote className="h-4 w-4" /> Deposits
                       </TabsTrigger>
@@ -3418,6 +3420,7 @@ const FinancialManagement: React.FC = () => {
                                   hover:bg-muted/50 transition-colors
                                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                         aria-label="Manage crew payroll and compensation"
+                        onClick={() => setActiveTab("payroll")}
                       >
                         <Users className="h-4 w-4" /> Payroll
                       </TabsTrigger>
