@@ -554,10 +554,10 @@ const FinancialManagement: React.FC = () => {
                   {accounts && Array.isArray(accounts) && accounts.length > 0 ? (
                     accounts.map((account: any) => (
                       <TableRow key={account.id}>
-                        <TableCell className="font-medium">{account.name}</TableCell>
-                        <TableCell>{`${account.type} - ${account.subtype}`}</TableCell>
+                        <TableCell className="font-medium">{account.accountName}</TableCell>
+                        <TableCell>{account.accountType}</TableCell>
                         <TableCell>{account.accountNumber}</TableCell>
-                        <TableCell>{account.currency}</TableCell>
+                        <TableCell>USD</TableCell>
                         <TableCell className="text-right">
                           {new Intl.NumberFormat('en-US', { 
                             style: 'currency', 
@@ -593,14 +593,35 @@ const FinancialManagement: React.FC = () => {
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction 
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => {
-                                      // Here you would call the API to delete the account
-                                      toast({
-                                        title: 'Account deleted',
-                                        description: `Account ${account.name} has been deleted.`,
-                                      });
-                                      // Refresh the accounts list
-                                      refreshFinancialAccounts();
+                                    onClick={async () => {
+                                      try {
+                                        // Call the API to delete the account
+                                        const response = await fetch(`/api/financial-accounts/${account.id}`, {
+                                          method: 'DELETE',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                          }
+                                        });
+                                        
+                                        if (!response.ok) {
+                                          throw new Error('Failed to delete account');
+                                        }
+                                        
+                                        toast({
+                                          title: 'Account deleted',
+                                          description: `Account ${account.accountName} has been deleted.`,
+                                        });
+                                        
+                                        // Refresh the accounts list
+                                        refreshFinancialAccounts();
+                                      } catch (error) {
+                                        console.error('Error deleting account:', error);
+                                        toast({
+                                          title: 'Error',
+                                          description: 'Failed to delete the account. Please try again.',
+                                          variant: 'destructive',
+                                        });
+                                      }
                                     }}
                                   >
                                     Delete
