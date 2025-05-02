@@ -325,6 +325,9 @@ const FinancialManagement: React.FC = () => {
     setShowExpenseDialog(false);
   };
   
+  // State for tracking selected vendor ID in the expense form
+  const [selectedVendorId, setSelectedVendorId] = useState<string>("");
+  
   // Handle adding a new vendor quickly
   const handleQuickAddVendor = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -367,45 +370,11 @@ const FinancialManagement: React.FC = () => {
       setNewVendorType("supplier");
       setShowQuickAddVendorDialog(false);
       
-      // Refresh vendors list and get the updated list
+      // Refresh vendors list
       await queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
       
-      // Fetch the updated vendors list to ensure we have the latest data
-      const updatedVendorsResponse = await fetch('/api/vendors');
-      if (updatedVendorsResponse.ok) {
-        const updatedVendors = await updatedVendorsResponse.json();
-        
-        // Using Shadcn's implementation, we need to update the component by simulating a click
-        // on the specific vendor item in the dropdown after it's refreshed in the UI
-        setTimeout(() => {
-          try {
-            // First click the trigger to open the dropdown
-            const trigger = document.getElementById('vendor-select-trigger');
-            if (trigger) {
-              trigger.click(); 
-              
-              // Wait a bit for the dropdown to open
-              setTimeout(() => {
-                // Then find and click the newly added vendor
-                const newVendorElement = Array.from(
-                  document.querySelectorAll('[data-radix-select-item]')
-                ).find(
-                  (el) => el.getAttribute('data-value') === newVendor.id.toString()
-                ) as HTMLElement;
-                
-                if (newVendorElement) {
-                  newVendorElement.click();
-                  console.log("Selected new vendor in dropdown");
-                } else {
-                  console.log("Could not find the new vendor element");
-                }
-              }, 100);
-            }
-          } catch (err) {
-            console.error("Error selecting the new vendor", err);
-          }
-        }, 200);
-      }
+      // Set the selected vendor ID directly in state so the expense form will use it
+      setSelectedVendorId(newVendor.id.toString());
       
       return newVendor;
     } catch (error) {
@@ -1904,7 +1873,16 @@ const FinancialManagement: React.FC = () => {
       />
             
       {/* Add New Expense Dialog */}
-      <Dialog open={showExpenseDialog} onOpenChange={setShowExpenseDialog}>
+      <Dialog 
+        open={showExpenseDialog} 
+        onOpenChange={(open) => {
+          setShowExpenseDialog(open);
+          if (!open) {
+            // Reset the selected vendor when closing the dialog
+            setSelectedVendorId("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -2021,10 +1999,10 @@ const FinancialManagement: React.FC = () => {
                   </div>
                   <Select 
                     name="payee" 
-                    defaultValue=""
+                    value={selectedVendorId}
                     onValueChange={(value) => {
                       console.log("Selected vendor ID:", value);
-                      // This will update the UI when a vendor is selected
+                      setSelectedVendorId(value);
                     }}
                   >
                     <SelectTrigger id="vendor-select-trigger">
