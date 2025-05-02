@@ -586,18 +586,24 @@ const FinancialManagement: React.FC = () => {
   const renderVesselSelector = () => {
     if (!currentVessel) {
       return (
-        <div className="p-4 text-center bg-amber-100 rounded-md mb-4">
-          <p>Please select a vessel from the navigation dropdown to view financial data.</p>
+        <div className="p-5 text-center bg-amber-50 border border-amber-200 rounded-lg mb-6 shadow-sm">
+          <div className="flex flex-col items-center justify-center gap-2">
+            <Ship className="h-6 w-6 text-amber-500" />
+            <p className="text-amber-800 font-medium">Please select a vessel from the navigation dropdown to view financial data.</p>
+          </div>
         </div>
       );
     }
     
     return (
-      <div className="p-4 bg-muted/30 rounded-md mb-4 flex items-center gap-2">
-        <Ship className="h-5 w-5 text-primary" />
-        <span>
-          Viewing financial data for: <strong>{currentVessel.name}</strong>
-        </span>
+      <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg mb-6 shadow-sm flex items-center gap-3">
+        <div className="bg-primary/10 p-2 rounded-full">
+          <Ship className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Current Vessel</p>
+          <p className="font-semibold text-primary">{currentVessel.name}</p>
+        </div>
       </div>
     );
   };
@@ -1284,37 +1290,171 @@ const FinancialManagement: React.FC = () => {
         
       case "expenses":
         return (
-          <div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Expense Tracking</CardTitle>
-                  <CardDescription>Expenses for {currentVessel.name}</CardDescription>
-                </div>
+          <div className="space-y-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight mb-1">Expense Tracking</h2>
+                <p className="text-muted-foreground">Manage and categorize all expenses for {currentVessel.name}</p>
+              </div>
+              <div className="flex gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        <FileUp className="h-4 w-4 mr-2" /> Import
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Import expenses from CSV file</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
                         variant="default" 
-                        size="sm"
+                        size="sm" 
                         onClick={() => setShowExpenseDialog(true)}
-                        aria-label="Record a new expense"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                        className="bg-primary hover:bg-primary/90"
                       >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Expense
+                        <Plus className="h-4 w-4 mr-2" /> Add Expense
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Record a new expense transaction</p>
+                      <p>Create a new expense record</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md p-4 text-center">
-                  <p className="text-muted-foreground">No expenses found for this vessel.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Expenses will appear here once added.</p>
+              </div>
+            </div>
+            
+            <Card className="border shadow-sm">
+              <CardHeader className="bg-muted/30 border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg font-medium">Recent Expenses</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Select defaultValue="all">
+                      <SelectTrigger className="w-[180px] h-8 text-xs">
+                        <SelectValue placeholder="Filter by category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="fuel">Fuel</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="provisions">Provisions</SelectItem>
+                        <SelectItem value="crew">Crew Expenses</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select defaultValue="recent">
+                      <SelectTrigger className="w-[150px] h-8 text-xs">
+                        <SelectValue placeholder="Time period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recent">Last 30 Days</SelectItem>
+                        <SelectItem value="month">This Month</SelectItem>
+                        <SelectItem value="quarter">This Quarter</SelectItem>
+                        <SelectItem value="year">This Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {expenses && Array.isArray(expenses) && expenses.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/10 hover:bg-muted/10">
+                          <TableHead className="font-medium">Date</TableHead>
+                          <TableHead className="font-medium">Description</TableHead>
+                          <TableHead className="font-medium">Category</TableHead>
+                          <TableHead className="font-medium">Amount</TableHead>
+                          <TableHead className="font-medium text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {expenses.map((expense) => (
+                          <TableRow key={expense.id} className="hover:bg-muted/5">
+                            <TableCell className="font-medium">{format(new Date(expense.date), 'MMM d, yyyy')}</TableCell>
+                            <TableCell>{expense.description}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                                {expense.category || 'Uncategorized'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-semibold">€{parseFloat(expense.amount).toFixed(2)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex space-x-1 justify-end">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  aria-label="Edit expense"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                                      aria-label="Delete expense"
+                                    >
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this expense? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        className="bg-destructive hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="border-t p-8 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+                      <div className="bg-muted/30 p-3 rounded-full">
+                        <CreditCard className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-medium">No expenses recorded</h3>
+                      <p className="text-muted-foreground text-sm">
+                        There are no expense records for this vessel. Start tracking your expenses to better manage your vessel's finances.
+                      </p>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => setShowExpenseDialog(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Record First Expense
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -3021,20 +3161,23 @@ const FinancialManagement: React.FC = () => {
   return (
     <MainLayout title="Financial Management">
       <TooltipProvider>
-        <div className="w-full px-4 py-6">
-          <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">Financial Management</h1>
-            <div className="flex items-center gap-4">
-              <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+        <div className="w-full px-6 py-8">
+          <div className="space-y-8">
+            <div className="flex items-center justify-between border-b pb-6">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-primary">Financial Management</h1>
+                <p className="text-muted-foreground mt-1">Comprehensive financial oversight for your vessel operations</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+              </div>
             </div>
-          </div>
           
-          {/* Vessel selector component */}
-          {renderVesselSelector()}
+            {/* Vessel selector component */}
+            {renderVesselSelector()}
           
-          {/* Financial overview section */}
-          {currentVessel && renderFinancialOverview()}
+            {/* Financial overview section */}
+            {currentVessel && renderFinancialOverview()}
           
           <Tabs 
             defaultValue="accounts" 
