@@ -34,6 +34,7 @@ import {
   insertVesselSchema,
   insertUserVesselAssignmentSchema,
   insertFinancialAccountSchema,
+  insertVendorSchema,
   insertBudgetSchema,
   insertBudgetAllocationSchema,
   insertExpenseSchema,

@@ -27,6 +27,7 @@ import {
   taskComments, type TaskComment, type InsertTaskComment,
   // Financial Management imports
   financialAccounts, type FinancialAccount, type InsertFinancialAccount,
+  vendors, type Vendor, type InsertVendor,
   budgets, type Budget, type InsertBudget,
   budgetAllocations, type BudgetAllocation, type InsertBudgetAllocation,
   expenses, type Expense, type InsertExpense, 
@@ -254,6 +255,22 @@ export interface IStorage {
   getTaskComment(id: number): Promise<TaskComment | undefined>;
   getTaskCommentsByTask(taskId: number): Promise<TaskComment[]>;
   createTaskComment(comment: InsertTaskComment): Promise<TaskComment>;
+  
+  // Vendor operations
+  getVendor(id: number): Promise<Vendor | undefined>;
+  getAllVendors(): Promise<Vendor[]>;
+  getActiveVendors(): Promise<Vendor[]>;
+  createVendor(vendor: InsertVendor): Promise<Vendor>;
+  updateVendor(id: number, vendor: Partial<Vendor>): Promise<Vendor | undefined>;
+  deleteVendor(id: number): Promise<boolean>;
+  
+  // Financial Account operations
+  getFinancialAccount(id: number): Promise<FinancialAccount | undefined>;
+  getFinancialAccountsByVessel(vesselId: number): Promise<FinancialAccount[]>;
+  getActiveFinancialAccounts(vesselId: number): Promise<FinancialAccount[]>;
+  createFinancialAccount(account: InsertFinancialAccount): Promise<FinancialAccount>;
+  updateFinancialAccount(id: number, account: Partial<FinancialAccount>): Promise<FinancialAccount | undefined>;
+  deleteFinancialAccount(id: number): Promise<boolean>;
   updateTaskComment(id: number, comment: Partial<TaskComment>): Promise<TaskComment | undefined>;
   deleteTaskComment(id: number): Promise<boolean>;
   
