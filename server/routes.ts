@@ -39,7 +39,8 @@ import {
   insertBudgetAllocationSchema,
   insertExpenseSchema,
   insertTransactionSchema,
-  InsertDeposit
+  InsertDeposit,
+  vendors
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -4041,9 +4042,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const validatedData = insertVendorSchema.parse(req.body);
-      const [vendor] = await db.insert(vendors).values(validatedData).returning();
+      const newVendor = await db.insert(vendors).values(validatedData).returning();
       
-      res.status(201).json(vendor);
+      res.status(201).json(newVendor[0]);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -4064,18 +4065,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const vendorId = parseInt(req.params.id);
-      const [existingVendor] = await db.select().from(vendors).where(eq(vendors.id, vendorId));
+      const existingVendor = await db.query.vendors.findFirst({
+        where: (vendors, { eq }) => eq(vendors.id, vendorId)
+      });
       
       if (!existingVendor) {
         return res.status(404).json({ error: "Vendor not found" });
       }
       
-      const [updatedVendor] = await db
+      const updatedVendorArray = await db
         .update(vendors)
         .set(req.body)
         .where(eq(vendors.id, vendorId))
         .returning();
       
+      const updatedVendor = updatedVendorArray[0];
       res.json(updatedVendor);
     } catch (error) {
       console.error(`Error updating vendor ${req.params.id}:`, error);
@@ -4091,7 +4095,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const vendorId = parseInt(req.params.id);
-      const [existingVendor] = await db.select().from(vendors).where(eq(vendors.id, vendorId));
+      const existingVendor = await db.query.vendors.findFirst({
+        where: (vendors, { eq }) => eq(vendors.id, vendorId)
+      });
       
       if (!existingVendor) {
         return res.status(404).json({ error: "Vendor not found" });
