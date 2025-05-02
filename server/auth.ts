@@ -22,12 +22,8 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  // Log for debugging
-  console.log(`Comparing passwords: supplied=${supplied}, stored=${stored}`);
-  
   // Handle plaintext passwords for demo/development
   if (!stored.includes('.')) {
-    console.log(`Using plaintext comparison: ${supplied === stored}`);
     return supplied === stored;
   }
   
@@ -35,9 +31,7 @@ async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  const result = timingSafeEqual(hashedBuf, suppliedBuf);
-  console.log(`Using hash comparison: ${result}`);
-  return result;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function setupAuth(app: Express) {
@@ -61,19 +55,15 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        console.log(`User found: ${JSON.stringify(user)}`);
         if (!user || !(await comparePasswords(password, user.password))) {
-          console.log("Invalid username or password");
           return done(null, false, { message: "Invalid username or password" });
         }
         // Note: isActive field doesn't exist in the DB but is added by the storage layer
         // Since we're adding it virtually in the storage layer and defaulting to true,
         // we can just check it directly
         if (user.isActive === false) {
-          console.log("Account is inactive");
           return done(null, false, { message: "Account is inactive" });
         }
-        console.log("Authentication successful");
         return done(null, user);
       } catch (err) {
         console.error("Authentication error:", err);
@@ -86,20 +76,17 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-      console.log(`Deserializing user ${id}: ${JSON.stringify(user)}`);
       // If user is deleted, logout
       if (!user) {
-        console.log(`User ${id} not found`);
         return done(null, false);
       }
       // Note: isActive field is added by storage layer with default true
       if (user.isActive === false) {
-        console.log(`User ${id} is inactive`);
         return done(null, false);
       }
       done(null, user);
     } catch (err) {
-      console.error(`Error deserializing user ${id}:`, err);
+      console.error(`Error deserializing user ${id}`);
       done(err, null);
     }
   });
@@ -161,7 +148,6 @@ export function setupAuth(app: Express) {
           isActive: user.isActive === false ? false : true
         };
         
-        console.log("Login successful, returning user:", JSON.stringify(userResponse));
         return res.status(200).json(userResponse);
       });
     })(req, res, next);
@@ -176,7 +162,6 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) {
-      console.log("User not authenticated");
       return res.status(401).json({ error: "Authentication required. Please log in." });
     }
     
@@ -184,7 +169,6 @@ export function setupAuth(app: Express) {
     const user = req.user as SelectUser;
     const { password, ...safeUserData } = user;
     
-    console.log("User profile requested:", JSON.stringify(safeUserData));
     res.json(safeUserData);
   });
 
