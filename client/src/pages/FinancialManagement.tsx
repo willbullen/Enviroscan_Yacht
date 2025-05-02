@@ -1914,6 +1914,21 @@ const FinancialManagement: React.FC = () => {
             
             // Send the expense data to the API
             try {
+              console.log("Sending expense data:", expenseData);
+              
+              // Make sure required fields have valid values
+              if (!expenseData.vesselId) {
+                throw new Error('No vessel selected');
+              }
+              
+              if (!expenseData.vendorId) {
+                throw new Error('Please select a vendor');
+              }
+              
+              if (!expenseData.accountId) {
+                throw new Error('Please select an account');
+              }
+              
               const response = await fetch('/api/transactions', {
                 method: 'POST',
                 headers: {
@@ -1923,7 +1938,9 @@ const FinancialManagement: React.FC = () => {
               });
               
               if (!response.ok) {
-                throw new Error('Failed to save transaction');
+                const errorData = await response.json();
+                console.error("API Error response:", errorData);
+                throw new Error(errorData.error || 'Failed to save transaction');
               }
               
               await response.json();
@@ -1999,7 +2016,7 @@ const FinancialManagement: React.FC = () => {
                   </div>
                   <Select 
                     name="payee" 
-                    value={selectedVendorId}
+                    value={selectedVendorId || undefined}
                     onValueChange={(value) => {
                       console.log("Selected vendor ID:", value);
                       setSelectedVendorId(value);
