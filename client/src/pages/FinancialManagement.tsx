@@ -944,12 +944,28 @@ const FinancialManagement: React.FC = () => {
       case "accounts":
         return (
           <div className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row justify-between items-center">
-                <div>
-                  <CardTitle>Chart of Accounts</CardTitle>
-                  <CardDescription>Financial accounts for {currentVessel.name}</CardDescription>
-                </div>
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight mb-1">Chart of Accounts</h2>
+                <p className="text-muted-foreground">Manage financial accounts for {currentVessel.name}</p>
+              </div>
+              <div className="flex gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        <FileUp className="h-4 w-4 mr-2" /> Import
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Import accounts from CSV file</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -957,10 +973,9 @@ const FinancialManagement: React.FC = () => {
                         variant="default" 
                         size="sm"
                         onClick={() => setShowAccountDialog(true)}
-                        aria-label="Add a new financial account"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                        className="bg-primary hover:bg-primary/90"
                       >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
+                        <Plus className="h-4 w-4 mr-2" /> Add Account
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -968,88 +983,167 @@ const FinancialManagement: React.FC = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+              </div>
+            </div>
+            
+            <Card className="border shadow-sm">
+              <CardHeader className="bg-muted/30 border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg font-medium">Financial Accounts</CardTitle>
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-[150px] h-8 text-xs">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Accounts</SelectItem>
+                      <SelectItem value="operating">Operating</SelectItem>
+                      <SelectItem value="reserve">Reserve</SelectItem>
+                      <SelectItem value="asset">Asset</SelectItem>
+                      <SelectItem value="liability">Liability</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {(!accounts || !Array.isArray(accounts) || accounts.length === 0) ? (
-                  <div className="border rounded-md p-4 text-center">
-                    <p className="text-muted-foreground">No accounts found for this vessel.</p>
-                    <div className="flex flex-col items-center gap-2 mt-4">
-                      <p className="text-sm text-muted-foreground">Add your first account to get started</p>
+                  <div className="border-t p-8 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+                      <div className="bg-muted/30 p-3 rounded-full">
+                        <Wallet className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-medium">No financial accounts</h3>
+                      <p className="text-muted-foreground text-sm">
+                        There are no financial accounts set up for this vessel. Create accounts to track income, expenses, and balances.
+                      </p>
                       <Button 
                         variant="default" 
                         size="sm"
                         onClick={() => setShowAccountDialog(true)}
-                        aria-label="Add a new financial account"
-                        className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                        className="mt-2"
                       >
-                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add Account
+                        <Plus className="h-4 w-4 mr-2" /> Create First Account
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-muted/50">
-                          <TableHead className="font-medium">Account Number</TableHead>
-                          <TableHead className="font-medium">Name</TableHead>
-                          <TableHead className="font-medium">Type</TableHead>
-                          <TableHead className="font-medium text-right">Balance</TableHead>
-                          <TableHead className="font-medium text-center">Status</TableHead>
-                          <TableHead className="w-[80px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {accounts.map((account) => (
-                          <TableRow key={account.id} className="hover:bg-muted/50">
-                            <TableCell className="font-mono">{account.accountNumber}</TableCell>
-                            <TableCell className="font-medium">{account.accountName}</TableCell>
-                            <TableCell>{account.accountType}</TableCell>
-                            <TableCell className="text-right">
-                              €{parseFloat(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant={account.isActive ? "default" : "secondary"} className="px-2 py-0.5 text-xs">
-                                {account.isActive ? "Active" : "Inactive"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-end gap-2">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
+                  <div>
+                    {/* Quick stats cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border-b">
+                      <div className="bg-muted/10 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Total Balance</p>
+                            <p className="text-2xl font-semibold text-primary">
+                              €{accounts.reduce((sum, account) => sum + parseFloat(account.balance.toString()), 0).toFixed(2)}
+                            </p>
+                          </div>
+                          <div className="bg-primary/10 p-2 rounded-full">
+                            <Euro className="h-5 w-5 text-primary" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/10 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Total Accounts</p>
+                            <p className="text-2xl font-semibold text-primary">{accounts.length}</p>
+                          </div>
+                          <div className="bg-primary/10 p-2 rounded-full">
+                            <Wallet className="h-5 w-5 text-primary" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/10 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Last Updated</p>
+                            <p className="text-2xl font-semibold text-primary">{format(new Date(), 'MMM d, yyyy')}</p>
+                          </div>
+                          <div className="bg-primary/10 p-2 rounded-full">
+                            <Calendar className="h-5 w-5 text-primary" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Accounts table */}
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/10 hover:bg-muted/10">
+                            <TableHead className="font-medium">Account Number</TableHead>
+                            <TableHead className="font-medium">Name</TableHead>
+                            <TableHead className="font-medium">Type</TableHead>
+                            <TableHead className="font-medium text-right">Balance</TableHead>
+                            <TableHead className="font-medium text-center">Status</TableHead>
+                            <TableHead className="w-[80px] text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {accounts.map((account) => (
+                            <TableRow key={account.id} className="hover:bg-muted/5">
+                              <TableCell className="font-mono">{account.accountNumber}</TableCell>
+                              <TableCell className="font-medium">{account.accountName}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                                  {account.accountType || 'General'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                €{parseFloat(account.balance.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={account.isActive ? "default" : "secondary"} className="px-2 py-0.5 text-xs">
+                                  {account.isActive ? "Active" : "Inactive"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => {
+                                      setEditingAccount(account);
+                                      setShowAccountDialog(true);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
                                       <Button 
                                         variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8"
-                                        onClick={() => {
-                                          // Set the account to edit and populate form values
-                                          setEditingAccount(account);
-                                          accountForm.reset({
-                                            name: account.accountName,
-                                            accountNumber: account.accountNumber,
-                                            balance: account.balance.toString(),
-                                            type: account.accountType,
-                                            description: account.description || ""
-                                          });
-                                          // Open the dialog
-                                          setShowAccountDialog(true);
-                                        }}
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
                                       >
-                                        <Pencil className="h-4 w-4" />
+                                        <Trash className="h-4 w-4" />
                                       </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Edit account</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to delete this account? This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-destructive hover:bg-destructive/90">
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
               </CardContent>
