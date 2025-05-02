@@ -21,15 +21,61 @@ let wsInstance: WebSocket | null = null;
 let wsLastUsed: number = 0; // Timestamp when the WS was last used
 const WS_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+// Circuit breaker configuration for AIS WebSocket
+const MAX_CONSECUTIVE_FAILURES = 5;
+const MAX_BACKOFF_TIME = 10 * 60 * 1000; // 10 minutes maximum backoff
+let failureCount = 0;
+let lastFailureTime = 0;
+let circuitBreakerOpen = false;
+let reconnectTimeout: NodeJS.Timeout | null = null;
+
 // Function to initialize AIS Stream WebSocket connection (if needed)
 // AIS Stream primarily uses WebSockets for real-time tracking
 let wsInitialized = false;
+
+// Calculate the exponential backoff time based on failure count
+function getBackoffTime() {
+  // Basic exponential backoff: 10s, 20s, 40s, 80s, 160s...
+  const backoffTime = Math.min(
+    10000 * Math.pow(2, failureCount - 1),
+    MAX_BACKOFF_TIME
+  );
+  return backoffTime;
+}
+
+// Reset the circuit breaker
+function resetCircuitBreaker() {
+  failureCount = 0;
+  circuitBreakerOpen = false;
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+}
+
 // Initialize and export the function so it can be called from other modules
 export function initAisStreamWebsocket() {
   // Record the timestamp when the connection was requested
   wsLastUsed = Date.now();
   
+  // Don't try to connect if already initialized, missing API key,
+  // or circuit breaker is open (too many failures)
   if (wsInitialized || !AIS_API_KEY) return;
+  
+  // Check if circuit breaker is open
+  if (circuitBreakerOpen) {
+    const timeSinceLastFailure = Date.now() - lastFailureTime;
+    const backoffTime = getBackoffTime();
+    
+    if (timeSinceLastFailure < backoffTime) {
+      console.log(`AIS Stream WebSocket circuit breaker open. Next retry in ${Math.round((backoffTime - timeSinceLastFailure) / 1000)}s`);
+      return;
+    } else {
+      // Allow a retry after backoff period
+      console.log(`AIS Stream WebSocket retrying after backoff period (${Math.round(backoffTime / 1000)}s)`);
+      circuitBreakerOpen = false;
+    }
+  }
   
   try {
     // Connect to AIS Stream WebSocket API
@@ -39,6 +85,9 @@ export function initAisStreamWebsocket() {
     // Handle WebSocket connection open
     ws.on('open', function open() {
       console.log('Connected to AIS Stream WebSocket');
+      
+      // Reset circuit breaker on successful connection
+      resetCircuitBreaker();
       
       // Subscribe to specific vessel types (e.g., 30=fishing, 37=pleasure craft)
       const subscriptionMessage = {
@@ -66,9 +115,6 @@ export function initAisStreamWebsocket() {
           console.log('Received non-string/buffer data:', typeof data);
           return; // Skip processing for other data types
         }
-        
-        // Only log message types for debugging if they're not position reports
-        // or uncomment for all message types: console.log(`Received message type: ${jsonData?.MessageType || 'unknown'}`);
         
         // Process AIS message
         if (jsonData && jsonData.MessageType === 'PositionReport') {
@@ -105,9 +151,6 @@ export function initAisStreamWebsocket() {
             
             // Update vessel position in database if this MMSI matches any vessels
             updateVesselPositionInDatabase(mmsi, latitude, longitude, heading, speed);
-            
-            // Disabled for less verbose logging
-            // console.log(`Updated position for vessel MMSI: ${mmsi} (New Format)`);
           }
           // Handle the old format where data is directly in Message
           else if (jsonData.Message) {
@@ -141,11 +184,7 @@ export function initAisStreamWebsocket() {
             
             // Update vessel position in database
             updateVesselPositionInDatabase(mmsi, latitude, longitude, heading, speed);
-            
-            // Disabled for less verbose logging
-            // console.log(`Updated position for vessel MMSI: ${mmsi} (Old Format)`);
           }
-          // Console log already handled in individual cases
         }
       } catch (error) {
         console.error('Error processing AIS message:', error);
@@ -155,6 +194,16 @@ export function initAisStreamWebsocket() {
     // Handle errors
     ws.on('error', function error(err) {
       console.error('AIS Stream WebSocket error:', err);
+      
+      // Increment failure count for circuit breaker
+      failureCount++;
+      lastFailureTime = Date.now();
+      
+      // Open circuit breaker if we've exceeded max consecutive failures
+      if (failureCount >= MAX_CONSECUTIVE_FAILURES) {
+        circuitBreakerOpen = true;
+        console.log(`AIS Stream WebSocket circuit breaker opened after ${failureCount} consecutive failures`);
+      }
     });
     
     // Handle close
@@ -162,15 +211,47 @@ export function initAisStreamWebsocket() {
       console.log('AIS Stream WebSocket connection closed');
       wsInitialized = false;
       
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        initAisStreamWebsocket();
-      }, 10000);
+      // Increment failure count for circuit breaker
+      failureCount++;
+      lastFailureTime = Date.now();
+      
+      // Open circuit breaker if we've exceeded max consecutive failures
+      if (failureCount >= MAX_CONSECUTIVE_FAILURES) {
+        circuitBreakerOpen = true;
+        const backoffTime = getBackoffTime();
+        console.log(`AIS Stream WebSocket circuit breaker opened after ${failureCount} consecutive failures. Backing off for ${Math.round(backoffTime / 1000)}s`);
+        
+        // Schedule reconnect with exponential backoff
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        reconnectTimeout = setTimeout(() => {
+          console.log('Attempting to reconnect AIS Stream WebSocket after backoff period');
+          circuitBreakerOpen = false;
+          initAisStreamWebsocket();
+        }, backoffTime);
+      } else {
+        // Try to reconnect after a delay with graduated backoff
+        const retryTime = getBackoffTime();
+        console.log(`AIS Stream WebSocket will retry in ${Math.round(retryTime / 1000)}s (failure ${failureCount}/${MAX_CONSECUTIVE_FAILURES})`);
+        
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        reconnectTimeout = setTimeout(() => {
+          initAisStreamWebsocket();
+        }, retryTime);
+      }
     });
     
     wsInitialized = true;
   } catch (error) {
     console.error('Failed to initialize AIS Stream WebSocket:', error);
+    
+    // Increment failure count for circuit breaker
+    failureCount++;
+    lastFailureTime = Date.now();
+    
+    // Open circuit breaker if we've exceeded max consecutive failures
+    if (failureCount >= MAX_CONSECUTIVE_FAILURES) {
+      circuitBreakerOpen = true;
+    }
   }
 }
 
