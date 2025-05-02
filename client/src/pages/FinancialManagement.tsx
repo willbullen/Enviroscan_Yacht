@@ -37,6 +37,8 @@ import MainLayout from "@/components/layout/MainLayout";
 import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
 import BatchImportDialog from "@/components/BatchImportDialog";
 import CashFlowTrendsChart from "@/components/financial/CashFlowTrendsChart";
+import { VendorTable } from "@/components/financial/VendorTable";
+import { VendorDialog } from "@/components/financial/VendorDialog";
 import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -1361,78 +1363,21 @@ const FinancialManagement: React.FC = () => {
       case "vendors":
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Vendor Directory</h3>
-              <div className="flex items-center gap-2">
-                <Input 
-                  placeholder="Search vendors..." 
-                  className="w-[250px]" 
-                />
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
+            {vendorsLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading vendors...</span>
               </div>
-            </div>
+            ) : (
+              /* Use our new VendorTable component */
+              <VendorTable />
+            )}
             
-            <div className="bg-card rounded-lg shadow-sm border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Vendor Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Last Transaction</TableHead>
-                    <TableHead className="text-right">Total Spent</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {/* Sample vendor data - replace with actual API data */}
-                  <TableRow>
-                    <TableCell className="font-medium">Monaco Marine</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">Maintenance</Badge>
-                    </TableCell>
-                    <TableCell>contact@monacomarine.com</TableCell>
-                    <TableCell>Monaco</TableCell>
-                    <TableCell>April 15, 2025</TableCell>
-                    <TableCell className="text-right">$42,750.00</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Palma Chandlery</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">Supplies</Badge>
-                    </TableCell>
-                    <TableCell>orders@palmachandlery.com</TableCell>
-                    <TableCell>Palma de Mallorca</TableCell>
-                    <TableCell>May 01, 2025</TableCell>
-                    <TableCell className="text-right">$15,320.00</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
+            {/* Vendor Dialog for adding/editing vendors */}
+            <VendorDialog 
+              open={showVendorDialog} 
+              onOpenChange={setShowVendorDialog} 
+            />
           </div>
         );
       
