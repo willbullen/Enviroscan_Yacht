@@ -42,6 +42,7 @@ import {
   InsertDeposit
 } from "@shared/schema";
 import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -3973,6 +3974,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete user-vessel assignment" });
     }
   });
+  
+  // =========== Financial Management - Vendors Routes =============
+  
+  // Get all vendors
+  apiRouter.get("/vendors", asyncHandler(async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required. Please log in." });
+      }
+      
+      // Directly query the vendors table
+      const vendorsList = await db.query.vendors.findMany();
+      res.json(vendorsList);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      res.status(500).json({ error: "Failed to get vendors" });
+    }
+  }));
+  
+  // Get active vendors only
+  apiRouter.get("/vendors/active", asyncHandler(async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required. Please log in." });
+      }
+      
+      const activeVendors = await db.query.vendors.findMany({
+        where: (vendors, { eq }) => eq(vendors.isActive, true)
+      });
+      res.json(activeVendors);
+    } catch (error) {
+      console.error("Error fetching active vendors:", error);
+      res.status(500).json({ error: "Failed to get active vendors" });
+    }
+  }));
+  
+  // Get a vendor by ID
+  apiRouter.get("/vendors/:id", asyncHandler(async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required. Please log in." });
+      }
+      
+      const vendorId = parseInt(req.params.id);
+      const vendor = await db.query.vendors.findFirst({
+        where: (vendors, { eq }) => eq(vendors.id, vendorId)
+      });
+      
+      if (!vendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      res.json(vendor);
+    } catch (error) {
+      console.error(`Error fetching vendor ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to get vendor" });
+    }
+  }));
+  
+  // Create a vendor
+  apiRouter.post("/vendors", asyncHandler(async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required. Please log in." });
+      }
+      
+      const validatedData = insertVendorSchema.parse(req.body);
+      const [vendor] = await db.insert(vendors).values(validatedData).returning();
+      
+      res.status(201).json(vendor);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid vendor data", 
+          details: error.errors 
+        });
+      }
+      console.error("Error creating vendor:", error);
+      res.status(500).json({ error: "Failed to create vendor" });
+    }
+  }));
+  
+  // Update a vendor
+  apiRouter.patch("/vendors/:id", asyncHandler(async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required. Please log in." });
+      }
+      
+      const vendorId = parseInt(req.params.id);
+      const [existingVendor] = await db.select().from(vendors).where(eq(vendors.id, vendorId));
+      
+      if (!existingVendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      const [updatedVendor] = await db
+        .update(vendors)
+        .set(req.body)
+        .where(eq(vendors.id, vendorId))
+        .returning();
+      
+      res.json(updatedVendor);
+    } catch (error) {
+      console.error(`Error updating vendor ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to update vendor" });
+    }
+  }));
+  
+  // Delete a vendor (soft delete by setting isActive = false)
+  apiRouter.delete("/vendors/:id", asyncHandler(async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required. Please log in." });
+      }
+      
+      const vendorId = parseInt(req.params.id);
+      const [existingVendor] = await db.select().from(vendors).where(eq(vendors.id, vendorId));
+      
+      if (!existingVendor) {
+        return res.status(404).json({ error: "Vendor not found" });
+      }
+      
+      // Soft delete - set isActive to false
+      await db
+        .update(vendors)
+        .set({ isActive: false })
+        .where(eq(vendors.id, vendorId));
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error(`Error deleting vendor ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to delete vendor" });
+    }
+  }));
   
   // =========== Financial Management - Financial Accounts Routes =============
   
