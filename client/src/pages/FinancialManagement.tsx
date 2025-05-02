@@ -307,6 +307,44 @@ const FinancialManagement: React.FC = () => {
     await refetchAccounts();
   };
   
+  // Handler for account deletion
+  const handleDeleteAccount = async (accountId: number) => {
+    if (!currentVessel?.id) {
+      toast({
+        title: "Error",
+        description: "No vessel selected. Please select a vessel first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Make API call to delete the account
+      await apiRequest(
+        'DELETE',
+        `/api/financial-accounts/${accountId}`,
+        {}
+      );
+      
+      // Invalidate accounts query to refresh the UI
+      await queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
+      await refreshFinancialAccounts();
+      
+      toast({
+        title: "Account deleted successfully",
+        description: "The account has been removed from your chart of accounts",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error deleting account",
+        description: "There was a problem deleting the account. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   // Event handlers for ledger tab
   const handlePageChange = (newPage: number) => {
     setTransactionsPage(newPage);
@@ -1144,7 +1182,10 @@ const FinancialManagement: React.FC = () => {
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction className="bg-destructive hover:bg-destructive/90">
+                                        <AlertDialogAction 
+                                          className="bg-destructive hover:bg-destructive/90"
+                                          onClick={() => handleDeleteAccount(account.id)}
+                                        >
                                           Delete
                                         </AlertDialogAction>
                                       </AlertDialogFooter>
@@ -2962,6 +3003,9 @@ const FinancialManagement: React.FC = () => {
           accountData
         );
         
+        // Invalidate accounts query to refresh the UI
+        await queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
+        
         // Success handling for update
         toast({
           title: "Account updated successfully",
@@ -2975,6 +3019,9 @@ const FinancialManagement: React.FC = () => {
           '/api/financial-accounts',
           accountData
         );
+        
+        // Invalidate accounts query to refresh the UI
+        await queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel.id] });
         
         // Success handling for creation
         toast({
