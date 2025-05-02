@@ -1,0 +1,195 @@
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+[PERFORMANCE] logger_initialized { timestamp: '2025-05-02T09:45:34.829Z', environment: 'development' }
+AIS Stream WebSocket will be initialized on demand
+[PERFORMANCE] server_start { port: 5000, environment: 'development' }
+9:45:35 AM [express] serving on port 5000
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+User profile requested: {"id":5,"username":"admin","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Fetching fleet vessels from database and AIS data
+Initializing AIS Stream WebSocket with API key
+9:45:46 AM [express] GET /api/user 304 in 77ms :: {"id":5,"username":"admin","fullName":"System Admi…
+Found 4 vessels in database
+9:45:47 AM [express] GET /api/marine/fleet-vessels 200 in 108ms :: [{"id":4,"name":"M/Y NOURAH OF RI…
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting tasks for vessel ID: 1
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting inventory items for vessel ID: 1
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting activity logs for vessel ID: 1
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting equipment for vessel ID: 1
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting dashboard data for vessel ID: 1
+9:45:47 AM [express] GET /api/tasks 304 in 97ms :: [{"id":3,"title":"Air Conditioning System Inspect…
+Starting getUpcomingMaintenanceTasks...
+Date range: 2025-05-02T09:45:47.246Z to 2025-06-01T09:45:47.246Z
+Executing query to get upcoming tasks...
+9:45:47 AM [express] GET /api/users 304 in 90ms :: [{"id":1,"username":"captain","fullName":"John Sm…
+Found 2 tasks with upcoming status
+Found 1 upcoming tasks within the next 30 days
+9:45:47 AM [express] GET /api/inventory 304 in 92ms :: [{"id":1,"name":"Engine Oil - MTU Approved [M…
+9:45:47 AM [express] GET /api/equipment 304 in 95ms :: [{"id":1,"name":"Main Engine - Port [M/Y Sere…
+9:45:47 AM [express] GET /api/activity 304 in 100ms :: [{"id":5,"activityType":"crew_document_expiri…
+AIS Stream WebSocket error: Error: Unexpected server response: 503
+    at ClientRequest.<anonymous> (/home/runner/workspace/node_modules/ws/lib/websocket.js:913:7)
+    at ClientRequest.emit (node:events:518:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)
+AIS Stream WebSocket connection closed
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting tasks for vessel ID: 4
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting activity logs for vessel ID: 4
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting equipment for vessel ID: 4
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+9:45:47 AM [express] GET /api/tasks 304 in 87ms :: [{"id":3,"title":"Air Conditioning System Inspect…
+9:45:47 AM [express] GET /api/activity 304 in 88ms :: [{"id":5,"activityType":"crew_document_expirin…
+9:45:47 AM [express] GET /api/users 304 in 94ms :: [{"id":1,"username":"captain","fullName":"John Sm…
+9:45:47 AM [express] GET /api/equipment 304 in 102ms :: [{"id":1,"name":"Main Engine - Port [M/Y Azu…
+Returning customized stats for vessel 1
+9:45:47 AM [express] GET /api/dashboard 304 in 371ms :: {"stats":{"dueTasks":0,"upcomingTasks":1,"co…
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting inventory items for vessel ID: 4
+9:45:47 AM [express] GET /api/inventory 304 in 88ms :: [{"id":1,"name":"Engine Oil - MTU Approved [M…
+Deserializing user 5: {"id":5,"username":"admin","password":"admin123","fullName":"System Administrator","role":"admin","avatarUrl":null,"createdAt":"2025-04-30T06:41:22.475Z","isActive":true,"email":null}
+Getting dashboard data for vessel ID: 4
+Starting getUpcomingMaintenanceTasks...
+Date range: 2025-05-02T09:45:47.663Z to 2025-06-01T09:45:47.663Z
+Executing query to get upcoming tasks...
+Found 2 tasks with upcoming status
+Found 1 upcoming tasks within the next 30 days
+Returning customized stats for vessel 4
+9:45:48 AM [express] GET /api/dashboard 304 in 416ms :: {"stats":{"dueTasks":-1,"upcomingTasks":0,"c…
+AIS Stream WebSocket error: Error: Unexpected server response: 503
+    at ClientRequest.<anonymous> (/home/runner/workspace/node_modules/ws/lib/websocket.js:913:7)
+    at ClientRequest.emit (node:events:518:28)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:702:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:118:17)
+    at TLSSocket.socketOnData (node:_http_client:544:22)
+    at TLSSocket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)
+AIS Stream WebSocket connection closed
+^A
