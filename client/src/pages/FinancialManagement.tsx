@@ -450,45 +450,21 @@ const FinancialManagement: React.FC = () => {
       <div className="w-full p-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b pb-4">
-            <div className="flex flex-col space-y-1">
-              <div className="flex items-center">
-                <h1 className="text-2xl font-bold tracking-tight text-primary mr-3">
-                  {activeTab === "accounts" && "Chart of Accounts"}
-                  {activeTab === "deposits" && "Deposits Management"}
-                  {activeTab === "banking" && "Banking & Reconciliation"}
-                  {activeTab === "payroll" && "Payroll Management"}
-                  {activeTab === "budgets" && "Budget Planning"}
-                  {activeTab === "expenses" && "Expense Tracking"}
-                  {activeTab === "vendors" && "Vendor Management"}
-                  {activeTab === "categories" && "Financial Categories"}
-                  {activeTab === "ledger" && "General Ledger"}
-                  {activeTab === "reports" && "Financial Reports"}
-                </h1>
-                
-                {/* Vessel selector - simplified and inline */}
-                <Select
-                  value={currentVessel?.id?.toString()}
-                  disabled={!currentVessel}
-                >
-                  <SelectTrigger className="w-52 h-8 text-sm">
-                    <SelectValue placeholder={
-                      currentVessel 
-                        ? `${currentVessel.name}`
-                        : "Select a vessel"
-                    } />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* Vessel selection is handled by the VesselContext */}
-                    {currentVessel && (
-                      <SelectItem value={currentVessel.id.toString()}>
-                        {currentVessel.name}
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold tracking-tight text-primary">
+                {activeTab === "accounts" && "Chart of Accounts"}
+                {activeTab === "deposits" && "Deposits Management"}
+                {activeTab === "banking" && "Banking & Reconciliation"}
+                {activeTab === "payroll" && "Payroll Management"}
+                {activeTab === "budgets" && "Budget Planning"}
+                {activeTab === "expenses" && "Expense Tracking"}
+                {activeTab === "vendors" && "Vendor Management"}
+                {activeTab === "categories" && "Financial Categories"}
+                {activeTab === "ledger" && "General Ledger"}
+                {activeTab === "reports" && "Financial Reports"}
+              </h1>
               <p className="text-muted-foreground mt-1">
-                {currentVessel ? `Managing financial data for ${currentVessel.name}` : "Select a vessel to manage financial data"}
+                {currentVessel ? `Managing financial data for ${currentVessel.name}` : "Select a vessel from the navigation bar to manage financial data"}
               </p>
             </div>
             
