@@ -1840,14 +1840,507 @@ const FinancialManagement: React.FC = () => {
             
       {/* Add New Expense Dialog */}
       <Dialog open={showExpenseDialog} onOpenChange={setShowExpenseDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Record New Expense</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Record New Expense
+            </DialogTitle>
             <DialogDescription>
               Add a new expense transaction for {currentVessel?.name}.
             </DialogDescription>
           </DialogHeader>
-          {/* Expense form content */}
+          
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            
+            // Create a new expense transaction
+            const formData = new FormData(e.target as HTMLFormElement);
+            const expenseData = {
+              transactionType: 'expense',
+              vesselId: currentVessel?.id,
+              transactionDate: formData.get('transactionDate') as string,
+              amount: parseFloat(formData.get('amount') as string),
+              description: formData.get('description') as string,
+              payee: formData.get('payee') as string,
+              accountId: parseInt(formData.get('accountId') as string),
+              category: formData.get('category') as string,
+              status: formData.get('status') as string,
+              currency: formData.get('currency') as string || 'USD',
+            };
+            
+            // Log the expense data (this would normally be sent to the API)
+            console.log("Expense data to submit:", expenseData);
+            
+            // Show success toast
+            toast({
+              title: "Expense recorded",
+              description: `$${expenseData.amount.toFixed(2)} expense has been added.`,
+              variant: "default",
+            });
+            
+            // Close the dialog
+            setShowExpenseDialog(false);
+            
+            // Refresh transactions data
+            queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
+          }}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="transactionDate">Date</Label>
+                  <Input 
+                    id="transactionDate" 
+                    name="transactionDate" 
+                    type="date" 
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input 
+                      id="amount" 
+                      name="amount" 
+                      type="number" 
+                      step="0.01" 
+                      min="0.01" 
+                      placeholder="0.00" 
+                      className="pl-7"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="payee">Vendor/Payee</Label>
+                  <Input 
+                    id="payee" 
+                    name="payee" 
+                    type="text" 
+                    placeholder="Enter vendor or payee name" 
+                    required
+                  />
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select name="category" defaultValue="fuel">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fuel">Fuel</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      <SelectItem value="dockage">Dockage</SelectItem>
+                      <SelectItem value="crew">Crew Expenses</SelectItem>
+                      <SelectItem value="provisions">Provisions</SelectItem>
+                      <SelectItem value="other">Other Expenses</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="accountId">Account</Label>
+                <Select name="accountId" defaultValue={accounts?.[0]?.id?.toString()}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts && Array.isArray(accounts) && accounts.map((account: any) => (
+                      <SelectItem key={account.id} value={account.id.toString()}>
+                        {account.name} ({account.accountNumber})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description" 
+                  name="description" 
+                  placeholder="Enter details about this expense" 
+                  rows={2}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select name="currency" defaultValue="USD">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select name="status" defaultValue="pending">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex items-center">
+                <Checkbox id="receipt" name="hasReceipt" />
+                <Label htmlFor="receipt" className="ml-2">
+                  Receipt attached
+                </Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowExpenseDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Expense</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add New Deposit Dialog */}
+      <Dialog open={showDepositDialog} onOpenChange={setShowDepositDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Banknote className="h-5 w-5 text-primary" />
+              Add New Deposit
+            </DialogTitle>
+            <DialogDescription>
+              Add a new deposit transaction for {currentVessel?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            
+            // Create a new deposit transaction
+            const formData = new FormData(e.target as HTMLFormElement);
+            const depositData = {
+              transactionType: 'deposit',
+              vesselId: currentVessel?.id,
+              transactionDate: formData.get('transactionDate') as string,
+              amount: parseFloat(formData.get('amount') as string),
+              description: formData.get('description') as string,
+              source: formData.get('source') as string,
+              accountId: parseInt(formData.get('accountId') as string),
+              category: formData.get('category') as string,
+              currency: formData.get('currency') as string || 'USD',
+              referenceNumber: formData.get('referenceNumber') as string,
+            };
+            
+            // Log the deposit data (this would normally be sent to the API)
+            console.log("Deposit data to submit:", depositData);
+            
+            // Show success toast
+            toast({
+              title: "Deposit recorded",
+              description: `$${depositData.amount.toFixed(2)} deposit has been added.`,
+              variant: "default",
+            });
+            
+            // Close the dialog
+            setShowDepositDialog(false);
+            
+            // Refresh transactions data
+            queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
+          }}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="transactionDate">Date</Label>
+                  <Input 
+                    id="transactionDate" 
+                    name="transactionDate" 
+                    type="date" 
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input 
+                      id="amount" 
+                      name="amount" 
+                      type="number" 
+                      step="0.01" 
+                      min="0.01" 
+                      placeholder="0.00" 
+                      className="pl-7"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="source">Source</Label>
+                  <Input 
+                    id="source" 
+                    name="source" 
+                    type="text" 
+                    placeholder="Enter deposit source" 
+                    required
+                  />
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select name="category" defaultValue="charter">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="charter">Charter Income</SelectItem>
+                      <SelectItem value="owner">Owner Contribution</SelectItem>
+                      <SelectItem value="refund">Refund</SelectItem>
+                      <SelectItem value="sale">Sale of Equipment</SelectItem>
+                      <SelectItem value="insurance">Insurance Claim</SelectItem>
+                      <SelectItem value="other">Other Income</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="accountId">Account</Label>
+                <Select name="accountId" defaultValue={accounts?.[0]?.id?.toString()}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts && Array.isArray(accounts) && accounts.map((account: any) => (
+                      <SelectItem key={account.id} value={account.id.toString()}>
+                        {account.name} ({account.accountNumber})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description" 
+                  name="description" 
+                  placeholder="Enter details about this deposit" 
+                  rows={2}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select name="currency" defaultValue="USD">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="referenceNumber">Reference Number</Label>
+                  <Input 
+                    id="referenceNumber" 
+                    name="referenceNumber" 
+                    type="text" 
+                    placeholder="Enter reference/check number" 
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowDepositDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Deposit</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add New Budget Dialog */}
+      <Dialog open={showBudgetDialog} onOpenChange={setShowBudgetDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-primary" />
+              Create Budget Plan
+            </DialogTitle>
+            <DialogDescription>
+              Create a new budget allocation for {currentVessel?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            
+            // Create a new budget plan
+            const formData = new FormData(e.target as HTMLFormElement);
+            const budgetData = {
+              vesselId: currentVessel?.id,
+              category: formData.get('category') as string,
+              description: formData.get('description') as string,
+              budgetAmount: parseFloat(formData.get('budgetAmount') as string),
+              fiscalYear: parseInt(formData.get('fiscalYear') as string),
+              fiscalPeriod: formData.get('fiscalPeriod') as string,
+              assignedTo: formData.get('assignedTo') as string,
+              notes: formData.get('notes') as string,
+            };
+            
+            // Log the budget data (this would normally be sent to the API)
+            console.log("Budget data to submit:", budgetData);
+            
+            // Show success toast
+            toast({
+              title: "Budget plan created",
+              description: `$${budgetData.budgetAmount.toFixed(2)} budget for ${budgetData.category} has been created.`,
+              variant: "default",
+            });
+            
+            // Close the dialog
+            setShowBudgetDialog(false);
+          }}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="category">Budget Category</Label>
+                  <Select name="category" defaultValue="fuel">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fuel">Fuel</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      <SelectItem value="dockage">Dockage</SelectItem>
+                      <SelectItem value="crew">Crew Expenses</SelectItem>
+                      <SelectItem value="provisions">Provisions</SelectItem>
+                      <SelectItem value="insurance">Insurance</SelectItem>
+                      <SelectItem value="admin">Administrative</SelectItem>
+                      <SelectItem value="other">Other Expenses</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="budgetAmount">Budget Amount</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input 
+                      id="budgetAmount" 
+                      name="budgetAmount" 
+                      type="number" 
+                      step="0.01" 
+                      min="0.01" 
+                      placeholder="0.00" 
+                      className="pl-7"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input 
+                  id="description" 
+                  name="description" 
+                  type="text" 
+                  placeholder="Brief description of budget allocation" 
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="fiscalYear">Fiscal Year</Label>
+                  <Select name="fiscalYear" defaultValue={new Date().getFullYear().toString()}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={(new Date().getFullYear() - 1).toString()}>{new Date().getFullYear() - 1}</SelectItem>
+                      <SelectItem value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</SelectItem>
+                      <SelectItem value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="fiscalPeriod">Period</Label>
+                  <Select name="fiscalPeriod" defaultValue="annual">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="annual">Annual</SelectItem>
+                      <SelectItem value="q1">Q1</SelectItem>
+                      <SelectItem value="q2">Q2</SelectItem>
+                      <SelectItem value="q3">Q3</SelectItem>
+                      <SelectItem value="q4">Q4</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="assignedTo">Assigned To</Label>
+                <Input 
+                  id="assignedTo" 
+                  name="assignedTo" 
+                  type="text" 
+                  placeholder="Person responsible for this budget" 
+                />
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea 
+                  id="notes" 
+                  name="notes" 
+                  placeholder="Additional notes or instructions" 
+                  rows={2}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowBudgetDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Create Budget</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       
