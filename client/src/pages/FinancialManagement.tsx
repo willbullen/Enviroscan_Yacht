@@ -429,132 +429,12 @@ const FinancialManagement: React.FC = () => {
 
   return (
     <MainLayout title="Financial Management">
-      <div className="w-full h-full flex">
-        {/* Sidebar Navigation */}
-        <div className="w-64 min-h-[calc(100vh-4rem)] border-r bg-muted/10 p-4 flex flex-col">
-          <h2 className="font-semibold text-lg mb-4 text-primary border-b pb-2">Financial Management</h2>
-          
-          {/* Vessel selector in sidebar */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium mb-2 text-foreground/70">Active Vessel</h3>
-            {renderVesselSelector()}
-          </div>
-          
-          {/* Navigation Groups */}
-          <div className="space-y-4 flex-1 overflow-auto">
-            {/* Accounts & Assets Group */}
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-foreground/70">Accounts & Assets</h3>
-              <div className="space-y-1">
-                <Button 
-                  variant={activeTab === "accounts" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("accounts")}
-                >
-                  <DollarSign className="h-4 w-4 mr-2" /> Accounts
-                </Button>
-                <Button 
-                  variant={activeTab === "ledger" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("ledger")}
-                >
-                  <Calculator className="h-4 w-4 mr-2" /> Ledger
-                </Button>
-              </div>
-            </div>
-            
-            {/* Transactions Group */}
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-foreground/70">Transactions</h3>
-              <div className="space-y-1">
-                <Button 
-                  variant={activeTab === "deposits" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("deposits")}
-                >
-                  <Banknote className="h-4 w-4 mr-2" /> Deposits
-                </Button>
-                <Button 
-                  variant={activeTab === "expenses" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("expenses")}
-                >
-                  <CreditCard className="h-4 w-4 mr-2" /> Expenses
-                </Button>
-                <Button 
-                  variant={activeTab === "banking" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("banking")}
-                >
-                  <Building className="h-4 w-4 mr-2" /> Banking
-                </Button>
-              </div>
-            </div>
-            
-            {/* Planning Group */}
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-foreground/70">Planning</h3>
-              <div className="space-y-1">
-                <Button 
-                  variant={activeTab === "budgets" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("budgets")}
-                >
-                  <Wallet className="h-4 w-4 mr-2" /> Budgets
-                </Button>
-                <Button 
-                  variant={activeTab === "payroll" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("payroll")}
-                >
-                  <Users className="h-4 w-4 mr-2" /> Payroll
-                </Button>
-              </div>
-            </div>
-            
-            {/* Organization Group */}
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-foreground/70">Organization</h3>
-              <div className="space-y-1">
-                <Button 
-                  variant={activeTab === "categories" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("categories")}
-                >
-                  <ListTree className="h-4 w-4 mr-2" /> Categories
-                </Button>
-                <Button 
-                  variant={activeTab === "vendors" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("vendors")}
-                >
-                  <Building className="h-4 w-4 mr-2" /> Vendors
-                </Button>
-              </div>
-            </div>
-            
-            {/* Reporting Group */}
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-foreground/70">Reporting</h3>
-              <div className="space-y-1">
-                <Button 
-                  variant={activeTab === "reports" ? "default" : "ghost"} 
-                  className="w-full justify-start text-sm h-9"
-                  onClick={() => setActiveTab("reports")}
-                >
-                  <FileText className="h-4 w-4 mr-2" /> Reports
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Main Content Area */}
-        <div className="flex-1 p-6 overflow-auto">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b pb-4">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-primary">
+      <div className="w-full p-6">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b pb-4">
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold tracking-tight text-primary mr-3">
                   {activeTab === "accounts" && "Chart of Accounts"}
                   {activeTab === "deposits" && "Deposits Management"}
                   {activeTab === "banking" && "Banking & Reconciliation"}
@@ -566,45 +446,145 @@ const FinancialManagement: React.FC = () => {
                   {activeTab === "ledger" && "General Ledger"}
                   {activeTab === "reports" && "Financial Reports"}
                 </h1>
-                <p className="text-muted-foreground mt-1">
-                  {currentVessel ? `Managing financial data for ${currentVessel.name}` : "Select a vessel to manage financial data"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <ViewToggle viewMode={viewMode} onChange={setViewMode} />
                 
-                {currentVessel && activeTab !== "reports" && renderBulkImportButton(activeTab)}
-                
-                {currentVessel && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAddNew}
-                    className="bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary"
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> 
-                    {activeTab === "accounts" && "New Account"}
-                    {activeTab === "deposits" && "New Deposit"}
-                    {activeTab === "banking" && "New Banking Record"}
-                    {activeTab === "payroll" && "New Payroll Entry"}
-                    {activeTab === "budgets" && "New Budget"}
-                    {activeTab === "expenses" && "New Expense"}
-                    {activeTab === "vendors" && "New Vendor"}
-                    {activeTab === "categories" && "New Category"}
-                    {activeTab === "ledger" && "New Entry"}
-                    {activeTab === "reports" && "Generate Report"}
-                  </Button>
-                )}
+                {/* Vessel selector - simplified and inline */}
+                <Select
+                  value={currentVessel?.id?.toString()}
+                  disabled={!currentVessel}
+                >
+                  <SelectTrigger className="w-52 h-8 text-sm">
+                    <SelectValue placeholder={
+                      currentVessel 
+                        ? `${currentVessel.name}`
+                        : "Select a vessel"
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Vessel selection is handled by the VesselContext */}
+                    {currentVessel && (
+                      <SelectItem value={currentVessel.id.toString()}>
+                        {currentVessel.name}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
+              <p className="text-muted-foreground mt-1">
+                {currentVessel ? `Managing financial data for ${currentVessel.name}` : "Select a vessel to manage financial data"}
+              </p>
             </div>
             
-            {/* Financial overview section */}
-            {currentVessel && renderFinancialOverview()}
-            
-            {/* Tab Content */}
-            <div className="mt-6">
-              {renderTabContent()}
+            <div className="flex items-center gap-2">
+              <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+              
+              {/* Module Navigation Dropdown Menu */}
+              <div className="relative">
+                <Select
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                >
+                  <SelectTrigger className="w-40 h-9 bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary">
+                    <ChevronDown className="h-4 w-4 mr-2" />
+                    <span className="font-medium">Module</span>
+                  </SelectTrigger>
+                  <SelectContent className="w-52">
+                    {/* Accounts & Assets Group */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Accounts & Assets
+                    </div>
+                    <SelectItem value="accounts" className="flex items-center py-1.5 pl-2">
+                      <DollarSign className="h-4 w-4 mr-2 text-primary" /> Accounts
+                    </SelectItem>
+                    <SelectItem value="ledger" className="flex items-center py-1.5 pl-2">
+                      <Calculator className="h-4 w-4 mr-2 text-primary" /> Ledger
+                    </SelectItem>
+                    
+                    <Separator className="my-1" />
+                    
+                    {/* Transactions Group */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Transactions
+                    </div>
+                    <SelectItem value="deposits" className="flex items-center py-1.5 pl-2">
+                      <Banknote className="h-4 w-4 mr-2 text-primary" /> Deposits
+                    </SelectItem>
+                    <SelectItem value="expenses" className="flex items-center py-1.5 pl-2">
+                      <CreditCard className="h-4 w-4 mr-2 text-primary" /> Expenses
+                    </SelectItem>
+                    <SelectItem value="banking" className="flex items-center py-1.5 pl-2">
+                      <Building className="h-4 w-4 mr-2 text-primary" /> Banking
+                    </SelectItem>
+                    
+                    <Separator className="my-1" />
+                    
+                    {/* Planning Group */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Planning
+                    </div>
+                    <SelectItem value="budgets" className="flex items-center py-1.5 pl-2">
+                      <Wallet className="h-4 w-4 mr-2 text-primary" /> Budgets
+                    </SelectItem>
+                    <SelectItem value="payroll" className="flex items-center py-1.5 pl-2">
+                      <Users className="h-4 w-4 mr-2 text-primary" /> Payroll
+                    </SelectItem>
+                    
+                    <Separator className="my-1" />
+                    
+                    {/* Organization Group */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Organization
+                    </div>
+                    <SelectItem value="categories" className="flex items-center py-1.5 pl-2">
+                      <ListTree className="h-4 w-4 mr-2 text-primary" /> Categories
+                    </SelectItem>
+                    <SelectItem value="vendors" className="flex items-center py-1.5 pl-2">
+                      <Building className="h-4 w-4 mr-2 text-primary" /> Vendors
+                    </SelectItem>
+                    
+                    <Separator className="my-1" />
+                    
+                    {/* Reporting Group */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Reporting
+                    </div>
+                    <SelectItem value="reports" className="flex items-center py-1.5 pl-2">
+                      <FileText className="h-4 w-4 mr-2 text-primary" /> Reports
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {currentVessel && activeTab !== "reports" && renderBulkImportButton(activeTab)}
+              
+              {currentVessel && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAddNew}
+                  className="bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary"
+                >
+                  <Plus className="h-4 w-4 mr-2" /> 
+                  {activeTab === "accounts" && "New Account"}
+                  {activeTab === "deposits" && "New Deposit"}
+                  {activeTab === "banking" && "New Banking Record"}
+                  {activeTab === "payroll" && "New Payroll Entry"}
+                  {activeTab === "budgets" && "New Budget"}
+                  {activeTab === "expenses" && "New Expense"}
+                  {activeTab === "vendors" && "New Vendor"}
+                  {activeTab === "categories" && "New Category"}
+                  {activeTab === "ledger" && "New Entry"}
+                  {activeTab === "reports" && "Generate Report"}
+                </Button>
+              )}
             </div>
+          </div>
+          
+          {/* Financial overview section */}
+          {currentVessel && renderFinancialOverview()}
+          
+          {/* Tab Content */}
+          <div className="mt-6">
+            {renderTabContent()}
           </div>
         </div>
       </div>
