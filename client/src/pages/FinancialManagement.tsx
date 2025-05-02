@@ -986,22 +986,35 @@ const FinancialManagement: React.FC = () => {
               </div>
             </div>
             
-            <Card className="border shadow-sm">
-              <CardHeader className="bg-muted/30 border-b pb-3">
+            {/* Chart of Accounts */}
+            <Card className="border border-primary/20 shadow-sm">
+              <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg font-medium">Financial Accounts</CardTitle>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-[150px] h-8 text-xs">
-                      <SelectValue placeholder="Filter by type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Accounts</SelectItem>
-                      <SelectItem value="operating">Operating</SelectItem>
-                      <SelectItem value="reserve">Reserve</SelectItem>
-                      <SelectItem value="asset">Asset</SelectItem>
-                      <SelectItem value="liability">Liability</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div>
+                    <CardTitle className="text-xl font-semibold">Chart of Accounts</CardTitle>
+                    <CardDescription className="text-muted-foreground">
+                      Financial accounts for {currentVessel?.name || 'this vessel'}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select defaultValue="all">
+                      <SelectTrigger className="w-[150px] h-8 text-xs bg-background border-primary/20">
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Accounts</SelectItem>
+                        <SelectItem value="operating">Operating</SelectItem>
+                        <SelectItem value="reserve">Reserve</SelectItem>
+                        <SelectItem value="asset">Asset</SelectItem>
+                        <SelectItem value="liability">Liability</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      type="search"
+                      placeholder="Search accounts..."
+                      className="h-8 text-xs max-w-[180px] bg-background"
+                    />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
