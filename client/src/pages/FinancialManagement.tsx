@@ -12,6 +12,24 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+// Importing all required dropdown components
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuGroup,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -477,82 +495,124 @@ const FinancialManagement: React.FC = () => {
             <div className="flex items-center gap-2">
               <ViewToggle viewMode={viewMode} onChange={setViewMode} />
               
-              {/* Module Navigation Dropdown Menu */}
-              <div className="relative">
-                <Select
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                >
-                  <SelectTrigger className="w-40 h-9 bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary">
+              {/* Module Navigation Dropdown Menu - using shadcn DropdownMenu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-40 h-9 bg-background text-foreground border-primary/30 hover:bg-primary/10 hover:text-primary">
                     <ChevronDown className="h-4 w-4 mr-2" />
                     <span className="font-medium">Module</span>
-                  </SelectTrigger>
-                  <SelectContent className="w-52">
-                    {/* Accounts & Assets Group */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Accounts & Assets
-                    </div>
-                    <SelectItem value="accounts" className="flex items-center py-1.5 pl-2">
-                      <DollarSign className="h-4 w-4 mr-2 text-primary" /> Accounts
-                    </SelectItem>
-                    <SelectItem value="ledger" className="flex items-center py-1.5 pl-2">
-                      <Calculator className="h-4 w-4 mr-2 text-primary" /> Ledger
-                    </SelectItem>
-                    
-                    <Separator className="my-1" />
-                    
-                    {/* Transactions Group */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Transactions
-                    </div>
-                    <SelectItem value="deposits" className="flex items-center py-1.5 pl-2">
-                      <Banknote className="h-4 w-4 mr-2 text-primary" /> Deposits
-                    </SelectItem>
-                    <SelectItem value="expenses" className="flex items-center py-1.5 pl-2">
-                      <CreditCard className="h-4 w-4 mr-2 text-primary" /> Expenses
-                    </SelectItem>
-                    <SelectItem value="banking" className="flex items-center py-1.5 pl-2">
-                      <Building className="h-4 w-4 mr-2 text-primary" /> Banking
-                    </SelectItem>
-                    
-                    <Separator className="my-1" />
-                    
-                    {/* Planning Group */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Planning
-                    </div>
-                    <SelectItem value="budgets" className="flex items-center py-1.5 pl-2">
-                      <Wallet className="h-4 w-4 mr-2 text-primary" /> Budgets
-                    </SelectItem>
-                    <SelectItem value="payroll" className="flex items-center py-1.5 pl-2">
-                      <Users className="h-4 w-4 mr-2 text-primary" /> Payroll
-                    </SelectItem>
-                    
-                    <Separator className="my-1" />
-                    
-                    {/* Organization Group */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Organization
-                    </div>
-                    <SelectItem value="categories" className="flex items-center py-1.5 pl-2">
-                      <ListTree className="h-4 w-4 mr-2 text-primary" /> Categories
-                    </SelectItem>
-                    <SelectItem value="vendors" className="flex items-center py-1.5 pl-2">
-                      <Building className="h-4 w-4 mr-2 text-primary" /> Vendors
-                    </SelectItem>
-                    
-                    <Separator className="my-1" />
-                    
-                    {/* Reporting Group */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Reporting
-                    </div>
-                    <SelectItem value="reports" className="flex items-center py-1.5 pl-2">
-                      <FileText className="h-4 w-4 mr-2 text-primary" /> Reports
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuLabel>Financial Modules</DropdownMenuLabel>
+                  
+                  {/* Accounts & Assets Group */}
+                  <DropdownMenuGroup>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span className="flex items-center">
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          <span>Accounts & Assets</span>
+                        </span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="min-w-[220px]">
+                        <DropdownMenuItem onClick={() => setActiveTab("accounts")} className={activeTab === "accounts" ? "bg-muted" : ""}>
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          <span>Chart of Accounts</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setActiveTab("ledger")} className={activeTab === "ledger" ? "bg-muted" : ""}>
+                          <Calculator className="h-4 w-4 mr-2" />
+                          <span>General Ledger</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuGroup>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Transactions Group */}
+                  <DropdownMenuGroup>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span className="flex items-center">
+                          <Receipt className="w-4 h-4 mr-2" />
+                          <span>Transactions</span>
+                        </span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="min-w-[220px]">
+                        <DropdownMenuItem onClick={() => setActiveTab("deposits")} className={activeTab === "deposits" ? "bg-muted" : ""}>
+                          <Banknote className="h-4 w-4 mr-2" />
+                          <span>Deposits</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setActiveTab("expenses")} className={activeTab === "expenses" ? "bg-muted" : ""}>
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          <span>Expenses</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setActiveTab("banking")} className={activeTab === "banking" ? "bg-muted" : ""}>
+                          <Building className="h-4 w-4 mr-2" />
+                          <span>Banking</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuGroup>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Planning Group */}
+                  <DropdownMenuGroup>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          <span>Planning</span>
+                        </span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="min-w-[220px]">
+                        <DropdownMenuItem onClick={() => setActiveTab("budgets")} className={activeTab === "budgets" ? "bg-muted" : ""}>
+                          <Wallet className="h-4 w-4 mr-2" />
+                          <span>Budgets</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setActiveTab("payroll")} className={activeTab === "payroll" ? "bg-muted" : ""}>
+                          <Users className="h-4 w-4 mr-2" />
+                          <span>Payroll</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuGroup>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Organization Group */}
+                  <DropdownMenuGroup>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span className="flex items-center">
+                          <ListTree className="w-4 h-4 mr-2" />
+                          <span>Organization</span>
+                        </span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="min-w-[220px]">
+                        <DropdownMenuItem onClick={() => setActiveTab("categories")} className={activeTab === "categories" ? "bg-muted" : ""}>
+                          <ListTree className="h-4 w-4 mr-2" />
+                          <span>Categories</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setActiveTab("vendors")} className={activeTab === "vendors" ? "bg-muted" : ""}>
+                          <Building className="h-4 w-4 mr-2" />
+                          <span>Vendors</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuGroup>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Direct Access Items */}
+                  <DropdownMenuItem onClick={() => setActiveTab("reports")} className={activeTab === "reports" ? "bg-muted" : ""}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    <span>Reports</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               {currentVessel && activeTab !== "reports" && renderBulkImportButton(activeTab)}
               
