@@ -75,6 +75,7 @@ import {
 import { 
   AlertCircle,
   Banknote,
+  BarChart3,
   CheckCircle,
   DollarSign, 
   Wallet, 
@@ -91,7 +92,11 @@ import {
   Pencil,
   ListTree,
   FileUp,
+  MoreHorizontal,
+  PiggyBank,
+  RefreshCw,
   Trash,
+  TrendingUp,
   Euro,
   Calculator,
   ChevronRight,
@@ -313,14 +318,30 @@ const FinancialManagement: React.FC = () => {
     // Here you would call a mutation to create the category
   };
 
+  // Calculate total balance from accounts
+  const calculateTotalBalance = () => {
+    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
+      return 0;
+    }
+    return accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
+  };
+
   // Render financial overview section with summary cards and charts
   const renderFinancialOverview = () => {
     if (!currentVessel) return null;
     
-    // This would display summary cards and charts
+    // Get the total balance for all accounts
+    const totalBalance = calculateTotalBalance();
+    
+    // Format the balance with appropriate currency
+    const formattedBalance = new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD'
+    }).format(totalBalance);
+    
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="border border-border/40 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <DollarSign className="h-4 w-4 mr-2 text-primary" />
@@ -329,14 +350,18 @@ const FinancialManagement: React.FC = () => {
             <CardDescription>Current value of all accounts</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
-              {/* This would be calculated from account data */}
-              $450,250.00
-            </p>
+            <div className="flex justify-between items-end">
+              <p className="text-2xl font-bold">
+                {formattedBalance}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {accounts && Array.isArray(accounts) ? `${accounts.length} account${accounts.length !== 1 ? 's' : ''}` : '0 accounts'}
+              </p>
+            </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border border-border/40 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <CreditCard className="h-4 w-4 mr-2 text-primary" />
@@ -345,14 +370,22 @@ const FinancialManagement: React.FC = () => {
             <CardDescription>Current month expenses</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
-              {/* This would be calculated from expense data */}
-              $28,750.00
-            </p>
+            <div className="flex justify-between items-end">
+              <p className="text-2xl font-bold">
+                {new Intl.NumberFormat('en-US', { 
+                  style: 'currency', 
+                  currency: 'USD'
+                }).format(28750)}
+              </p>
+              <div className="flex items-center text-xs text-red-500">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                <span>+5.2% from last month</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border border-border/40 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
               <BarChart4 className="h-4 w-4 mr-2 text-primary" />
@@ -369,6 +402,12 @@ const FinancialManagement: React.FC = () => {
               <div className="w-full bg-muted rounded-full h-2.5">
                 <div className="bg-primary h-2.5 rounded-full" style={{ width: '75%' }}></div>
               </div>
+            </div>
+            <div className="flex justify-end mt-2">
+              <Button variant="link" size="sm" className="p-0 h-auto text-xs">
+                View Budget Details
+                <ChevronRight className="h-3 w-3 ml-1" />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -811,9 +850,9 @@ const FinancialManagement: React.FC = () => {
       
       case "budgets":
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Budget Plans</h3>
+              <h3 className="text-lg font-medium">Budget Planning</h3>
               <div className="flex items-center gap-2">
                 <Select defaultValue="current">
                   <SelectTrigger className="w-[180px]">
@@ -835,7 +874,95 @@ const FinancialManagement: React.FC = () => {
               </div>
             </div>
             
+            {/* Budget Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border border-border/40 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <Wallet className="h-4 w-4 mr-2 text-primary" />
+                    Total Budget
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-2xl font-bold">$500,000.00</p>
+                    <p className="text-xs text-muted-foreground">For fiscal year {new Date().getFullYear()}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border border-border/40 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <CreditCard className="h-4 w-4 mr-2 text-primary" />
+                    Spent to Date
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-2xl font-bold">$375,000.00</p>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-muted-foreground">75% of total budget</p>
+                      <Badge variant="outline" className="text-xs">On track</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border border-border/40 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <PiggyBank className="h-4 w-4 mr-2 text-primary" />
+                    Remaining
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-2xl font-bold">$125,000.00</p>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-muted-foreground">25% of total budget</p>
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs bg-amber-100 text-amber-800 hover:bg-amber-100"
+                      >
+                        4 months left
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Budget vs Actual Chart */}
+            <Card className="border border-border/40 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Budget vs. Actual by Category</CardTitle>
+                <CardDescription>
+                  Comparing budgeted amounts to actual spending for {new Date().getFullYear()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-72 w-full">
+                  {/* Placeholder for chart - in a real implementation, this would be a recharts or similar component */}
+                  <div className="h-full w-full flex items-center justify-center bg-muted/10 border border-dashed rounded-md">
+                    <div className="text-center text-muted-foreground">
+                      <BarChart3 className="h-8 w-8 mx-auto mb-2" />
+                      <p>Budget comparison chart would appear here</p>
+                      <Button variant="outline" size="sm" className="mt-2">
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Load Chart Data
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Budget Items Table */}
             <div className="bg-card rounded-lg shadow-sm border">
+              <div className="p-4 border-b">
+                <h4 className="text-sm font-medium">Budget Line Items</h4>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -867,9 +994,34 @@ const FinancialManagement: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => toast({ title: "Edit budget item" })}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast({ title: "View transactions" })}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Transactions
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => toast({ 
+                              title: "Delete budget item", 
+                              variant: "destructive" 
+                            })}
+                            className="text-destructive"
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -889,9 +1041,81 @@ const FinancialManagement: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => toast({ title: "Edit budget item" })}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast({ title: "View transactions" })}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Transactions
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => toast({ 
+                              title: "Delete budget item", 
+                              variant: "destructive" 
+                            })}
+                            className="text-destructive"
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <Badge variant="outline">Dockage</Badge>
+                    </TableCell>
+                    <TableCell>Annual marina and port fees</TableCell>
+                    <TableCell className="text-right">$180,000.00</TableCell>
+                    <TableCell className="text-right">$135,000.00</TableCell>
+                    <TableCell className="text-right text-emerald-600">$45,000.00</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-xs">75% used</span>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => toast({ title: "Edit budget item" })}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast({ title: "View transactions" })}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Transactions
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => toast({ 
+                              title: "Delete budget item", 
+                              variant: "destructive" 
+                            })}
+                            className="text-destructive"
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 </TableBody>
