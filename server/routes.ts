@@ -4860,6 +4860,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // =========== Financial Dashboard API endpoints =============
+  
+  // Get transaction statistics for financial dashboard
+  apiRouter.get("/transactions/vessel/:id/stats", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+
+    const vesselId = parseInt(req.params.id);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Valid vessel ID is required" });
+    }
+
+    // Get all transactions for the vessel
+    const transactions = await storage.getTransactionsByVessel(vesselId);
+
+    // Get current date info for filtering
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Filter expenses for the current month
+    const expenses = transactions.filter(t => 
+      t.transactionType === 'expense'
+    );
+    
+    // Filter deposits for the current month
+    const deposits = transactions.filter(t => 
+      t.transactionType === 'deposit'
+    );
+
+    res.json({ 
+      expenses,
+      deposits
+    });
+  }));
+
+  // Get financial summary for the dashboard
+  apiRouter.get("/transactions/vessel/:id/summary", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+
+    const vesselId = parseInt(req.params.id);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Valid vessel ID is required" });
+    }
+
+    // Get all transactions for the vessel
+    const transactions = await storage.getTransactionsByVessel(vesselId);
+
+    // Get accounts for this vessel to calculate available funds
+    const accounts = await storage.getFinancialAccountsByVessel(vesselId);
+
+    // Get current date info for filtering
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    
+    // Calculate totals
+    const totalExpenses = transactions
+      .filter(t => t.transactionType === 'expense')
+      .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+    
+    const totalIncome = transactions
+      .filter(t => t.transactionType === 'deposit')
+      .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+    
+    // Calculate expenses for the current month
+    const currentMonthExpenses = transactions
+      .filter(t => {
+        const date = new Date(t.transactionDate);
+        return t.transactionType === 'expense' && 
+               date.getMonth() === currentMonth && 
+               date.getFullYear() === currentYear;
+      })
+      .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+    
+    // Calculate income for the current month
+    const currentMonthIncome = transactions
+      .filter(t => {
+        const date = new Date(t.transactionDate);
+        return t.transactionType === 'deposit' && 
+               date.getMonth() === currentMonth && 
+               date.getFullYear() === currentYear;
+      })
+      .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+    
+    // Calculate expenses for last month
+    const lastMonthExpenses = transactions
+      .filter(t => {
+        const date = new Date(t.transactionDate);
+        return t.transactionType === 'expense' && 
+               date.getMonth() === lastMonth && 
+               date.getFullYear() === lastMonthYear;
+      })
+      .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+    
+    // Calculate income for last month
+    const lastMonthIncome = transactions
+      .filter(t => {
+        const date = new Date(t.transactionDate);
+        return t.transactionType === 'deposit' && 
+               date.getMonth() === lastMonth && 
+               date.getFullYear() === lastMonthYear;
+      })
+      .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+    
+    // Calculate available funds from all accounts
+    const availableFunds = accounts.reduce((sum, account) => 
+      sum + parseFloat(account.balance.toString()), 0);
+    
+    res.json({
+      totalExpenses,
+      totalIncome,
+      netBalance: totalIncome - totalExpenses,
+      availableFunds,
+      currentMonthExpenses,
+      currentMonthIncome,
+      lastMonthExpenses,
+      lastMonthIncome,
+      accountCount: accounts.length
+    });
+  }));
+
+  // Get cash flow data for the dashboard
+  apiRouter.get("/transactions/vessel/:id/cash-flow", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+
+    const vesselId = parseInt(req.params.id);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Valid vessel ID is required" });
+    }
+
+    // Get all transactions for the vessel
+    const transactions = await storage.getTransactionsByVessel(vesselId);
+
+    // Get date range (last 6 months)
+    const now = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 6);
+    
+    // Group by month
+    const monthlyData: Record<string, { date: string; income: number; expenses: number; balance: number }> = {};
+    
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(now.getMonth() - i);
+      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyData[monthYear] = {
+        date: monthYear,
+        income: 0,
+        expenses: 0,
+        balance: 0
+      };
+    }
+    
+    // Process transactions
+    transactions.forEach(transaction => {
+      const date = new Date(transaction.transactionDate);
+      // Only include transactions from the last 6 months
+      if (date >= sixMonthsAgo) {
+        const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (monthlyData[monthYear]) {
+          const amount = parseFloat(transaction.amount.toString());
+          if (transaction.transactionType === 'deposit') {
+            monthlyData[monthYear].income += amount;
+          } else {
+            monthlyData[monthYear].expenses += amount;
+          }
+        }
+      }
+    });
+    
+    // Calculate balance
+    Object.keys(monthlyData).forEach(monthYear => {
+      monthlyData[monthYear].balance = 
+        monthlyData[monthYear].income - monthlyData[monthYear].expenses;
+    });
+    
+    // Convert to array and sort by date
+    const result = Object.values(monthlyData).sort((a, b) => 
+      a.date.localeCompare(b.date)
+    );
+    
+    res.json(result);
+  }));
+
   // Register API routes
   // Setup API Keys routes
   setupApiKeysRoutes(apiRouter);
