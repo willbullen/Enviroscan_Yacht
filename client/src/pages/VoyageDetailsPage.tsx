@@ -19,7 +19,9 @@ import {
   CheckCircle2,
   Download,
   Share2,
-  Printer
+  Printer,
+  Cloud,
+  CloudSun
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Separator } from '@/components/ui/separator';
 import { VoyageCalculator } from '@/components/voyage/VoyageCalculator';
 import { VoyageMap } from '@/components/voyage/VoyageMap';
+import { WeatherMap } from '@/components/voyage/WeatherMap';
 import { PerformanceCurves } from '@/components/voyage/PerformanceCurves';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
 import MainLayout from '@/components/layout/MainLayout';
@@ -286,7 +289,7 @@ export function VoyageDetailsPage() {
       
       {/* Main content with tabs */}
       <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 md:w-[400px] mb-6">
+        <TabsList className="grid grid-cols-4 md:w-[540px] mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-1">
             <Ship className="h-4 w-4" />
             Overview
@@ -294,6 +297,10 @@ export function VoyageDetailsPage() {
           <TabsTrigger value="route" className="flex items-center gap-1">
             <MapPin className="h-4 w-4" />
             Route
+          </TabsTrigger>
+          <TabsTrigger value="weather" className="flex items-center gap-1">
+            <CloudSun className="h-4 w-4" />
+            Weather
           </TabsTrigger>
           <TabsTrigger value="calculations" className="flex items-center gap-1">
             <Fuel className="h-4 w-4" />
@@ -512,6 +519,90 @@ export function VoyageDetailsPage() {
               </CardFooter>
             </Card>
           </div>
+        </TabsContent>
+        
+        {/* Weather Tab Content */}
+        <TabsContent value="weather" className="space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl">Weather Forecast</CardTitle>
+              <CardDescription>
+                Interactive weather forecast for the voyage route
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {waypoints.length > 0 ? (
+                <WeatherMap 
+                  voyageId={voyageId}
+                  waypoints={waypoints}
+                  voyageStartDate={voyage.startDate}
+                  voyageEndDate={voyage.endDate}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 bg-muted/20 rounded-md">
+                  <Cloud className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium mb-1">No Route Defined</h3>
+                  <p className="text-sm text-muted-foreground text-center max-w-md mb-4">
+                    Add waypoints to your voyage to see weather forecasts along the route.
+                    Weather data is powered by Windy API.
+                  </p>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setActiveTab('route')}
+                  >
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Go to Route Tab
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {waypoints.length > 0 && (
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium mb-1">Time Control</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Use the time slider in the weather map to view forecasts at different points during the voyage.
+                      </p>
+                    </div>
+                    <Clock className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium mb-1">Weather Layers</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Switch between wind, precipitation, temperature, and other weather data layers.
+                      </p>
+                    </div>
+                    <CloudSun className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium mb-1">Position Tracking</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Track vessel position along the route and see the weather conditions at that location.
+                      </p>
+                    </div>
+                    <Navigation className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
         
         {/* Calculations Tab Content */}
