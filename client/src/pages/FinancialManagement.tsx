@@ -339,10 +339,16 @@ const FinancialManagement: React.FC = () => {
   // State for tracking selected vendor ID in the expense form
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
   
-  // Set up vendor selection when editing an expense
+  // Set up form values when editing an expense
+  // We'll need to wait until the form is rendered before setting these values
   useEffect(() => {
-    if (editingExpense && editingExpense.vendorId) {
-      setSelectedVendorId(editingExpense.vendorId.toString());
+    if (editingExpense) {
+      if (editingExpense.vendorId) {
+        setSelectedVendorId(editingExpense.vendorId.toString());
+      }
+      
+      // The rest of the form fields will use the defaultValue prop with conditional rendering
+      // based on whether editingExpense exists
     }
   }, [editingExpense]);
   
