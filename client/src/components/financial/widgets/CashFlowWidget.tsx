@@ -12,6 +12,15 @@ interface CashFlowWidgetProps {
 const CashFlowWidget: React.FC<CashFlowWidgetProps> = ({ vesselId }) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['/api/transactions/vessel', vesselId, 'cash-flow'],
+    queryFn: () => {
+      if (!vesselId) return Promise.resolve([]);
+      return fetch(`/api/transactions/vessel/${vesselId}/cash-flow`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching cash flow data:", err);
+          return [];
+        });
+    },
     enabled: !!vesselId,
   });
 
