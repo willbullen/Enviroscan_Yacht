@@ -5,8 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Cloud, Wind, Droplets, Thermometer, Clock, Calendar, CloudRain, CloudSnow, Navigation, RefreshCw, AlertCircle } from 'lucide-react';
+import { Cloud, Wind, Droplets, Thermometer, Clock, Calendar, CloudRain, CloudSnow, Navigation, RefreshCw } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { format } from 'date-fns';
@@ -37,292 +36,82 @@ const VesselIcon = L.divIcon({
   popupAnchor: [0, -10]
 });
 
-// Component to add a simulated weather overlay to the map
+// Component to add Windy API overlay to the map
 function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: number }) {
   const map = useMap();
-  const [initialized, setInitialized] = useState(false);
-  const overlayRef = useRef<L.FeatureGroup | null>(null);
-  
-  // Initialize the overlay when the component mounts
+  const windyLayerRef = useRef<any>(null);
+  const windyInitialized = useRef(false);
+
   useEffect(() => {
-    if (!overlayRef.current) {
-      overlayRef.current = L.featureGroup().addTo(map);
-      setInitialized(true);
-    }
-    
-    return () => {
-      if (overlayRef.current) {
-        overlayRef.current.clearLayers();
-        map.removeLayer(overlayRef.current);
-      }
-    };
-  }, [map]);
-  
-  // Update the overlay when the tab or timestamp changes
-  useEffect(() => {
-    if (!initialized || !overlayRef.current) return;
-    
-    // Clear previous layers
-    overlayRef.current.clearLayers();
-    
-    // Add weather symbols based on the selected tab
-    const bounds = map.getBounds();
-    const centerLat = map.getCenter().lat;
-    const centerLng = map.getCenter().lng;
-    
-    // Create a grid of weather symbols
-    const gridSize = 5; // Number of symbols in each direction
-    const latSpan = bounds.getNorth() - bounds.getSouth();
-    const lngSpan = bounds.getEast() - bounds.getWest();
-    
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        const lat = bounds.getSouth() + (latSpan * (i + 0.5)) / gridSize;
-        const lng = bounds.getWest() + (lngSpan * (j + 0.5)) / gridSize;
-        
-        // Create different symbols based on the selected weather tab
-        let symbol: L.Marker | L.Circle;
-        let color: string;
-        let size: number;
-        
-        // Seed random values based on position and timestamp for consistency
-        const seed = (lat * 1000 + lng * 100 + timestamp) % 100;
-        const intensity = (seed % 10) / 10; // 0-1 value for intensity
-        
-        switch (windyTab) {
-          case 'wind':
-            // Wind arrows
-            color = intensity > 0.7 ? '#ff4757' : intensity > 0.4 ? '#ff7f50' : '#3ec97c';
-            size = 15 + (intensity * 15);
-            
-            // Create a wind direction arrow
-            const windDir = (timestamp + (lat * 100 + lng * 100)) % 360;
-            const arrowIcon = L.divIcon({
-              className: 'custom-wind-icon',
-              html: `<div style="transform: rotate(${windDir}deg); color: ${color};">
-                      <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="19" x2="12" y2="5"></line>
-                        <polyline points="5 12 12 5 19 12"></polyline>
-                      </svg>
-                     </div>`,
-              iconSize: [size, size],
-              iconAnchor: [size/2, size/2]
-            });
-            
-            symbol = L.marker([lat, lng], { icon: arrowIcon });
-            break;
-            
-          case 'rain':
-            // Rain circles
-            color = `rgba(59, 130, 246, ${0.3 + intensity * 0.6})`;
-            size = 15 + (intensity * 25);
-            symbol = L.circle([lat, lng], {
-              radius: size * 1000, // Convert to meters
-              color: 'transparent',
-              fillColor: color,
-              fillOpacity: 0.6,
-            });
-            break;
-            
-          case 'temp':
-            // Temperature indicators
-            const temp = Math.floor(15 + (intensity * 20) - (lat - centerLat) * 2);
-            const tempColor = temp > 25 ? '#ff4757' : temp > 15 ? '#ff7f50' : '#3b82f6';
-            
-            const tempIcon = L.divIcon({
-              className: 'custom-temp-icon',
-              html: `<div style="background-color: ${tempColor}; color: white; padding: 3px; border-radius: 50%; font-size: 10px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                      ${temp}°
-                     </div>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10]
-            });
-            
-            symbol = L.marker([lat, lng], { icon: tempIcon });
-            break;
-            
-          case 'clouds':
-            // Cloud cover
-            const cloudCover = Math.floor(intensity * 100);
-            const cloudOpacity = 0.2 + (intensity * 0.5);
-            color = `rgba(156, 163, 175, ${cloudOpacity})`;
-            size = 20 + (intensity * 30);
-            
-            const cloudIcon = L.divIcon({
-              className: 'custom-cloud-icon',
-              html: `<div style="color: ${color};">
-                      <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                        <path d="M17 16a3 3 0 0 1-3 3H4a3 3 0 1 1 0-6h.1a5 5 0 0 1-.1-1 5 5 0 0 1 5-5c2.2 0 4.1 1.4 4.8 3.4a3 3 0 0 1 6.2 2.6 3 3 0 0 1-3 3z"></path>
-                      </svg>
-                     </div>`,
-              iconSize: [size, size],
-              iconAnchor: [size/2, size/2]
-            });
-            
-            symbol = L.marker([lat, lng], { icon: cloudIcon });
-            break;
-            
-          case 'waves':
-            // Wave height indicators
-            const waveHeight = (1 + intensity * 3).toFixed(1);
-            const waveColor = intensity > 0.7 ? '#ff4757' : intensity > 0.4 ? '#ff7f50' : '#3b82f6';
-            
-            const waveIcon = L.divIcon({
-              className: 'custom-wave-icon',
-              html: `<div style="color: ${waveColor};">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
-                        <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
-                        <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
-                      </svg>
-                      <span style="position: absolute; top: -8px; right: -5px; background-color: ${waveColor}; color: white; border-radius: 9999px; font-size: 9px; padding: 1px 4px; font-weight: bold;">${waveHeight}m</span>
-                     </div>`,
-              iconSize: [24, 24],
-              iconAnchor: [12, 12]
-            });
-            
-            symbol = L.marker([lat, lng], { icon: waveIcon });
-            break;
-            
-          case 'currents':
-            // Current direction and speed
-            color = intensity > 0.7 ? '#3ec97c' : intensity > 0.4 ? '#3b82f6' : '#6366f1';
-            size = 15 + (intensity * 15);
-            
-            // Create a current direction arrow
-            const currentDir = (timestamp + (lat * 50 + lng * 70)) % 360;
-            const currentSpeed = (1 + intensity * 2).toFixed(1);
-            
-            const currentIcon = L.divIcon({
-              className: 'custom-current-icon',
-              html: `<div style="transform: rotate(${currentDir}deg); color: ${color};">
-                      <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 5v14"></path>
-                        <path d="M18 13l-6 6-6-6"></path>
-                      </svg>
-                      <span style="position: absolute; top: -8px; right: -5px; background-color: ${color}; color: white; border-radius: 9999px; font-size: 9px; padding: 1px 4px; transform: rotate(-${currentDir}deg); font-weight: bold;">${currentSpeed}kt</span>
-                     </div>`,
-              iconSize: [size, size],
-              iconAnchor: [size/2, size/2]
-            });
-            
-            symbol = L.marker([lat, lng], { icon: currentIcon });
-            break;
-            
-          default:
-            // Default to a simple marker
-            symbol = L.circle([lat, lng], {
-              radius: 10000,
-              color: '#3b82f6',
-              fillColor: '#3b82f6',
-              fillOpacity: 0.4,
-            });
+    if (!windyInitialized.current) {
+      // Initialize Windy API
+      const windyApiScript = document.createElement('script');
+      windyApiScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
+      windyApiScript.async = true;
+      document.head.appendChild(windyApiScript);
+      
+      windyApiScript.onload = () => {
+        if (!window.windyInit) {
+          console.error('Windy API failed to load');
+          return;
         }
         
-        overlayRef.current.addLayer(symbol);
+        // Initialize Windy with API key
+        window.windyInit({
+          key: import.meta.env.WINDY_MAP_FORECAST_KEY || '',
+          lat: map.getCenter().lat,
+          lon: map.getCenter().lng,
+          zoom: map.getZoom(),
+        }, (windyAPI: any) => {
+          // Store the Windy instance for later use
+          windyLayerRef.current = windyAPI;
+          
+          // We need to hide windy's own map as we use Leaflet
+          const { map: windyMap } = windyAPI;
+          windyMap.remove();
+          
+          // Initialize the overlay on our Leaflet map
+          windyAPI.overlays.add({
+            map: map,
+            overlayName: getWindyOverlayByTab(windyTab),
+            level: '1000h', // Default level (can be changed)
+            timestamp: timestamp
+          });
+          
+          windyInitialized.current = true;
+        });
+      };
+      
+      return () => {
+        document.head.removeChild(windyApiScript);
+        if (windyLayerRef.current) {
+          try {
+            windyLayerRef.current.overlays.remove();
+          } catch (e) {
+            console.error('Error removing Windy overlay:', e);
+          }
+        }
+      };
+    }
+  }, [map]);
+
+  // Update overlay when tab or timestamp changes
+  useEffect(() => {
+    if (windyInitialized.current && windyLayerRef.current) {
+      try {
+        windyLayerRef.current.overlays.remove();
+        windyLayerRef.current.overlays.add({
+          map: map,
+          overlayName: getWindyOverlayByTab(windyTab),
+          level: '1000h',
+          timestamp: timestamp
+        });
+      } catch (e) {
+        console.error('Error updating Windy overlay:', e);
       }
     }
-    
-    // Add a legend for the current weather type
-    const legendControl = L.control({ position: 'bottomright' });
-    
-    legendControl.onAdd = () => {
-      const div = L.DomUtil.create('div', 'info legend');
-      div.style.backgroundColor = 'white';
-      div.style.padding = '6px 8px';
-      div.style.border = '1px solid #ccc';
-      div.style.borderRadius = '4px';
-      div.style.fontSize = '12px';
-      
-      let title = '';
-      let content = '';
-      
-      switch (windyTab) {
-        case 'wind':
-          title = 'Wind Speed';
-          content = `
-            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; color: #3ec97c; display: flex; align-items: center; justify-content: center;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="19" x2="12" y2="5"></line>
-                  <polyline points="5 12 12 5 19 12"></polyline>
-                </svg>
-              </div>
-              <span>Low (0-10 kt)</span>
-            </div>
-            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; color: #ff7f50; display: flex; align-items: center; justify-content: center;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="19" x2="12" y2="5"></line>
-                  <polyline points="5 12 12 5 19 12"></polyline>
-                </svg>
-              </div>
-              <span>Medium (10-20 kt)</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; color: #ff4757; display: flex; align-items: center; justify-content: center;">
-                <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="19" x2="12" y2="5"></line>
-                  <polyline points="5 12 12 5 19 12"></polyline>
-                </svg>
-              </div>
-              <span>High (20+ kt)</span>
-            </div>
-          `;
-          break;
-          
-        case 'rain':
-          title = 'Precipitation';
-          content = `
-            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; background-color: rgba(59, 130, 246, 0.3); border-radius: 50%;"></div>
-              <span>Light</span>
-            </div>
-            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; background-color: rgba(59, 130, 246, 0.6); border-radius: 50%;"></div>
-              <span>Moderate</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; background-color: rgba(59, 130, 246, 0.9); border-radius: 50%;"></div>
-              <span>Heavy</span>
-            </div>
-          `;
-          break;
-          
-        case 'temp':
-          title = 'Temperature';
-          content = `
-            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; background-color: #3b82f6; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px;">15°</div>
-              <span>Cool (< 15°C)</span>
-            </div>
-            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; background-color: #ff7f50; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px;">20°</div>
-              <span>Warm (15-25°C)</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-              <div style="width: 20px; height: 20px; margin-right: 8px; background-color: #ff4757; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px;">30°</div>
-              <span>Hot (> 25°C)</span>
-            </div>
-          `;
-          break;
-          
-        default:
-          title = 'Weather Layer';
-          content = `<span>Simulated ${windyTab} data for visualization</span>`;
-      }
-      
-      div.innerHTML = `<div style="font-weight: bold; margin-bottom: 6px;">${title}</div>${content}`;
-      return div;
-    };
-    
-    legendControl.addTo(map);
-    
-    return () => {
-      map.removeControl(legendControl);
-    };
-  }, [map, windyTab, timestamp, initialized]);
-  
+  }, [windyTab, timestamp, map]);
+
   return null;
 }
 
@@ -456,7 +245,6 @@ export function WeatherMap({
   const [weatherTab, setWeatherTab] = useState('wind');
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [timestamp, setTimestamp] = useState<number>(Math.floor(Date.now() / 1000));
-  const [showInfoAlert, setShowInfoAlert] = useState(true);
   
   // Format date for display
   const formatDateForDisplay = (position: number) => {
@@ -508,24 +296,6 @@ export function WeatherMap({
   
   return (
     <div className="flex flex-col h-[550px] w-full">
-      {showInfoAlert && (
-        <Alert variant="info" className="mb-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Weather Visualization</AlertTitle>
-          <AlertDescription>
-            This is a simulated weather visualization for route planning purposes. Weather patterns are generated based on voyage timeline and location.
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="ml-1 h-auto p-0 text-primary" 
-              onClick={() => setShowInfoAlert(false)}
-            >
-              Dismiss
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-    
       <div className="bg-card px-3 py-2 flex justify-between items-center border-b">
         <div className="font-medium text-primary flex items-center">
           <Cloud className="h-4 w-4 mr-1 text-primary" />
@@ -650,7 +420,7 @@ export function WeatherMap({
                   </p>
                   <div className="border-t my-2"></div>
                   <p className="text-xs italic mt-1">
-                    Simulated weather visualization. Adjust time slider to see weather changes during the voyage.
+                    Weather data provided by Windy API. Adjust time slider to see weather changes during the voyage.
                   </p>
                 </div>
               </CardContent>
