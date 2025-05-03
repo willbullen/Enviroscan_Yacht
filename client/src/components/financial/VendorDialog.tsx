@@ -128,7 +128,9 @@ export function VendorDialog({ open, onOpenChange, vendor, onSuccess }: VendorDi
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel required>Vendor Name</FormLabel>
+                  <FormLabel>
+                    Vendor Name <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Enter vendor name" />
                   </FormControl>
@@ -165,7 +167,7 @@ export function VendorDialog({ open, onOpenChange, vendor, onSuccess }: VendorDi
                     <FormLabel>Category</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(value || null)}
-                      value={field.value || ''}
+                      value={field.value || 'uncategorized'}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -180,6 +182,7 @@ export function VendorDialog({ open, onOpenChange, vendor, onSuccess }: VendorDi
                         <SelectItem value="services">Services</SelectItem>
                         <SelectItem value="equipment">Equipment</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="uncategorized">Uncategorized</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
