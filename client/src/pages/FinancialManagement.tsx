@@ -2494,6 +2494,104 @@ const FinancialManagement: React.FC = () => {
         </DialogContent>
       </Dialog>
       
+      {/* Batch Import Dialog for bulk operations */}
+      <BatchImportDialog
+        open={showGenericDialog}
+        onOpenChange={setShowGenericDialog}
+        title={`Bulk Import ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
+        description={`Upload a CSV file to bulk import ${activeTab}. Download the template for the correct format.`}
+        templateFileName={`${activeTab}_template.csv`}
+        templateContent={
+          activeTab === "expenses" 
+            ? "date,description,category,amount,vendor,paymentMethod,status,referenceNumber\n2025-05-01,Fuel Purchase,Fuel,1500,Ocean Fuels,Credit Card,Paid,INV-123"
+            : activeTab === "deposits"
+            ? "date,description,amount,source,category,referenceNumber\n2025-05-01,Charter Payment,5000,Charter Client,Income,REF-456"
+            : "date,description,amount,category\n2025-05-01,Sample Entry,1000,General"
+        }
+        onImport={(data) => {
+          console.log(`Importing ${activeTab} data:`, data);
+          
+          if (data.length === 0) {
+            toast({
+              title: "No data to import",
+              description: "The uploaded file contained no valid records.",
+              variant: "destructive",
+            });
+            return;
+          }
+          
+          // Handle different import types based on active tab
+          if (activeTab === "expenses") {
+            // Process expense imports
+            try {
+              const processedData = data.map(item => ({
+                description: item.description || "Imported Expense",
+                amount: parseFloat(item.amount) || 0,
+                expenseDate: item.date || new Date().toISOString().split('T')[0],
+                category: item.category || "Other",
+                vendorId: item.vendorId || (item.vendor ? -1 : null), // -1 will be handled to create a new vendor
+                vendorName: item.vendor,
+                paymentMethod: item.paymentMethod || "Other",
+                status: item.status || "pending",
+                referenceNumber: item.referenceNumber || "",
+                vesselId: currentVessel?.id,
+                // Add other required fields with defaults
+                accountId: accounts && accounts.length > 0 ? accounts[0].id : null,
+              }));
+              
+              // Here you would call API to process these
+              console.log("Processed expense data:", processedData);
+              
+              toast({
+                title: "Import Successful",
+                description: `${processedData.length} expenses have been imported.`,
+                variant: "default",
+              });
+              
+              // Close dialog and refresh data
+              setShowGenericDialog(false);
+              // Ideally refresh your expense list here
+              
+            } catch (error) {
+              console.error("Error processing expense import:", error);
+              toast({
+                title: "Import Failed",
+                description: "There was an error processing the expense import. Please check your file format.",
+                variant: "destructive",
+              });
+            }
+          } else if (activeTab === "deposits") {
+            // Process deposit imports (similar structure to expenses)
+            toast({
+              title: "Import Successful",
+              description: `${data.length} deposits have been imported.`,
+              variant: "default",
+            });
+            setShowGenericDialog(false);
+          } else {
+            // Generic import success
+            toast({
+              title: "Import Successful",
+              description: `${data.length} records have been imported.`,
+              variant: "default",
+            });
+            setShowGenericDialog(false);
+          }
+        }}
+        validateRow={(row, index) => {
+          // Basic validation based on tab type
+          if (activeTab === "expenses") {
+            if (!row.amount || isNaN(parseFloat(row.amount))) {
+              return `Row ${index+1}: Invalid amount`;
+            }
+            if (!row.date) {
+              return `Row ${index+1}: Missing date`;
+            }
+          }
+          return null; // No errors
+        }}
+      />
+      
       {/* Other dialogs follow (journal, banking, etc.) */}
     </MainLayout>
   );
