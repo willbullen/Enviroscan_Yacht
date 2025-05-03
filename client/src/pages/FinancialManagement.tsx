@@ -2556,7 +2556,7 @@ const FinancialManagement: React.FC = () => {
                         isActive: true
                       };
                       
-                      const response = await apiRequest.post('/api/vendors', vendorData);
+                      const response = await apiRequest("POST", '/api/vendors', vendorData);
                       
                       if (response.ok) {
                         const newVendor = await response.json();
@@ -2574,7 +2574,7 @@ const FinancialManagement: React.FC = () => {
                 
                 // Submit bulk expenses to the API
                 try {
-                  const response = await apiRequest.post('/api/expenses/bulk', finalExpenses);
+                  const response = await apiRequest("POST", '/api/expenses/bulk', finalExpenses);
                   
                   if (response.ok) {
                     const result = await response.json();

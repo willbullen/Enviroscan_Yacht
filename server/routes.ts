@@ -4520,7 +4520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const expensesData = req.body as InsertExpense[];
+      const expensesData = req.body as any[];
       if (!Array.isArray(expensesData)) {
         return res.status(400).json({ error: "Invalid data format. Expected an array of expenses." });
       }
