@@ -2556,27 +2556,40 @@ const FinancialManagement: React.FC = () => {
                 }
               };
 
-              const processedData = data.map(item => ({
-                description: item.description || "Imported Expense",
-                amount: parseFloat(item.amount) || 0,
-                // Make sure this is a proper Date object
-                expenseDate: formatDate(item.date || new Date().toISOString().split('T')[0]),
-                total: String(parseFloat(item.amount) || 0), // Required field - same as amount but as string
-                transactionId: 0, // Required field - will be set by server
-                createdById: user?.id || 5, // Required field - use current user ID or admin
-                category: item.category || "Other",
-                vendorId: item.vendorId || (item.vendor ? -1 : null), // -1 will be handled to create a new vendor
-                vendorName: item.vendor,
-                paymentMethod: item.paymentMethod || "Other",
-                status: item.status || "pending",
-                referenceNumber: item.referenceNumber || "",
-                vesselId: currentVessel?.id,
-                // Try to find the account by accountNumber, otherwise use the first available account
-                accountId: item.accountNumber && accounts 
+              const processedData = data.map(item => {
+                // Find account by accountNumber, otherwise use the first available account
+                const accountId = item.accountNumber && accounts 
                   ? (accounts.find((acc: { accountNumber: string, id: number }) => acc.accountNumber === item.accountNumber)?.id || 
                      (accounts.length > 0 ? accounts[0].id : null))
-                  : (accounts && accounts.length > 0 ? accounts[0].id : null),
-              }));
+                  : (accounts && accounts.length > 0 ? accounts[0].id : null);
+                
+                // Ensure we don't have null values for required fields
+                if (!accountId) {
+                  console.error("Unable to find a valid account for expense:", item);
+                }
+                
+                // Decimal total needs to be a string
+                const amount = parseFloat(item.amount) || 0;
+                
+                return {
+                  description: item.description || "Imported Expense",
+                  amount: amount,
+                  // Make sure date is in proper ISO string format
+                  expenseDate: formatDate(item.date || new Date().toISOString().split('T')[0]),
+                  total: String(amount), // Required field - as string for decimal handling
+                  transactionId: 0, // Required field - will be set by server
+                  createdById: user?.id || 5, // Required field - use current user ID or admin
+                  category: item.category || "Other",
+                  vendorId: item.vendorId || (item.vendor ? -1 : null), // -1 will be handled to create a new vendor
+                  vendorName: item.vendor,
+                  paymentMethod: item.paymentMethod || "Credit Card", // Must be non-empty
+                  status: item.status || "pending", // Must be non-empty
+                  referenceNumber: item.referenceNumber || "",
+                  vesselId: currentVessel?.id,
+                  accountId: accountId, // Must be non-null
+                  notes: item.notes || "" // Optional but good to include
+                };
+              });
               
               // Create vendors that don't exist yet and finalize the expenses data
               const finalizeAndSubmitExpenses = async () => {
