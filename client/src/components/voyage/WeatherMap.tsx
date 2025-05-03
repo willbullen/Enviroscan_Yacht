@@ -78,8 +78,7 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
-        },
-        credentials: 'include' // Important for sending cookies
+        }
       });
       
       console.log('API keys response status:', response.status);
@@ -89,7 +88,12 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
       }
       
       const data = await response.json();
-      console.log('API keys retrieved successfully');
+      console.log('API keys retrieved successfully:', data);
+      
+      if (!data.WINDY_MAP_FORECAST_KEY) {
+        throw new Error('API key not found in response');
+      }
+      
       return data.WINDY_MAP_FORECAST_KEY;
     } catch (error) {
       console.error('Error fetching Windy API keys:', error);
