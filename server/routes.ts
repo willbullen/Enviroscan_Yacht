@@ -4726,6 +4726,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(201).json(transaction);
   }));
   
+  // Update a transaction
+  apiRouter.put("/transactions/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid transaction ID" });
+    }
+    
+    const transaction = await storage.getTransaction(id);
+    if (!transaction) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+    
+    const validationResult = insertTransactionSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid transaction data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    const updatedTransaction = await storage.updateTransaction(id, validationResult.data);
+    return res.json(updatedTransaction);
+  }));
+  
   // =========== Financial Management - Deposits Routes =============
   
   // Get all deposits

@@ -128,8 +128,9 @@ const FinancialManagement: React.FC = () => {
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
   
-  // State for currently editing item
+  // State for currently editing items
   const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
   
   // State for cash flow chart and form selections
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
