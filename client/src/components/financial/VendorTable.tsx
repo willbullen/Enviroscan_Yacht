@@ -82,9 +82,17 @@ export function VendorTable() {
 
   const confirmDelete = async () => {
     if (vendorToDelete) {
-      await deleteVendor(vendorToDelete.id);
-      setDeleteDialogOpen(false);
-      setVendorToDelete(null);
+      try {
+        await deleteVendor(vendorToDelete.id);
+        setDeleteDialogOpen(false);
+        setVendorToDelete(null);
+        // Manually refresh the vendors list
+        setTimeout(() => {
+          refetchVendors();
+        }, 500);
+      } catch (error) {
+        console.error("Error deleting vendor:", error);
+      }
     }
   };
 
