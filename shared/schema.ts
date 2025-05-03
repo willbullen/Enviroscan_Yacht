@@ -664,10 +664,18 @@ export const expenses = pgTable("expenses", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertExpenseSchema = createInsertSchema(expenses).omit({
+const baseExpenseSchema = createInsertSchema(expenses).omit({
   id: true,
   createdAt: true,
   updatedAt: true
+});
+
+// Create a custom schema that handles date string conversion
+export const insertExpenseSchema = baseExpenseSchema.extend({
+  expenseDate: z.union([
+    z.date(),
+    z.string().transform((val) => new Date(val)),
+  ]),
 });
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Expense = typeof expenses.$inferSelect;
