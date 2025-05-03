@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 export function setupApiKeysRoutes(router: Router) {
-  router.get('/api/config/windy-keys', (req, res) => {
+  router.get('/config/windy-keys', (req, res) => {
     // Only return the keys to authenticated users
     if (!req.isAuthenticated()) {
       return res.status(401).json({

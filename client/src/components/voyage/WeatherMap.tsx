@@ -10,6 +10,13 @@ import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { format } from 'date-fns';
 
+// Add windyInit to Window interface
+declare global {
+  interface Window {
+    windyInit: any;
+  }
+}
+
 // Define the types for waypoints (same as in VoyageMap.tsx)
 type Waypoint = {
   id?: number;
@@ -36,6 +43,26 @@ const VesselIcon = L.divIcon({
   popupAnchor: [0, -10]
 });
 
+// Map Windy tabs to overlay names
+function getWindyOverlayByTab(tab: string): string {
+  switch (tab) {
+    case 'wind':
+      return 'wind';
+    case 'rain':
+      return 'rainAccumulation';
+    case 'temp':
+      return 'temperature';
+    case 'clouds':
+      return 'clouds';
+    case 'waves':
+      return 'waves';
+    case 'currents':
+      return 'currents';
+    default:
+      return 'wind';
+  }
+}
+
 // Component to add Windy API overlay to the map
 function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: number }) {
   const map = useMap();
@@ -46,13 +73,23 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
   // Function to fetch API keys from server
   const fetchWindyAPIKeys = async (): Promise<string | null> => {
     try {
-      const response = await fetch('/api/config/windy-keys');
+      console.log('Fetching Windy API keys from server...');
+      const response = await fetch('/api/config/windy-keys', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include' // Important for sending cookies
+      });
+      
+      console.log('API keys response status:', response.status);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch Windy API keys');
+        throw new Error(`Failed to fetch Windy API keys: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('API keys retrieved successfully');
       return data.WINDY_MAP_FORECAST_KEY;
     } catch (error) {
       console.error('Error fetching Windy API keys:', error);
@@ -197,26 +234,6 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
   }, [map]);
 
   return null;
-}
-
-// Map Windy tabs to overlay names
-function getWindyOverlayByTab(tab: string): string {
-  switch (tab) {
-    case 'wind':
-      return 'wind';
-    case 'rain':
-      return 'rainAccumulation';
-    case 'temp':
-      return 'temperature';
-    case 'clouds':
-      return 'clouds';
-    case 'waves':
-      return 'waves';
-    case 'currents':
-      return 'currents';
-    default:
-      return 'wind';
-  }
 }
 
 // Component to show vessel position at a specific time point
@@ -462,71 +479,96 @@ export function WeatherMap({
             </TabsList>
           </Tabs>
           
-          <div className="mt-6 space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Time Control
-              </label>
-              <div className="flex items-center gap-2">
-                <Slider
-                  value={[timeSliderPosition]}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onValueChange={(values) => setTimeSliderPosition(values[0])}
-                  className="flex-1"
-                />
-                <span className="text-xs w-8 text-right">{timeSliderPosition}%</span>
+          <div className="mt-4">
+            <h4 className="font-medium mb-2">Timeline</h4>
+            <div className="space-y-4">
+              <Slider
+                value={[timeSliderPosition]}
+                onValueChange={(values) => setTimeSliderPosition(values[0])}
+                max={100}
+                step={1}
+              />
+              
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{formatDateForDisplay(0)}</span>
+                <span>{formatDateForDisplay(100)}</span>
               </div>
               
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>{voyageStartDate ? format(new Date(voyageStartDate), 'MMM dd') : 'Start'}</span>
-                <span>{voyageEndDate ? format(new Date(voyageEndDate), 'MMM dd') : 'End'}</span>
+              <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <h5 className="text-sm font-medium">Current Time</h5>
+                  <span className="text-xs bg-primary/10 px-2 py-0.5 rounded text-primary">
+                    {formatDateForDisplay(timeSliderPosition)}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-5 gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 col-span-1"
+                    onClick={() => setTimeSliderPosition(0)}
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 col-span-4"
+                    onClick={() => setTimeSliderPosition(Math.max(0, timeSliderPosition - 10))}
+                  >
+                    <span className="text-xs">Previous</span>
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-5 gap-1 mt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 col-span-1"
+                    onClick={() => setTimeSliderPosition(100)}
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 col-span-4"
+                    onClick={() => setTimeSliderPosition(Math.min(100, timeSliderPosition + 10))}
+                  >
+                    <span className="text-xs">Next</span>
+                  </Button>
+                </div>
               </div>
             </div>
-            
+          </div>
+          
+          {voyageId && (
             <Card className="mt-4">
               <CardContent className="p-3">
-                <h5 className="text-sm font-medium mb-2 flex items-center">
-                  <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                  Weather Forecast
-                </h5>
-                <div className="text-xs text-muted-foreground space-y-1.5">
-                  <p className="flex justify-between">
-                    <span>Selected Time:</span>
-                    <span className="font-medium">{formatDateForDisplay(timeSliderPosition)}</span>
+                <div className="text-xs">
+                  <h5 className="font-medium">Weather Forecast Info</h5>
+                  <p className="text-muted-foreground mt-1">
+                    This map shows weather forecasts along the voyage route.
+                    Use the timeline slider to see conditions at different times.
                   </p>
-                  <p className="flex justify-between">
-                    <span>Weather Layer:</span>
-                    <span className="font-medium capitalize">{weatherTab}</span>
-                  </p>
-                  <div className="border-t my-2"></div>
-                  <p className="text-xs italic mt-1">
-                    Weather data provided by Windy API. Adjust time slider to see weather changes during the voyage.
-                  </p>
+                  
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center gap-1">
+                      <RefreshCw className="h-3 w-3 text-muted-foreground" />
+                      <span>Forecasts updated daily</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Cloud className="h-3 w-3 text-muted-foreground" />
+                      <span>Powered by Windy.com</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full text-xs h-8"
-              onClick={() => setTimeSliderPosition(0)}
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Reset Time Position
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
-}
-
-// Add typing to window for Windy API
-declare global {
-  interface Window {
-    windyInit: any;
-  }
 }
