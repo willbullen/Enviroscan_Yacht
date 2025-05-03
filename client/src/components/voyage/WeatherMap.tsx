@@ -133,87 +133,181 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
     
     // Check if script is already loaded
     if (document.getElementById('windy-api-script')) {
+      console.log('Windy API script already loaded');
       return;
     }
+    
+    console.log('Loading Windy API script...');
     
     // Create script element for Windy
     const script = document.createElement('script');
     script.id = 'windy-api-script';
-    script.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
+    script.src = 'https://unpkg.com/leaflet@1.4.0/dist/leaflet.js';
     script.async = true;
+    script.defer = true;
+    
+    // Create second script element for Windy API
+    const windyScript = document.createElement('script');
+    windyScript.id = 'windy-api-lib-script';
+    windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
+    windyScript.async = true;
+    windyScript.defer = true;
+    
+    // Add onload and onerror handlers for Leaflet script
+    script.onload = () => {
+      console.log('Leaflet script loaded successfully');
+      
+      // Now append Windy script
+      windyScript.onload = () => {
+        console.log('Windy API script loaded successfully');
+        scriptAdded.current = true;
+      };
+      
+      windyScript.onerror = (error) => {
+        console.error('Failed to load Windy API script:', error);
+        
+        // Remove the failed script
+        if (document.getElementById('windy-api-lib-script')) {
+          document.getElementById('windy-api-lib-script')?.remove();
+        }
+      };
+      
+      // Add Windy script to document
+      document.head.appendChild(windyScript);
+    };
+    
+    script.onerror = (error) => {
+      console.error('Failed to load Leaflet script:', error);
+      scriptAdded.current = false;
+      
+      // Remove the failed script
+      if (document.getElementById('windy-api-script')) {
+        document.getElementById('windy-api-script')?.remove();
+      }
+    };
     
     // Add the script to the document
     document.head.appendChild(script);
-    scriptAdded.current = true;
     
     // Clean up on unmount
     return () => {
-      const existingScript = document.getElementById('windy-api-script');
-      if (existingScript) {
-        existingScript.remove();
+      const leafletScript = document.getElementById('windy-api-script');
+      if (leafletScript) {
+        leafletScript.remove();
       }
+      
+      const windyScriptElem = document.getElementById('windy-api-lib-script');
+      if (windyScriptElem) {
+        windyScriptElem.remove();
+      }
+      
       scriptAdded.current = false;
     };
   }, []);
   
   // Initialize Windy with API key when container and script are ready
   useEffect(() => {
-    // Wait for container, script, and windyInit to be available
-    if (!containerRef.current || !window.windyInit || windyAPI) {
+    // Track if we're still mounted
+    let isMounted = true;
+    let checkInterval: NodeJS.Timeout | null = null;
+    
+    // Wait for container to be available
+    if (!containerRef.current) {
       return;
     }
     
+    // Check if Windy is already initialized
+    if (windyAPI) {
+      return;
+    }
+    
+    // Function to initialize Windy API
     const initializeWindy = async () => {
-      // Get the API key from our server
-      const apiKey = await fetchWindyAPIKeys();
+      // Don't proceed if component is unmounted
+      if (!isMounted) return;
       
-      if (!apiKey) {
-        console.error('Failed to get Windy API key');
-        return;
-      }
-      
-      console.log('Windy API Key available:', !!apiKey);
-      
-      // Initialize Windy with our API key
-      window.windyInit({
-        key: apiKey,
-        container: containerRef.current,
-      }, (api: any) => {
-        console.log('Windy API initialized successfully');
-        setWindyAPI(api);
-        
-        // Hide Windy's attribution to avoid duplicates with Leaflet
-        const attribution = containerRef.current?.querySelector('.leaflet-control-attribution');
-        if (attribution) {
-          attribution.remove();
+      try {
+        // Check if windyInit is defined
+        if (typeof window.windyInit === 'undefined') {
+          return; // Skip this attempt, will try again on interval
         }
         
-        // Set the overlay to display
-        api.store.set('overlay', getWindyOverlayByTab(windyTab));
-        
-        // Set the forecast timestamp if provided
-        if (timestamp) {
-          api.store.set('timestamp', timestamp);
+        // Cancel the interval once we detect windyInit is available
+        if (checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
         }
         
-        // Sync positions between Leaflet and Windy
-        map.on('move', () => {
+        // Get the API key from our server
+        const response = await fetch('/api/config/windy-keys');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch API key: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const apiKey = data.WINDY_MAP_FORECAST_KEY;
+        
+        if (!apiKey) {
+          throw new Error('API key not found in response');
+        }
+        
+        console.log('Initializing Windy API...');
+        
+        // Initialize Windy with our API key - Make sure to use correct parameter name
+        window.windyInit({
+          key: apiKey,
+          container: containerRef.current,
+          // Add verbose flag for debugging
+          verbose: true
+        }, (api: any) => {
+          if (!isMounted) return;
+          
+          console.log('Windy API initialized successfully');
+          setWindyAPI(api);
+          
+          // Set the overlay to display
+          api.store.set('overlay', getWindyOverlayByTab(windyTab));
+          
+          // Set the forecast timestamp
+          if (timestamp) {
+            api.store.set('timestamp', timestamp);
+          }
+          
+          // Sync map position
           const center = map.getCenter();
           const zoom = map.getZoom();
           api.map.setView([center.lat, center.lng], zoom);
+          
+          // Add sync listener
+          map.on('move', () => {
+            if (api && api.map) {
+              const center = map.getCenter();
+              const zoom = map.getZoom();
+              api.map.setView([center.lat, center.lng], zoom);
+            }
+          });
         });
-        
-        // Trigger initial sync
-        api.map.setView(
-          [map.getCenter().lat, map.getCenter().lng], 
-          map.getZoom()
-        );
-      });
+      } catch (error) {
+        console.error('Failed to initialize Windy API:', error);
+      }
     };
     
-    // Call the initialize function
+    // Try to initialize immediately
     initializeWindy();
-  }, [map, windyTab, timestamp, windyAPI]);
+    
+    // Also set up an interval to retry
+    checkInterval = setInterval(initializeWindy, 1000);
+    
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      // Clean up event listeners
+      map.off('move');
+    };
+  }, [map, windyTab, timestamp]);
   
   // Update weather overlay when tab changes
   useEffect(() => {
