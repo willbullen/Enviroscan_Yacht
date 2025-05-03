@@ -63,10 +63,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Mutation for creating a new vendor
   const createVendorMutation = useMutation({
     mutationFn: async (vendorData: NewVendor): Promise<Vendor> => {
-      const response = await apiRequest('/api/vendors', {
-        method: 'POST',
-        body: JSON.stringify(vendorData),
-      });
+      const response = await apiRequest('POST', '/api/vendors', vendorData);
       return response as Vendor;
     },
     onSuccess: () => {
@@ -90,10 +87,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Mutation for updating a vendor
   const updateVendorMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<Vendor> }): Promise<Vendor> => {
-      const response = await apiRequest(`/api/vendors/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('PATCH', `/api/vendors/${id}`, data);
       return response as Vendor;
     },
     onSuccess: () => {
@@ -117,9 +111,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Mutation for deleting a vendor
   const deleteVendorMutation = useMutation({
     mutationFn: async (id: number): Promise<void> => {
-      await apiRequest(`/api/vendors/${id}`, {
-        method: 'DELETE',
-      });
+      await apiRequest('DELETE', `/api/vendors/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
