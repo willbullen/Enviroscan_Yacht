@@ -2531,18 +2531,28 @@ const FinancialManagement: React.FC = () => {
           if (activeTab === "expenses") {
             // Process expense imports
             try {
-              // Format dates properly
+              // Format dates properly and return ISO string which is expected by the backend
               const formatDate = (dateStr: string) => {
                 try {
+                  let date;
                   // Handle MM/DD/YYYY format
                   if (dateStr.includes('/')) {
                     const [month, day, year] = dateStr.split('/');
-                    return new Date(`${year}-${month}-${day}`);
+                    date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+                  } else {
+                    // Handle YYYY-MM-DD format
+                    date = new Date(dateStr);
                   }
-                  // Handle YYYY-MM-DD format
-                  return new Date(dateStr);
+                  
+                  // Check if date is valid, otherwise fall back to current date
+                  if (isNaN(date.getTime())) {
+                    date = new Date();
+                  }
+                  
+                  // Return ISO string
+                  return date.toISOString();
                 } catch (e) {
-                  return new Date();
+                  return new Date().toISOString();
                 }
               };
 
@@ -2551,7 +2561,7 @@ const FinancialManagement: React.FC = () => {
                 amount: parseFloat(item.amount) || 0,
                 // Make sure this is a proper Date object
                 expenseDate: formatDate(item.date || new Date().toISOString().split('T')[0]),
-                total: parseFloat(item.amount) || 0, // Required field - same as amount
+                total: String(parseFloat(item.amount) || 0), // Required field - same as amount but as string
                 transactionId: 0, // Required field - will be set by server
                 createdById: user?.id || 5, // Required field - use current user ID or admin
                 category: item.category || "Other",
