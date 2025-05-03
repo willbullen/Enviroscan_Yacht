@@ -34,8 +34,7 @@ import { VoyageMap } from '@/components/voyage/VoyageMap';
 import { EnhancedWindyMap } from '@/components/voyage/EnhancedWindyMap';
 import { PerformanceCurves } from '@/components/voyage/PerformanceCurves';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
-import { queryClient } from '@/lib/queryClient';
-import { apiRequest } from '@/lib/apiRequest';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import MainLayout from '@/components/layout/MainLayout';
 
 type Voyage = {
@@ -75,6 +74,38 @@ export function VoyageDetailsPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isCalculating, setIsCalculating] = useState(false);
+  
+  // Function to calculate waypoint times
+  const calculateWaypointTimes = async () => {
+    if (isNaN(voyageId)) return;
+    
+    try {
+      setIsCalculating(true);
+      
+      const response = await apiRequest('POST', `/api/voyages/${voyageId}/calculate-times`);
+      
+      if (response.success) {
+        // Refresh the waypoints data
+        queryClient.invalidateQueries({ queryKey: [`/api/waypoints?voyageId=${voyageId}`] });
+        
+        toast({
+          title: "Success",
+          description: "Waypoint times have been calculated successfully.",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error("Error calculating waypoint times:", error);
+      toast({
+        title: "Error",
+        description: "Failed to calculate waypoint times. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCalculating(false);
+    }
+  };
   
   // Get voyage details
   const voyageQuery = useVesselQuery<Voyage>(
@@ -437,6 +468,26 @@ export function VoyageDetailsPage() {
                 <CardDescription>
                   Visual representation of the voyage route
                 </CardDescription>
+                <div className="flex justify-end pr-6">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={calculateWaypointTimes}
+                    disabled={isCalculating || waypoints.length === 0}
+                  >
+                    {isCalculating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Calculating...
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="mr-2 h-4 w-4" />
+                        Calculate Arrival/Departure Times
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-[500px] w-full">
