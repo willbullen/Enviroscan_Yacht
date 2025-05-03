@@ -339,6 +339,13 @@ const FinancialManagement: React.FC = () => {
   // State for tracking selected vendor ID in the expense form
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
   
+  // Set up vendor selection when editing an expense
+  useEffect(() => {
+    if (editingExpense && editingExpense.vendorId) {
+      setSelectedVendorId(editingExpense.vendorId.toString());
+    }
+  }, [editingExpense]);
+  
   // Handle adding a new vendor quickly
   const handleQuickAddVendor = async (e: React.FormEvent) => {
     e.preventDefault();
