@@ -317,7 +317,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-lg">
+      <DialogContent className="max-w-md sm:max-w-2xl md:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>

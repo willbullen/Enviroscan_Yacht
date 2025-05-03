@@ -1,0 +1,33 @@
+[vite] connecting...
+[vite] connected.
+Importing expenses data: 
+Array [{…}]
+0: Object
+accountNumber: "FA-006"
+amount: "1500"
+category: "Fuel"
+date: "01/05/2025"
+description: "Fuel Purchase for Tender"
+paymentMethod: "Credit Card"
+referenceNumber: "INV-123"
+status: "Paid"
+vendor: "Sasol"
+[[Prototype]]: Object
+length: 1
+[[Prototype]]: Array(0)
+API Error: POST https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/expenses/bulk (400) 400: Bad Request 
+Object {error: "Some expenses failed validation", details: Array(1), validCount: 0, errorCount: 1}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error importing expenses: 
+Error {status: 400, data: {…}, url: "https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/expenses/bulk", method: "POST"}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+[vite] hot updated: /src/components/BatchImportDialog.tsx
+[vite] hot updated: /src/index.css?v=G6l-S-Gqc9ijqah3IjMAh
