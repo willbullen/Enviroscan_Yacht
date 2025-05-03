@@ -46,9 +46,11 @@ export function VendorSelect({
                 </div>
               ) : vendors && Array.isArray(vendors) && vendors.length > 0 ? (
                 vendors.map((vendor: any) => (
-                  <SelectItem key={vendor.id} value={vendor.id.toString()}>
-                    {vendor.name}
-                  </SelectItem>
+                  vendor.id ? (
+                    <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                      {vendor.name}
+                    </SelectItem>
+                  ) : null
                 ))
               ) : (
                 <div className="p-2 text-sm text-center text-muted-foreground">

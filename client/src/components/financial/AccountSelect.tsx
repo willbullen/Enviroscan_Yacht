@@ -45,9 +45,11 @@ export function AccountSelect({
           </div>
         ) : accounts && Array.isArray(accounts) && accounts.length > 0 ? (
           accounts.map((account: any) => (
-            <SelectItem key={account.id} value={account.id.toString()}>
-              {account.accountName} ({account.accountNumber})
-            </SelectItem>
+            account.id ? (
+              <SelectItem key={account.id} value={account.id.toString()}>
+                {account.accountName} ({account.accountNumber})
+              </SelectItem>
+            ) : null
           ))
         ) : (
           <div className="p-2 text-sm text-center text-muted-foreground">
