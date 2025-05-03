@@ -1910,13 +1910,17 @@ const FinancialManagement: React.FC = () => {
             
             // Create a new expense transaction
             const formData = new FormData(e.target as HTMLFormElement);
+            // Get the vendor ID and make sure it's a valid number
+            const vendorIdStr = formData.get('payee') as string;
+            const vendorId = vendorIdStr ? parseInt(vendorIdStr) : null;
+            
             const expenseData = {
               transactionType: 'expense',
               vesselId: currentVessel?.id,
               transactionDate: formData.get('transactionDate') as string,
               amount: parseFloat(formData.get('amount') as string),
               description: formData.get('description') as string,
-              vendorId: parseInt(formData.get('payee') as string),
+              vendorId: isNaN(vendorId as number) ? null : vendorId,
               accountId: parseInt(formData.get('accountId') as string),
               category: formData.get('category') as string,
               status: formData.get('status') as string,
@@ -1971,11 +1975,11 @@ const FinancialManagement: React.FC = () => {
               
               // Refresh vendors data to ensure we have the latest
               queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
-            } catch (error) {
+            } catch (error: any) {
               console.error('Failed to save transaction:', error);
               toast({
-                title: "Error",
-                description: "Failed to save transaction. Please try again.",
+                title: "Error Saving Expense",
+                description: error.message || "Failed to save expense. Please try again and ensure a vendor is selected.",
                 variant: "destructive",
               });
             }
@@ -2014,6 +2018,12 @@ const FinancialManagement: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-2">
                   <Label htmlFor="payee">Vendor/Payee</Label>
+                  {/* Hidden input field to store the vendor ID in the form data */}
+                  <input 
+                    type="hidden" 
+                    name="payee" 
+                    value={selectedVendorId} 
+                  />
                   <VendorSelect
                     value={selectedVendorId}
                     onValueChange={(value) => {
