@@ -2608,10 +2608,9 @@ const FinancialManagement: React.FC = () => {
                         isActive: true
                       };
                       
-                      const response = await apiRequest("POST", '/api/vendors', vendorData);
+                      const newVendor = await apiRequest("POST", '/api/vendors', vendorData);
                       
-                      if (response.ok) {
-                        const newVendor = await response.json();
+                      if (newVendor && newVendor.id) {
                         expenseToAdd.vendorId = newVendor.id;
                       }
                     } catch (error) {
@@ -2626,28 +2625,21 @@ const FinancialManagement: React.FC = () => {
                 
                 // Submit bulk expenses to the API
                 try {
-                  const response = await apiRequest("POST", '/api/expenses/bulk', finalExpenses);
+                  const result = await apiRequest("POST", '/api/expenses/bulk', finalExpenses);
                   
-                  if (response.ok) {
-                    const result = await response.json();
-                    
-                    toast({
-                      title: "Import Successful",
-                      description: `${result.count || finalExpenses.length} expenses have been imported.`,
-                      variant: "default",
-                    });
-                    
-                    // Refresh expenses data
-                    if (currentVessel) {
-                      queryClient.invalidateQueries({ queryKey: [`/api/expenses/vessel/${currentVessel.id}`] });
-                    }
-                    
-                    // Close dialog
-                    setShowGenericDialog(false);
-                  } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Failed to import expenses");
+                  toast({
+                    title: "Import Successful",
+                    description: `${result.count || finalExpenses.length} expenses have been imported.`,
+                    variant: "default",
+                  });
+                  
+                  // Refresh expenses data
+                  if (currentVessel) {
+                    queryClient.invalidateQueries({ queryKey: [`/api/expenses/vessel/${currentVessel.id}`] });
                   }
+                  
+                  // Close dialog
+                  setShowGenericDialog(false);
                 } catch (error) {
                   console.error("Error importing expenses:", error);
                   toast({
