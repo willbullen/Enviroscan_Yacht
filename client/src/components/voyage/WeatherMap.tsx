@@ -39,78 +39,137 @@ const VesselIcon = L.divIcon({
 // Component to add Windy API overlay to the map
 function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: number }) {
   const map = useMap();
-  const windyLayerRef = useRef<any>(null);
-  const windyInitialized = useRef(false);
-
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [windyAPI, setWindyAPI] = useState<any>(null);
+  const scriptAdded = useRef(false);
+  
+  // Create container element for Windy
   useEffect(() => {
-    if (!windyInitialized.current) {
-      // Initialize Windy API
-      const windyApiScript = document.createElement('script');
-      windyApiScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
-      windyApiScript.async = true;
-      document.head.appendChild(windyApiScript);
-      
-      windyApiScript.onload = () => {
-        if (!window.windyInit) {
-          console.error('Windy API failed to load');
-          return;
-        }
-        
-        // Initialize Windy with API key
-        window.windyInit({
-          key: import.meta.env.WINDY_MAP_FORECAST_KEY || '',
-          lat: map.getCenter().lat,
-          lon: map.getCenter().lng,
-          zoom: map.getZoom(),
-        }, (windyAPI: any) => {
-          // Store the Windy instance for later use
-          windyLayerRef.current = windyAPI;
-          
-          // We need to hide windy's own map as we use Leaflet
-          const { map: windyMap } = windyAPI;
-          windyMap.remove();
-          
-          // Initialize the overlay on our Leaflet map
-          windyAPI.overlays.add({
-            map: map,
-            overlayName: getWindyOverlayByTab(windyTab),
-            level: '1000h', // Default level (can be changed)
-            timestamp: timestamp
-          });
-          
-          windyInitialized.current = true;
-        });
-      };
-      
-      return () => {
-        document.head.removeChild(windyApiScript);
-        if (windyLayerRef.current) {
-          try {
-            windyLayerRef.current.overlays.remove();
-          } catch (e) {
-            console.error('Error removing Windy overlay:', e);
-          }
-        }
-      };
-    }
-  }, [map]);
-
-  // Update overlay when tab or timestamp changes
-  useEffect(() => {
-    if (windyInitialized.current && windyLayerRef.current) {
-      try {
-        windyLayerRef.current.overlays.remove();
-        windyLayerRef.current.overlays.add({
-          map: map,
-          overlayName: getWindyOverlayByTab(windyTab),
-          level: '1000h',
-          timestamp: timestamp
-        });
-      } catch (e) {
-        console.error('Error updating Windy overlay:', e);
+    // Create a container for the Windy API
+    const windyContainer = document.createElement('div');
+    windyContainer.id = 'windy-map-container';
+    windyContainer.style.position = 'absolute';
+    windyContainer.style.top = '0';
+    windyContainer.style.left = '0';
+    windyContainer.style.width = '100%';
+    windyContainer.style.height = '100%';
+    windyContainer.style.zIndex = '400'; // Above base map but below markers
+    windyContainer.style.pointerEvents = 'none'; // Allow clicking through to markers
+    
+    // Add the container to the map pane
+    map.getContainer().appendChild(windyContainer);
+    setContainer(windyContainer);
+    
+    return () => {
+      if (windyContainer && windyContainer.parentNode) {
+        windyContainer.parentNode.removeChild(windyContainer);
       }
+    };
+  }, [map]);
+  
+  // Load the Windy API script
+  useEffect(() => {
+    // Only add script if we have a container
+    if (!container) {
+      return;
     }
-  }, [windyTab, timestamp, map]);
+    
+    // Check if script is already loaded
+    if (document.getElementById('windy-api-script') || scriptAdded.current) {
+      return;
+    }
+    
+    // Create script element for Windy
+    const script = document.createElement('script');
+    script.id = 'windy-api-script';
+    script.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
+    script.async = true;
+    
+    // Add the script to the document
+    document.head.appendChild(script);
+    
+    // Mark script as added (using mutable ref)
+    scriptAdded.current = true;
+    
+    // Clean up on unmount
+    return () => {
+      const existingScript = document.getElementById('windy-api-script');
+      if (existingScript) {
+        existingScript.remove();
+      }
+      scriptAdded.current = false;
+    };
+  }, [container]);
+  
+  // Initialize Windy with API key when container and script are ready
+  useEffect(() => {
+    // Wait for container and windyInit to be available
+    if (!container || !window.windyInit || windyAPI) {
+      return;
+    }
+    
+    // Log API key status - without showing the actual key
+    console.log('Windy API Key available:', !!import.meta.env.WINDY_MAP_FORECAST_KEY);
+    
+    // Initialize Windy with our API key
+    window.windyInit({
+      key: import.meta.env.WINDY_MAP_FORECAST_KEY,
+      container: container,
+    }, (api: any) => {
+      console.log('Windy API initialized successfully');
+      setWindyAPI(api);
+      
+      // Hide Windy's attribution to avoid duplicates with Leaflet
+      const attribution = container.querySelector('.leaflet-control-attribution');
+      if (attribution) {
+        attribution.remove();
+      }
+      
+      // Set the overlay to display
+      api.store.set('overlay', getWindyOverlayByTab(windyTab));
+      
+      // Set the forecast timestamp if provided
+      if (timestamp) {
+        api.store.set('timestamp', timestamp);
+      }
+      
+      // Sync positions between Leaflet and Windy
+      map.on('move', () => {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        api.map.setView([center.lat, center.lng], zoom);
+      });
+      
+      // Trigger initial sync
+      api.map.setView(
+        [map.getCenter().lat, map.getCenter().lng], 
+        map.getZoom()
+      );
+    });
+    
+  }, [map, container, windyAPI, windyTab, timestamp]);
+  
+  // Update weather overlay when tab changes
+  useEffect(() => {
+    if (windyAPI && windyTab) {
+      windyAPI.store.set('overlay', getWindyOverlayByTab(windyTab));
+    }
+  }, [windyAPI, windyTab]);
+  
+  // Update timestamp when it changes
+  useEffect(() => {
+    if (windyAPI && timestamp) {
+      windyAPI.store.set('timestamp', timestamp);
+    }
+  }, [windyAPI, timestamp]);
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up event listeners
+      map.off('move');
+    };
+  }, [map]);
 
   return null;
 }
@@ -335,10 +394,8 @@ export function WeatherMap({
               </LayersControl.BaseLayer>
             </LayersControl>
             
-            {/* Draw the route polyline */}
-            {waypoints.length > 1 && (
-              <WindyMapLayer windyTab={weatherTab} timestamp={timestamp} />
-            )}
+            {/* Add the Windy layer */}
+            <WindyMapLayer windyTab={weatherTab} timestamp={timestamp} />
             
             {/* Show vessel position based on time slider */}
             <VesselPositionMarker 
