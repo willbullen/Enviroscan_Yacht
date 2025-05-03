@@ -176,21 +176,30 @@ export function EnhancedWindyMap({
         url += `&marker=${wpLat},${wpLng},WP${index+2},blue`;
       });
       
-      // Instead of a single path, create multiple line segments between each pair of waypoints
-      // This gives us more visibility control and makes each segment stand out better
+      // Add intermediate points along the route for better visibility
+      // These appear as dots between waypoints to show the route
       if (waypoints.length >= 2) {
-        // Create line segments between consecutive waypoints
+        // Create points along the route at regular intervals
         for (let i = 0; i < waypoints.length - 1; i++) {
-          const startLat = parseFloat(waypoints[i].latitude).toFixed(6);
-          const startLng = parseFloat(waypoints[i].longitude).toFixed(6);
-          const endLat = parseFloat(waypoints[i+1].latitude).toFixed(6);
-          const endLng = parseFloat(waypoints[i+1].longitude).toFixed(6);
+          const startLat = parseFloat(waypoints[i].latitude);
+          const startLng = parseFloat(waypoints[i].longitude);
+          const endLat = parseFloat(waypoints[i+1].latitude);
+          const endLng = parseFloat(waypoints[i+1].longitude);
           
-          // Add a bright yellow line segment with 5px width between these two points
-          url += `&path=${startLat},${startLng};${endLat},${endLng},ffff00,5`;
+          // Calculate 3 intermediate points for each segment
+          for (let j = 1; j <= 3; j++) {
+            const ratio = j / 4; // This divides each segment into 4 parts (3 intermediate points)
+            const pointLat = startLat + (endLat - startLat) * ratio;
+            const pointLng = startLng + (endLng - startLng) * ratio;
+            
+            // Add a bright yellow point marker 
+            url += `&marker=${pointLat.toFixed(6)},${pointLng.toFixed(6)},,yellow`;
+          }
           
-          // Log for debugging
-          console.log(`Adding line segment ${i}: ${startLat},${startLng} to ${endLat},${endLng}`);
+          // Also create a direct line segment
+          url += `&path=${startLat.toFixed(6)},${startLng.toFixed(6)};${endLat.toFixed(6)},${endLng.toFixed(6)},ff00ff,4`;
+          
+          console.log(`Adding route segment ${i}: ${startLat.toFixed(6)},${startLng.toFixed(6)} to ${endLat.toFixed(6)},${endLng.toFixed(6)}`);
         }
       }
     }
@@ -423,7 +432,7 @@ export function EnhancedWindyMap({
               </div>
             </div>
             <p className="text-xs mt-2 text-muted-foreground">
-              <span className="font-semibold">Route visualization:</span> The voyage route is displayed as a bright yellow line connecting all waypoints.
+              <span className="font-semibold">Route visualization:</span> The voyage route is displayed with magenta line segments and yellow intermediate points.
               Start point is marked in green (START), end point in red (END), and intermediate waypoints in blue (WP2, WP3, etc).
               Use the timeline controls to see weather conditions at different points during the voyage.
             </p>
