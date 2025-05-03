@@ -68,6 +68,19 @@ export function EnhancedWindyMap({
     setForecastTime(currentTime);
   }, [timeSliderPosition, voyageStartDate, voyageEndDate]);
   
+  // Generate path coordinates for waypoints
+  const getWaypointPathParameters = () => {
+    if (waypoints.length < 2) return '';
+    
+    // Collect all waypoint coordinates pairs
+    const coordinates = waypoints.map(waypoint => {
+      return `${waypoint.latitude},${waypoint.longitude}`;
+    });
+    
+    // Join coordinates with semicolons to form a path
+    return coordinates.join(';');
+  };
+  
   // Fetch the Windy API key from the server
   useEffect(() => {
     async function fetchApiKey() {
@@ -113,9 +126,10 @@ export function EnhancedWindyMap({
   const getWindyUrl = (overlay = 'wind', timestamp?: number) => {
     if (!apiKey) return '';
     
-    // Default center to first waypoint if available, otherwise use provided lat/long
-    const centerLat = waypoints.length > 0 ? parseFloat(waypoints[0].latitude) : latitude;
-    const centerLon = waypoints.length > 0 ? parseFloat(waypoints[0].longitude) : longitude;
+    // Default center to middle waypoint if available, otherwise use provided lat/long
+    const centerIndex = Math.floor(waypoints.length / 2);
+    const centerLat = waypoints.length > 0 ? parseFloat(waypoints[centerIndex < 0 ? 0 : centerIndex].latitude) : latitude;
+    const centerLon = waypoints.length > 0 ? parseFloat(waypoints[centerIndex < 0 ? 0 : centerIndex].longitude) : longitude;
     
     // Build base URL with core parameters
     let url = `https://embed.windy.com/embed2.html?lat=${centerLat}&lon=${centerLon}&zoom=${zoom}&level=surface&overlay=${overlay}&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&key=${apiKey}`;
@@ -125,11 +139,29 @@ export function EnhancedWindyMap({
       url += `&timestamp=${timestamp}`;
     }
     
-    // Add markers for waypoints
+    // Add markers for waypoints with distinct colors and clear labels
     if (waypoints.length > 0) {
-      waypoints.forEach((waypoint, index) => {
-        url += `&marker=${waypoint.latitude},${waypoint.longitude},${waypoint.name || `Waypoint ${index + 1}`}`;
+      // Start marker - special green marker
+      const startWaypoint = waypoints[0];
+      url += `&marker=${startWaypoint.latitude},${startWaypoint.longitude},1:${startWaypoint.name || 'Departure'},green`;
+      
+      // End marker - special red marker 
+      const endWaypoint = waypoints[waypoints.length - 1];
+      url += `&marker=${endWaypoint.latitude},${endWaypoint.longitude},${waypoints.length}:${endWaypoint.name || 'Arrival'},red`;
+      
+      // Intermediate waypoints - blue markers
+      waypoints.slice(1, waypoints.length - 1).forEach((waypoint, index) => {
+        url += `&marker=${waypoint.latitude},${waypoint.longitude},${index+2}:${waypoint.name || `Waypoint ${index+2}`},blue`;
       });
+      
+      // Add path between all waypoints for route visualization
+      // path parameter takes a series of lat,lon points with specific color and width
+      // Format is: path=lat1,lon1;lat2,lon2...;latN,lonN,colorHex,width
+      const pathCoordinates = getWaypointPathParameters();
+      if (pathCoordinates) {
+        // Add the path with a bright orange color and width of 3 pixels
+        url += `&path=${pathCoordinates},ff5f00,3`;
+      }
     }
     
     return url;
@@ -360,8 +392,9 @@ export function EnhancedWindyMap({
               </div>
             </div>
             <p className="text-xs mt-2 text-muted-foreground">
-              Note: Waypoints are shown as markers on the map in Windy's interface.
-              Use the timeline controls to see weather conditions at different points of the voyage.
+              <span className="font-semibold">Route visualization:</span> The voyage route is displayed as an orange line connecting all waypoints.
+              Start point is marked in green, end point in red, and intermediate waypoints in blue.
+              Use the timeline controls to see weather conditions at different points during the voyage.
             </p>
           </CardContent>
         </Card>
