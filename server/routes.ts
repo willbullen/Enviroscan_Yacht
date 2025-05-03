@@ -4513,6 +4513,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(201).json(expense);
   }));
   
+  // Bulk create expenses
+  apiRouter.post("/expenses/bulk", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    try {
+      const expensesData = req.body as InsertExpense[];
+      if (!Array.isArray(expensesData)) {
+        return res.status(400).json({ error: "Invalid data format. Expected an array of expenses." });
+      }
+      
+      // Validate each expense in the array
+      const validatedExpenses: InsertExpense[] = [];
+      const errors: { index: number; errors: any }[] = [];
+      
+      expensesData.forEach((expense, index) => {
+        const validationResult = insertExpenseSchema.safeParse(expense);
+        if (validationResult.success) {
+          // Add the user ID to the expense data
+          validatedExpenses.push({
+            ...validationResult.data,
+            createdById: req.user.id
+          });
+        } else {
+          errors.push({
+            index,
+            errors: validationResult.error.format()
+          });
+        }
+      });
+      
+      // If there are validation errors, return them
+      if (errors.length > 0) {
+        return res.status(400).json({
+          error: "Some expenses failed validation",
+          details: errors,
+          validCount: validatedExpenses.length,
+          errorCount: errors.length
+        });
+      }
+      
+      // Create all expenses
+      const createdExpenses = await storage.createBulkExpenses(validatedExpenses);
+      
+      return res.status(201).json({
+        message: "Expenses imported successfully",
+        count: createdExpenses.length,
+        expenses: createdExpenses
+      });
+    } catch (error) {
+      console.error("Error bulk creating expenses:", error);
+      return res.status(500).json({ error: "Failed to create expenses" });
+    }
+  }));
+  
   // Update an expense
   apiRouter.patch("/expenses/:id", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {

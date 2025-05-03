@@ -2258,6 +2258,23 @@ export class DatabaseStorage implements IStorage {
     return newExpense;
   }
   
+  async createBulkExpenses(expensesData: InsertExpense[]): Promise<Expense[]> {
+    const createdExpenses: Expense[] = [];
+    
+    // Process each expense individually to ensure proper error handling
+    for (const expense of expensesData) {
+      try {
+        const newExpense = await this.createExpense(expense);
+        createdExpenses.push(newExpense);
+      } catch (error) {
+        console.error("Error creating expense in bulk operation:", error);
+        // Continue with the next expense even if one fails
+      }
+    }
+    
+    return createdExpenses;
+  }
+  
   async updateExpense(id: number, expense: Partial<Expense>): Promise<Expense | undefined> {
     const [updatedExpense] = await db
       .update(expenses)

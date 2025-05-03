@@ -2539,18 +2539,75 @@ const FinancialManagement: React.FC = () => {
                 accountId: accounts && accounts.length > 0 ? accounts[0].id : null,
               }));
               
-              // Here you would call API to process these
-              console.log("Processed expense data:", processedData);
+              // Create vendors that don't exist yet and finalize the expenses data
+              const finalizeAndSubmitExpenses = async () => {
+                const finalExpenses = [];
+                
+                for (const expense of processedData) {
+                  let expenseToAdd = { ...expense };
+                  
+                  // If vendor needs to be created (vendorId is -1)
+                  if (expense.vendorId === -1 && expense.vendorName) {
+                    try {
+                      // Create a new vendor
+                      const vendorData = {
+                        name: expense.vendorName,
+                        category: "Imported",
+                        isActive: true
+                      };
+                      
+                      const response = await apiRequest.post('/api/vendors', vendorData);
+                      
+                      if (response.ok) {
+                        const newVendor = await response.json();
+                        expenseToAdd.vendorId = newVendor.id;
+                      }
+                    } catch (error) {
+                      console.error("Error creating vendor:", error);
+                    }
+                  }
+                  
+                  // Remove the vendorName field as it's not part of the expense schema
+                  delete expenseToAdd.vendorName;
+                  finalExpenses.push(expenseToAdd);
+                }
+                
+                // Submit bulk expenses to the API
+                try {
+                  const response = await apiRequest.post('/api/expenses/bulk', finalExpenses);
+                  
+                  if (response.ok) {
+                    const result = await response.json();
+                    
+                    toast({
+                      title: "Import Successful",
+                      description: `${result.count || finalExpenses.length} expenses have been imported.`,
+                      variant: "default",
+                    });
+                    
+                    // Refresh expenses data
+                    if (currentVessel) {
+                      queryClient.invalidateQueries({ queryKey: [`/api/expenses/vessel/${currentVessel.id}`] });
+                    }
+                    
+                    // Close dialog
+                    setShowGenericDialog(false);
+                  } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Failed to import expenses");
+                  }
+                } catch (error) {
+                  console.error("Error importing expenses:", error);
+                  toast({
+                    title: "Import Failed",
+                    description: error instanceof Error ? error.message : "Failed to import expenses",
+                    variant: "destructive",
+                  });
+                }
+              };
               
-              toast({
-                title: "Import Successful",
-                description: `${processedData.length} expenses have been imported.`,
-                variant: "default",
-              });
-              
-              // Close dialog and refresh data
-              setShowGenericDialog(false);
-              // Ideally refresh your expense list here
+              // Execute the async function
+              finalizeAndSubmitExpenses();
               
             } catch (error) {
               console.error("Error processing expense import:", error);
