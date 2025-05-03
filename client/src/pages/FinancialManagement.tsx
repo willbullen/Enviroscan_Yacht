@@ -535,6 +535,11 @@ const FinancialManagement: React.FC = () => {
       );
     }
 
+    // Dashboard tab content
+    if (activeTab === "dashboard") {
+      return <FinancialDashboard vesselId={currentVessel.id} />;
+    }
+    
     // Render content based on active tab
     switch (activeTab) {
       case "accounts":
@@ -1832,6 +1837,10 @@ const FinancialManagement: React.FC = () => {
                   <DropdownMenuSeparator />
                   
                   {/* Direct Access Items */}
+                  <DropdownMenuItem onClick={() => setActiveTab("dashboard")} className={activeTab === "dashboard" ? "bg-muted" : ""}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    <span>Dashboard</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setActiveTab("reports")} className={activeTab === "reports" ? "bg-muted" : ""}>
                     <FileText className="h-4 w-4 mr-2" />
                     <span>Reports</span>
