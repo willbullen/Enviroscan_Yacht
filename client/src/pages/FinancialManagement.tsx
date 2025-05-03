@@ -339,16 +339,31 @@ const FinancialManagement: React.FC = () => {
   // State for tracking selected vendor ID in the expense form
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
   
+  // Create refs for form elements
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
+  const amountInputRef = React.useRef<HTMLInputElement>(null);
+  const descriptionInputRef = React.useRef<HTMLTextAreaElement>(null);
+  
   // Set up form values when editing an expense
-  // We'll need to wait until the form is rendered before setting these values
   useEffect(() => {
     if (editingExpense) {
+      // Set vendor ID
       if (editingExpense.vendorId) {
         setSelectedVendorId(editingExpense.vendorId.toString());
       }
       
-      // The rest of the form fields will use the defaultValue prop with conditional rendering
-      // based on whether editingExpense exists
+      // Set values using refs after the form is rendered
+      if (dateInputRef.current && editingExpense.transactionDate) {
+        dateInputRef.current.value = new Date(editingExpense.transactionDate).toISOString().split('T')[0];
+      }
+      
+      if (amountInputRef.current && editingExpense.amount) {
+        amountInputRef.current.value = editingExpense.amount.toString();
+      }
+      
+      if (descriptionInputRef.current && editingExpense.description) {
+        descriptionInputRef.current.value = editingExpense.description;
+      }
     }
   }, [editingExpense]);
   
@@ -1948,7 +1963,7 @@ const FinancialManagement: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={async (e) => {
+          <form key={editingExpense ? `edit-${editingExpense.id}` : 'new-expense'} onSubmit={async (e) => {
             e.preventDefault();
             
             // Create or update expense transaction
