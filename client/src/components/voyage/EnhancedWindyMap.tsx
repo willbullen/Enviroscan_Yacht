@@ -73,9 +73,25 @@ export function EnhancedWindyMap({
     if (waypoints.length < 2) return '';
     
     // Collect all waypoint coordinates pairs
+    // Make sure to properly parse and format the coordinates
     const coordinates = waypoints.map(waypoint => {
-      return `${waypoint.latitude},${waypoint.longitude}`;
-    });
+      // Ensure we're dealing with string values that can be parsed to numbers
+      let lat = parseFloat(waypoint.latitude);
+      let lng = parseFloat(waypoint.longitude);
+      
+      // Only include valid coordinates (prevent NaN values)
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn('Invalid waypoint coordinates:', waypoint);
+        return null;
+      }
+      
+      // Format to 6 decimal places for consistency
+      return `${lat.toFixed(6)},${lng.toFixed(6)}`;
+    })
+    .filter(coord => coord !== null); // Remove any invalid coordinates
+    
+    // Log for debugging
+    console.log('Path coordinates:', coordinates);
     
     // Join coordinates with semicolons to form a path
     return coordinates.join(';');
@@ -143,24 +159,39 @@ export function EnhancedWindyMap({
     if (waypoints.length > 0) {
       // Start marker - special green marker
       const startWaypoint = waypoints[0];
-      url += `&marker=${startWaypoint.latitude},${startWaypoint.longitude},1:${startWaypoint.name || 'Departure'},green`;
+      const startLat = parseFloat(startWaypoint.latitude).toFixed(6);
+      const startLng = parseFloat(startWaypoint.longitude).toFixed(6);
+      url += `&marker=${startLat},${startLng},START,green`;
       
       // End marker - special red marker 
       const endWaypoint = waypoints[waypoints.length - 1];
-      url += `&marker=${endWaypoint.latitude},${endWaypoint.longitude},${waypoints.length}:${endWaypoint.name || 'Arrival'},red`;
+      const endLat = parseFloat(endWaypoint.latitude).toFixed(6);
+      const endLng = parseFloat(endWaypoint.longitude).toFixed(6);
+      url += `&marker=${endLat},${endLng},END,red`;
       
       // Intermediate waypoints - blue markers
       waypoints.slice(1, waypoints.length - 1).forEach((waypoint, index) => {
-        url += `&marker=${waypoint.latitude},${waypoint.longitude},${index+2}:${waypoint.name || `Waypoint ${index+2}`},blue`;
+        const wpLat = parseFloat(waypoint.latitude).toFixed(6);
+        const wpLng = parseFloat(waypoint.longitude).toFixed(6);
+        url += `&marker=${wpLat},${wpLng},WP${index+2},blue`;
       });
       
-      // Add path between all waypoints for route visualization
-      // path parameter takes a series of lat,lon points with specific color and width
-      // Format is: path=lat1,lon1;lat2,lon2...;latN,lonN,colorHex,width
-      const pathCoordinates = getWaypointPathParameters();
-      if (pathCoordinates) {
-        // Add the path with a bright orange color and width of 3 pixels
-        url += `&path=${pathCoordinates},ff5f00,3`;
+      // Instead of a single path, create multiple line segments between each pair of waypoints
+      // This gives us more visibility control and makes each segment stand out better
+      if (waypoints.length >= 2) {
+        // Create line segments between consecutive waypoints
+        for (let i = 0; i < waypoints.length - 1; i++) {
+          const startLat = parseFloat(waypoints[i].latitude).toFixed(6);
+          const startLng = parseFloat(waypoints[i].longitude).toFixed(6);
+          const endLat = parseFloat(waypoints[i+1].latitude).toFixed(6);
+          const endLng = parseFloat(waypoints[i+1].longitude).toFixed(6);
+          
+          // Add a bright yellow line segment with 5px width between these two points
+          url += `&path=${startLat},${startLng};${endLat},${endLng},ffff00,5`;
+          
+          // Log for debugging
+          console.log(`Adding line segment ${i}: ${startLat},${startLng} to ${endLat},${endLng}`);
+        }
       }
     }
     
@@ -392,8 +423,8 @@ export function EnhancedWindyMap({
               </div>
             </div>
             <p className="text-xs mt-2 text-muted-foreground">
-              <span className="font-semibold">Route visualization:</span> The voyage route is displayed as an orange line connecting all waypoints.
-              Start point is marked in green, end point in red, and intermediate waypoints in blue.
+              <span className="font-semibold">Route visualization:</span> The voyage route is displayed as a bright yellow line connecting all waypoints.
+              Start point is marked in green (START), end point in red (END), and intermediate waypoints in blue (WP2, WP3, etc).
               Use the timeline controls to see weather conditions at different points during the voyage.
             </p>
           </CardContent>
