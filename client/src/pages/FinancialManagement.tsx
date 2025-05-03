@@ -137,6 +137,13 @@ const FinancialManagement: React.FC = () => {
   // Get current vessel from context to filter financial data
   const { currentVessel } = useVessel();
   
+  // Load current user information for auth and permissions
+  const { data: user } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: () => fetch('/api/user').then(res => res.json()),
+    enabled: true,
+  });
+  
   // Load vessel-specific financial data
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['/api/transactions/vessel', currentVessel?.id],
@@ -2503,9 +2510,9 @@ const FinancialManagement: React.FC = () => {
         templateFileName={`${activeTab}_template.csv`}
         templateContent={
           activeTab === "expenses" 
-            ? "date,description,category,amount,vendor,paymentMethod,status,referenceNumber\n2025-05-01,Fuel Purchase,Fuel,1500,Ocean Fuels,Credit Card,Paid,INV-123"
+            ? "date,description,category,amount,vendor,paymentMethod,status,referenceNumber,accountNumber\n2025-05-01,Fuel Purchase,Fuel,1500,Ocean Fuels,Credit Card,Paid,INV-123,FUEL-001"
             : activeTab === "deposits"
-            ? "date,description,amount,source,category,referenceNumber\n2025-05-01,Charter Payment,5000,Charter Client,Income,REF-456"
+            ? "date,description,amount,source,category,referenceNumber,accountNumber\n2025-05-01,Charter Payment,5000,Charter Client,Income,REF-456,OPEX-001"
             : "date,description,amount,category\n2025-05-01,Sample Entry,1000,General"
         }
         onImport={(data) => {
@@ -2524,10 +2531,29 @@ const FinancialManagement: React.FC = () => {
           if (activeTab === "expenses") {
             // Process expense imports
             try {
+              // Format dates properly
+              const formatDate = (dateStr: string) => {
+                try {
+                  // Handle MM/DD/YYYY format
+                  if (dateStr.includes('/')) {
+                    const [month, day, year] = dateStr.split('/');
+                    return new Date(`${year}-${month}-${day}`);
+                  }
+                  // Handle YYYY-MM-DD format
+                  return new Date(dateStr);
+                } catch (e) {
+                  return new Date();
+                }
+              };
+
               const processedData = data.map(item => ({
                 description: item.description || "Imported Expense",
                 amount: parseFloat(item.amount) || 0,
-                expenseDate: item.date || new Date().toISOString().split('T')[0],
+                // Make sure this is a proper Date object
+                expenseDate: formatDate(item.date || new Date().toISOString().split('T')[0]),
+                total: parseFloat(item.amount) || 0, // Required field - same as amount
+                transactionId: 0, // Required field - will be set by server
+                createdById: user?.id || 5, // Required field - use current user ID or admin
                 category: item.category || "Other",
                 vendorId: item.vendorId || (item.vendor ? -1 : null), // -1 will be handled to create a new vendor
                 vendorName: item.vendor,
@@ -2535,8 +2561,11 @@ const FinancialManagement: React.FC = () => {
                 status: item.status || "pending",
                 referenceNumber: item.referenceNumber || "",
                 vesselId: currentVessel?.id,
-                // Add other required fields with defaults
-                accountId: accounts && accounts.length > 0 ? accounts[0].id : null,
+                // Try to find the account by accountNumber, otherwise use the first available account
+                accountId: item.accountNumber && accounts 
+                  ? (accounts.find((acc: { accountNumber: string, id: number }) => acc.accountNumber === item.accountNumber)?.id || 
+                     (accounts.length > 0 ? accounts[0].id : null))
+                  : (accounts && accounts.length > 0 ? accounts[0].id : null),
               }));
               
               // Create vendors that don't exist yet and finalize the expenses data
@@ -2643,6 +2672,14 @@ const FinancialManagement: React.FC = () => {
             }
             if (!row.date) {
               return `Row ${index+1}: Missing date`;
+            }
+            
+            // Validate account if specified
+            if (row.accountNumber && accounts) {
+              const accountExists = accounts.some((acc: { accountNumber: string }) => acc.accountNumber === row.accountNumber);
+              if (!accountExists) {
+                return `Row ${index+1}: Account number "${row.accountNumber}" does not exist for this vessel`;
+              }
             }
           }
           return null; // No errors
