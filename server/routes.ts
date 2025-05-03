@@ -4987,6 +4987,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Get transaction stats by vessel (for dashboard widgets)
+  apiRouter.get("/transactions/vessel/:id/stats", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+
+    const vesselId = parseInt(req.params.id);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Valid vessel ID is required" });
+    }
+
+    // Get all transactions for the vessel
+    const transactions = await storage.getTransactionsByVessel(vesselId);
+    
+    // Get current date info for category analysis
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Filter expenses and calculate by category
+    const expenses = transactions.filter(t => t.transactionType === 'expense');
+    
+    // Process data by categories
+    const expensesByCategory: Record<string, number> = {};
+    expenses.forEach(expense => {
+      const category = expense.category || 'Uncategorized';
+      if (!expensesByCategory[category]) {
+        expensesByCategory[category] = 0;
+      }
+      expensesByCategory[category] += parseFloat(expense.amount || '0');
+    });
+    
+    // Get recent transactions (last 10)
+    const recentTransactions = [...transactions]
+      .sort((a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime())
+      .slice(0, 10);
+    
+    res.json({
+      expenses,
+      expensesByCategory,
+      recentTransactions,
+      totalTransactions: transactions.length
+    });
+  }));
+
   // Get cash flow data for the dashboard
   apiRouter.get("/transactions/vessel/:id/cash-flow", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {

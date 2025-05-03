@@ -13,7 +13,16 @@ interface RecentTransactionsWidgetProps {
 
 const RecentTransactionsWidget: React.FC<RecentTransactionsWidgetProps> = ({ vesselId }) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/transactions/vessel', vesselId],
+    queryKey: ['/api/transactions/vessel', vesselId, 'stats'],
+    queryFn: () => {
+      if (!vesselId) return Promise.resolve({});
+      return fetch(`/api/transactions/vessel/${vesselId}/stats`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching recent transactions:", err);
+          return {};
+        });
+    },
     enabled: !!vesselId,
   });
 
@@ -37,11 +46,11 @@ const RecentTransactionsWidget: React.FC<RecentTransactionsWidgetProps> = ({ ves
     );
   }
 
-  // Get the transactions, defaulting to empty array if undefined
-  const transactions = data || [];
+  // Get the transactions from the stats endpoint
+  const recentTransactions = data?.recentTransactions || [];
 
   // If no transactions are available
-  if (transactions.length === 0) {
+  if (recentTransactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
         <p>No transactions available</p>
@@ -49,11 +58,6 @@ const RecentTransactionsWidget: React.FC<RecentTransactionsWidgetProps> = ({ ves
       </div>
     );
   }
-
-  // Display the most recent transactions (limit to 5)
-  const recentTransactions = [...transactions]
-    .sort((a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime())
-    .slice(0, 5);
 
   return (
     <Table>

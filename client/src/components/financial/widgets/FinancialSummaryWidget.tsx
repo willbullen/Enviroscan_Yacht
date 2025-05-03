@@ -12,6 +12,15 @@ interface FinancialSummaryWidgetProps {
 const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({ vesselId }) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['/api/transactions/vessel', vesselId, 'summary'],
+    queryFn: () => {
+      if (!vesselId) return Promise.resolve({});
+      return fetch(`/api/transactions/vessel/${vesselId}/summary`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching financial summary:", err);
+          return {};
+        });
+    },
     enabled: !!vesselId,
   });
 
