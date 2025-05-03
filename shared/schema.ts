@@ -607,10 +607,22 @@ export const transactions = pgTable("transactions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertTransactionSchema = createInsertSchema(transactions).omit({
+const baseTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   createdAt: true,
   updatedAt: true
+});
+
+// Create a custom schema that handles date string conversion and amount validation
+export const insertTransactionSchema = baseTransactionSchema.extend({
+  transactionDate: z.union([
+    z.date(),
+    z.string().transform((val) => new Date(val)),
+  ]),
+  amount: z.union([
+    z.string(),
+    z.number().transform((val) => val.toString()),
+  ]),
 });
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
