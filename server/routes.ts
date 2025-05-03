@@ -3578,6 +3578,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // Calculate and update waypoint arrival and departure times
+  apiRouter.post("/voyages/:id/calculate-times", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const voyageId = parseInt(req.params.id);
+    if (isNaN(voyageId)) {
+      return res.status(400).json({ error: "Invalid voyage ID" });
+    }
+    
+    try {
+      // Import the calculation function
+      const { calculateWaypointTimes } = await import('./calcWaypointTimes');
+      
+      // Calculate and update the waypoint times
+      await calculateWaypointTimes(voyageId);
+      
+      // Get the updated waypoints
+      const updatedWaypoints = await storage.getWaypointsByVoyage(voyageId);
+      
+      return res.json({
+        success: true,
+        message: `Successfully calculated arrival and departure times for voyage ${voyageId}`,
+        waypoints: updatedWaypoints
+      });
+    } catch (error) {
+      console.error("Error calculating waypoint times:", error);
+      return res.status(500).json({ 
+        error: "Failed to calculate waypoint times", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  }));
+  
   // Get vessel fuel consumption data
   apiRouter.get("/vessels/:vesselId/fuel-consumption-data", asyncHandler(async (req: Request, res: Response) => {
     const vesselId = parseInt(req.params.vesselId);

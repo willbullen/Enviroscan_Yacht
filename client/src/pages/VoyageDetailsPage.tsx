@@ -34,6 +34,8 @@ import { VoyageMap } from '@/components/voyage/VoyageMap';
 import { EnhancedWindyMap } from '@/components/voyage/EnhancedWindyMap';
 import { PerformanceCurves } from '@/components/voyage/PerformanceCurves';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
+import { queryClient } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/apiRequest';
 import MainLayout from '@/components/layout/MainLayout';
 
 type Voyage = {

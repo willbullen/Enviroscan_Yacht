@@ -43,7 +43,7 @@ export async function calculateWaypointTimes(voyageId: number): Promise<void> {
         // Update the first waypoint with departure time (no arrival time)
         await db.update(waypoints)
           .set({
-            estimatedDeparture: currentDateTime.toISOString(),
+            estimatedDeparture: new Date(currentDateTime),
             estimatedArrival: null
           })
           .where(eq(waypoints.id, waypoint.id));
@@ -102,8 +102,8 @@ export async function calculateWaypointTimes(voyageId: number): Promise<void> {
       // Update the waypoint with calculated times
       await db.update(waypoints)
         .set({
-          estimatedArrival: arrivalTime.toISOString(),
-          estimatedDeparture: departureTime ? departureTime.toISOString() : null
+          estimatedArrival: arrivalTime,
+          estimatedDeparture: departureTime
         })
         .where(eq(waypoints.id, waypoint.id));
       
