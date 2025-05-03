@@ -1243,9 +1243,11 @@ const FinancialManagement: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="all">All Accounts</SelectItem>
                     {accounts && Array.isArray(accounts) && accounts.map((account: any) => (
-                      <SelectItem key={account.id} value={account.id.toString()}>
-                        {account.name}
-                      </SelectItem>
+                      account.id ? (
+                        <SelectItem key={account.id} value={account.id.toString()}>
+                          {account.accountName || account.name}
+                        </SelectItem>
+                      ) : null
                     ))}
                   </SelectContent>
                 </Select>
