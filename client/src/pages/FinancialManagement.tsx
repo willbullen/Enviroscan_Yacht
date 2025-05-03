@@ -42,6 +42,7 @@ import { VendorDialog } from "@/components/financial/VendorDialog";
 import { VendorSelect } from "@/components/financial/VendorSelect";
 import { AccountSelect } from "@/components/financial/AccountSelect";
 import { AccountDialog } from "@/components/financial/AccountDialog";
+import FinancialDashboard from "@/components/financial/FinancialDashboard";
 import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -1708,6 +1709,7 @@ const FinancialManagement: React.FC = () => {
                 {activeTab === "vendors" && "Vendor Management"}
                 {activeTab === "categories" && "Financial Categories"}
                 {activeTab === "ledger" && "General Ledger"}
+                {activeTab === "dashboard" && "Financial Dashboard"}
                 {activeTab === "reports" && "Financial Reports"}
               </h1>
               <p className="text-muted-foreground mt-1">
