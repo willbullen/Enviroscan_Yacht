@@ -50,7 +50,11 @@ export function VendorTable() {
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
 
   // Get unique categories from vendors
-  const categories = [...new Set(vendors.map(vendor => vendor.category || 'Uncategorized'))].sort();
+  const categorySet = new Set<string>();
+  vendors.forEach(vendor => {
+    categorySet.add(vendor.category || 'Uncategorized');
+  });
+  const categories = Array.from(categorySet).sort();
 
   // Filter vendors based on search term and selected category
   const filteredVendors = vendors.filter(vendor => {
@@ -111,16 +115,22 @@ export function VendorTable() {
         <div className="flex gap-2 items-center">
           <div className="w-full sm:w-48">
             <Select 
-              value={selectedCategory || ''} 
-              onValueChange={(value) => setSelectedCategory(value || null)}
+              value={selectedCategory || 'all_categories'} 
+              onValueChange={(value) => {
+                if (value === 'all_categories') {
+                  setSelectedCategory(null);
+                } else {
+                  setSelectedCategory(value);
+                }
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all_categories">All Categories</SelectItem>
                 {categories.map(category => (
-                  <SelectItem key={category} value={category}>
+                  <SelectItem key={category} value={category || "uncategorized"}>
                     {category}
                   </SelectItem>
                 ))}
