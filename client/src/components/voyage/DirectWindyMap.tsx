@@ -129,28 +129,68 @@ export function DirectWindyMap({
     fetchAPIKey();
   }, []);
   
-  // Load Windy API script
+  // Load Windy API script with a more explicit approach
   useEffect(() => {
     if (isScriptLoaded || !apiKey) return;
     
+    // Create a script element
     const script = document.createElement('script');
-    script.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
-    script.async = true;
+    script.type = 'text/javascript';
     
+    // Set the source to the Windy API loader
+    script.src = 'https://unpkg.com/leaflet@1.4.0/dist/leaflet.js';
+    script.async = false;
+    
+    // First load Leaflet, then load Windy
     script.onload = () => {
-      console.log('Windy script loaded successfully');
-      setIsScriptLoaded(true);
+      console.log('Leaflet loaded successfully');
+      
+      // Create the Windy API script
+      const windyScript = document.createElement('script');
+      windyScript.type = 'text/javascript';
+      windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
+      windyScript.async = false;
+      
+      // Once Windy script is loaded
+      windyScript.onload = () => {
+        console.log('Windy script loaded successfully');
+        
+        // Add a small delay to ensure windyInit is registered
+        setTimeout(() => {
+          if (typeof window.windyInit === 'function') {
+            console.log('windyInit function is available');
+            setIsScriptLoaded(true);
+          } else {
+            console.error('windyInit function not available after loading');
+          }
+        }, 500);
+      };
+      
+      windyScript.onerror = (error) => {
+        console.error('Failed to load Windy script:', error);
+      };
+      
+      document.head.appendChild(windyScript);
     };
     
     script.onerror = (error) => {
-      console.error('Failed to load Windy script:', error);
+      console.error('Failed to load Leaflet script:', error);
     };
     
     document.head.appendChild(script);
     
     return () => {
-      // Clean up script if component unmounts
-      document.head.removeChild(script);
+      // Clean up scripts if component unmounts
+      const leafletScript = document.querySelector('script[src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"]');
+      const windyScript = document.querySelector('script[src="https://api.windy.com/assets/map-forecast/libBoot.js"]');
+      
+      if (leafletScript && leafletScript.parentNode) {
+        leafletScript.parentNode.removeChild(leafletScript);
+      }
+      
+      if (windyScript && windyScript.parentNode) {
+        windyScript.parentNode.removeChild(windyScript);
+      }
     };
   }, [apiKey]);
   

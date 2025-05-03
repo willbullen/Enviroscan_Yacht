@@ -31,7 +31,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Separator } from '@/components/ui/separator';
 import { VoyageCalculator } from '@/components/voyage/VoyageCalculator';
 import { VoyageMap } from '@/components/voyage/VoyageMap';
-import { DirectWindyMap } from '@/components/voyage/DirectWindyMap';
+import { SimpleWindyMap } from '@/components/voyage/SimpleWindyMap';
 import { PerformanceCurves } from '@/components/voyage/PerformanceCurves';
 import { useVesselQuery } from '@/hooks/useVesselQuery';
 import MainLayout from '@/components/layout/MainLayout';
@@ -532,11 +532,10 @@ export function VoyageDetailsPage() {
             </CardHeader>
             <CardContent>
               {waypoints.length > 0 ? (
-                <DirectWindyMap 
+                <SimpleWindyMap 
                   voyageId={voyageId}
-                  waypoints={waypoints}
-                  voyageStartDate={voyage.startDate}
-                  voyageEndDate={voyage.endDate}
+                  latitude={waypoints.length > 0 ? parseFloat(waypoints[0].latitude) : undefined}
+                  longitude={waypoints.length > 0 ? parseFloat(waypoints[0].longitude) : undefined}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 bg-muted/20 rounded-md">
