@@ -1,0 +1,36 @@
+[vite] connecting...
+[vite] connected.
+Vessel changed to M/Y NOURAH OF RIYAD (ID: 4). Reloading data...
+Selected vendor ID: 6
+Sending expense data: 
+Object {transactionType: "expense", vesselId: 4, transactionDate: Date, amount: "100", description: "", …}
+API Error response: 
+Object {error: "Invalid transaction data", details: {…}}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Failed to save transaction: 
+Error {}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Sending expense data: 
+Object {transactionType: "expense", vesselId: 4, transactionDate: Date, amount: "100", description: "", …}
+API Error response: 
+Object {error: "Invalid transaction data", details: {…}}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Failed to save transaction: 
+Error {}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
