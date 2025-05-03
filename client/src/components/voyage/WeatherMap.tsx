@@ -39,9 +39,26 @@ const VesselIcon = L.divIcon({
 // Component to add Windy API overlay to the map
 function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: number }) {
   const map = useMap();
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [windyAPI, setWindyAPI] = useState<any>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const scriptAdded = useRef(false);
+
+  // Function to fetch API keys from server
+  const fetchWindyAPIKeys = async (): Promise<string | null> => {
+    try {
+      const response = await fetch('/api/config/windy-keys');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch Windy API keys');
+      }
+      
+      const data = await response.json();
+      return data.WINDY_MAP_FORECAST_KEY;
+    } catch (error) {
+      console.error('Error fetching Windy API keys:', error);
+      return null;
+    }
+  };
   
   // Create container element for Windy
   useEffect(() => {
@@ -58,7 +75,7 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
     
     // Add the container to the map pane
     map.getContainer().appendChild(windyContainer);
-    setContainer(windyContainer);
+    containerRef.current = windyContainer;
     
     return () => {
       if (windyContainer && windyContainer.parentNode) {
@@ -69,13 +86,12 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
   
   // Load the Windy API script
   useEffect(() => {
-    // Only add script if we have a container
-    if (!container) {
+    if (scriptAdded.current) {
       return;
     }
     
     // Check if script is already loaded
-    if (document.getElementById('windy-api-script') || scriptAdded.current) {
+    if (document.getElementById('windy-api-script')) {
       return;
     }
     
@@ -87,8 +103,6 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
     
     // Add the script to the document
     document.head.appendChild(script);
-    
-    // Mark script as added (using mutable ref)
     scriptAdded.current = true;
     
     // Clean up on unmount
@@ -99,55 +113,66 @@ function WindyMapLayer({ windyTab, timestamp }: { windyTab: string, timestamp: n
       }
       scriptAdded.current = false;
     };
-  }, [container]);
+  }, []);
   
   // Initialize Windy with API key when container and script are ready
   useEffect(() => {
-    // Wait for container and windyInit to be available
-    if (!container || !window.windyInit || windyAPI) {
+    // Wait for container, script, and windyInit to be available
+    if (!containerRef.current || !window.windyInit || windyAPI) {
       return;
     }
     
-    // Log API key status - without showing the actual key
-    console.log('Windy API Key available:', !!import.meta.env.WINDY_MAP_FORECAST_KEY);
-    
-    // Initialize Windy with our API key
-    window.windyInit({
-      key: import.meta.env.WINDY_MAP_FORECAST_KEY,
-      container: container,
-    }, (api: any) => {
-      console.log('Windy API initialized successfully');
-      setWindyAPI(api);
+    const initializeWindy = async () => {
+      // Get the API key from our server
+      const apiKey = await fetchWindyAPIKeys();
       
-      // Hide Windy's attribution to avoid duplicates with Leaflet
-      const attribution = container.querySelector('.leaflet-control-attribution');
-      if (attribution) {
-        attribution.remove();
+      if (!apiKey) {
+        console.error('Failed to get Windy API key');
+        return;
       }
       
-      // Set the overlay to display
-      api.store.set('overlay', getWindyOverlayByTab(windyTab));
+      console.log('Windy API Key available:', !!apiKey);
       
-      // Set the forecast timestamp if provided
-      if (timestamp) {
-        api.store.set('timestamp', timestamp);
-      }
-      
-      // Sync positions between Leaflet and Windy
-      map.on('move', () => {
-        const center = map.getCenter();
-        const zoom = map.getZoom();
-        api.map.setView([center.lat, center.lng], zoom);
+      // Initialize Windy with our API key
+      window.windyInit({
+        key: apiKey,
+        container: containerRef.current,
+      }, (api: any) => {
+        console.log('Windy API initialized successfully');
+        setWindyAPI(api);
+        
+        // Hide Windy's attribution to avoid duplicates with Leaflet
+        const attribution = containerRef.current?.querySelector('.leaflet-control-attribution');
+        if (attribution) {
+          attribution.remove();
+        }
+        
+        // Set the overlay to display
+        api.store.set('overlay', getWindyOverlayByTab(windyTab));
+        
+        // Set the forecast timestamp if provided
+        if (timestamp) {
+          api.store.set('timestamp', timestamp);
+        }
+        
+        // Sync positions between Leaflet and Windy
+        map.on('move', () => {
+          const center = map.getCenter();
+          const zoom = map.getZoom();
+          api.map.setView([center.lat, center.lng], zoom);
+        });
+        
+        // Trigger initial sync
+        api.map.setView(
+          [map.getCenter().lat, map.getCenter().lng], 
+          map.getZoom()
+        );
       });
-      
-      // Trigger initial sync
-      api.map.setView(
-        [map.getCenter().lat, map.getCenter().lng], 
-        map.getZoom()
-      );
-    });
+    };
     
-  }, [map, container, windyAPI, windyTab, timestamp]);
+    // Call the initialize function
+    initializeWindy();
+  }, [map, windyTab, timestamp, windyAPI]);
   
   // Update weather overlay when tab changes
   useEffect(() => {

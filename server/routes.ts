@@ -7,6 +7,7 @@ import path from "path";
 import { logger } from "./services/logger";
 import { createError, asyncHandler } from "./middleware/errorHandler";
 import marineRouter, { initAisStreamWebsocket } from "./routes/marine";
+import { setupApiKeysRoutes } from "./routes/apiKeys";
 import { setupAuth } from "./auth";
 import { 
   insertUserSchema, 
@@ -4825,6 +4826,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
   
   // Register API routes
+  // Setup API Keys routes
+  setupApiKeysRoutes(apiRouter);
+  
   app.use("/api", apiRouter);
   
   // Register marine tracking router
