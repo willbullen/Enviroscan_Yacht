@@ -306,6 +306,7 @@ export interface IStorage {
   getExpensesByAccount(accountId: number): Promise<Expense[]>;
   getExpensesByCategory(category: string): Promise<Expense[]>;
   createExpense(expense: InsertExpense): Promise<Expense>;
+  createBulkExpenses(expenses: InsertExpense[]): Promise<Expense[]>;
   updateExpense(id: number, expense: Partial<Expense>): Promise<Expense | undefined>;
   deleteExpense(id: number): Promise<boolean>;
   
