@@ -1917,8 +1917,10 @@ const FinancialManagement: React.FC = () => {
             const expenseData = {
               transactionType: 'expense',
               vesselId: currentVessel?.id,
-              transactionDate: formData.get('transactionDate') as string,
-              amount: parseFloat(formData.get('amount') as string),
+              // Convert string date to Date object
+              transactionDate: new Date(formData.get('transactionDate') as string),
+              // Keep amount as string instead of converting to number
+              amount: (formData.get('amount') as string),
               description: formData.get('description') as string,
               vendorId: isNaN(vendorId as number) ? null : vendorId,
               accountId: parseInt(formData.get('accountId') as string),
@@ -1963,7 +1965,7 @@ const FinancialManagement: React.FC = () => {
               // Show success toast
               toast({
                 title: "Expense recorded",
-                description: `$${expenseData.amount.toFixed(2)} expense has been added.`,
+                description: `$${parseFloat(expenseData.amount).toFixed(2)} expense has been added.`,
                 variant: "default",
               });
               
