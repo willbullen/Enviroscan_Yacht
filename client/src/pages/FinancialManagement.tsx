@@ -1912,7 +1912,7 @@ const FinancialManagement: React.FC = () => {
         onSuccess={refreshFinancialAccounts}
       />
             
-      {/* Add New Expense Dialog */}
+      {/* Add/Edit Expense Dialog */}
       <Dialog 
         open={showExpenseDialog} 
         onOpenChange={(open) => {
@@ -1920,6 +1920,7 @@ const FinancialManagement: React.FC = () => {
           if (!open) {
             // Reset the selected vendor when closing the dialog
             setSelectedVendorId("");
+            setEditingExpense(null);
           }
         }}
       >
@@ -1927,17 +1928,17 @@ const FinancialManagement: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
-              Record New Expense
+              {editingExpense ? 'Edit Expense' : 'Record New Expense'}
             </DialogTitle>
             <DialogDescription>
-              Add a new expense transaction for {currentVessel?.name}.
+              {editingExpense ? 'Update existing' : 'Add a new'} expense transaction for {currentVessel?.name}.
             </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={async (e) => {
             e.preventDefault();
             
-            // Create a new expense transaction
+            // Create or update expense transaction
             const formData = new FormData(e.target as HTMLFormElement);
             // Get the vendor ID and make sure it's a valid number
             const vendorIdStr = formData.get('payee') as string;
@@ -1975,13 +1976,27 @@ const FinancialManagement: React.FC = () => {
                 throw new Error('Please select an account');
               }
               
-              const response = await fetch('/api/transactions', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(expenseData),
-              });
+              let response;
+              
+              if (editingExpense) {
+                // Update existing transaction
+                response = await fetch(`/api/transactions/${editingExpense.id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(expenseData),
+                });
+              } else {
+                // Create new transaction
+                response = await fetch('/api/transactions', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(expenseData),
+                });
+              }
               
               if (!response.ok) {
                 const errorData = await response.json();
@@ -1993,13 +2008,14 @@ const FinancialManagement: React.FC = () => {
               
               // Show success toast
               toast({
-                title: "Expense recorded",
-                description: `$${parseFloat(expenseData.amount).toFixed(2)} expense has been added.`,
+                title: editingExpense ? "Expense updated" : "Expense recorded",
+                description: `$${parseFloat(expenseData.amount).toFixed(2)} expense has been ${editingExpense ? 'updated' : 'added'}.`,
                 variant: "default",
               });
               
-              // Close the dialog
+              // Close the dialog and reset edit state
               setShowExpenseDialog(false);
+              setEditingExpense(null);
               
               // Refresh transactions data
               queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
@@ -2009,8 +2025,8 @@ const FinancialManagement: React.FC = () => {
             } catch (error: any) {
               console.error('Failed to save transaction:', error);
               toast({
-                title: "Error Saving Expense",
-                description: error.message || "Failed to save expense. Please try again and ensure a vendor is selected.",
+                title: editingExpense ? "Error Updating Expense" : "Error Saving Expense",
+                description: error.message || "Failed to process expense. Please try again and ensure a vendor is selected.",
                 variant: "destructive",
               });
             }
