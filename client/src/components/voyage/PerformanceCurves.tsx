@@ -40,9 +40,10 @@ export function PerformanceCurves({ vesselId }: PerformanceCurvesProps) {
   const fuelConsumptionQuery = useQuery({
     queryKey: ['vessels', vesselId, 'fuel-consumption-data'],
     queryFn: async () => {
-      const response = await apiRequest<FuelConsumptionDataPoint[]>(`/api/vessels/${vesselId}/fuel-consumption-data`, {
-        method: 'GET'
-      });
+      const response = await apiRequest<FuelConsumptionDataPoint[]>(
+        'GET',
+        `/api/vessels/${vesselId}/fuel-consumption-data`
+      );
       return response;
     },
     enabled: !!vesselId,
@@ -52,9 +53,10 @@ export function PerformanceCurves({ vesselId }: PerformanceCurvesProps) {
   const speedDataQuery = useQuery({
     queryKey: ['vessels', vesselId, 'speed-data'],
     queryFn: async () => {
-      const response = await apiRequest<SpeedDataPoint[]>(`/api/vessels/${vesselId}/speed-data`, {
-        method: 'GET'
-      });
+      const response = await apiRequest<SpeedDataPoint[]>(
+        'GET', 
+        `/api/vessels/${vesselId}/speed-data`
+      );
       return response;
     },
     enabled: !!vesselId,
