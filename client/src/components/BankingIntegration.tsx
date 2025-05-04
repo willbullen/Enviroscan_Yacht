@@ -91,19 +91,13 @@ const BankingIntegration = () => {
       setLoading(true);
       try {
         // Fetch bank accounts
-        const bankAccountsResp = await apiRequest("/api/banking/accounts", {
-          method: "GET",
-        });
+        const bankAccountsResp = await apiRequest("GET", "/api/banking/accounts");
         
         // Fetch API providers
-        const providersResp = await apiRequest("/api/banking/providers", {
-          method: "GET",
-        });
+        const providersResp = await apiRequest("GET", "/api/banking/providers");
         
         // Fetch existing connections
-        const connectionsResp = await apiRequest("/api/banking/connections", {
-          method: "GET",
-        });
+        const connectionsResp = await apiRequest("GET", "/api/banking/connections");
         
         setBankAccounts(bankAccountsResp.data || []);
         setProviders(providersResp.data || []);
@@ -138,14 +132,11 @@ const BankingIntegration = () => {
         credentials = { accessToken: data.credentials.accessToken };
       }
       
-      const response = await apiRequest("/api/banking/connections", {
-        method: "POST",
-        body: JSON.stringify({
-          name: data.name,
-          bankAccountId: parseInt(data.bankAccountId),
-          providerId: parseInt(data.providerId),
-          credentials,
-        }),
+      const response = await apiRequest("POST", "/api/banking/connections", {
+        name: data.name,
+        bankAccountId: parseInt(data.bankAccountId),
+        providerId: parseInt(data.providerId),
+        credentials,
       });
       
       if (response.data) {
@@ -155,9 +146,7 @@ const BankingIntegration = () => {
         });
         
         // Refresh connections list
-        const connectionsResp = await apiRequest("/api/banking/connections", {
-          method: "GET",
-        });
+        const connectionsResp = await apiRequest("GET", "/api/banking/connections");
         
         setConnections(connectionsResp.data || []);
         setConnectionDialogOpen(false);
@@ -180,9 +169,7 @@ const BankingIntegration = () => {
     try {
       setSyncInProgress(true);
       
-      const response = await apiRequest(`/api/banking/connections/${connectionId}/sync`, {
-        method: "POST",
-      });
+      const response = await apiRequest("POST", `/api/banking/connections/${connectionId}/sync`);
       
       if (response.data) {
         toast({
@@ -209,9 +196,7 @@ const BankingIntegration = () => {
   const loadSyncHistory = async (connectionId) => {
     try {
       setLoading(true);
-      const response = await apiRequest(`/api/banking/connections/${connectionId}/sync-history`, {
-        method: "GET",
-      });
+      const response = await apiRequest("GET", `/api/banking/connections/${connectionId}/sync-history`);
       
       if (response.data) {
         setSyncLogs(response.data);

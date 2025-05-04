@@ -1,0 +1,58 @@
+[vite] connecting...
+[vite] connected.
+Fetching financial summary for vessel 6
+Fetched accounts data: 
+(2) [{…}, {…}]
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+API Error: /api/banking/accounts [object Object] (0) Failed to execute 'fetch' on 'Window': '/api/banking/accounts' is not a valid HTTP method. undefined
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error fetching banking data: 
+TypeError {message: "Failed to execute 'fetch' on 'Window': '/api/banking/accounts' is not a valid HTTP method.", status: 0, url: {…}, method: "/api/banking/accounts"}
+message: "Failed to execute 'fetch' on 'Window': '/api/banking/accounts' is not a valid HTTP method."
+method: "/api/banking/accounts"
+status: 0
+url: Object
+stack: "TypeError: '/api/banking/accounts' is not a valid HTTP method.↵ at window.fetch (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218642)↵ at apiRequest (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:50:23)↵ at fetchData (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/BankingIntegration.tsx:105:40)↵ at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/BankingIntegration.tsx:128:5↵ at commitHookEffectListMount (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:16915:34)↵ at commitPassiveMountOnFiber (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18156:19)↵ at commitPassiveMountEffects_complete (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18129:17)↵ at commitPassiveMountEffects_begin (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18119:15)↵ at commitPassiveMountEffects (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18109:11)↵ at flushPassiveEffectsImpl (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:19490:11)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Failed to execute 'fetch' on 'Window': '/api/banking/accounts' is not a valid HTTP method.
+at window.fetch (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218642)
+at apiRequest (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:50:23)
+at fetchData (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/BankingIntegration.tsx:105:40)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/BankingIntegration.tsx:128:5
+at commitHookEffectListMount (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:16915:34)
+at commitPassiveMountOnFiber (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18156:19)
+at commitPassiveMountEffects_complete (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18129:17)
+at commitPassiveMountEffects_begin (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18119:15)
+at commitPassiveMountEffects (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:18109:11)
+at flushPassiveEffectsImpl (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:19490:11)
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
