@@ -1,0 +1,54 @@
+Giving up after 3 attempts. Last error: error: null value in column "transaction_id" of relation "expenses" violates not-null constraint
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async <anonymous> (/home/runner/workspace/server/databaseStorage.ts:2269:24)
+    at async executeWithRetry (/home/runner/workspace/server/db.ts:42:14)
+    at async DatabaseStorage.createExpense (/home/runner/workspace/server/databaseStorage.ts:2268:24)
+    at async DatabaseStorage.createBulkExpenses (/home/runner/workspace/server/databaseStorage.ts:2296:28)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:4612:31) {
+  length: 405,
+  severity: 'ERROR',
+  code: '23502',
+  detail: 'Failing row contains (16, null, Fuel Purchase for Tender, 2025-01-05 00:00:00, 12, 4, Credit Card, INV-123, 1500.00, Paid, null, , Fuel, 1, null, null, null, 5, 2025-05-04 04:13:14.321673, 2025-05-04 04:13:14.321673).',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'expenses',
+  column: 'transaction_id',
+  dataType: undefined,
+  constraint: undefined,
+  file: 'execMain.c',
+  line: '2006',
+  routine: 'ExecConstraints'
+}
+Error creating expense in bulk operation: error: null value in column "transaction_id" of relation "expenses" violates not-null constraint
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async <anonymous> (/home/runner/workspace/server/databaseStorage.ts:2269:24)
+    at async executeWithRetry (/home/runner/workspace/server/db.ts:42:14)
+    at async DatabaseStorage.createExpense (/home/runner/workspace/server/databaseStorage.ts:2268:24)
+    at async DatabaseStorage.createBulkExpenses (/home/runner/workspace/server/databaseStorage.ts:2296:28)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:4612:31) {
+  length: 405,
+  severity: 'ERROR',
+  code: '23502',
+  detail: 'Failing row contains (16, null, Fuel Purchase for Tender, 2025-01-05 00:00:00, 12, 4, Credit Card, INV-123, 1500.00, Paid, null, , Fuel, 1, null, null, null, 5, 2025-05-04 04:13:14.321673, 2025-05-04 04:13:14.321673).',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'expenses',
+  column: 'transaction_id',
+  dataType: undefined,
+  constraint: undefined,
+  file: 'execMain.c',
+  line: '2006',
+  routine: 'ExecConstraints'
+}
