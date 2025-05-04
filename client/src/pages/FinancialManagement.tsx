@@ -2051,6 +2051,7 @@ const FinancialManagement: React.FC = () => {
               
               if (editingExpense) {
                 // Update existing expense
+                console.log(`Updating expense ${editingExpense.id} with data:`, expenseDataFormatted);
                 response = await fetch(`/api/expenses/${editingExpense.id}`, {
                   method: 'PUT',
                   headers: {
@@ -2060,6 +2061,7 @@ const FinancialManagement: React.FC = () => {
                 });
               } else {
                 // Create new expense
+                console.log("Creating new expense with data:", expenseDataFormatted);
                 response = await fetch('/api/expenses', {
                   method: 'POST',
                   headers: {
@@ -2089,12 +2091,25 @@ const FinancialManagement: React.FC = () => {
               setEditingExpense(null);
               
               // Force a complete data refresh for the expense table
-              queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
-              queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id] });
+              console.log("Invalidating queries for vessel ID:", currentVessel?.id);
+              
+              // Invalidate all expense queries with proper format
+              queryClient.invalidateQueries({ 
+                queryKey: ['/api/expenses/vessel', currentVessel?.id],
+                refetchType: 'all'
+              });
+              
+              // Also invalidate all transaction and related queries to ensure full data consistency
+              queryClient.invalidateQueries({ 
+                queryKey: ['/api/transactions/vessel', currentVessel?.id],
+                refetchType: 'all'
+              });
+              
+              // Invalidate vendor and account data
               queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
               queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel?.id] });
               
-              // Also invalidate any summary queries that might display expense or transaction data
+              // Invalidate summary and stats queries
               queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'summary'] });
               queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'stats'] });
               queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'summary'] });
