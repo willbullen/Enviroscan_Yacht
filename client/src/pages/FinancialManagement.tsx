@@ -2777,7 +2777,7 @@ const FinancialManagement: React.FC = () => {
                   // Make sure date is in proper ISO string format
                   expenseDate: formatDate(item.date || new Date().toISOString().split('T')[0]),
                   total: String(amount), // Required field - as string for decimal handling
-                  transactionId: 0, // Required field - will be set by server
+                  // Do not include transactionId to avoid foreign key constraints
                   createdById: user?.id || 5, // Required field - use current user ID or admin
                   category: item.category || "Other",
                   vendorId: item.vendorId || (item.vendor ? -1 : null), // -1 will be handled to create a new vendor

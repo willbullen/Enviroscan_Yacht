@@ -657,7 +657,7 @@ export const expenses = pgTable("expenses", {
   total: decimal("total", { precision: 12, scale: 2 }).notNull(), // The column is named 'total' in the DB, not 'amount'
   // Note: currency is not in the database schema, but kept in the model for future migration
   // Leaving it out of the schema completely since it's not in the DB
-  transactionId: integer("transaction_id"), // Reference to original transaction if needed
+  transactionId: integer("transaction_id").references(() => transactions.id, { onDelete: 'set null' }).notNull().default(0), // Reference to original transaction if needed, but setting a default value to avoid foreign key issues during bulk import
   vendorId: integer("vendor_id").references(() => vendors.id),
   vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
   paymentMethod: text("payment_method").notNull(), // credit card, bank transfer, cash, etc.
