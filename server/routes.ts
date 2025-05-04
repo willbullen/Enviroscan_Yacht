@@ -9,6 +9,7 @@ import { createError, asyncHandler } from "./middleware/errorHandler";
 import marineRouter, { initAisStreamWebsocket } from "./routes/marine";
 import { setupApiKeysRoutes } from "./routes/apiKeys";
 import { setupAuth } from "./auth";
+import setupReceiptRoutes from "./routes/receiptReconciliation";
 import { 
   insertUserSchema, 
   insertEquipmentSchema, 
@@ -5260,10 +5261,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup API Keys routes
   setupApiKeysRoutes(apiRouter);
   
+  // Register receipt reconciliation routes
+  const receiptRoutes = setupReceiptRoutes(storage);
+  app.use("/api/receipts", receiptRoutes);
+  
   app.use("/api", apiRouter);
   
   // Register marine tracking router
   app.use("/api/marine", marineRouter);
+  
+  // Serve uploaded files
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   const httpServer = createServer(app);
 

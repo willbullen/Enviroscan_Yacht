@@ -2324,6 +2324,39 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Receipt reconciliation methods
+  async getUnreconciledExpenses(vesselId?: number): Promise<Expense[]> {
+    try {
+      let query = db.select().from(expenses).where(eq(expenses.receiptUrl, null));
+      
+      if (vesselId) {
+        query = query.where(eq(expenses.vesselId, vesselId));
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error getting unreconciled expenses:', error);
+      return [];
+    }
+  }
+
+  async updateExpenseReceipt(id: number, receiptUrl: string): Promise<Expense | undefined> {
+    try {
+      const result = await db.update(expenses)
+        .set({ 
+          receiptUrl,
+          updatedAt: new Date()
+        })
+        .where(eq(expenses.id, id))
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error(`Error updating receipt for expense ${id}:`, error);
+      return undefined;
+    }
+  }
   
   // =========== Financial Management - Transaction operations =============
   

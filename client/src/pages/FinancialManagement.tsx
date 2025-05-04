@@ -147,6 +147,7 @@ const FinancialManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [dateRangeFilter, setDateRangeFilter] = useState<{from?: Date; to?: Date}>({});
+  const [accountFilter, setAccountFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("accounts");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -314,7 +315,7 @@ const FinancialManagement: React.FC = () => {
   // Reset pagination when filters change
   useEffect(() => {
     setPageIndex(0);
-  }, [filterValue, categoryFilter, statusFilter, dateRangeFilter]);
+  }, [filterValue, categoryFilter, statusFilter, accountFilter, dateRangeFilter]);
   
   // Helper function to ensure UI updates after account changes
   const refreshFinancialAccounts = async () => {
@@ -1046,8 +1047,12 @@ const FinancialManagement: React.FC = () => {
                 (!dateRangeFilter.from || new Date(expense.expenseDate) >= dateRangeFilter.from) &&
                 (!dateRangeFilter.to || new Date(expense.expenseDate) <= dateRangeFilter.to)
               );
+              
+              // Account filter
+              const accountMatch = !accountFilter || 
+                (expense.accountId && expense.accountId.toString() === accountFilter);
                 
-              return searchMatch && categoryMatch && statusMatch && dateMatch;
+              return searchMatch && categoryMatch && statusMatch && dateMatch && accountMatch;
             })
           : [];
           
@@ -1080,6 +1085,21 @@ const FinancialManagement: React.FC = () => {
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">Expense Transactions</h3>
               <div className="flex items-center gap-2">
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => {
+                    // Will be implemented later
+                    toast({
+                      title: "Receipts Reconciliation",
+                      description: "This feature is coming soon.",
+                      variant: "default"
+                    });
+                  }}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Receipts Reconciliation
+                </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Export
@@ -1089,32 +1109,28 @@ const FinancialManagement: React.FC = () => {
             
             {/* Filter controls */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <Label htmlFor="expense-search">Search</Label>
-                <div className="mt-1 relative">
-                  <Input
-                    id="expense-search"
-                    type="text"
-                    placeholder="Search expenses..."
-                    value={filterValue}
-                    onChange={(e) => setFilterValue(e.target.value)}
-                    className="pl-8"
-                  />
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  {filterValue && (
-                    <Button 
-                      variant="ghost" 
-                      className="absolute right-1 top-1 h-6 w-6 p-0" 
-                      onClick={() => setFilterValue("")}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+              <div className="relative">
+                <Input
+                  id="expense-search"
+                  type="text"
+                  placeholder="Search expenses..."
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                  className="pl-8"
+                />
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                {filterValue && (
+                  <Button 
+                    variant="ghost" 
+                    className="absolute right-1 top-1 h-6 w-6 p-0" 
+                    onClick={() => setFilterValue("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
               
               <div>
-                <Label htmlFor="category-filter">Category</Label>
                 <Select 
                   value={categoryFilter || "all"} 
                   onValueChange={(value) => setCategoryFilter(value === "all" ? null : value)}
@@ -1132,7 +1148,6 @@ const FinancialManagement: React.FC = () => {
               </div>
               
               <div>
-                <Label htmlFor="status-filter">Status</Label>
                 <Select 
                   value={statusFilter || "all"} 
                   onValueChange={(value) => setStatusFilter(value === "all" ? null : value)}
@@ -1149,8 +1164,27 @@ const FinancialManagement: React.FC = () => {
                 </Select>
               </div>
               
+              <div>
+                <Select 
+                  value={accountFilter || "all"} 
+                  onValueChange={(value) => setAccountFilter(value === "all" ? null : value)}
+                >
+                  <SelectTrigger id="account-filter">
+                    <SelectValue placeholder="All Accounts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Accounts</SelectItem>
+                    {accounts && accounts.map((account: any) => (
+                      <SelectItem key={account.id} value={account.id.toString()}>
+                        {account.accountName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="flex justify-end items-end">
-                {(filterValue || categoryFilter || statusFilter || dateRangeFilter.from || dateRangeFilter.to) && (
+                {(filterValue || categoryFilter || statusFilter || accountFilter || dateRangeFilter.from || dateRangeFilter.to) && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -1158,6 +1192,7 @@ const FinancialManagement: React.FC = () => {
                       setFilterValue("");
                       setCategoryFilter(null);
                       setStatusFilter(null);
+                      setAccountFilter(null);
                       setDateRangeFilter({});
                     }}
                   >
