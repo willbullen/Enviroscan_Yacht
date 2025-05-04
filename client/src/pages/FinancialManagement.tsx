@@ -44,6 +44,7 @@ import { AccountSelect } from "@/components/financial/AccountSelect";
 import { AccountDialog } from "@/components/financial/AccountDialog";
 import FinancialDashboard from "@/components/financial/FinancialDashboard";
 import ReceiptReconciliationDialog from "@/components/financial/ReceiptReconciliationDialog";
+import BankingIntegration from "@/components/BankingIntegration";
 import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
