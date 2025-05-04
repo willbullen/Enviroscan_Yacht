@@ -1086,21 +1086,10 @@ const FinancialManagement: React.FC = () => {
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">Expense Transactions</h3>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={() => {
-                    // Will be implemented later
-                    toast({
-                      title: "Receipts Reconciliation",
-                      description: "This feature is coming soon.",
-                      variant: "default"
-                    });
-                  }}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Receipts Reconciliation
-                </Button>
+                <ReceiptReconciliationDialog 
+                  expenses={expenses || []} 
+                  onSuccess={() => refetchExpenses()}
+                />
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Export

@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler } from "./middleware/errorHandler";
@@ -12,6 +13,9 @@ app.use(express.urlencoded({ extended: false }));
 
 // Add request logger middleware
 app.use(requestLogger);
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Keep existing logger for compatibility
 app.use((req, res, next) => {
