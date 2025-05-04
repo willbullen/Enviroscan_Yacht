@@ -1111,8 +1111,8 @@ const FinancialManagement: React.FC = () => {
               <div>
                 <Label htmlFor="category-filter">Category</Label>
                 <Select 
-                  value={categoryFilter || ""} 
-                  onValueChange={(value) => setCategoryFilter(value || null)}
+                  value={categoryFilter || "all"} 
+                  onValueChange={(value) => setCategoryFilter(value === "all" ? null : value)}
                 >
                   <SelectTrigger id="category-filter">
                     <SelectValue placeholder="All Categories" />
@@ -1129,8 +1129,8 @@ const FinancialManagement: React.FC = () => {
               <div>
                 <Label htmlFor="status-filter">Status</Label>
                 <Select 
-                  value={statusFilter || ""} 
-                  onValueChange={(value) => setStatusFilter(value || null)}
+                  value={statusFilter || "all"} 
+                  onValueChange={(value) => setStatusFilter(value === "all" ? null : value)}
                 >
                   <SelectTrigger id="status-filter">
                     <SelectValue placeholder="All Statuses" />
@@ -1364,6 +1364,34 @@ const FinancialManagement: React.FC = () => {
                   )}
                 </TableBody>
               </Table>
+              {filteredExpenses.length > 0 && (
+                <div className="flex items-center justify-between p-4 border-t">
+                  <div className="flex-1 text-sm text-muted-foreground">
+                    Showing <strong>{Math.min(pageSize, filteredExpenses.length)}</strong> of{" "}
+                    <strong>{filteredExpenses.length}</strong> expenses
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPageIndex(Math.max(0, pageIndex - 1))}
+                      disabled={pageIndex === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-2" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPageIndex(Math.min(pageCount - 1, pageIndex + 1))}
+                      disabled={pageIndex === pageCount - 1 || pageCount === 0}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
