@@ -2033,8 +2033,8 @@ const FinancialManagement: React.FC = () => {
               const expenseDataFormatted = {
                 description: expenseData.description,
                 expenseDate: expenseData.transactionDate,
-                amount: expenseData.amount,
-                currency: expenseData.currency,
+                total: expenseData.amount, // Important: DB field is 'total', not 'amount'
+                // Currency field doesn't exist in the expense table, so we'll omit it
                 vendorId: expenseData.vendorId,
                 vesselId: expenseData.vesselId,
                 paymentMethod: 'credit card', // Default payment method

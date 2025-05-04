@@ -655,7 +655,8 @@ export const expenses = pgTable("expenses", {
   description: text("description").notNull(),
   expenseDate: timestamp("expense_date").notNull(),
   total: decimal("total", { precision: 12, scale: 2 }).notNull(), // The column is named 'total' in the DB, not 'amount'
-  currency: text("currency").default("USD").notNull(),
+  // Note: currency is not in the database schema, but kept in the model for future migration
+  // Leaving it out of the schema completely since it's not in the DB
   transactionId: integer("transaction_id"), // Reference to original transaction if needed
   vendorId: integer("vendor_id").references(() => vendors.id),
   vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
@@ -686,6 +687,8 @@ export const insertExpenseSchema = baseExpenseSchema.extend({
     z.date(),
     z.string().transform((val) => new Date(val)),
   ]),
+  // Add manual handling for currency since it's not in the database schema
+  currency: z.string().default("USD").optional(),
 });
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Expense = typeof expenses.$inferSelect;

@@ -39,6 +39,7 @@ import {
   insertBudgetSchema,
   insertBudgetAllocationSchema,
   insertExpenseSchema,
+  InsertExpense,
   insertTransactionSchema,
   InsertDeposit,
   vendors
@@ -5156,7 +5157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!expensesByCategory[category]) {
         expensesByCategory[category] = 0;
       }
-      expensesByCategory[category] += parseFloat(expense.amount || '0');
+      expensesByCategory[category] += parseFloat(expense.total || expense.amount || '0');
     });
     
     // Get recent transactions (last 10)
