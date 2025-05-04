@@ -4557,24 +4557,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      console.log("DEBUG: Received bulk expenses request with body:", JSON.stringify(req.body));
+      
       const expensesData = req.body as any[];
       if (!Array.isArray(expensesData)) {
+        console.log("DEBUG: Invalid data format, not an array:", typeof req.body);
         return res.status(400).json({ error: "Invalid data format. Expected an array of expenses." });
       }
+      
+      console.log(`DEBUG: Processing ${expensesData.length} expenses for bulk import`);
       
       // Validate each expense in the array
       const validatedExpenses: InsertExpense[] = [];
       const errors: { index: number; errors: any }[] = [];
       
       expensesData.forEach((expense, index) => {
+        console.log(`DEBUG: Validating expense at index ${index}:`, JSON.stringify(expense));
+        
+        // Remove transactionId if it exists to prevent foreign key constraint errors
+        if (expense.transactionId === 0 || expense.transactionId === undefined) {
+          delete expense.transactionId;
+        }
+        
         const validationResult = insertExpenseSchema.safeParse(expense);
         if (validationResult.success) {
           // Add the user ID to the expense data
+          console.log(`DEBUG: Expense ${index} is valid, adding to validated list`);
           validatedExpenses.push({
             ...validationResult.data,
             createdById: req.user.id
           });
         } else {
+          console.log(`DEBUG: Expense ${index} failed validation:`, JSON.stringify(validationResult.error.format()));
           errors.push({
             index,
             errors: validationResult.error.format()
@@ -4584,6 +4598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If there are validation errors, return them
       if (errors.length > 0) {
+        console.log(`DEBUG: ${errors.length} expenses failed validation`);
         return res.status(400).json({
           error: "Some expenses failed validation",
           details: errors,
@@ -4593,7 +4608,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create all expenses
+      console.log(`DEBUG: Sending ${validatedExpenses.length} validated expenses to storage:`, JSON.stringify(validatedExpenses));
       const createdExpenses = await storage.createBulkExpenses(validatedExpenses);
+      console.log(`DEBUG: Successfully created ${createdExpenses.length} expenses`);
       
       return res.status(201).json({
         message: "Expenses imported successfully",

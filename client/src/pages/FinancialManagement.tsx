@@ -2825,7 +2825,11 @@ const FinancialManagement: React.FC = () => {
                 
                 // Submit bulk expenses to the API
                 try {
+                  console.log("DEBUG: Submitting bulk expenses to API:", finalExpenses);
+                  console.log("DEBUG: Current vessel:", currentVessel);
+                  
                   const result = await apiRequest("POST", '/api/expenses/bulk', finalExpenses);
+                  console.log("DEBUG: Bulk expense import response:", result);
                   
                   toast({
                     title: "Import Successful",
