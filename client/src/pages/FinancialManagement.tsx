@@ -1118,7 +1118,7 @@ const FinancialManagement: React.FC = () => {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {allCategories.map((category: string) => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -1136,7 +1136,7 @@ const FinancialManagement: React.FC = () => {
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     {allStatuses.map((status: string) => (
                       <SelectItem key={status} value={status.toLowerCase()}>{status}</SelectItem>
                     ))}
@@ -1259,6 +1259,18 @@ const FinancialManagement: React.FC = () => {
                   {paginatedExpenses.length > 0 ? (
                     paginatedExpenses.map((expense: any) => (
                         <TableRow key={expense.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedExpenses.includes(expense.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedExpenses(prev => [...prev, expense.id]);
+                                } else {
+                                  setSelectedExpenses(prev => prev.filter(id => id !== expense.id));
+                                }
+                              }}
+                            />
+                          </TableCell>
                           <TableCell>{format(new Date(expense.expenseDate || new Date()), 'MMM dd, yyyy')}</TableCell>
                           <TableCell>{
                             // Find the vendor by ID and display its name
@@ -1334,7 +1346,7 @@ const FinancialManagement: React.FC = () => {
                       ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-24 text-center">
+                      <TableCell colSpan={9} className="h-24 text-center">
                         <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
                           <CreditCard className="h-8 w-8 text-muted" />
                           <p>No expense transactions found</p>
