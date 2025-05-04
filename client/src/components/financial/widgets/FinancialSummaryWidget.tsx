@@ -14,6 +14,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({ vesselI
     queryKey: ['/api/expenses/vessel', vesselId, 'summary'],
     queryFn: () => {
       if (!vesselId) return Promise.resolve({});
+      console.log(`Fetching financial summary for vessel ${vesselId}`);
       return fetch(`/api/expenses/vessel/${vesselId}/summary`)
         .then(res => res.json())
         .catch(err => {
@@ -22,6 +23,10 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({ vesselI
         });
     },
     enabled: !!vesselId,
+    // These settings ensure data is refreshed when the vesselId changes
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Consider data stale immediately
+    cacheTime: 10000, // Keep in cache for 10 seconds
   });
 
   if (isLoading) {
