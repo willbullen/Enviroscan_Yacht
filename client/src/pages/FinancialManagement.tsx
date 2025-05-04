@@ -2067,7 +2067,9 @@ const FinancialManagement: React.FC = () => {
                     id="transactionDate" 
                     name="transactionDate" 
                     type="date" 
-                    defaultValue={new Date().toISOString().split('T')[0]}
+                    defaultValue={editingExpense 
+                      ? new Date(editingExpense.transactionDate).toISOString().split('T')[0] 
+                      : new Date().toISOString().split('T')[0]}
                     required
                   />
                 </div>
@@ -2083,6 +2085,7 @@ const FinancialManagement: React.FC = () => {
                       step="0.01" 
                       min="0.01" 
                       placeholder="0.00" 
+                      defaultValue={editingExpense ? editingExpense.amount : ''}
                       className="pl-7"
                       required
                     />
@@ -2111,7 +2114,10 @@ const FinancialManagement: React.FC = () => {
                 
                 <div className="flex flex-col space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue="fuel">
+                  <Select 
+                    name="category" 
+                    defaultValue={editingExpense?.category || "fuel"}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -2129,7 +2135,10 @@ const FinancialManagement: React.FC = () => {
               
               <div className="flex flex-col space-y-2">
                 <Label htmlFor="accountId">Account</Label>
-                <Select name="accountId" defaultValue={accounts?.[0]?.id?.toString()}>
+                <Select 
+                  name="accountId" 
+                  defaultValue={editingExpense?.accountId?.toString() || accounts?.[0]?.id?.toString()}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select account" />
                   </SelectTrigger>
@@ -2148,7 +2157,8 @@ const FinancialManagement: React.FC = () => {
                 <Textarea 
                   id="description" 
                   name="description" 
-                  placeholder="Enter details about this expense" 
+                  placeholder="Enter details about this expense"
+                  defaultValue={editingExpense?.description || ""}
                   rows={2}
                 />
               </div>
@@ -2156,7 +2166,10 @@ const FinancialManagement: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-2">
                   <Label htmlFor="currency">Currency</Label>
-                  <Select name="currency" defaultValue="USD">
+                  <Select 
+                    name="currency" 
+                    defaultValue={editingExpense?.currency || "USD"}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
@@ -2170,7 +2183,10 @@ const FinancialManagement: React.FC = () => {
                 
                 <div className="flex flex-col space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select name="status" defaultValue="pending">
+                  <Select 
+                    name="status" 
+                    defaultValue={editingExpense?.status || "pending"}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -2184,7 +2200,11 @@ const FinancialManagement: React.FC = () => {
               </div>
               
               <div className="flex items-center">
-                <Checkbox id="receipt" name="hasReceipt" />
+                <Checkbox 
+                  id="receipt" 
+                  name="hasReceipt"
+                  defaultChecked={editingExpense?.hasReceipt || false} 
+                />
                 <Label htmlFor="receipt" className="ml-2">
                   Receipt attached
                 </Label>
