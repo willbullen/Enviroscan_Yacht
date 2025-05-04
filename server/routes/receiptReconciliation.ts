@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
@@ -6,19 +6,26 @@ import { randomUUID } from 'crypto';
 import { IStorage } from '../storage';
 import { analyzeReceiptImage, findPotentialMatches, generateExpenseRecord } from '../openai';
 
+// Extend the session to include user ID
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+  }
+}
+
 const router = Router();
 
 // Set up multer for file uploads - store in memory
-const storage = multer.memoryStorage();
+const multerStorage = multer.memoryStorage();
 const upload = multer({ 
-  storage,
+  storage: multerStorage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB max file size
   },
   fileFilter: (req, file, cb) => {
     // Accept images only
     if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-      return cb(new Error('Only image files are allowed!'), false);
+      return cb(null, false);
     }
     cb(null, true);
   }
@@ -107,24 +114,27 @@ export default function setupReceiptRoutes(storage: IStorage) {
       }
       
       // Get the existing expense
-      const expense = await storage.getExpenseById(expenseId);
+      const expense = await storage.getExpense(parseInt(expenseId));
       if (!expense) {
         return res.status(404).json({ error: 'Expense not found' });
       }
       
       // Update the expense with the receipt URL and optional notes
-      const updatedExpense = {
-        ...expense,
+      const updateData: Record<string, any> = {
         receiptUrl,
-        notes: addNotes && notes ? (expense.notes ? `${expense.notes}\n${notes}` : notes) : expense.notes
       };
       
-      await storage.updateExpense(expenseId, updatedExpense);
+      // Only update notes if needed
+      if (addNotes && notes) {
+        updateData.notes = expense.notes ? `${expense.notes}\n${notes}` : notes;
+      }
+      
+      const result = await storage.updateExpense(parseInt(expenseId), updateData);
       
       return res.json({ 
         success: true, 
         message: 'Receipt linked to expense successfully',
-        expense: updatedExpense
+        expense: result
       });
     } catch (error) {
       console.error('Error linking receipt to expense:', error);
