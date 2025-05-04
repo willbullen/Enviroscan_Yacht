@@ -311,6 +311,11 @@ const FinancialManagement: React.FC = () => {
   const [newVendorType, setNewVendorType] = useState("supplier");
   const [isAddingVendor, setIsAddingVendor] = useState(false);
   
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPageIndex(0);
+  }, [filterValue, categoryFilter, statusFilter, dateRangeFilter]);
+  
   // Helper function to ensure UI updates after account changes
   const refreshFinancialAccounts = async () => {
     // Force a refresh of the accounts list
