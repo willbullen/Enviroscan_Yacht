@@ -385,10 +385,10 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
             }
           }
           
-          // Custom validation
-          const validationError = validateRow(row, i);
-          if (validationError) {
-            validationErrors.push(`Row ${i}: ${validationError}`);
+          // Custom validation from props
+          const rowValidationError = validateRow ? validateRow(row, i) : null;
+          if (rowValidationError) {
+            validationErrors.push(`Row ${i}: ${rowValidationError}`);
             continue;
           }
           
@@ -681,6 +681,68 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                         >
                           <Plus className="h-4 w-4 mr-1" />
                           Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {missingVendors.size > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Missing Vendors</CardTitle>
+                  <CardDescription>
+                    Create the vendors below to continue with import
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {Array.from(missingVendors).map((vendor) => (
+                        <Badge key={vendor} variant="outline" className="text-sm py-1 px-2 bg-red-50 text-red-700 hover:bg-red-100">
+                          {vendor}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-12 gap-2">
+                      <div className="col-span-5">
+                        <Label htmlFor="new-vendor">Vendor Name</Label>
+                        <Input 
+                          id="new-vendor"
+                          value={newVendorName} 
+                          onChange={(e) => setNewVendorName(e.target.value)}
+                          placeholder="Enter a vendor name"
+                        />
+                      </div>
+                      <div className="col-span-5">
+                        <Label htmlFor="vendor-type">Vendor Type (Optional)</Label>
+                        <Input 
+                          id="vendor-type"
+                          value={newVendorType} 
+                          onChange={(e) => setNewVendorType(e.target.value)}
+                          placeholder="Enter a type (optional)"
+                        />
+                      </div>
+                      <div className="col-span-2 flex items-end">
+                        <Button 
+                          onClick={() => handleAddVendor(newVendorName, newVendorType)}
+                          disabled={!newVendorName.trim() || isAddingVendor}
+                          className="w-full"
+                        >
+                          {isAddingVendor ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin w-4 h-4 border-2 border-background border-t-transparent rounded-full mr-2"></div>
+                              <span>Adding...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
