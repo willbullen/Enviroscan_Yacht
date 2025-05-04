@@ -45,6 +45,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CategoryItem {
   id: string | number;
@@ -64,6 +65,9 @@ interface BatchImportDialogProps {
   categories?: CategoryItem[];
   onAddCategory?: (category: { name: string, type?: string }) => void;
   onAddSubcategory?: (categoryId: string | number, subcategoryName: string) => void;
+  vendors?: {id: number|string, name: string}[];
+  accounts?: {id: number|string, accountNumber: string, accountName: string}[];
+  expenseCategories?: string[];
 }
 
 const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
@@ -77,7 +81,10 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
   validateRow = () => null,
   categories = [],
   onAddCategory,
-  onAddSubcategory
+  onAddSubcategory,
+  vendors = [],
+  accounts = [],
+  expenseCategories = []
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -632,7 +639,69 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                           </TableCell>
                           {headers.map((header) => (
                             <TableCell key={`${rowIndex}-${header}`} className="py-2">
-                              {row[header] || ""}
+                              {header === 'category' && expenseCategories.length > 0 ? (
+                                <Select 
+                                  defaultValue={row[header] || ""}
+                                  onValueChange={(value) => {
+                                    const updatedData = [...previewData];
+                                    updatedData[rowIndex] = { ...updatedData[rowIndex], [header]: value };
+                                    setPreviewData(updatedData);
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full h-8">
+                                    <SelectValue placeholder="Select category" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {expenseCategories.map((category) => (
+                                      <SelectItem key={category} value={category}>
+                                        {category}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : header === 'vendor' && vendors.length > 0 ? (
+                                <Select 
+                                  defaultValue={row[header] || ""}
+                                  onValueChange={(value) => {
+                                    const updatedData = [...previewData];
+                                    updatedData[rowIndex] = { ...updatedData[rowIndex], [header]: value };
+                                    setPreviewData(updatedData);
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full h-8">
+                                    <SelectValue placeholder="Select vendor" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {vendors.map((vendor) => (
+                                      <SelectItem key={vendor.id.toString()} value={vendor.name}>
+                                        {vendor.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : header === 'accountNumber' && accounts.length > 0 ? (
+                                <Select 
+                                  defaultValue={row[header] || ""}
+                                  onValueChange={(value) => {
+                                    const updatedData = [...previewData];
+                                    updatedData[rowIndex] = { ...updatedData[rowIndex], [header]: value };
+                                    setPreviewData(updatedData);
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full h-8">
+                                    <SelectValue placeholder="Select account" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {accounts.map((account) => (
+                                      <SelectItem key={account.id.toString()} value={account.accountNumber}>
+                                        {account.accountName} ({account.accountNumber})
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                row[header] || ""
+                              )}
                             </TableCell>
                           ))}
                         </TableRow>
