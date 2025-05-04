@@ -1,0 +1,106 @@
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+0: Object
+1: Object
+2: Object
+3: Object
+length: 4
+[[Prototype]]: Array(0)
+Error analyzing receipt: 
+Error {}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number

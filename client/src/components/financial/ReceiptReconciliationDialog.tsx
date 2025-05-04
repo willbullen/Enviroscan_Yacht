@@ -94,9 +94,14 @@ const ReceiptReconciliationDialog: React.FC<ReceiptReconciliationDialogProps> = 
       const result = await fetch("/api/receipts/analyze", {
         method: "POST",
         body: formData,
+        credentials: "include" // Add this to include session cookies
       }).then(res => {
         if (!res.ok) {
-          throw new Error(`Error: ${res.status}`);
+          if (res.status === 401) {
+            throw new Error("Authentication required. Please log in first.");
+          } else {
+            throw new Error(`Error: ${res.status}`);
+          }
         }
         return res.json();
       });
@@ -150,7 +155,9 @@ const ReceiptReconciliationDialog: React.FC<ReceiptReconciliationDialogProps> = 
         notes: addNotes ? notes : ""
       };
       
-      await apiRequest("/api/receipts/link-to-expense", "POST", payload);
+      await apiRequest("/api/receipts/link-to-expense", "POST", payload, {
+        credentials: "include" // Add credentials for this API request
+      });
       
       toast({
         title: "Success",
@@ -190,7 +197,9 @@ const ReceiptReconciliationDialog: React.FC<ReceiptReconciliationDialogProps> = 
         vesselId: currentVessel.id
       };
       
-      await apiRequest("/api/receipts/create-expense", "POST", payload);
+      await apiRequest("/api/receipts/create-expense", "POST", payload, {
+        credentials: "include" // Add credentials for this API request
+      });
       
       toast({
         title: "Success",
