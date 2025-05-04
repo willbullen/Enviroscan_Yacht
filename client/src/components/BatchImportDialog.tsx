@@ -100,6 +100,8 @@ interface BatchImportDialogProps {
   vendors?: {id: number|string, name: string}[];
   accounts?: {id: number|string, accountNumber: string, accountName: string}[];
   expenseCategories?: string[];
+  // Existing data for duplicate checking
+  existingRecords?: any[];
 }
 
 const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
