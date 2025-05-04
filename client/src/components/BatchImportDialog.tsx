@@ -18,7 +18,9 @@ import {
   Eye, 
   EyeOff, 
   Plus,
-  Save 
+  Save,
+  AlertCircle,
+  UserPlus
 } from 'lucide-react';
 import {
   Table,
@@ -46,12 +48,32 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface CategoryItem {
   id: string | number;
   name: string;
   subcategories?: Array<{id: string | number; name: string}>;
 }
+
+// Maps CSV header keys to more user-friendly display names
+const headerDisplayNames: Record<string, string> = {
+  'date': 'Date',
+  'description': 'Description',
+  'category': 'Category',
+  'amount': 'Amount',
+  'total': 'Total',
+  'vendor': 'Vendor',
+  'paymentMethod': 'Payment Method',
+  'status': 'Status',
+  'referenceNumber': 'Reference #',
+  'accountNumber': 'Account #',
+  'expenseDate': 'Expense Date',
+  'transactionDate': 'Transaction Date',
+  'notes': 'Notes',
+  'currency': 'Currency'
+};
 
 interface BatchImportDialogProps {
   open: boolean;
