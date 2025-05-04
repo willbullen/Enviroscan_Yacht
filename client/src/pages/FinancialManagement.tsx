@@ -2032,8 +2032,8 @@ const FinancialManagement: React.FC = () => {
               const expenseDataFormatted = {
                 description: expenseData.description,
                 expenseDate: expenseData.transactionDate,
-                total: expenseData.total, // Important: DB field is 'total', not 'amount'
-                // Currency field doesn't exist in the expense table, so we'll omit it
+                total: expenseData.amount, // Important: map the amount field to total in the DB
+                currency: expenseData.currency, // Send currency even though it's not in the DB schema
                 vendorId: expenseData.vendorId,
                 vesselId: expenseData.vesselId,
                 paymentMethod: 'credit card', // Default payment method
@@ -2130,7 +2130,7 @@ const FinancialManagement: React.FC = () => {
                     name="transactionDate" 
                     type="date" 
                     defaultValue={editingExpense 
-                      ? new Date(editingExpense.transactionDate).toISOString().split('T')[0] 
+                      ? new Date(editingExpense.expenseDate || new Date()).toISOString().split('T')[0] 
                       : new Date().toISOString().split('T')[0]}
                     required
                   />
@@ -2147,7 +2147,7 @@ const FinancialManagement: React.FC = () => {
                       step="0.01" 
                       min="0.01" 
                       placeholder="0.00" 
-                      defaultValue={editingExpense ? editingExpense.amount : ''}
+                      defaultValue={editingExpense ? editingExpense.total : ''}
                       className="pl-7"
                       required
                     />
