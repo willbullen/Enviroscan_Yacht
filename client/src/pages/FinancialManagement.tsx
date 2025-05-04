@@ -38,13 +38,13 @@ import MainLayout from "@/components/layout/MainLayout";
 import BatchImportDialog from "@/components/BatchImportDialog";
 import CashFlowTrendsChart from "@/components/financial/CashFlowTrendsChart";
 import { VendorTable } from "@/components/financial/VendorTable";
+import BankingIntegration from "@/components/BankingIntegration";
 import { VendorDialog } from "@/components/financial/VendorDialog";
 import { VendorSelect } from "@/components/financial/VendorSelect";
 import { AccountSelect } from "@/components/financial/AccountSelect";
 import { AccountDialog } from "@/components/financial/AccountDialog";
 import FinancialDashboard from "@/components/financial/FinancialDashboard";
 import ReceiptReconciliationDialog from "@/components/financial/ReceiptReconciliationDialog";
-import BankingIntegration from "@/components/BankingIntegration";
 import { useVessel } from "@/contexts/VesselContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -806,6 +806,13 @@ const FinancialManagement: React.FC = () => {
     
     // Render content based on active tab
     switch (activeTab) {
+      case "banking":
+        return (
+          <div className="space-y-4">
+            <BankingIntegration />
+          </div>
+        );
+        
       case "accounts":
         return (
           <div className="space-y-4">
@@ -1805,7 +1812,7 @@ const FinancialManagement: React.FC = () => {
           </div>
         );
       
-      case "banking":
+      case "banking_transactions":
         return (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
