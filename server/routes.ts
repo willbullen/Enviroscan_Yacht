@@ -5267,6 +5267,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // =========== Financial Management - Banking Integration Routes =============
   
+  // Get all bank accounts
+  apiRouter.get("/banking/accounts", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const accounts = await storage.getAllBankAccounts();
+    res.json(accounts);
+  }));
+  
+  // Get a specific bank account
+  apiRouter.get("/banking/accounts/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    const account = await storage.getBankAccount(id);
+    if (!account) {
+      return res.status(404).json({ error: "Bank account not found" });
+    }
+    
+    res.json(account);
+  }));
+  
+  // Create a new bank account
+  apiRouter.post("/banking/accounts", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    try {
+      const validatedData = insertBankAccountSchema.parse(req.body);
+      
+      // Create new bank account
+      const account = await storage.createBankAccount(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'bank_account_created',
+        description: `New bank account created: ${account.accountName}`,
+        userId: req.user.id,
+        relatedEntityType: 'bank_account',
+        relatedEntityId: account.id,
+        metadata: { 
+          accountType: account.accountType,
+          bankName: account.bankName
+        }
+      });
+      
+      res.status(201).json(account);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid bank account data", errors: error.errors });
+      }
+      console.error("Failed to create bank account:", error);
+      res.status(500).json({ message: "Failed to create bank account" });
+    }
+  }));
+  
+  // Update a bank account
+  apiRouter.patch("/banking/accounts/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    try {
+      const existingAccount = await storage.getBankAccount(id);
+      if (!existingAccount) {
+        return res.status(404).json({ error: "Bank account not found" });
+      }
+      
+      // Update account
+      const updatedAccount = await storage.updateBankAccount(id, req.body);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'bank_account_updated',
+        description: `Bank account updated: ${existingAccount.accountName}`,
+        userId: req.user.id,
+        relatedEntityType: 'bank_account',
+        relatedEntityId: id,
+        metadata: { updated: Object.keys(req.body) }
+      });
+      
+      res.json(updatedAccount);
+    } catch (error) {
+      console.error(`Failed to update bank account ${id}:`, error);
+      res.status(500).json({ message: "Failed to update bank account" });
+    }
+  }));
+  
+  // Delete a bank account
+  apiRouter.delete("/banking/accounts/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid account ID" });
+    }
+    
+    try {
+      const account = await storage.getBankAccount(id);
+      if (!account) {
+        return res.status(404).json({ error: "Bank account not found" });
+      }
+      
+      // Check if there are any active connections to this account
+      const connections = await storage.getBankApiConnectionsByBankAccount(id);
+      if (connections.length > 0) {
+        return res.status(400).json({ 
+          error: "Cannot delete bank account with active connections",
+          connections: connections.length
+        });
+      }
+      
+      await storage.deleteBankAccount(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'bank_account_deleted',
+        description: `Bank account deleted: ${account.accountName}`,
+        userId: req.user.id,
+        relatedEntityType: 'bank_account',
+        relatedEntityId: id,
+        metadata: { 
+          accountName: account.accountName,
+          bankName: account.bankName
+        }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error(`Failed to delete bank account ${id}:`, error);
+      res.status(500).json({ message: "Failed to delete bank account" });
+    }
+  }));
+  
   // Get all banking API providers
   apiRouter.get("/banking/providers", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
