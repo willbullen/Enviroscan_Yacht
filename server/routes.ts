@@ -4571,6 +4571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedExpenses: InsertExpense[] = [];
       const errors: { index: number; errors: any }[] = [];
       
+      // Process each expense
       expensesData.forEach((expense, index) => {
         console.log(`DEBUG: Validating expense at index ${index}:`, JSON.stringify(expense));
         

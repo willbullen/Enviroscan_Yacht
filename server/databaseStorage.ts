@@ -2412,4 +2412,33 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Vendor operations
+  async getVendor(id: number): Promise<Vendor | undefined> {
+    const result = await db.select().from(vendors).where(eq(vendors.id, id)).limit(1);
+    return result[0];
+  }
+  
+  async getAllVendors(): Promise<Vendor[]> {
+    return await db.select().from(vendors).orderBy(vendors.name);
+  }
+  
+  async getActiveVendors(): Promise<Vendor[]> {
+    return await db.select().from(vendors).where(eq(vendors.isActive, true)).orderBy(vendors.name);
+  }
+  
+  async createVendor(vendor: InsertVendor): Promise<Vendor> {
+    const result = await db.insert(vendors).values(vendor).returning();
+    return result[0];
+  }
+  
+  async updateVendor(id: number, vendor: Partial<Vendor>): Promise<Vendor | undefined> {
+    const result = await db.update(vendors).set(vendor).where(eq(vendors.id, id)).returning();
+    return result[0];
+  }
+  
+  async deleteVendor(id: number): Promise<boolean> {
+    const result = await db.delete(vendors).where(eq(vendors.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
 }
