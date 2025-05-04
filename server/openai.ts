@@ -173,18 +173,48 @@ export async function findPotentialMatches(
  */
 export async function generateExpenseRecord(receiptData: ReceiptAnalysisResult): Promise<any> {
   // Format the receipt data into a structure that matches our expense schema
-  return {
-    description: `${receiptData.vendor} - ${receiptData.items.length} items`,
-    expenseDate: receiptData.date,
-    total: receiptData.total.toString(),
-    paymentMethod: receiptData.paymentMethod || 'Unknown',
-    referenceNumber: receiptData.receiptNumber || '',
-    status: 'pending',
-    category: receiptData.category || 'Other',
-    notes: receiptData.suspiciousElements ? 
-      `AI Flags: ${receiptData.suspiciousElements.join(', ')}` : 
-      'Created from receipt via AI analysis'
-  };
+  try {
+    // Convert the string date to a proper Date object with error handling
+    // If the date format is invalid, fall back to today's date
+    let expenseDate;
+    try {
+      expenseDate = new Date(receiptData.date);
+      // Check if the date is valid
+      if (isNaN(expenseDate.getTime())) {
+        console.warn(`Invalid date format received: "${receiptData.date}", using current date instead`);
+        expenseDate = new Date();
+      }
+    } catch (error) {
+      console.warn(`Error parsing date "${receiptData.date}": ${error}, using current date instead`);
+      expenseDate = new Date();
+    }
+    
+    return {
+      description: `${receiptData.vendor} - ${receiptData.items.length} items`,
+      expenseDate: expenseDate.toISOString(), // Ensure properly formatted date string
+      total: receiptData.total.toString(),
+      paymentMethod: receiptData.paymentMethod || 'Unknown',
+      referenceNumber: receiptData.receiptNumber || '',
+      status: 'pending',
+      category: receiptData.category || 'Other',
+      notes: receiptData.suspiciousElements ? 
+        `AI Flags: ${receiptData.suspiciousElements.join(', ')}` : 
+        'Created from receipt via AI analysis'
+    };
+  } catch (error) {
+    console.error('Error generating expense record:', error);
+    // Return a minimal valid record with default values if something goes wrong
+    return {
+      description: receiptData.vendor ? `${receiptData.vendor} receipt` : 'Receipt analysis',
+      expenseDate: new Date().toISOString(),
+      total: receiptData.total?.toString() || '0',
+      paymentMethod: 'Unknown',
+      referenceNumber: '',
+      status: 'pending',
+      category: 'Other',
+      notes: 'Error occurred during receipt analysis'
+    };
+  }
 }
 
 export default {
