@@ -34,7 +34,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import MainLayout from "@/components/layout/MainLayout";
-import ViewToggle, { ViewMode } from "@/components/ui/view-toggle";
+// Removed ViewToggle import as we no longer need card/list view toggle
 import BatchImportDialog from "@/components/BatchImportDialog";
 import CashFlowTrendsChart from "@/components/financial/CashFlowTrendsChart";
 import { VendorTable } from "@/components/financial/VendorTable";
@@ -139,8 +139,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const FinancialManagement: React.FC = () => {
-  // State for view toggle (Card/Grid vs Table view)
-  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.CARDS);
+  // State for pagination and filtering
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [selectedExpenses, setSelectedExpenses] = useState<number[]>([]);
+  const [filterValue, setFilterValue] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [dateRangeFilter, setDateRangeFilter] = useState<{from?: Date; to?: Date}>({});
   const [activeTab, setActiveTab] = useState("accounts");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -1013,24 +1019,62 @@ const FinancialManagement: React.FC = () => {
         );
       
       case "expenses":
+        // Filter expenses based on search term, category, and status filters
+        const filteredExpenses = expenses
+          ? expenses.filter((expense: any) => {
+              // Search filter (case insensitive)
+              const searchMatch = !filterValue || 
+                expense.description?.toLowerCase().includes(filterValue.toLowerCase()) ||
+                expense.category?.toLowerCase().includes(filterValue.toLowerCase()) ||
+                expense.referenceNumber?.toLowerCase().includes(filterValue.toLowerCase());
+              
+              // Category filter
+              const categoryMatch = !categoryFilter || 
+                expense.category?.toLowerCase() === categoryFilter.toLowerCase();
+              
+              // Status filter
+              const statusMatch = !statusFilter || 
+                expense.status?.toLowerCase() === statusFilter.toLowerCase();
+                
+              // Date range filter
+              const dateMatch = (!dateRangeFilter.from && !dateRangeFilter.to) || (
+                (!dateRangeFilter.from || new Date(expense.expenseDate) >= dateRangeFilter.from) &&
+                (!dateRangeFilter.to || new Date(expense.expenseDate) <= dateRangeFilter.to)
+              );
+                
+              return searchMatch && categoryMatch && statusMatch && dateMatch;
+            })
+          : [];
+          
+        // Handle pagination
+        const pageCount = Math.ceil(filteredExpenses.length / pageSize);
+        const paginatedExpenses = filteredExpenses.slice(
+          pageIndex * pageSize, 
+          (pageIndex + 1) * pageSize
+        );
+        
+        // Get all unique categories for the dropdown
+        const allCategories = expenses
+          ? [...new Set(expenses.map((expense: any) => expense.category?.trim()).filter(Boolean))]
+          : [];
+          
+        // Get all unique statuses for the dropdown
+        const allStatuses = expenses
+          ? [...new Set(expenses.map((expense: any) => expense.status?.trim()).filter(Boolean))]
+          : [];
+          
+        // Calculate total of selected expenses
+        const selectedTotal = selectedExpenses.length > 0 
+          ? expenses
+              .filter((expense: any) => selectedExpenses.includes(expense.id))
+              .reduce((sum: number, expense: any) => sum + parseFloat(expense.total || 0), 0)
+          : 0;
+            
         return (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">Expense Transactions</h3>
               <div className="flex items-center gap-2">
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="fuel">Fuel</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="dockage">Dockage</SelectItem>
-                    <SelectItem value="crew">Crew Expenses</SelectItem>
-                    <SelectItem value="provisions">Provisions</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Export
@@ -1038,10 +1082,169 @@ const FinancialManagement: React.FC = () => {
               </div>
             </div>
             
+            {/* Filter controls */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="expense-search">Search</Label>
+                <div className="mt-1 relative">
+                  <Input
+                    id="expense-search"
+                    type="text"
+                    placeholder="Search expenses..."
+                    value={filterValue}
+                    onChange={(e) => setFilterValue(e.target.value)}
+                    className="pl-8"
+                  />
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  {filterValue && (
+                    <Button 
+                      variant="ghost" 
+                      className="absolute right-1 top-1 h-6 w-6 p-0" 
+                      onClick={() => setFilterValue("")}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="category-filter">Category</Label>
+                <Select 
+                  value={categoryFilter || ""} 
+                  onValueChange={(value) => setCategoryFilter(value || null)}
+                >
+                  <SelectTrigger id="category-filter">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Categories</SelectItem>
+                    {allCategories.map((category: string) => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="status-filter">Status</Label>
+                <Select 
+                  value={statusFilter || ""} 
+                  onValueChange={(value) => setStatusFilter(value || null)}
+                >
+                  <SelectTrigger id="status-filter">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Statuses</SelectItem>
+                    {allStatuses.map((status: string) => (
+                      <SelectItem key={status} value={status.toLowerCase()}>{status}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex justify-end items-end">
+                {(filterValue || categoryFilter || statusFilter || dateRangeFilter.from || dateRangeFilter.to) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFilterValue("");
+                      setCategoryFilter(null);
+                      setStatusFilter(null);
+                      setDateRangeFilter({});
+                    }}
+                  >
+                    <FilterX className="h-4 w-4 mr-2" />
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            {/* Bulk actions */}
+            {selectedExpenses.length > 0 && (
+              <div className="bg-muted/20 rounded p-2 flex items-center justify-between">
+                <div className="flex items-center">
+                  <CheckCircle className="h-4 w-4 mr-2 text-primary" />
+                  <span>
+                    <strong>{selectedExpenses.length}</strong> {selectedExpenses.length === 1 ? 'expense' : 'expenses'} selected
+                    {' '}<span className="text-muted-foreground">({new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedTotal)})</span>
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Approve
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
+                        <Trash className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Multiple Expenses</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete {selectedExpenses.length} {selectedExpenses.length === 1 ? 'expense' : 'expenses'}? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => {
+                            // Handle bulk delete
+                            toast({
+                              title: "Bulk Delete",
+                              description: `${selectedExpenses.length} expenses deleted successfully.`
+                            });
+                            setSelectedExpenses([]);
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => setSelectedExpenses([])}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Clear Selection
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             <div className="bg-card rounded-lg shadow-sm border">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[40px]">
+                      <Checkbox 
+                        checked={
+                          paginatedExpenses.length > 0 && 
+                          paginatedExpenses.every(expense => selectedExpenses.includes(expense.id))
+                        }
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedExpenses(prev => 
+                              [...new Set([...prev, ...paginatedExpenses.map(expense => expense.id)])]
+                            );
+                          } else {
+                            setSelectedExpenses(prev => 
+                              prev.filter(id => !paginatedExpenses.some(expense => expense.id === id))
+                            );
+                          }
+                        }}
+                      />
+                    </TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Vendor</TableHead>
                     <TableHead>Category</TableHead>
@@ -1053,8 +1256,8 @@ const FinancialManagement: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenses && Array.isArray(expenses) && expenses.length > 0 ? (
-                    expenses.map((expense: any) => (
+                  {paginatedExpenses.length > 0 ? (
+                    paginatedExpenses.map((expense: any) => (
                         <TableRow key={expense.id}>
                           <TableCell>{format(new Date(expense.expenseDate || new Date()), 'MMM dd, yyyy')}</TableCell>
                           <TableCell>{
@@ -2011,8 +2214,6 @@ const FinancialManagement: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-2">
-              <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-              
               {/* Module Navigation Dropdown Menu - using shadcn DropdownMenu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
