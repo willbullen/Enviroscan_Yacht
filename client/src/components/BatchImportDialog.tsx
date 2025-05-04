@@ -18,6 +18,8 @@ import {
   Eye, 
   EyeOff, 
   Plus,
+  Edit,
+  Check,
   Save,
   AlertCircle,
   UserPlus
