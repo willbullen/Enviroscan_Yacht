@@ -4625,6 +4625,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(updatedExpense);
   }));
   
+  // Put endpoint for backward compatibility with existing client code
+  apiRouter.put("/expenses/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid expense ID" });
+    }
+    
+    const expense = await storage.getExpense(id);
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+    
+    const validationResult = insertExpenseSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid expense data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    const updatedExpense = await storage.updateExpense(id, validationResult.data);
+    return res.json(updatedExpense);
+  }));
+  
+  // Get expense stats by vessel (for dashboard widgets)
+  apiRouter.get("/expenses/vessel/:id/stats", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+
+    const vesselId = parseInt(req.params.id);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Valid vessel ID is required" });
+    }
+
+    // Get all expenses for the vessel
+    const expenses = await storage.getExpensesByVessel(vesselId);
+    
+    // For backwards compatibility with the UI that may expect transactions
+    const deposits = []; // We'll implement deposits separately
+
+    res.json({ 
+      expenses,
+      deposits
+    });
+  }));
+
+  // Get financial summary for the dashboard using expenses
+  apiRouter.get("/expenses/vessel/:id/summary", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+
+    const vesselId = parseInt(req.params.id);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Valid vessel ID is required" });
+    }
+
+    // Get all expenses for the vessel
+    const expenses = await storage.getExpensesByVessel(vesselId);
+
+    // Get accounts for this vessel to calculate available funds
+    const accounts = await storage.getFinancialAccountsByVessel(vesselId);
+    
+    // Calculate total available funds across all accounts
+    const availableFunds = accounts.reduce((sum, account) => 
+      sum + parseFloat(account.balance.toString() || '0'), 0);
+
+    // Get current date info for filtering
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    // Calculate total expenses
+    let totalExpenses = 0;
+    let lastMonthExpenses = 0;
+
+    expenses.forEach(e => {
+      const amount = parseFloat(e.amount.toString());
+      const expenseDate = new Date(e.expenseDate);
+      const isCurrentMonth = 
+        expenseDate.getMonth() === currentMonth && 
+        expenseDate.getFullYear() === currentYear;
+      const isLastMonth = 
+        expenseDate.getMonth() === lastMonth && 
+        expenseDate.getFullYear() === lastMonthYear;
+
+      totalExpenses += amount;
+      if (isLastMonth) lastMonthExpenses += amount;
+    });
+
+    // Placeholder values for income until income module is refactored
+    const totalIncome = 0;
+    const lastMonthIncome = 0;
+    const netBalance = totalIncome - totalExpenses;
+
+    res.json({
+      totalExpenses,
+      totalIncome,
+      netBalance,
+      availableFunds,
+      lastMonthExpenses,
+      lastMonthIncome
+    });
+  }));
+  
   // =========== Financial Management - Transactions Routes =============
   
   // Get all transactions
