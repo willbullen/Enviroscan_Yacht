@@ -1192,17 +1192,41 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                                     </Button>
                                   </div>
                                 ) : (
-                                  <div 
-                                    className={`cursor-pointer hover:bg-muted/50 p-1 rounded ${
-                                      row._isDuplicate ? 'hover:underline' : ''
-                                    }`}
-                                    onClick={() => handleEditField(rowIndex, header, row[header] || "")}
-                                  >
-                                    {row[header] || ""}
-                                    {row._isDuplicate && !row._isModified && (
-                                      <span className="ml-1 text-xs text-muted-foreground">(click to edit)</span>
-                                    )}
-                                  </div>
+                                  row._isDuplicate ? (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div 
+                                            className={`cursor-pointer p-1 rounded flex items-center ${
+                                              row._isModified 
+                                                ? 'bg-green-50 text-green-800 hover:bg-green-100' 
+                                                : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                                            }`}
+                                            onClick={() => handleEditField(rowIndex, header, row[header] || "")}
+                                          >
+                                            {row[header] || ""}
+                                            {row._isModified ? (
+                                              <Check className="h-3.5 w-3.5 ml-1 text-green-600" />
+                                            ) : (
+                                              <Edit className="h-3.5 w-3.5 ml-1 text-amber-600" />
+                                            )}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">
+                                          {row._isModified 
+                                            ? "This record was modified and will be imported" 
+                                            : "This appears to be a duplicate. Click to edit and mark for import."}
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  ) : (
+                                    <div 
+                                      className="cursor-pointer hover:bg-muted/50 p-1 rounded"
+                                      onClick={() => handleEditField(rowIndex, header, row[header] || "")}
+                                    >
+                                      {row[header] || ""}
+                                    </div>
+                                  )
                                 )
                               )}
                             </TableCell>
