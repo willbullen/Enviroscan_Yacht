@@ -229,11 +229,57 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
     }
   };
 
+  // Track missing vendors for validation
+  const [missingVendors, setMissingVendors] = useState<Set<string>>(new Set());
+  const [newVendorName, setNewVendorName] = useState("");
+  const [newVendorType, setNewVendorType] = useState("");
+  const [isAddingVendor, setIsAddingVendor] = useState(false);
+  
+  // Handle adding a new vendor
+  const handleAddVendor = async (name: string, vendorType: string = "other") => {
+    if (!name.trim()) return null;
+    
+    setIsAddingVendor(true);
+    
+    try {
+      // This is a simplified placeholder - the actual implementation would call the API
+      // and return the newly created vendor to be used in your application
+      const newVendor = { id: Date.now(), name: name.trim(), type: vendorType };
+      
+      // Remove the vendor from the missing list
+      const updatedMissingVendors = new Set(missingVendors);
+      updatedMissingVendors.delete(name.trim());
+      setMissingVendors(updatedMissingVendors);
+      
+      // Update preview data to use new vendor
+      const updatedPreviewData = previewData.map(row => {
+        if (row.vendor === name.trim()) {
+          return { ...row, vendorId: newVendor.id };
+        }
+        return row;
+      });
+      
+      setPreviewData(updatedPreviewData);
+      
+      // Reset form
+      setNewVendorName("");
+      setNewVendorType("");
+      
+      return newVendor;
+    } catch (error) {
+      console.error("Error creating vendor:", error);
+      return null;
+    } finally {
+      setIsAddingVendor(false);
+    }
+  };
+  
   const parseCSV = (file: File) => {
     setParsing(true);
     setActiveTab("upload");
     setMissingCategories(new Set());
     setMissingSubcategories(new Map());
+    setMissingVendors(new Set());
     
     const reader = new FileReader();
     
@@ -248,10 +294,12 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
         const validationErrors = [];
         const missingCats = new Set<string>();
         const missingSubs = new Map<string, Set<string>>();
+        const missingVends = new Set<string>();
         
-        // Check if this import has category or subcategory fields
+        // Check if this import has category, subcategory, or vendor fields
         const hasCategoryField = headerRow.includes('categoryId') || headerRow.includes('category');
         const hasSubcategoryField = headerRow.includes('subcategoryId') || headerRow.includes('subcategory');
+        const hasVendorField = headerRow.includes('vendor');
         
         // Start from row 1 (skip headers)
         for (let i = 1; i < rows.length; i++) {
@@ -304,6 +352,29 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
             }
           }
           
+          // Check for missing vendors
+          if (hasVendorField && vendors.length > 0 && row.vendor) {
+            const vendorName = row.vendor.trim();
+            if (vendorName) {
+              // Check if vendor exists
+              const vendorExists = vendors.some(vendor => 
+                vendor.name.toLowerCase() === vendorName.toLowerCase()
+              );
+              
+              if (!vendorExists) {
+                missingVends.add(vendorName);
+                // Flag the row for vendor validation by adding a property
+                row._vendorMissing = true;
+              } else {
+                // Find the vendor ID for this vendor name
+                const vendor = vendors.find(v => v.name.toLowerCase() === vendorName.toLowerCase());
+                if (vendor) {
+                  row.vendorId = vendor.id.toString();
+                }
+              }
+            }
+          }
+          
           // Custom validation
           const validationError = validateRow(row, i);
           if (validationError) {
@@ -326,6 +397,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
         setParsing(false);
         setMissingCategories(missingCats);
         setMissingSubcategories(missingSubs);
+        setMissingVendors(missingVends);
         
         // Always show preview before import
         setShowPreview(true);
@@ -489,15 +561,69 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
               </AlertDescription>
             </Alert>
             
-            {(missingCategories.size > 0 || missingSubcategories.size > 0) && (
+            {(missingCategories.size > 0 || missingSubcategories.size > 0 || missingVendors.size > 0) && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Action Required</AlertTitle>
                 <AlertDescription>
-                  Your import contains references to categories or subcategories that don't exist yet.
-                  Please create them before proceeding with the import.
+                  {missingVendors.size > 0 ? 
+                    "Your import contains vendors that don't exist yet. You can add them below or in the preview table." : 
+                    "Your import contains references to categories or subcategories that don't exist yet. Please create them before proceeding with the import."}
                 </AlertDescription>
               </Alert>
+            )}
+            
+            {missingVendors.size > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Missing Vendors</CardTitle>
+                  <CardDescription>
+                    Create the following vendors before importing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {Array.from(missingVendors).map((vendor) => (
+                        <Badge key={vendor} variant="outline" className="text-sm py-1 px-2 bg-red-50 text-red-700 hover:bg-red-100">
+                          {vendor}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-12 gap-2">
+                      <div className="col-span-5">
+                        <Label htmlFor="new-vendor">Vendor Name</Label>
+                        <Input 
+                          id="new-vendor"
+                          value={newVendorName} 
+                          onChange={(e) => setNewVendorName(e.target.value)}
+                          placeholder="Enter a vendor name"
+                        />
+                      </div>
+                      <div className="col-span-5">
+                        <Label htmlFor="vendor-type">Vendor Type (Optional)</Label>
+                        <Input 
+                          id="vendor-type"
+                          value={newVendorType} 
+                          onChange={(e) => setNewVendorType(e.target.value)}
+                          placeholder="Type (e.g. 'supplier', 'contractor')"
+                        />
+                      </div>
+                      <div className="col-span-2 flex items-end">
+                        <Button 
+                          onClick={() => handleAddVendor(newVendorName, newVendorType)}
+                          disabled={!newVendorName.trim() || isAddingVendor}
+                          className="w-full"
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          {isAddingVendor ? "Adding..." : "Add"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
             
             {missingCategories.size > 0 && onAddCategory && (
@@ -648,7 +774,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                         <TableHead className="w-[50px]">#</TableHead>
                         {headers.map((header) => (
                           <TableHead key={header} className="font-medium">
-                            {header}
+                            {headerDisplayNames[header] || header}
                           </TableHead>
                         ))}
                       </TableRow>
@@ -682,26 +808,110 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                                   </SelectContent>
                                 </Select>
                               ) : header === 'vendor' && vendors.length > 0 ? (
-                                <Select 
-                                  defaultValue={row[header] || ""}
-                                  onValueChange={(value) => {
-                                    const updatedData = [...previewData];
-                                    updatedData[rowIndex] = { ...updatedData[rowIndex], [header]: value, vendorId: vendors.find(v => v.name === value)?.id || null };
-                                    setPreviewData(updatedData);
-                                  }}
-                                >
-                                  <SelectTrigger className="w-full h-8">
-                                    <SelectValue placeholder="Select vendor" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {/* Get unique vendors by name to prevent duplicates */}
-                                    {Array.from(new Map(vendors.map(vendor => [vendor.name, vendor])).values()).map((vendor) => (
-                                      <SelectItem key={vendor.id.toString()} value={vendor.name}>
-                                        {vendor.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <div className="flex items-center gap-1">
+                                  {row._vendorMissing ? (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="flex items-center text-red-500 font-medium">
+                                            <AlertCircle className="h-4 w-4 mr-1" />
+                                            {row[header]}
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Vendor doesn't exist in the system</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  ) : null}
+                                  
+                                  <Select 
+                                    defaultValue={row[header] || ""}
+                                    onValueChange={(value) => {
+                                      const updatedData = [...previewData];
+                                      updatedData[rowIndex] = { 
+                                        ...updatedData[rowIndex], 
+                                        [header]: value, 
+                                        vendorId: vendors.find(v => v.name === value)?.id || null,
+                                        _vendorMissing: value === "create_new" ? true : false
+                                      };
+                                      setPreviewData(updatedData);
+                                      
+                                      // If user selected "create new", set the new vendor name
+                                      if (value === "create_new") {
+                                        const vendorName = row[header];
+                                        if (vendorName) {
+                                          setNewVendorName(vendorName);
+                                          missingVendors.add(vendorName);
+                                          setMissingVendors(new Set(missingVendors));
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    <SelectTrigger className={`w-full h-8 ${row._vendorMissing ? 'border-red-400' : ''}`}>
+                                      <SelectValue placeholder="Select vendor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {row._vendorMissing && (
+                                        <div className="p-2 border-b">
+                                          <Popover>
+                                            <PopoverTrigger asChild>
+                                              <Button 
+                                                variant="secondary" 
+                                                size="sm" 
+                                                className="w-full flex items-center justify-between"
+                                              >
+                                                <span className="flex items-center">
+                                                  <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                                                  Create "{row[header]}"
+                                                </span>
+                                                <span>→</span>
+                                              </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-72 p-3">
+                                              <div className="space-y-2">
+                                                <h4 className="font-medium text-sm">Add New Vendor</h4>
+                                                <div>
+                                                  <Label htmlFor={`new-vendor-${rowIndex}`}>Name</Label>
+                                                  <Input 
+                                                    id={`new-vendor-${rowIndex}`}
+                                                    value={row[header]} 
+                                                    readOnly
+                                                    className="h-8 mt-1"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <Label htmlFor={`new-vendor-type-${rowIndex}`}>Type (optional)</Label>
+                                                  <Input 
+                                                    id={`new-vendor-type-${rowIndex}`}
+                                                    placeholder="e.g. supplier, contractor"
+                                                    className="h-8 mt-1"
+                                                    value={newVendorType}
+                                                    onChange={(e) => setNewVendorType(e.target.value)}
+                                                  />
+                                                </div>
+                                                <Button
+                                                  onClick={() => handleAddVendor(row[header], newVendorType)}
+                                                  disabled={!row[header] || isAddingVendor}
+                                                  className="w-full mt-2"
+                                                  size="sm"
+                                                >
+                                                  {isAddingVendor ? "Adding..." : "Add Vendor"}
+                                                </Button>
+                                              </div>
+                                            </PopoverContent>
+                                          </Popover>
+                                        </div>
+                                      )}
+                                      {/* Get unique vendors by name to prevent duplicates */}
+                                      {Array.from(new Map(vendors.map(vendor => [vendor.name, vendor])).values()).map((vendor) => (
+                                        <SelectItem key={vendor.id.toString()} value={vendor.name}>
+                                          {vendor.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               ) : header === 'accountNumber' && accounts.length > 0 ? (
                                 <Select 
                                   defaultValue={row[header] || ""}
