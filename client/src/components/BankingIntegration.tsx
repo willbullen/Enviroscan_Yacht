@@ -92,16 +92,19 @@ const BankingIntegration = () => {
       try {
         // Fetch bank accounts
         const bankAccountsResp = await apiRequest("GET", "/api/banking/accounts");
+        console.log("Bank Accounts Response:", bankAccountsResp);
         
         // Fetch API providers
         const providersResp = await apiRequest("GET", "/api/banking/providers");
+        console.log("Providers Response:", providersResp);
         
         // Fetch existing connections
         const connectionsResp = await apiRequest("GET", "/api/banking/connections");
+        console.log("Connections Response:", connectionsResp);
         
-        setBankAccounts(bankAccountsResp.data || []);
-        setProviders(providersResp.data || []);
-        setConnections(connectionsResp.data || []);
+        setBankAccounts(Array.isArray(bankAccountsResp) ? bankAccountsResp : []);
+        setProviders(Array.isArray(providersResp) ? providersResp : []);
+        setConnections(Array.isArray(connectionsResp) ? connectionsResp : []);
       } catch (error) {
         console.error("Error fetching banking data:", error);
         toast({
