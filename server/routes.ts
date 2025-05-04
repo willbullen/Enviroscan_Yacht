@@ -5263,7 +5263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register receipt reconciliation routes
   const receiptRoutes = setupReceiptRoutes(storage);
-  app.use("/api/receipts", receiptRoutes);
+  apiRouter.use("/receipts", receiptRoutes);
   
   app.use("/api", apiRouter);
   
