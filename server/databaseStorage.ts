@@ -93,7 +93,7 @@ import {
   type InsertDeposit
 } from "@shared/schema";
 import { IStorage } from "./storage";
-import { db } from "./db";
+import { db, executeWithRetry } from "./db";
 import { and, eq, lte, gte, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -2262,11 +2262,20 @@ export class DatabaseStorage implements IStorage {
       delete safeExpense.transactionId;
     }
     
-    const [newExpense] = await db.insert(expenses).values(safeExpense).returning();
+    console.log(`Creating expense: ${JSON.stringify(safeExpense)}`);
+    
+    // Use our retry helper to handle connection issues
+    const newExpense = await executeWithRetry(async () => {
+      const [result] = await db.insert(expenses).values(safeExpense).returning();
+      return result;
+    }, 3, 500); // Retry up to 3 times with 500ms base delay
+    
+    console.log(`Successfully created expense ID ${newExpense.id}`);
     return newExpense;
   }
   
   async createBulkExpenses(expensesData: InsertExpense[]): Promise<Expense[]> {
+    console.log(`Starting bulk expense creation for ${expensesData.length} expenses`);
     const createdExpenses: Expense[] = [];
     
     // Process each expense individually to ensure proper error handling
@@ -2280,14 +2289,20 @@ export class DatabaseStorage implements IStorage {
           delete safeExpense.transactionId;
         }
         
+        // Log the current expense being processed
+        console.log(`Processing expense for vesselId: ${safeExpense.vesselId}, amount: ${safeExpense.total}`);
+        
+        // Use our retry helper through the createExpense method
         const newExpense = await this.createExpense(safeExpense);
         createdExpenses.push(newExpense);
+        console.log(`Added expense ID ${newExpense.id} to created expenses list`);
       } catch (error) {
         console.error("Error creating expense in bulk operation:", error);
         // Continue with the next expense even if one fails
       }
     }
     
+    console.log(`Completed bulk expense creation. Created ${createdExpenses.length} expenses`);
     return createdExpenses;
   }
   
