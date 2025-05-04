@@ -1,0 +1,99 @@
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Importing expenses data: 
+Array [{…}]
+DEBUG: Submitting bulk expenses to API: 
+Array [{…}]
+DEBUG: Current vessel: 
+Object {id: 4, name: "M/Y NOURAH OF RIYAD", type: "Motor Yacht", length: "70m", mmsi: "319867000", …}
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+API Error: POST https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/expenses/bulk (400) 400: Bad Request 
+Object {error: "Some expenses failed validation", details: Array(1), validCount: 0, errorCount: 1}
+details: Array(1)
+0: Object
+length: 1
+[[Prototype]]: Array(0)
+error: "Some expenses failed validation"
+errorCount: 1
+validCount: 0
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error importing expenses: 
+Error {status: 400, data: {…}, url: "https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/expenses/bulk", method: "POST"}
+data: Object
+details: Array(1)
+error: "Some expenses failed validation"
+errorCount: 1
+validCount: 0
+[[Prototype]]: Object
+method: "POST"
+status: 400
+url: "https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/expenses/bulk"
+message: "400: Bad Request"
+stack: "Error: 400: Bad Request↵ at parseErrorResponse (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:28:17)↵ at async throwIfResNotOk (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:37:19)↵ at async apiRequest (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:59:7)↵ at async finalizeAndSubmitExpenses (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/pages/FinancialManagement.tsx?t=1746362407137:7183:34)"
+get stack: ƒ ()
+length: 0
+name: ""
+[[Prototype]]: ƒ ()
+set stack: ƒ ()
+length: 1
+name: ""
+[[Prototype]]: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
