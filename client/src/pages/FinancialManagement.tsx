@@ -3173,6 +3173,7 @@ const FinancialManagement: React.FC = () => {
         vendors={vendors || []}
         accounts={accounts || []}
         expenseCategories={expenseCategories}
+        existingRecords={activeTab === "expenses" ? expenses : []} // Pass existing expenses for duplicate detection
         templateContent={
           activeTab === "expenses" 
             ? "date,description,category,amount,vendor,paymentMethod,status,referenceNumber,accountNumber\n2025-05-01,Fuel Purchase,Fuel,1500,Ocean Fuels,Credit Card,Paid,INV-123,FUEL-001"
