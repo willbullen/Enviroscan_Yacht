@@ -43,7 +43,15 @@ import {
   InsertExpense,
   insertTransactionSchema,
   InsertDeposit,
-  vendors
+  vendors,
+  // Banking Integration schemas
+  insertBankAccountSchema,
+  insertBankApiConnectionSchema,
+  insertBankApiTransactionSchema,
+  insertBankSyncLogSchema,
+  BankApiConnection,
+  BankApiTransaction,
+  BankSyncLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
