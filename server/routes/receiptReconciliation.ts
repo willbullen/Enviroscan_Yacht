@@ -186,13 +186,40 @@ export default function setupReceiptRoutes(storage: IStorage) {
       }
       
       // Add vessel ID and user ID to the expense data
+      // Also ensure the expenseDate is a properly formatted ISO string
+      let expenseData_fixed = { ...expenseData };
+      
+      // Make sure expenseDate is properly formatted if it exists
+      if (expenseData_fixed.expenseDate) {
+        try {
+          // Try to convert expenseDate to a proper Date object if it's not already
+          const expenseDate = new Date(expenseData_fixed.expenseDate);
+          // Check if date is valid
+          if (isNaN(expenseDate.getTime())) {
+            console.warn(`Invalid expenseDate received: "${expenseData_fixed.expenseDate}", using current date`);
+            expenseData_fixed.expenseDate = new Date().toISOString();
+          } else {
+            // Format as ISO string if valid
+            expenseData_fixed.expenseDate = expenseDate.toISOString();
+          }
+        } catch (dateError) {
+          console.warn(`Error processing expenseDate: ${dateError}, using current date`);
+          expenseData_fixed.expenseDate = new Date().toISOString();
+        }
+      } else {
+        // If no expenseDate provided, use current date
+        expenseData_fixed.expenseDate = new Date().toISOString();
+      }
+      
       const newExpense = {
-        ...expenseData,
+        ...expenseData_fixed,
         vesselId,
         createdById: userId, // Use the userId from passport
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+      
+      console.log("Creating expense with data:", JSON.stringify(newExpense, null, 2));
       
       // Create the new expense
       const createdExpense = await storage.createExpense(newExpense);
