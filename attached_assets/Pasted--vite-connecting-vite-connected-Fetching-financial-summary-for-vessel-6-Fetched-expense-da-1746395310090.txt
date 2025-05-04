@@ -1,0 +1,56 @@
+[vite] connecting...
+[vite] connected.
+Fetching financial summary for vessel 6
+Fetched expense data: 
+Array []
+Fetched accounts data: 
+(2) [{…}, {…}]
+Vessel changed to M/Y NOURAH OF RIYAD (ID: 4). Reloading data...
+Fetching financial summary for vessel 4
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Fetched accounts data: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+API Error: GET https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/banking/accounts (500) column "vessel_id" does not exist 
+Object {message: "column "vessel_id" does not exist", code: "42703", stack: "error: column "vessel_id" does not exist↵    at…"}
+code: "42703"
+message: "column "vessel_id" does not exist"
+stack: "error: column "vessel_id" does not exist↵ at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74↵ at process.processTicksAndRejections (node:internal/process/task_queues:95:5)↵ at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)↵ at async <anonymous> (/home/runner/workspace/server/routes.ts:5276:22)"
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error fetching banking data: 
+Error {status: 500, data: {…}, url: "https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/banking/accounts", method: "GET"}
+data: Object
+method: "GET"
+status: 500
+url: "https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/banking/accounts"
+message: "column "vessel_id" does not exist"
+stack: "Error: column "vessel_id" does not exist↵ at parseErrorResponse (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:28:17)↵ at async throwIfResNotOk (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:37:19)↵ at async apiRequest (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:59:7)↵ at async fetchData (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/BankingIntegration.tsx:105:34)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
