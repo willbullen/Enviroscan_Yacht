@@ -2002,8 +2002,9 @@ const FinancialManagement: React.FC = () => {
               vesselId: currentVessel?.id,
               // Convert string date to Date object
               transactionDate: new Date(formData.get('transactionDate') as string),
-              // Keep amount as string instead of converting to number
+              // Keep amount as string instead of converting to number - we'll map this to 'total' in the DB
               amount: (formData.get('amount') as string),
+              total: (formData.get('amount') as string), // Add total field to match DB schema
               description: formData.get('description') as string,
               vendorId: isNaN(vendorId as number) ? null : vendorId,
               accountId: parseInt(formData.get('accountId') as string),
@@ -2033,7 +2034,7 @@ const FinancialManagement: React.FC = () => {
               const expenseDataFormatted = {
                 description: expenseData.description,
                 expenseDate: expenseData.transactionDate,
-                total: expenseData.amount, // Important: DB field is 'total', not 'amount'
+                total: expenseData.total, // Important: DB field is 'total', not 'amount'
                 // Currency field doesn't exist in the expense table, so we'll omit it
                 vendorId: expenseData.vendorId,
                 vesselId: expenseData.vesselId,
@@ -2043,6 +2044,7 @@ const FinancialManagement: React.FC = () => {
                 notes: '',
                 category: expenseData.category,
                 accountId: expenseData.accountId,
+                createdById: user?.id || 1, // Add the user ID who created this expense
               };
               
               let response;
