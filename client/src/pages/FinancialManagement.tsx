@@ -161,6 +161,21 @@ const FinancialManagement: React.FC = () => {
     enabled: !!currentVessel?.id
   });
   
+  // Load vessel-specific expenses data directly from expenses table
+  const { data: expenses, isLoading: expensesLoading } = useQuery({
+    queryKey: ['/api/expenses/vessel', currentVessel?.id],
+    queryFn: () => {
+      if (!currentVessel?.id) return Promise.resolve([]);
+      return fetch(`/api/expenses/vessel/${currentVessel.id}`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching vessel expenses:", err);
+          return [];
+        });
+    },
+    enabled: !!currentVessel?.id
+  });
+  
   // Fetch vendors for dropdown selection
   const { data: vendors, isLoading: vendorsLoading } = useQuery({
     queryKey: ['/api/vendors'],
