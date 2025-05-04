@@ -179,7 +179,9 @@ const FinancialManagement: React.FC = () => {
     },
     enabled: !!currentVessel?.id,
     refetchOnWindowFocus: true, // Ensure data refreshes when window gets focus
-    staleTime: 5000, // Data becomes stale after 5 seconds
+    staleTime: 1000, // Reduced stale time to 1 second for more frequent refreshes
+    refetchInterval: 3000, // Automatically refetch every 3 seconds when stale
+    networkMode: 'always', // Always attempt network requests, even if previous request failed
   });
   
   // Fetch vendors for dropdown selection
@@ -2840,6 +2842,9 @@ const FinancialManagement: React.FC = () => {
                       queryKey: ['/api/expenses/vessel', currentVessel?.id],
                       refetchType: 'all' 
                     });
+                    
+                    // Manually trigger refetch to ensure immediate update
+                    refetchExpenses();
                     
                     // Also invalidate transaction and related queries to ensure full data consistency
                     queryClient.invalidateQueries({ 
