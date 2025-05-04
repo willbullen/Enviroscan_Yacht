@@ -118,7 +118,8 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
   onAddSubcategory,
   vendors = [],
   accounts = [],
-  expenseCategories = []
+  expenseCategories = [],
+  existingRecords = []
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -140,6 +141,8 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
   const [newVendorName, setNewVendorName] = useState("");
   const [newVendorType, setNewVendorType] = useState("");
   const [isAddingVendor, setIsAddingVendor] = useState(false);
+  const [editingField, setEditingField] = useState<{ rowIndex: number, field: string } | null>(null);
+  const [editValue, setEditValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Function to handle adding a new vendor
@@ -297,14 +300,95 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
     setNewSubcategoryName("");
   };
   
+  // Handle editing a field in the preview table
+  const handleEditField = (rowIndex: number, field: string, value: string) => {
+    setEditingField({ rowIndex, field });
+    setEditValue(value);
+  };
+  
+  // Handle saving the edited field value
+  const handleSaveField = () => {
+    if (!editingField) return;
+    
+    const { rowIndex, field } = editingField;
+    const updatedData = [...previewData];
+    
+    if (updatedData[rowIndex]) {
+      // Check if this is a duplicate record being modified
+      if (updatedData[rowIndex]._isDuplicate && !updatedData[rowIndex]._isModified) {
+        // The value has changed, mark it as modified
+        if (updatedData[rowIndex][field] !== editValue) {
+          updatedData[rowIndex]._isModified = true;
+        }
+      }
+      
+      // Update the field value
+      updatedData[rowIndex][field] = editValue;
+      setPreviewData(updatedData);
+    }
+    
+    // Reset editing state
+    setEditingField(null);
+    setEditValue("");
+  };
+  
+  // Handle canceling the edit
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValue("");
+  };
+  
   const handleFinalImport = () => {
     if (previewData.length > 0) {
-      onImport(previewData);
+      // Filter out unmodified duplicate records before importing
+      const filteredData = previewData.filter(row => {
+        // If it's a duplicate and hasn't been modified, don't include it
+        if (row._isDuplicate && !row._isModified) {
+          return false;
+        }
+        return true;
+      });
+      
+      onImport(filteredData);
       onOpenChange(false);
     }
   };
 
 
+  
+  // Helper function to check if an expense is a duplicate
+  const isDuplicateExpense = (expense: any) => {
+    if (!existingRecords || existingRecords.length === 0) return false;
+    
+    return existingRecords.some((existingExpense) => {
+      // Check primary matching fields (if available in the expense record)
+      // Most important fields for detecting duplicates:
+      const descriptionMatch = expense.description && 
+        existingExpense.description?.toLowerCase() === expense.description.toLowerCase();
+      
+      const vendorMatch = 
+        (expense.vendorId && existingExpense.vendorId?.toString() === expense.vendorId.toString()) ||
+        (expense.vendor && existingExpense.vendor?.toLowerCase() === expense.vendor.toLowerCase());
+      
+      const dateMatch = expense.expenseDate && 
+        new Date(existingExpense.expenseDate).toDateString() === new Date(expense.expenseDate).toDateString();
+      
+      const amountMatch = 
+        (expense.total && existingExpense.total === expense.total) ||
+        (expense.amount && existingExpense.total === expense.amount);
+        
+      const referenceMatch = expense.referenceNumber && 
+        existingExpense.referenceNumber === expense.referenceNumber;
+      
+      // For an expense to be considered a duplicate, it should match on:
+      // 1. Description AND Amount AND (Date OR Vendor)
+      // 2. OR Reference Number (if it exists and is unique)
+      return (
+        (descriptionMatch && amountMatch && (dateMatch || vendorMatch)) ||
+        (referenceMatch && referenceMatch !== '' && descriptionMatch)
+      );
+    });
+  };
   
   const parseCSV = (file: File) => {
     setParsing(true);
@@ -405,6 +489,14 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                 }
               }
             }
+          }
+          
+          // Check for duplicate expenses
+          const isDuplicate = isDuplicateExpense(row);
+          if (isDuplicate) {
+            // Mark as duplicate, but don't prevent it from being imported
+            row._isDuplicate = true;
+            row._isModified = false; // Track if user has modified this duplicate
           }
           
           // Custom validation from props
