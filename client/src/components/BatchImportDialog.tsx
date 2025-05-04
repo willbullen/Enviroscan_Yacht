@@ -134,7 +134,70 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
   const [newSubcategoryName, setNewSubcategoryName] = useState("");
   const [missingCategories, setMissingCategories] = useState<Set<string>>(new Set());
   const [missingSubcategories, setMissingSubcategories] = useState<Map<string, Set<string>>>(new Map());
+  const [missingVendors, setMissingVendors] = useState<Set<string>>(new Set());
+  const [newVendorName, setNewVendorName] = useState("");
+  const [newVendorType, setNewVendorType] = useState("");
+  const [isAddingVendor, setIsAddingVendor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Function to handle adding a new vendor
+  const handleAddVendor = async (name: string, type?: string) => {
+    if (!name.trim()) return;
+    
+    try {
+      setIsAddingVendor(true);
+      
+      // Make API request to create vendor
+      const response = await fetch('/api/vendors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          name: name.trim(),
+          type: type?.trim() || undefined
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to create vendor: ${response.statusText}`);
+      }
+      
+      const newVendor = await response.json();
+      
+      // Update vendors list in previewData
+      const updatedPreviewData = previewData.map(row => {
+        if (row.vendor === name && row._vendorMissing) {
+          return {
+            ...row,
+            vendorId: newVendor.id.toString(),
+            _vendorMissing: false
+          };
+        }
+        return row;
+      });
+      
+      // Remove vendor from missing list
+      const updatedMissingVendors = new Set(missingVendors);
+      updatedMissingVendors.delete(name);
+      
+      // Update state
+      setPreviewData(updatedPreviewData);
+      setMissingVendors(updatedMissingVendors);
+      setNewVendorName("");
+      setNewVendorType("");
+      
+      // Add to vendors array so it's available in dropdowns
+      vendors.push(newVendor);
+      
+    } catch (error) {
+      console.error("Error adding vendor:", error);
+      // Here you might want to show an error toast
+    } finally {
+      setIsAddingVendor(false);
+    }
+  };
 
   const handleDownloadTemplate = () => {
     const blob = new Blob([templateContent], { type: 'text/csv' });
@@ -239,50 +302,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
     }
   };
 
-  // Track missing vendors for validation
-  const [missingVendors, setMissingVendors] = useState<Set<string>>(new Set());
-  const [newVendorName, setNewVendorName] = useState("");
-  const [newVendorType, setNewVendorType] = useState("");
-  const [isAddingVendor, setIsAddingVendor] = useState(false);
-  
-  // Handle adding a new vendor
-  const handleAddVendor = async (name: string, vendorType: string = "other") => {
-    if (!name.trim()) return null;
-    
-    setIsAddingVendor(true);
-    
-    try {
-      // This is a simplified placeholder - the actual implementation would call the API
-      // and return the newly created vendor to be used in your application
-      const newVendor = { id: Date.now(), name: name.trim(), type: vendorType };
-      
-      // Remove the vendor from the missing list
-      const updatedMissingVendors = new Set(missingVendors);
-      updatedMissingVendors.delete(name.trim());
-      setMissingVendors(updatedMissingVendors);
-      
-      // Update preview data to use new vendor
-      const updatedPreviewData = previewData.map(row => {
-        if (row.vendor === name.trim()) {
-          return { ...row, vendorId: newVendor.id };
-        }
-        return row;
-      });
-      
-      setPreviewData(updatedPreviewData);
-      
-      // Reset form
-      setNewVendorName("");
-      setNewVendorType("");
-      
-      return newVendor;
-    } catch (error) {
-      console.error("Error creating vendor:", error);
-      return null;
-    } finally {
-      setIsAddingVendor(false);
-    }
-  };
+
   
   const parseCSV = (file: File) => {
     setParsing(true);
