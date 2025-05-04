@@ -2802,9 +2802,25 @@ const FinancialManagement: React.FC = () => {
                     variant: "default",
                   });
                   
-                  // Refresh expenses data
+                  // Refresh all expense related data with proper format and force refetch
                   if (currentVessel) {
-                    queryClient.invalidateQueries({ queryKey: [`/api/expenses/vessel/${currentVessel.id}`] });
+                    console.log("Invalidating queries after bulk import for vessel ID:", currentVessel?.id);
+                    
+                    // Invalidate expense queries with proper format
+                    queryClient.invalidateQueries({ 
+                      queryKey: ['/api/expenses/vessel', currentVessel?.id],
+                      refetchType: 'all' 
+                    });
+                    
+                    // Also invalidate transaction and related queries to ensure full data consistency
+                    queryClient.invalidateQueries({ 
+                      queryKey: ['/api/transactions/vessel', currentVessel?.id],
+                      refetchType: 'all'
+                    });
+                    
+                    // Invalidate summary and stats queries
+                    queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'summary'] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'stats'] });
                   }
                   
                   // Close dialog
