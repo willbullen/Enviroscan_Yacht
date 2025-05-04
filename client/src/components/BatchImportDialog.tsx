@@ -967,9 +967,30 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                     </TableHeader>
                     <TableBody>
                       {previewData.slice(0, 10).map((row, rowIndex) => (
-                        <TableRow key={rowIndex} className="hover:bg-muted/30">
-                          <TableCell className="text-muted-foreground font-mono text-xs">
+                        <TableRow 
+                          key={rowIndex} 
+                          className={`hover:bg-muted/30 ${row._isDuplicate ? 'bg-amber-50' : ''}`}
+                        >
+                          <TableCell className="text-muted-foreground font-mono text-xs flex items-center gap-1">
                             {rowIndex + 1}
+                            {row._isDuplicate && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant="outline" className="ml-1 bg-amber-100 text-amber-800 border-amber-300 text-[10px]">
+                                      Duplicate
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right">
+                                    <p>
+                                      {row._isModified 
+                                        ? "This expense exists but has been modified" 
+                                        : "This expense already exists and will be skipped unless modified"}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </TableCell>
                           {headers.map((header) => (
                             <TableCell key={`${rowIndex}-${header}`} className="py-2">
@@ -1119,7 +1140,38 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                                   </SelectContent>
                                 </Select>
                               ) : (
-                                row[header] || ""
+                                editingField && editingField.rowIndex === rowIndex && editingField.field === header ? (
+                                  <div className="flex items-center space-x-1">
+                                    <Input 
+                                      className="h-7 text-sm"
+                                      value={editValue}
+                                      onChange={(e) => setEditValue(e.target.value)}
+                                      autoFocus
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          handleSaveField();
+                                        } else if (e.key === 'Escape') {
+                                          handleCancelEdit();
+                                        }
+                                      }}
+                                    />
+                                    <Button size="sm" variant="ghost" onClick={handleSaveField} className="h-7 px-2">
+                                      <Save className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div 
+                                    className={`cursor-pointer hover:bg-muted/50 p-1 rounded ${
+                                      row._isDuplicate ? 'hover:underline' : ''
+                                    }`}
+                                    onClick={() => handleEditField(rowIndex, header, row[header] || "")}
+                                  >
+                                    {row[header] || ""}
+                                    {row._isDuplicate && !row._isModified && (
+                                      <span className="ml-1 text-xs text-muted-foreground">(click to edit)</span>
+                                    )}
+                                  </div>
+                                )
                               )}
                             </TableCell>
                           ))}
