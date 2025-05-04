@@ -638,7 +638,7 @@ const FinancialManagement: React.FC = () => {
                 })
               ) : (
                 <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-                  <PieChart className="h-10 w-10 mb-2 opacity-20" />
+                  <ChartPie className="h-10 w-10 mb-2 opacity-20" />
                   <p>No expense data available</p>
                 </div>
               )}
