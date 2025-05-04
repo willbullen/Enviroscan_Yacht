@@ -847,12 +847,10 @@ const FinancialManagement: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions && Array.isArray(transactions) && transactions.filter((t: any) => t.transactionType === 'expense').length > 0 ? (
-                    transactions
-                      .filter((t: any) => t.transactionType === 'expense')
-                      .map((expense: any) => (
+                  {expenses && Array.isArray(expenses) && expenses.length > 0 ? (
+                    expenses.map((expense: any) => (
                         <TableRow key={expense.id}>
-                          <TableCell>{format(new Date(expense.transactionDate || new Date()), 'MMM dd, yyyy')}</TableCell>
+                          <TableCell>{format(new Date(expense.expenseDate || new Date()), 'MMM dd, yyyy')}</TableCell>
                           <TableCell>{
                             // Find the vendor by ID and display its name
                             vendors && Array.isArray(vendors) 
@@ -866,14 +864,14 @@ const FinancialManagement: React.FC = () => {
                           <TableCell>{
                             // Find the account by ID and display its name
                             accounts && Array.isArray(accounts) 
-                              ? accounts.find((a: any) => a.id === expense.accountId)?.accountName || '-'
+                              ? accounts.find((a: any) => a.id === expense.accountId)?.name || '-'
                               : '-'
                           }</TableCell>
                           <TableCell className="text-right">
                             {new Intl.NumberFormat('en-US', { 
                               style: 'currency', 
                               currency: expense.currency || 'USD'
-                            }).format(expense.amount || 0)}
+                            }).format(expense.total || 0)}
                           </TableCell>
                           <TableCell>
                             <Badge 
