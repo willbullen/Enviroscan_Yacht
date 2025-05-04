@@ -181,45 +181,84 @@ export default function setupReceiptRoutes(storage: IStorage) {
         vesselId 
       } = req.body;
       
+      // Log the incoming data for debugging
+      console.log("RECEIPT DEBUG - Raw request body:", JSON.stringify(req.body, null, 2));
+      console.log("RECEIPT DEBUG - Raw expenseData:", JSON.stringify(expenseData, null, 2));
+      
       if (!expenseData || !vesselId) {
         return res.status(400).json({ error: 'Expense data and vessel ID are required' });
       }
       
-      // Add vessel ID and user ID to the expense data
-      // Also ensure the expenseDate is a properly formatted ISO string
-      let expenseData_fixed = { ...expenseData };
+      // Create a fresh clean object with proper typing
+      let expenseData_cleaned: Record<string, any> = {};
       
-      // Make sure expenseDate is properly formatted if it exists
-      if (expenseData_fixed.expenseDate) {
-        try {
-          // Try to convert expenseDate to a proper Date object if it's not already
-          const expenseDate = new Date(expenseData_fixed.expenseDate);
-          // Check if date is valid
-          if (isNaN(expenseDate.getTime())) {
-            console.warn(`Invalid expenseDate received: "${expenseData_fixed.expenseDate}", using current date`);
-            expenseData_fixed.expenseDate = new Date().toISOString();
-          } else {
-            // Format as ISO string if valid
-            expenseData_fixed.expenseDate = expenseDate.toISOString();
+      // Copy all fields except for expenseDate for now
+      if (typeof expenseData === 'object' && expenseData !== null) {
+        Object.keys(expenseData).forEach(key => {
+          if (key !== 'expenseDate') {
+            expenseData_cleaned[key] = expenseData[key];
           }
-        } catch (dateError) {
-          console.warn(`Error processing expenseDate: ${dateError}, using current date`);
-          expenseData_fixed.expenseDate = new Date().toISOString();
-        }
-      } else {
-        // If no expenseDate provided, use current date
-        expenseData_fixed.expenseDate = new Date().toISOString();
+        });
       }
       
-      const newExpense = {
-        ...expenseData_fixed,
-        vesselId,
-        createdById: userId, // Use the userId from passport
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+      console.log("RECEIPT DEBUG - expenseData after initial cleanup:", JSON.stringify(expenseData_cleaned, null, 2));
+      
+      // Now handle the date specifically
+      let expenseDateISO: string;
+      
+      if (expenseData.expenseDate) {
+        try {
+          console.log("RECEIPT DEBUG - Original expenseDate:", expenseData.expenseDate);
+          console.log("RECEIPT DEBUG - Type of expenseDate:", typeof expenseData.expenseDate);
+          
+          // Handle date based on its type
+          if (typeof expenseData.expenseDate === 'string') {
+            const dateObj = new Date(expenseData.expenseDate);
+            if (!isNaN(dateObj.getTime())) {
+              expenseDateISO = dateObj.toISOString();
+            } else {
+              console.warn(`Invalid date string: "${expenseData.expenseDate}"`);
+              expenseDateISO = new Date().toISOString();
+            }
+          } else if (expenseData.expenseDate instanceof Date) {
+            expenseDateISO = expenseData.expenseDate.toISOString();
+          } else {
+            console.warn(`Unexpected expenseDate type: ${typeof expenseData.expenseDate}`);
+            expenseDateISO = new Date().toISOString();
+          }
+        } catch (dateError) {
+          console.error(`Error processing expenseDate: ${dateError}`);
+          expenseDateISO = new Date().toISOString();
+        }
+      } else {
+        expenseDateISO = new Date().toISOString();
+      }
+      
+      console.log("RECEIPT DEBUG - Final expenseDateISO:", expenseDateISO);
+      
+      // Required fields for an expense record
+      // The database expects a Date object for expenseDate, not an ISO string
+      const requiredFields = {
+        description: expenseData.description || 'Receipt Expense',
+        total: expenseData.total?.toString() || '0',
+        status: expenseData.status || 'pending',
+        category: expenseData.category || 'Other',
+        paymentMethod: expenseData.paymentMethod || 'Unknown',
+        expenseDate: new Date(expenseDateISO), // Convert ISO string to Date object
+        accountId: expenseData.accountId || 1, // Default account ID
       };
       
-      console.log("Creating expense with data:", JSON.stringify(newExpense, null, 2));
+      // Combine all the data
+      const newExpense = {
+        ...expenseData_cleaned,
+        ...requiredFields,
+        vesselId: parseInt(vesselId, 10),
+        createdById: userId, 
+        createdAt: new Date(), // Using Date objects directly instead of ISO strings
+        updatedAt: new Date()
+      };
+      
+      console.log("RECEIPT DEBUG - Final expense object:", JSON.stringify(newExpense, null, 2));
       
       // Create the new expense
       const createdExpense = await storage.createExpense(newExpense);

@@ -1,0 +1,103 @@
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Fetched expense data: 
+Array []
+Vessel changed to M/Y NOURAH OF RIYAD (ID: 4). Reloading data...
+Fetching financial summary for vessel 4
+Fetched expense data: 
+Array []
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched accounts data: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+API Error: POST https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/receipts/create-expense (500) 500: Internal Server Error 
+Object {error: "Failed to create expense from receipt", details: "value.toISOString is not a function"}
+details: "value.toISOString is not a function"
+error: "Failed to create expense from receipt"
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error creating expense from receipt: 
+Error {status: 500, data: {…}, url: "https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/receipts/create…", method: "POST"}
+data: Object
+details: "value.toISOString is not a function"
+error: "Failed to create expense from receipt"
+[[Prototype]]: Object
+method: "POST"
+status: 500
+url: "https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/receipts/create-expense"
+message: "500: Internal Server Error"
+stack: "Error: 500: Internal Server Error↵ at parseErrorResponse (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:28:17)↵ at async throwIfResNotOk (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:37:19)↵ at async apiRequest (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:59:7)↵ at async handleCreateExpense (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/financial/ReceiptReconciliationDialog.tsx:178:7)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
