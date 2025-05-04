@@ -14,10 +14,10 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28EFF', '#FF6B6B'
 
 const ExpenseByCategoryWidget: React.FC<ExpenseByCategoryWidgetProps> = ({ vesselId }) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/transactions/vessel', vesselId, 'stats'],
+    queryKey: ['/api/expenses/vessel', vesselId, 'stats'],
     queryFn: () => {
       if (!vesselId) return Promise.resolve({});
-      return fetch(`/api/transactions/vessel/${vesselId}/stats`)
+      return fetch(`/api/expenses/vessel/${vesselId}/stats`)
         .then(res => res.json())
         .catch(err => {
           console.error("Error fetching expense stats:", err);

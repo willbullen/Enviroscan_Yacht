@@ -2014,25 +2014,41 @@ const FinancialManagement: React.FC = () => {
                 throw new Error('Please select an account');
               }
               
+              // Transform transaction data format to expense format
+              const expenseDataFormatted = {
+                description: expenseData.description,
+                expenseDate: expenseData.transactionDate,
+                amount: expenseData.amount,
+                currency: expenseData.currency,
+                vendorId: expenseData.vendorId,
+                vesselId: expenseData.vesselId,
+                paymentMethod: 'credit card', // Default payment method
+                referenceNumber: '',
+                status: expenseData.status,
+                notes: '',
+                category: expenseData.category,
+                accountId: expenseData.accountId,
+              };
+              
               let response;
               
               if (editingExpense) {
-                // Update existing transaction
-                response = await fetch(`/api/transactions/${editingExpense.id}`, {
+                // Update existing expense
+                response = await fetch(`/api/expenses/${editingExpense.id}`, {
                   method: 'PUT',
                   headers: {
                     'Content-Type': 'application/json',
                   },
-                  body: JSON.stringify(expenseData),
+                  body: JSON.stringify(expenseDataFormatted),
                 });
               } else {
-                // Create new transaction
-                response = await fetch('/api/transactions', {
+                // Create new expense
+                response = await fetch('/api/expenses', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
                   },
-                  body: JSON.stringify(expenseData),
+                  body: JSON.stringify(expenseDataFormatted),
                 });
               }
               
@@ -2057,12 +2073,15 @@ const FinancialManagement: React.FC = () => {
               
               // Force a complete data refresh for the expense table
               queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
+              queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id] });
               queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
               queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel?.id] });
               
-              // Also invalidate any summary queries that might display transaction data
+              // Also invalidate any summary queries that might display expense or transaction data
               queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'summary'] });
               queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'stats'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'summary'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'stats'] });
             } catch (error: any) {
               console.error('Failed to save transaction:', error);
               toast({
