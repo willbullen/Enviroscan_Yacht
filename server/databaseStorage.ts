@@ -31,6 +31,7 @@ import {
   transactions,
   transactionLines,
   deposits,
+  bankAccounts,
   bankingApiProviders,
   bankApiConnections,
   bankApiTransactions,
@@ -95,6 +96,8 @@ import {
   type InsertTransactionLine,
   type Deposit,
   type InsertDeposit,
+  type BankAccount,
+  type InsertBankAccount,
   type BankingApiProvider,
   type InsertBankingApiProvider,
   type BankApiConnection,
@@ -2528,6 +2531,28 @@ export class DatabaseStorage implements IStorage {
       console.error(`Error deleting bank account ${id}:`, error);
       return false;
     }
+  }
+  
+  async getBankAccountsByVessel(vesselId: number): Promise<BankAccount[]> {
+    return db
+      .select()
+      .from(bankAccounts)
+      .where(eq(bankAccounts.vesselId, vesselId))
+      .orderBy(bankAccounts.accountName);
+  }
+  
+  async reconcileBankAccount(id: number, newBalance: string, reconciliationDate: Date): Promise<BankAccount | undefined> {
+    const [reconciled] = await db
+      .update(bankAccounts)
+      .set({
+        currentBalance: newBalance,
+        lastReconciledDate: reconciliationDate,
+        updatedAt: new Date()
+      })
+      .where(eq(bankAccounts.id, id))
+      .returning();
+    
+    return reconciled;
   }
   
   // Banking Provider operations

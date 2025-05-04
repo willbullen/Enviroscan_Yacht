@@ -857,6 +857,7 @@ export const bankAccounts = pgTable("bank_accounts", {
   lastReconciledDate: timestamp("last_reconciled_date"),
   isActive: boolean("is_active").default(true),
   notes: text("notes"),
+  vesselId: integer("vessel_id").references(() => vessels.id),
   createdById: integer("created_by_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
