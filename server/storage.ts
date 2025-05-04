@@ -33,7 +33,13 @@ import {
   expenses, type Expense, type InsertExpense, 
   transactions, type Transaction, type InsertTransaction,
   transactionLines, type TransactionLine, type InsertTransactionLine,
-  deposits, type Deposit, type InsertDeposit
+  deposits, type Deposit, type InsertDeposit,
+  // Banking Integration imports
+  bankAccounts, type BankAccount, type InsertBankAccount,
+  bankingApiProviders, type BankingApiProvider, type InsertBankingApiProvider,
+  bankApiConnections, type BankApiConnection, type InsertBankApiConnection,
+  bankApiTransactions, type BankApiTransaction, type InsertBankApiTransaction,
+  bankSyncLogs, type BankSyncLog, type InsertBankSyncLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
@@ -282,6 +288,45 @@ export interface IStorage {
   createFinancialAccount(account: InsertFinancialAccount): Promise<FinancialAccount>;
   updateFinancialAccount(id: number, account: Partial<FinancialAccount>): Promise<FinancialAccount | undefined>;
   deleteFinancialAccount(id: number): Promise<boolean>;
+  
+  // Bank Account operations
+  getBankAccount(id: number): Promise<BankAccount | undefined>;
+  getAllBankAccounts(): Promise<BankAccount[]>;
+  getActiveBankAccounts(): Promise<BankAccount[]>;
+  createBankAccount(account: InsertBankAccount): Promise<BankAccount>;
+  updateBankAccount(id: number, account: Partial<BankAccount>): Promise<BankAccount | undefined>;
+  deleteBankAccount(id: number): Promise<boolean>;
+  
+  // Banking Provider operations
+  getBankingApiProvider(id: number): Promise<BankingApiProvider | undefined>;
+  getBankingApiProviderByType(apiType: string): Promise<BankingApiProvider | undefined>;
+  getAllBankingApiProviders(): Promise<BankingApiProvider[]>;
+  getActiveBankingApiProviders(): Promise<BankingApiProvider[]>;
+  
+  // Banking API Connection operations
+  getBankApiConnection(id: number): Promise<BankApiConnection | undefined>;
+  getBankApiConnectionsByBankAccount(bankAccountId: number): Promise<BankApiConnection[]>;
+  getActiveBankApiConnections(): Promise<BankApiConnection[]>;
+  createBankApiConnection(connection: InsertBankApiConnection): Promise<BankApiConnection>;
+  updateBankApiConnection(id: number, connection: Partial<BankApiConnection>): Promise<BankApiConnection | undefined>;
+  deleteBankApiConnection(id: number): Promise<boolean>;
+  
+  // Banking API Transaction operations
+  getBankApiTransaction(id: number): Promise<BankApiTransaction | undefined>;
+  getBankApiTransactionsByConnection(connectionId: number): Promise<BankApiTransaction[]>;
+  getBankApiTransactionsByBankAccount(bankAccountId: number): Promise<BankApiTransaction[]>;
+  getBankApiTransactionsByDateRange(bankAccountId: number, startDate: Date, endDate: Date): Promise<BankApiTransaction[]>;
+  getUnreconciledBankApiTransactions(bankAccountId: number): Promise<BankApiTransaction[]>;
+  createBankApiTransaction(transaction: InsertBankApiTransaction): Promise<BankApiTransaction>;
+  createBulkBankApiTransactions(transactions: InsertBankApiTransaction[]): Promise<BankApiTransaction[]>;
+  updateBankApiTransaction(id: number, transaction: Partial<BankApiTransaction>): Promise<BankApiTransaction | undefined>;
+  
+  // Bank Sync Log operations
+  getBankSyncLog(id: number): Promise<BankSyncLog | undefined>;
+  getBankSyncLogsByConnection(connectionId: number): Promise<BankSyncLog[]>;
+  getRecentBankSyncLogs(limit?: number): Promise<BankSyncLog[]>;
+  createBankSyncLog(log: InsertBankSyncLog): Promise<BankSyncLog>;
+  updateBankSyncLog(id: number, log: Partial<BankSyncLog>): Promise<BankSyncLog | undefined>;
   
   // Budget operations
   getBudget(id: number): Promise<Budget | undefined>;

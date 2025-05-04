@@ -2474,4 +2474,222 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(vendors).where(eq(vendors.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
+  
+  // ============= Banking Integration methods =============
+  
+  // Bank Account operations
+  async getBankAccount(id: number): Promise<BankAccount | undefined> {
+    const [account] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, id));
+    return account;
+  }
+  
+  async getAllBankAccounts(): Promise<BankAccount[]> {
+    return db.select().from(bankAccounts).orderBy(bankAccounts.accountName);
+  }
+  
+  async getActiveBankAccounts(): Promise<BankAccount[]> {
+    return db.select().from(bankAccounts).where(eq(bankAccounts.isActive, true)).orderBy(bankAccounts.accountName);
+  }
+  
+  async createBankAccount(account: InsertBankAccount): Promise<BankAccount> {
+    const [newAccount] = await db.insert(bankAccounts).values(account).returning();
+    return newAccount;
+  }
+  
+  async updateBankAccount(id: number, account: Partial<BankAccount>): Promise<BankAccount | undefined> {
+    const [updatedAccount] = await db
+      .update(bankAccounts)
+      .set({
+        ...account,
+        updatedAt: new Date()
+      })
+      .where(eq(bankAccounts.id, id))
+      .returning();
+    return updatedAccount;
+  }
+  
+  async deleteBankAccount(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(bankAccounts).where(eq(bankAccounts.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting bank account ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // Banking Provider operations
+  async getBankingApiProvider(id: number): Promise<BankingApiProvider | undefined> {
+    const [provider] = await db.select().from(bankingApiProviders).where(eq(bankingApiProviders.id, id));
+    return provider;
+  }
+  
+  async getBankingApiProviderByType(apiType: string): Promise<BankingApiProvider | undefined> {
+    const [provider] = await db.select().from(bankingApiProviders).where(eq(bankingApiProviders.apiType, apiType));
+    return provider;
+  }
+  
+  async getAllBankingApiProviders(): Promise<BankingApiProvider[]> {
+    return db.select().from(bankingApiProviders).orderBy(bankingApiProviders.name);
+  }
+  
+  async getActiveBankingApiProviders(): Promise<BankingApiProvider[]> {
+    return db.select().from(bankingApiProviders).where(eq(bankingApiProviders.isActive, true)).orderBy(bankingApiProviders.name);
+  }
+  
+  // Banking API Connection operations
+  async getBankApiConnection(id: number): Promise<BankApiConnection | undefined> {
+    const [connection] = await db.select().from(bankApiConnections).where(eq(bankApiConnections.id, id));
+    return connection;
+  }
+  
+  async getBankApiConnectionsByBankAccount(bankAccountId: number): Promise<BankApiConnection[]> {
+    return db
+      .select()
+      .from(bankApiConnections)
+      .where(eq(bankApiConnections.bankAccountId, bankAccountId))
+      .orderBy(bankApiConnections.name);
+  }
+  
+  async getActiveBankApiConnections(): Promise<BankApiConnection[]> {
+    return db
+      .select()
+      .from(bankApiConnections)
+      .where(eq(bankApiConnections.isActive, true))
+      .orderBy(bankApiConnections.name);
+  }
+  
+  async createBankApiConnection(connection: InsertBankApiConnection): Promise<BankApiConnection> {
+    const [newConnection] = await db.insert(bankApiConnections).values(connection).returning();
+    return newConnection;
+  }
+  
+  async updateBankApiConnection(id: number, connection: Partial<BankApiConnection>): Promise<BankApiConnection | undefined> {
+    const [updatedConnection] = await db
+      .update(bankApiConnections)
+      .set({
+        ...connection,
+        updatedAt: new Date()
+      })
+      .where(eq(bankApiConnections.id, id))
+      .returning();
+    return updatedConnection;
+  }
+  
+  async deleteBankApiConnection(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(bankApiConnections).where(eq(bankApiConnections.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting bank API connection ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // Banking API Transaction operations
+  async getBankApiTransaction(id: number): Promise<BankApiTransaction | undefined> {
+    const [transaction] = await db.select().from(bankApiTransactions).where(eq(bankApiTransactions.id, id));
+    return transaction;
+  }
+  
+  async getBankApiTransactionsByConnection(connectionId: number): Promise<BankApiTransaction[]> {
+    return db
+      .select()
+      .from(bankApiTransactions)
+      .where(eq(bankApiTransactions.connectionId, connectionId))
+      .orderBy(desc(bankApiTransactions.transactionDate));
+  }
+  
+  async getBankApiTransactionsByBankAccount(bankAccountId: number): Promise<BankApiTransaction[]> {
+    return db
+      .select()
+      .from(bankApiTransactions)
+      .where(eq(bankApiTransactions.bankAccountId, bankAccountId))
+      .orderBy(desc(bankApiTransactions.transactionDate));
+  }
+  
+  async getBankApiTransactionsByDateRange(bankAccountId: number, startDate: Date, endDate: Date): Promise<BankApiTransaction[]> {
+    return db
+      .select()
+      .from(bankApiTransactions)
+      .where(
+        and(
+          eq(bankApiTransactions.bankAccountId, bankAccountId),
+          between(bankApiTransactions.transactionDate, startDate, endDate)
+        )
+      )
+      .orderBy(desc(bankApiTransactions.transactionDate));
+  }
+  
+  async getUnreconciledBankApiTransactions(bankAccountId: number): Promise<BankApiTransaction[]> {
+    return db
+      .select()
+      .from(bankApiTransactions)
+      .where(
+        and(
+          eq(bankApiTransactions.bankAccountId, bankAccountId),
+          eq(bankApiTransactions.isReconciled, false)
+        )
+      )
+      .orderBy(desc(bankApiTransactions.transactionDate));
+  }
+  
+  async createBankApiTransaction(transaction: InsertBankApiTransaction): Promise<BankApiTransaction> {
+    const [newTransaction] = await db.insert(bankApiTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+  
+  async createBulkBankApiTransactions(transactions: InsertBankApiTransaction[]): Promise<BankApiTransaction[]> {
+    if (!transactions.length) return [];
+    const insertedTransactions = await db.insert(bankApiTransactions).values(transactions).returning();
+    return insertedTransactions;
+  }
+  
+  async updateBankApiTransaction(id: number, transaction: Partial<BankApiTransaction>): Promise<BankApiTransaction | undefined> {
+    const [updatedTransaction] = await db
+      .update(bankApiTransactions)
+      .set({
+        ...transaction,
+        updatedAt: new Date()
+      })
+      .where(eq(bankApiTransactions.id, id))
+      .returning();
+    return updatedTransaction;
+  }
+  
+  // Bank Sync Log operations
+  async getBankSyncLog(id: number): Promise<BankSyncLog | undefined> {
+    const [log] = await db.select().from(bankSyncLogs).where(eq(bankSyncLogs.id, id));
+    return log;
+  }
+  
+  async getBankSyncLogsByConnection(connectionId: number): Promise<BankSyncLog[]> {
+    return db
+      .select()
+      .from(bankSyncLogs)
+      .where(eq(bankSyncLogs.connectionId, connectionId))
+      .orderBy(desc(bankSyncLogs.startDate));
+  }
+  
+  async getRecentBankSyncLogs(limit: number = 10): Promise<BankSyncLog[]> {
+    return db
+      .select()
+      .from(bankSyncLogs)
+      .orderBy(desc(bankSyncLogs.startDate))
+      .limit(limit);
+  }
+  
+  async createBankSyncLog(log: InsertBankSyncLog): Promise<BankSyncLog> {
+    const [newLog] = await db.insert(bankSyncLogs).values(log).returning();
+    return newLog;
+  }
+  
+  async updateBankSyncLog(id: number, log: Partial<BankSyncLog>): Promise<BankSyncLog | undefined> {
+    const [updatedLog] = await db
+      .update(bankSyncLogs)
+      .set(log)
+      .where(eq(bankSyncLogs.id, id))
+      .returning();
+    return updatedLog;
+  }
 }
