@@ -65,14 +65,24 @@ const headerDisplayNames: Record<string, string> = {
   'amount': 'Amount',
   'total': 'Total',
   'vendor': 'Vendor',
+  'vendorId': 'Vendor ID',
   'paymentMethod': 'Payment Method',
   'status': 'Status',
   'referenceNumber': 'Reference #',
   'accountNumber': 'Account #',
+  'accountId': 'Account ID',
   'expenseDate': 'Expense Date',
   'transactionDate': 'Transaction Date',
   'notes': 'Notes',
-  'currency': 'Currency'
+  'currency': 'Currency',
+  'categoryId': 'Category ID',
+  'subcategory': 'Subcategory',
+  'subcategoryId': 'Subcategory ID',
+  'vesselId': 'Vessel ID',
+  'budgetId': 'Budget ID',
+  'createdById': 'Created By',
+  'createdAt': 'Created At',
+  'updatedAt': 'Updated At'
 };
 
 interface BatchImportDialogProps {
@@ -967,13 +977,15 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
           {activeTab === "preview" && (
             <Button 
               onClick={handleFinalImport} 
-              disabled={missingCategories.size > 0 || missingSubcategories.size > 0}
+              disabled={missingCategories.size > 0 || missingSubcategories.size > 0 || missingVendors.size > 0}
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
               {missingCategories.size > 0 || missingSubcategories.size > 0 
                 ? "Add Required Categories First" 
-                : `Import ${previewData.length} Records`}
+                : missingVendors.size > 0
+                  ? "Add Required Vendors First"
+                  : `Import ${previewData.length} Records`}
             </Button>
           )}
         </DialogFooter>
