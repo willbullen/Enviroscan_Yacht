@@ -363,29 +363,40 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
     return existingRecords.some((existingExpense) => {
       // Check primary matching fields (if available in the expense record)
       // Most important fields for detecting duplicates:
-      const descriptionMatch = expense.description && 
-        existingExpense.description?.toLowerCase() === expense.description.toLowerCase();
       
+      // Description match (case insensitive, trimmed)
+      const descriptionMatch = expense.description && existingExpense.description &&
+        existingExpense.description.toLowerCase().trim() === expense.description.toLowerCase().trim();
+      
+      // Vendor match can be by ID or name (case insensitive)
       const vendorMatch = 
-        (expense.vendorId && existingExpense.vendorId?.toString() === expense.vendorId.toString()) ||
-        (expense.vendor && existingExpense.vendor?.toLowerCase() === expense.vendor.toLowerCase());
+        (expense.vendorId && existingExpense.vendorId && 
+          existingExpense.vendorId.toString() === expense.vendorId.toString()) ||
+        (expense.vendor && existingExpense.vendor && 
+          existingExpense.vendor.toLowerCase().trim() === expense.vendor.toLowerCase().trim());
       
-      const dateMatch = expense.expenseDate && 
+      // Date match (same day)
+      const dateMatch = expense.expenseDate && existingExpense.expenseDate && 
         new Date(existingExpense.expenseDate).toDateString() === new Date(expense.expenseDate).toDateString();
       
+      // Amount match (handle both total and amount fields)
       const amountMatch = 
-        (expense.total && existingExpense.total === expense.total) ||
-        (expense.amount && existingExpense.total === expense.amount);
+        (expense.total && existingExpense.total && 
+          existingExpense.total.toString().trim() === expense.total.toString().trim()) ||
+        (expense.amount && existingExpense.total && 
+          existingExpense.total.toString().trim() === expense.amount.toString().trim());
         
-      const referenceMatch = expense.referenceNumber && 
-        existingExpense.referenceNumber === expense.referenceNumber;
+      // Reference number match (if both have non-empty reference numbers)
+      const referenceMatch = expense.referenceNumber && existingExpense.referenceNumber && 
+        expense.referenceNumber.trim() !== '' && 
+        existingExpense.referenceNumber.trim() === expense.referenceNumber.trim();
       
       // For an expense to be considered a duplicate, it should match on:
       // 1. Description AND Amount AND (Date OR Vendor)
-      // 2. OR Reference Number (if it exists and is unique)
+      // 2. OR Reference Number (if it exists and is unique) AND (Description OR Amount)
       return (
         (descriptionMatch && amountMatch && (dateMatch || vendorMatch)) ||
-        (referenceMatch && referenceMatch !== '' && descriptionMatch)
+        (referenceMatch && (descriptionMatch || amountMatch))
       );
     });
   };
@@ -411,6 +422,9 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
         const missingCats = new Set<string>();
         const missingSubs = new Map<string, Set<string>>();
         const missingVends = new Set<string>();
+        
+        // Track if we found any duplicates for auto-switching to preview tab
+        let hasDuplicates = false;
         
         // Check if this import has category, subcategory, or vendor fields
         const hasCategoryField = headerRow.includes('categoryId') || headerRow.includes('category');
@@ -497,6 +511,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
             // Mark as duplicate, but don't prevent it from being imported
             row._isDuplicate = true;
             row._isModified = false; // Track if user has modified this duplicate
+            hasDuplicates = true; // Track if we found any duplicates
           }
           
           // Custom validation from props
