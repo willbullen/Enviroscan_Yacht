@@ -656,65 +656,12 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
               </Card>
             )}
             
-            {missingCategories.size > 0 && onAddCategory && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Missing Categories</CardTitle>
-                  <CardDescription>
-                    Create the following categories before importing
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {Array.from(missingCategories).map((category) => (
-                        <Badge key={category} variant="outline" className="text-sm py-1 px-2">
-                          {category}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    <div className="grid grid-cols-12 gap-2">
-                      <div className="col-span-5">
-                        <Label htmlFor="new-category">Category Name</Label>
-                        <Input 
-                          id="new-category"
-                          value={newCategoryName} 
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          placeholder="Enter a category name"
-                        />
-                      </div>
-                      <div className="col-span-5">
-                        <Label htmlFor="category-type">Category Type (Optional)</Label>
-                        <Input 
-                          id="category-type"
-                          value={newCategoryType} 
-                          onChange={(e) => setNewCategoryType(e.target.value)}
-                          placeholder="Enter a type (optional)"
-                        />
-                      </div>
-                      <div className="col-span-2 flex items-end">
-                        <Button 
-                          onClick={handleAddCategory}
-                          disabled={!newCategoryName.trim()}
-                          className="w-full"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
             {missingVendors.size > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Missing Vendors</CardTitle>
                   <CardDescription>
-                    Create the vendors below to continue with import
+                    Create the following vendors before importing
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -759,10 +706,63 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                             </div>
                           ) : (
                             <>
-                              <Plus className="h-4 w-4 mr-1" />
+                              <UserPlus className="h-4 w-4 mr-1" />
                               Add
                             </>
                           )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {missingCategories.size > 0 && onAddCategory && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Missing Categories</CardTitle>
+                  <CardDescription>
+                    Create the following categories before importing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {Array.from(missingCategories).map((category) => (
+                        <Badge key={category} variant="outline" className="text-sm py-1 px-2 bg-red-50 text-red-700 hover:bg-red-100">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-12 gap-2">
+                      <div className="col-span-5">
+                        <Label htmlFor="new-category">Category Name</Label>
+                        <Input 
+                          id="new-category"
+                          value={newCategoryName} 
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder="Enter a category name"
+                        />
+                      </div>
+                      <div className="col-span-5">
+                        <Label htmlFor="category-type">Category Type (Optional)</Label>
+                        <Input 
+                          id="category-type"
+                          value={newCategoryType} 
+                          onChange={(e) => setNewCategoryType(e.target.value)}
+                          placeholder="Enter a type (optional)"
+                        />
+                      </div>
+                      <div className="col-span-2 flex items-end">
+                        <Button 
+                          onClick={handleAddCategory}
+                          disabled={!newCategoryName.trim()}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
                         </Button>
                       </div>
                     </div>
@@ -794,7 +794,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                           
                           <div className="flex flex-wrap gap-2 mb-3">
                             {Array.from(subcats).map((subcat) => (
-                              <Badge key={`${catId}-${subcat}`} variant="outline" className="text-sm py-1 px-2">
+                              <Badge key={`${catId}-${subcat}`} variant="outline" className="text-sm py-1 px-2 bg-red-50 text-red-700 hover:bg-red-100">
                                 {subcat}
                               </Badge>
                             ))}
