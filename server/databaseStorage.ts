@@ -2254,7 +2254,15 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createExpense(expense: InsertExpense): Promise<Expense> {
-    const [newExpense] = await db.insert(expenses).values(expense).returning();
+    // Create a safe copy of the expense data
+    const safeExpense = { ...expense };
+    
+    // Remove transactionId if it exists and is 0 (to prevent foreign key constraint errors)
+    if (safeExpense.transactionId === 0 || safeExpense.transactionId === undefined) {
+      delete safeExpense.transactionId;
+    }
+    
+    const [newExpense] = await db.insert(expenses).values(safeExpense).returning();
     return newExpense;
   }
   
@@ -2264,7 +2272,15 @@ export class DatabaseStorage implements IStorage {
     // Process each expense individually to ensure proper error handling
     for (const expense of expensesData) {
       try {
-        const newExpense = await this.createExpense(expense);
+        // Ensure transactionId is not being set to an invalid value
+        const safeExpense = { ...expense };
+        
+        // Remove transactionId if it exists and is 0 (to prevent foreign key constraint errors)
+        if (safeExpense.transactionId === 0 || safeExpense.transactionId === undefined) {
+          delete safeExpense.transactionId;
+        }
+        
+        const newExpense = await this.createExpense(safeExpense);
         createdExpenses.push(newExpense);
       } catch (error) {
         console.error("Error creating expense in bulk operation:", error);
