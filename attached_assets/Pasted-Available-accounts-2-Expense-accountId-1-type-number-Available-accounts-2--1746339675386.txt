@@ -1,0 +1,107 @@
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+API Error: /api/receipts/create-expense POST (0) Failed to execute 'fetch' on 'Window': '/api/receipts/create-expense' is not a valid HTTP method. undefined
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error creating expense from receipt: 
+TypeError {message: "Failed to execute 'fetch' on 'Window': '/api/receipts/create-expense' is not a valid HTTP method.", status: 0, url: "POST", method: "/api/receipts/create-expense"}
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Failed to execute 'fetch' on 'Window': '/api/receipts/create-expense' is not a valid HTTP method.
+at window.fetch (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218642)
+at apiRequest (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/lib/queryClient.ts:50:23)
+at handleCreateExpense (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/src/components/financial/ReceiptReconciliationDialog.tsx:179:13)
+at HTMLUnknownElement.callCallback2 (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:3674:22)
+at Object.invokeGuardedCallbackDev (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:3699:24)
+at invokeGuardedCallback (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:3733:39)
+at invokeGuardedCallbackAndCatchFirstError (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:3736:33)
+at executeDispatch (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:7014:11)
+at processDispatchQueueItemsInOrder (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:7034:15)
+at processDispatchQueue (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=1a28aaa8:7043:13)
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Fetched expense data: 
+(4) [{…}, {…}, {…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]
+Expense accountId: 1 type: number
+Available accounts: 
+(2) [{…}, {…}]

@@ -171,8 +171,8 @@ const ReceiptReconciliationDialog: React.FC<ReceiptReconciliationDialogProps> = 
         notes: addNotes ? notes : ""
       };
       
-      await apiRequest("/api/receipts/link-to-expense", "POST", payload, {
-        credentials: "include" // Add credentials for this API request
+      await apiRequest("POST", "/api/receipts/link-to-expense", payload, {
+        // Note: credentials: "include" is already set in apiRequest function as default
       });
       
       toast({
@@ -213,8 +213,8 @@ const ReceiptReconciliationDialog: React.FC<ReceiptReconciliationDialogProps> = 
         vesselId: currentVessel.id
       };
       
-      await apiRequest("/api/receipts/create-expense", "POST", payload, {
-        credentials: "include" // Add credentials for this API request
+      await apiRequest("POST", "/api/receipts/create-expense", payload, {
+        // Note: credentials: "include" is already set in apiRequest function as default
       });
       
       toast({
