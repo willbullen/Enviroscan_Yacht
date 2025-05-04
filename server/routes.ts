@@ -5265,6 +5265,443 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(result);
   }));
 
+  // =========== Financial Management - Banking Integration Routes =============
+  
+  // Get all banking API providers
+  apiRouter.get("/banking/providers", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const providers = await storage.getAllBankingApiProviders();
+    res.json(providers);
+  }));
+  
+  // Get all bank API connections
+  apiRouter.get("/banking/connections", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const connections = await storage.getBankApiConnections();
+    res.json(connections);
+  }));
+  
+  // Get a specific bank API connection
+  apiRouter.get("/banking/connections/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid connection ID" });
+    }
+    
+    const connection = await storage.getBankApiConnection(id);
+    if (!connection) {
+      return res.status(404).json({ error: "Bank API connection not found" });
+    }
+    
+    res.json(connection);
+  }));
+  
+  // Create a new bank API connection
+  apiRouter.post("/banking/connections", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    try {
+      const validatedData = insertBankApiConnectionSchema.parse(req.body);
+      
+      // Check if provider exists
+      const provider = await storage.getBankingApiProvider(validatedData.providerId);
+      if (!provider) {
+        return res.status(400).json({ error: "Invalid provider ID" });
+      }
+      
+      // Create new connection
+      const connection = await storage.createBankApiConnection(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'bank_connection_created',
+        description: `New banking API connection added for provider: ${provider.name}`,
+        userId: req.user.id,
+        relatedEntityType: 'bank_api_connection',
+        relatedEntityId: connection.id,
+        metadata: { provider: provider.name }
+      });
+      
+      res.status(201).json(connection);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid bank connection data", errors: error.errors });
+      }
+      console.error("Failed to create bank API connection:", error);
+      res.status(500).json({ message: "Failed to create bank API connection" });
+    }
+  }));
+  
+  // Update a bank API connection
+  apiRouter.patch("/banking/connections/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid connection ID" });
+    }
+    
+    try {
+      const existingConnection = await storage.getBankApiConnection(id);
+      if (!existingConnection) {
+        return res.status(404).json({ error: "Bank API connection not found" });
+      }
+      
+      // Update connection
+      const updatedConnection = await storage.updateBankApiConnection(id, req.body);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'bank_connection_updated',
+        description: `Banking API connection updated: ID ${id}`,
+        userId: req.user.id,
+        relatedEntityType: 'bank_api_connection',
+        relatedEntityId: id,
+        metadata: { updated: Object.keys(req.body) }
+      });
+      
+      res.json(updatedConnection);
+    } catch (error) {
+      console.error(`Failed to update bank API connection ${id}:`, error);
+      res.status(500).json({ message: "Failed to update bank API connection" });
+    }
+  }));
+  
+  // Delete a bank API connection
+  apiRouter.delete("/banking/connections/:id", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid connection ID" });
+    }
+    
+    try {
+      const connection = await storage.getBankApiConnection(id);
+      if (!connection) {
+        return res.status(404).json({ error: "Bank API connection not found" });
+      }
+      
+      await storage.deleteBankApiConnection(id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'bank_connection_deleted',
+        description: `Banking API connection deleted: ID ${id}`,
+        userId: req.user.id,
+        relatedEntityType: 'bank_api_connection',
+        relatedEntityId: id,
+        metadata: { provider: connection.providerId }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error(`Failed to delete bank API connection ${id}:`, error);
+      res.status(500).json({ message: "Failed to delete bank API connection" });
+    }
+  }));
+  
+  // Get bank transactions for a specific connection
+  apiRouter.get("/banking/connections/:id/transactions", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const connectionId = parseInt(req.params.id);
+    if (isNaN(connectionId)) {
+      return res.status(400).json({ error: "Invalid connection ID" });
+    }
+    
+    // Optional date range filtering
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    
+    try {
+      // Verify connection exists
+      const connection = await storage.getBankApiConnection(connectionId);
+      if (!connection) {
+        return res.status(404).json({ error: "Bank API connection not found" });
+      }
+      
+      const transactions = await storage.getBankApiTransactions(connectionId, startDate, endDate);
+      res.json(transactions);
+    } catch (error) {
+      console.error(`Failed to get bank transactions for connection ${connectionId}:`, error);
+      res.status(500).json({ message: "Failed to get bank transactions" });
+    }
+  }));
+  
+  // Initiate bank sync for a connection
+  apiRouter.post("/banking/connections/:id/sync", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const connectionId = parseInt(req.params.id);
+    if (isNaN(connectionId)) {
+      return res.status(400).json({ error: "Invalid connection ID" });
+    }
+    
+    try {
+      // Verify connection exists
+      const connection = await storage.getBankApiConnection(connectionId);
+      if (!connection) {
+        return res.status(404).json({ error: "Bank API connection not found" });
+      }
+      
+      // Get provider details
+      const provider = await storage.getBankingApiProvider(connection.providerId);
+      if (!provider) {
+        return res.status(404).json({ error: "Banking provider not found" });
+      }
+      
+      // Create a sync log entry to track the process
+      const syncLog = await storage.createBankSyncLog({
+        connectionId: connectionId,
+        startTime: new Date(),
+        status: 'in_progress',
+        transactionsRetrieved: 0,
+        transactionsImported: 0,
+        errors: null
+      });
+      
+      // In a real implementation, we would call the bank API here
+      // For now, we'll simulate a successful sync with mock data
+      
+      // Different handling based on provider type
+      let syncResult;
+      if (provider.name === 'Centtrip') {
+        // Simulate Centtrip API call which uses API key authentication
+        syncResult = await simulateCenttripSync(connection, syncLog.id);
+      } else if (provider.name === 'Revolut') {
+        // Simulate Revolut API call which uses OAuth authentication
+        syncResult = await simulateRevolutSync(connection, syncLog.id);
+      } else {
+        // Generic handling for other providers
+        return res.status(400).json({ error: `Unsupported provider: ${provider.name}` });
+      }
+      
+      // Update sync log with results
+      const updatedSyncLog = await storage.updateBankSyncLog(syncLog.id, {
+        endTime: new Date(),
+        status: syncResult.success ? 'completed' : 'failed',
+        transactionsRetrieved: syncResult.transactionsRetrieved,
+        transactionsImported: syncResult.transactionsImported,
+        errors: syncResult.errors
+      });
+      
+      // Log activity
+      await storage.createActivityLog({
+        activityType: 'bank_sync_completed',
+        description: `Bank sync ${syncResult.success ? 'completed' : 'failed'} for ${provider.name}`,
+        userId: req.user.id,
+        relatedEntityType: 'bank_api_connection',
+        relatedEntityId: connectionId,
+        metadata: { 
+          provider: provider.name,
+          transactionsRetrieved: syncResult.transactionsRetrieved,
+          transactionsImported: syncResult.transactionsImported
+        }
+      });
+      
+      res.json({
+        syncLog: updatedSyncLog,
+        transactions: syncResult.transactions
+      });
+    } catch (error) {
+      console.error(`Failed to sync bank connection ${connectionId}:`, error);
+      res.status(500).json({ message: "Failed to sync bank connection", error: error.message });
+    }
+  }));
+  
+  // Get sync history for a connection
+  apiRouter.get("/banking/connections/:id/sync-history", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const connectionId = parseInt(req.params.id);
+    if (isNaN(connectionId)) {
+      return res.status(400).json({ error: "Invalid connection ID" });
+    }
+    
+    try {
+      // Verify connection exists
+      const connection = await storage.getBankApiConnection(connectionId);
+      if (!connection) {
+        return res.status(404).json({ error: "Bank API connection not found" });
+      }
+      
+      const syncLogs = await storage.getBankSyncLogs(connectionId);
+      res.json(syncLogs);
+    } catch (error) {
+      console.error(`Failed to get sync history for connection ${connectionId}:`, error);
+      res.status(500).json({ message: "Failed to get sync history" });
+    }
+  }));
+  
+  // Helper function to simulate Centtrip API sync
+  async function simulateCenttripSync(connection: BankApiConnection, syncLogId: number) {
+    console.log(`Simulating Centtrip API sync for connection ID ${connection.id}`);
+    
+    // In a real implementation, this would call the actual Centtrip API
+    // using the stored API credentials
+    
+    // Check if we have API credentials
+    if (!connection.authDetails || !connection.authDetails.apiKey) {
+      return {
+        success: false,
+        transactionsRetrieved: 0,
+        transactionsImported: 0,
+        transactions: [],
+        errors: "Missing API key in authentication details"
+      };
+    }
+    
+    // In a real implementation, we would fetch transactions from the API
+    // For now, we'll create some sample transactions
+    const transactions = [];
+    const count = Math.floor(Math.random() * 10) + 5; // Random number between 5-15 transactions
+    
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30); // Last 30 days
+    
+    for (let i = 0; i < count; i++) {
+      const transactionDate = new Date(startDate);
+      transactionDate.setDate(transactionDate.getDate() + Math.floor(Math.random() * 30));
+      
+      const amount = (Math.random() * 10000).toFixed(2);
+      const isExpense = Math.random() > 0.3; // 70% chance of being an expense
+      
+      const transaction = {
+        connectionId: connection.id,
+        externalId: `CENTTRIP-${Date.now()}-${i}`,
+        transactionDate: transactionDate,
+        description: isExpense ? 
+          `Payment to ${['Chandlery', 'Fuel Supplier', 'Port Fees', 'Maintenance'][Math.floor(Math.random() * 4)]}` : 
+          `Deposit from ${['Charter Client', 'Owner', 'Insurance'][Math.floor(Math.random() * 3)]}`,
+        amount: isExpense ? `-${amount}` : amount,
+        currency: connection.currency || 'USD',
+        category: isExpense ? 
+          ['Fuel', 'Maintenance', 'Port Fees', 'Supplies'][Math.floor(Math.random() * 4)] : 
+          ['Charter Revenue', 'Owner Contribution', 'Insurance Claim'][Math.floor(Math.random() * 3)],
+        status: ['settled', 'pending'][Math.floor(Math.random() * 2)],
+        metadata: {
+          source: 'centtrip',
+          syncLogId: syncLogId,
+          originalData: {
+            // This would contain the raw data from the API
+            transactionId: `CENTTRIP-${Date.now()}-${i}`,
+            accountNumber: 'XXXXXXXXXX' + Math.floor(Math.random() * 1000)
+          }
+        }
+      };
+      
+      // Store the transaction
+      const savedTransaction = await storage.createBankApiTransaction(transaction);
+      transactions.push(savedTransaction);
+    }
+    
+    console.log(`Simulated Centtrip API sync completed: retrieved ${transactions.length} transactions`);
+    
+    return {
+      success: true,
+      transactionsRetrieved: transactions.length,
+      transactionsImported: transactions.length,
+      transactions: transactions,
+      errors: null
+    };
+  }
+  
+  // Helper function to simulate Revolut API sync
+  async function simulateRevolutSync(connection: BankApiConnection, syncLogId: number) {
+    console.log(`Simulating Revolut API sync for connection ID ${connection.id}`);
+    
+    // In a real implementation, this would call the actual Revolut API
+    // using OAuth token authentication
+    
+    // Check if we have OAuth credentials
+    if (!connection.authDetails || !connection.authDetails.accessToken) {
+      return {
+        success: false,
+        transactionsRetrieved: 0,
+        transactionsImported: 0,
+        transactions: [],
+        errors: "Missing OAuth access token in authentication details"
+      };
+    }
+    
+    // In a real implementation, we would fetch transactions from the API
+    // For now, we'll create some sample transactions similar to the Centtrip function
+    const transactions = [];
+    const count = Math.floor(Math.random() * 10) + 5; // Random number between 5-15 transactions
+    
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30); // Last 30 days
+    
+    for (let i = 0; i < count; i++) {
+      const transactionDate = new Date(startDate);
+      transactionDate.setDate(transactionDate.getDate() + Math.floor(Math.random() * 30));
+      
+      const amount = (Math.random() * 8000).toFixed(2);
+      const isExpense = Math.random() > 0.4; // 60% chance of being an expense
+      
+      const transaction = {
+        connectionId: connection.id,
+        externalId: `REVOLUT-${Date.now()}-${i}`,
+        transactionDate: transactionDate,
+        description: isExpense ? 
+          `Payment to ${['Marine Services', 'Crew Salaries', 'Insurance', 'Provisions'][Math.floor(Math.random() * 4)]}` : 
+          `Deposit from ${['Charter Fee', 'Transfer', 'Refund'][Math.floor(Math.random() * 3)]}`,
+        amount: isExpense ? `-${amount}` : amount,
+        currency: connection.currency || 'EUR',
+        category: isExpense ? 
+          ['Crew', 'Insurance', 'Provisions', 'Services'][Math.floor(Math.random() * 4)] : 
+          ['Charter', 'Transfer', 'Refund'][Math.floor(Math.random() * 3)],
+        status: ['completed', 'pending'][Math.floor(Math.random() * 2)],
+        metadata: {
+          source: 'revolut',
+          syncLogId: syncLogId,
+          originalData: {
+            // This would contain the raw data from the API
+            transactionId: `REVOLUT-${Date.now()}-${i}`,
+            accountId: 'REV-' + Math.floor(Math.random() * 100000)
+          }
+        }
+      };
+      
+      // Store the transaction
+      const savedTransaction = await storage.createBankApiTransaction(transaction);
+      transactions.push(savedTransaction);
+    }
+    
+    console.log(`Simulated Revolut API sync completed: retrieved ${transactions.length} transactions`);
+    
+    return {
+      success: true,
+      transactionsRetrieved: transactions.length,
+      transactionsImported: transactions.length,
+      transactions: transactions,
+      errors: null
+    };
+  }
+
   // Register API routes
   // Setup API Keys routes
   setupApiKeysRoutes(apiRouter);
