@@ -838,12 +838,22 @@ const FinancialManagement: React.FC = () => {
                       .map((expense: any) => (
                         <TableRow key={expense.id}>
                           <TableCell>{format(new Date(expense.transactionDate || new Date()), 'MMM dd, yyyy')}</TableCell>
-                          <TableCell>{expense.payee || '-'}</TableCell>
+                          <TableCell>{
+                            // Find the vendor by ID and display its name
+                            vendors && Array.isArray(vendors) 
+                              ? vendors.find((v: any) => v.id === expense.vendorId)?.name || '-'
+                              : '-'
+                          }</TableCell>
                           <TableCell>
                             <Badge variant="outline">{expense.category || 'Uncategorized'}</Badge>
                           </TableCell>
                           <TableCell>{expense.description}</TableCell>
-                          <TableCell>{expense.account?.name || '-'}</TableCell>
+                          <TableCell>{
+                            // Find the account by ID and display its name
+                            accounts && Array.isArray(accounts) 
+                              ? accounts.find((a: any) => a.id === expense.accountId)?.accountName || '-'
+                              : '-'
+                          }</TableCell>
                           <TableCell className="text-right">
                             {new Intl.NumberFormat('en-US', { 
                               style: 'currency', 
@@ -2045,11 +2055,14 @@ const FinancialManagement: React.FC = () => {
               setShowExpenseDialog(false);
               setEditingExpense(null);
               
-              // Refresh transactions data
+              // Force a complete data refresh for the expense table
               queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id] });
-              
-              // Refresh vendors data to ensure we have the latest
               queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel?.id] });
+              
+              // Also invalidate any summary queries that might display transaction data
+              queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'summary'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'stats'] });
             } catch (error: any) {
               console.error('Failed to save transaction:', error);
               toast({
