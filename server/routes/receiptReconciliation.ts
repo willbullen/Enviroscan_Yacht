@@ -35,14 +35,22 @@ export default function setupReceiptRoutes(storage: IStorage) {
   // Define a route for receipt analysis
   router.post('/analyze', upload.single('receipt'), async (req, res) => {
     try {
+      // Check authentication first - use the same pattern as other authenticated routes
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required. Please log in.' });
+      }
+      
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
-
-      // Check for user session
-      if (!req.session.userId) {
+      
+      // Use user ID from passport rather than session directly
+      if (!req.user || !req.user.id) {
         return res.status(401).json({ error: 'Authentication required' });
       }
+      
+      // Store userId for later use
+      const userId = req.user.id;
 
       // Check that vessel is provided
       const vesselId = parseInt(req.body.vesselId);
@@ -98,9 +106,17 @@ export default function setupReceiptRoutes(storage: IStorage) {
   // Route to link a receipt to an existing expense
   router.post('/link-to-expense', async (req, res) => {
     try {
-      if (!req.session.userId) {
+      // Check authentication first
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required. Please log in.' });
+      }
+      
+      // Use user ID from passport rather than session directly
+      if (!req.user || !req.user.id) {
         return res.status(401).json({ error: 'Authentication required' });
       }
+      
+      const userId = req.user.id;
       
       const { 
         expenseId, 
@@ -148,9 +164,17 @@ export default function setupReceiptRoutes(storage: IStorage) {
   // Route to create a new expense from receipt data
   router.post('/create-expense', async (req, res) => {
     try {
-      if (!req.session.userId) {
+      // Check authentication first
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required. Please log in.' });
+      }
+      
+      // Use user ID from passport rather than session directly
+      if (!req.user || !req.user.id) {
         return res.status(401).json({ error: 'Authentication required' });
       }
+      
+      const userId = req.user.id;
       
       const { 
         expenseData, 
@@ -165,7 +189,7 @@ export default function setupReceiptRoutes(storage: IStorage) {
       const newExpense = {
         ...expenseData,
         vesselId,
-        createdById: req.session.userId,
+        createdById: userId, // Use the userId from passport
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
