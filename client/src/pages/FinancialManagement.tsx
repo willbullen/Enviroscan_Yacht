@@ -48,6 +48,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
 import {
   Card as TremorCard,
   Text,
@@ -66,7 +67,6 @@ import {
   Col
 } from "@tremor/react";
 import {
-  PieChart,
   Pie,
   ResponsiveContainer, 
   Cell, 
@@ -76,40 +76,62 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid
+  CartesianGrid,
+  PieChart as RechartsPieChart
 } from "recharts";
 import { 
+  Activity,
   AlertCircle,
+  ArrowRight,
   Banknote,
   BarChart3,
-  CheckCircle,
-  DollarSign, 
-  Wallet, 
-  CreditCard, 
-  FileText, 
   BarChart4, 
-  Calendar, 
-  Plus, 
-  Building, 
-  ChevronDown,
-  Receipt, 
-  Users, 
-  Ship,
-  Pencil,
-  ListTree,
-  FileUp,
-  MoreHorizontal,
-  PiggyBank,
-  RefreshCw,
-  Trash,
-  TrendingUp,
-  Euro,
+  Building,
   Calculator,
+  Calendar, 
+  CheckCircle,
+  ChartPie,
+  ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  ChevronsUpDown,
+  Clock,
+  Copy,
+  CreditCard,
+  Dices,
+  DollarSign, 
   Download,
+  Euro,
+  FileDown,
+  FileSpreadsheet,
+  FileText, 
+  FileUp,
+  Filter,
+  FilterX,
+  HelpCircle,
+  ListTree,
+  Loader2,
+  MoreHorizontal,
+  PanelRightClose,
+  Pencil,
+  PencilLine,
+  PiggyBank,
+  Plus, 
+  Receipt,
+  ReceiptText,
+  RefreshCcw,
+  RefreshCw,
+  Search,
+  Settings,
+  Ship,
+  Trash,
+  TrendingDown,
+  TrendingUp,
   Upload,
-  X,
-  Loader2
+  User,
+  Users, 
+  Wallet, 
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -523,84 +545,212 @@ const FinancialManagement: React.FC = () => {
   const renderFinancialOverview = () => {
     if (!currentVessel) return null;
     
-    // Get the total balance for all accounts
-    const totalBalance = calculateTotalBalance();
+    // Get the total expenses from the summary data or calculate from raw expenses
+    const totalExpenseAmount = expenseSummary?.totalExpenses || 
+      expenses?.reduce((sum, exp) => sum + parseFloat(exp.total || '0'), 0) || 0;
     
-    // Format the balance with appropriate currency
-    const formattedBalance = new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: 'USD'
-    }).format(totalBalance);
+    // Format currency values
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('en-US', { 
+        style: 'currency', 
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(amount);
+    };
+    
+    // Calculate percentages and status for expense categories
+    const getTopExpenseCategories = () => {
+      if (!expenses || !Array.isArray(expenses)) return [];
+      
+      // Group expenses by category and sum amounts
+      const categoryTotals: {[key: string]: number} = {};
+      expenses.forEach(exp => {
+        const category = exp.category || 'Uncategorized';
+        const amount = parseFloat(exp.total || '0');
+        categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+      });
+      
+      // Convert to array and sort by amount descending
+      return Object.entries(categoryTotals)
+        .map(([name, amount]) => ({ name, amount }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 3); // Get top 3 categories
+    };
+    
+    // Get recent expenses (last 7 days)
+    const getRecentExpenses = () => {
+      if (!expenses || !Array.isArray(expenses)) return [];
+      
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      return expenses
+        .filter(exp => new Date(exp.expenseDate) >= sevenDaysAgo)
+        .sort((a, b) => new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime())
+        .slice(0, 3); // Get 3 most recent expenses
+    };
+    
+    const topCategories = getTopExpenseCategories();
+    const recentExpenses = getRecentExpenses();
+    
+    // Calculate pending expenses (status not "Paid")
+    const pendingExpenses = expenses?.filter(exp => 
+      (exp.status?.toLowerCase() !== 'paid') && 
+      (exp.status?.toLowerCase() !== 'approved')
+    ) || [];
+    
+    const pendingAmount = pendingExpenses.reduce(
+      (sum, exp) => sum + parseFloat(exp.total || '0'), 0
+    );
     
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border border-border/40 shadow-sm">
-          <CardHeader className="pb-2">
+        {/* Expense Summary by Category Card */}
+        <Card className="border border-border/40 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
             <CardTitle className="text-lg flex items-center">
-              <DollarSign className="h-4 w-4 mr-2 text-primary" />
-              Total Assets
+              <ChartPie className="h-4 w-4 mr-2 text-primary" />
+              Expense Categories
             </CardTitle>
-            <CardDescription>Current value of all accounts</CardDescription>
+            <CardDescription>Top spending categories</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-end">
-              <p className="text-2xl font-bold">
-                {formattedBalance}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {accounts && Array.isArray(accounts) ? `${accounts.length} account${accounts.length !== 1 ? 's' : ''}` : '0 accounts'}
-              </p>
+          <CardContent className="pt-4">
+            <div className="space-y-4">
+              {topCategories.length > 0 ? (
+                topCategories.map((category, index) => {
+                  // Calculate percentage of total
+                  const percentage = Math.round((category.amount / totalExpenseAmount) * 100) || 0;
+                  return (
+                    <div key={index} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium capitalize">{category.name}</span>
+                        <span>{formatCurrency(category.amount)}</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full" 
+                          style={{ width: `${Math.max(percentage, 5)}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">{percentage}% of total expenses</p>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
+                  <PieChart className="h-10 w-10 mb-2 opacity-20" />
+                  <p>No expense data available</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
         
+        {/* Recent Expenses Activity Card */}
         <Card className="border border-border/40 shadow-sm">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
             <CardTitle className="text-lg flex items-center">
-              <CreditCard className="h-4 w-4 mr-2 text-primary" />
-              Monthly Expenses
+              <Activity className="h-4 w-4 mr-2 text-primary" />
+              Recent Activity
             </CardTitle>
-            <CardDescription>Current month expenses</CardDescription>
+            <CardDescription>Latest expense transactions</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-end">
-              <p className="text-2xl font-bold">
-                {new Intl.NumberFormat('en-US', { 
-                  style: 'currency', 
-                  currency: 'USD'
-                }).format(28750)}
-              </p>
-              <div className="flex items-center text-xs text-red-500">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                <span>+5.2% from last month</span>
+          <CardContent className="pt-4">
+            {recentExpenses.length > 0 ? (
+              <div className="space-y-3">
+                {recentExpenses.map((expense, index) => (
+                  <div key={index} className="flex items-start justify-between border-b border-border/30 pb-2 last:border-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm line-clamp-1">{expense.description}</p>
+                      <div className="flex items-center text-xs text-muted-foreground space-x-2">
+                        <span>{new Date(expense.expenseDate).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span className="capitalize">{expense.category || 'Uncategorized'}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-sm">{formatCurrency(parseFloat(expense.total || '0'))}</p>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-sm ${
+                        expense.status?.toLowerCase() === 'paid' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                          : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                      }`}>
+                        {expense.status || 'Pending'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button variant="ghost" size="sm" className="w-full mt-2 text-xs h-8">
+                  View All Transactions
+                  <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[140px] text-muted-foreground">
+                <Receipt className="h-10 w-10 mb-2 opacity-20" />
+                <p>No recent expense activity</p>
+              </div>
+            )}
           </CardContent>
         </Card>
         
+        {/* Pending Expenses Card */}
         <Card className="border border-border/40 shadow-sm">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
             <CardTitle className="text-lg flex items-center">
-              <BarChart4 className="h-4 w-4 mr-2 text-primary" />
-              Budget Status
+              <Clock className="h-4 w-4 mr-2 text-primary" />
+              Pending Expenses
             </CardTitle>
-            <CardDescription>Current year budget</CardDescription>
+            <CardDescription>Awaiting approval or payment</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm text-muted-foreground">75% of annual budget used</span>
-                <span className="text-sm font-medium">$375,000 / $500,000</span>
+          <CardContent className="pt-4">
+            <div className="flex flex-col">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium">Total Pending</span>
+                <span className="text-xl font-bold">{formatCurrency(pendingAmount)}</span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2.5">
-                <div className="bg-primary h-2.5 rounded-full" style={{ width: '75%' }}></div>
-              </div>
-            </div>
-            <div className="flex justify-end mt-2">
-              <Button variant="link" size="sm" className="p-0 h-auto text-xs">
-                View Budget Details
-                <ChevronRight className="h-3 w-3 ml-1" />
-              </Button>
+              
+              {pendingExpenses.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-muted-foreground border-b border-border/30 pb-1">
+                    <span>Description</span>
+                    <span>Amount</span>
+                  </div>
+                  
+                  <div className="space-y-1 max-h-[120px] overflow-y-auto pr-1">
+                    {pendingExpenses.slice(0, 5).map((expense, index) => (
+                      <div key={index} className="flex justify-between items-center py-1">
+                        <span className="text-sm truncate max-w-[60%]">{expense.description}</span>
+                        <span className="text-sm font-medium">{formatCurrency(parseFloat(expense.total || '0'))}</span>
+                      </div>
+                    ))}
+                    
+                    {pendingExpenses.length > 5 && (
+                      <div className="text-center text-xs text-muted-foreground pt-1">
+                        +{pendingExpenses.length - 5} more pending expenses
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between mt-3">
+                    <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      <span>{pendingExpenses.length} pending</span>
+                    </Badge>
+                    
+                    <Button variant="ghost" size="sm" className="h-7 text-xs">
+                      Process All
+                      <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <CheckCircle className="h-10 w-10 mb-2 opacity-20" />
+                  <p>No pending expenses</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
