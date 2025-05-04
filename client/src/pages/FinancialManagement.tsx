@@ -136,6 +136,14 @@ const FinancialManagement: React.FC = () => {
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [timeRange, setTimeRange] = useState<string>("12months");
   
+  // Define expense categories for the batch import dialog
+  const expenseCategories = [
+    "Fuel", "Provisions", "Maintenance", "Crew Salaries", 
+    "Insurance", "Dockage", "Repairs", "Supplies", 
+    "Communications", "Travel", "Entertainment", "Administration",
+    "Medical", "Safety", "Training", "Other"
+  ];
+  
   // Get current vessel from context to filter financial data
   const { currentVessel } = useVessel();
   
