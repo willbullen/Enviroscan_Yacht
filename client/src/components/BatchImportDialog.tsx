@@ -401,6 +401,20 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
     });
   };
   
+  // Get counts for summary display
+  const getDuplicateCounts = () => {
+    const totalDuplicates = previewData.filter(row => row._isDuplicate).length;
+    const modifiedDuplicates = previewData.filter(row => row._isDuplicate && row._isModified).length;
+    const unmodifiedDuplicates = totalDuplicates - modifiedDuplicates;
+    
+    return {
+      totalDuplicates,
+      modifiedDuplicates,
+      unmodifiedDuplicates,
+      importable: previewData.length - unmodifiedDuplicates
+    };
+  };
+
   const parseCSV = (file: File) => {
     setParsing(true);
     setActiveTab("upload");
@@ -700,22 +714,37 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
               </AlertDescription>
             </Alert>
             
+            {/* Duplicate detection summary */}
             {previewData.some(row => row._isDuplicate) && (
-              <Alert variant="warning" className="bg-amber-50 border-amber-200">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <AlertTitle>Duplicate Records Detected</AlertTitle>
-                <AlertDescription className="space-y-1">
-                  <p>
-                    {previewData.filter(row => row._isDuplicate).length} of {previewData.length} records appear to be duplicates of existing expenses.
-                  </p>
-                  <ul className="list-disc list-inside text-sm pl-1 text-muted-foreground">
-                    <li>Unmodified duplicates will be skipped during import (highlighted in amber)</li>
-                    <li>Click on any field in a duplicate record to edit it and mark for import</li>
-                    <li>{previewData.filter(row => row._isDuplicate && row._isModified).length} duplicates have been modified and will be imported</li>
-                  </ul>
+              <Alert variant={previewData.some(row => row._isDuplicate && !row._isModified) ? "warning" : "success"} className="mt-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Duplicate Detection Results</AlertTitle>
+                <AlertDescription>
+                  <div className="text-sm mt-1 space-y-1">
+                    {(() => {
+                      const counts = getDuplicateCounts();
+                      return (
+                        <>
+                          <p><strong>{counts.totalDuplicates}</strong> potential {counts.totalDuplicates === 1 ? 'duplicate' : 'duplicates'} detected.</p>
+                          {counts.modifiedDuplicates > 0 && (
+                            <p><strong>{counts.modifiedDuplicates}</strong> {counts.modifiedDuplicates === 1 ? 'duplicate has' : 'duplicates have'} been modified and will be imported.</p>
+                          )}
+                          {counts.unmodifiedDuplicates > 0 && (
+                            <p><strong>{counts.unmodifiedDuplicates}</strong> unmodified {counts.unmodifiedDuplicates === 1 ? 'duplicate' : 'duplicates'} will be skipped.</p>
+                          )}
+                          <p className="pt-1 text-xs">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-100 text-amber-800 mr-1"><Edit className="h-3 w-3 mr-1" /> Amber</span> items are potential duplicates. 
+                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-green-100 text-green-800 ml-1"><Check className="h-3 w-3 mr-1" /> Green</span> items are modified duplicates that will be imported.
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
+            
+
             
             {(missingCategories.size > 0 || missingSubcategories.size > 0 || missingVendors.size > 0) && (
               <Alert>
@@ -729,58 +758,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
               </Alert>
             )}
             
-            {missingVendors.size > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Missing Vendors</CardTitle>
-                  <CardDescription>
-                    Create the following vendors before importing
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {Array.from(missingVendors).map((vendor) => (
-                        <Badge key={vendor} variant="outline" className="text-sm py-1 px-2 bg-red-50 text-red-700 hover:bg-red-100">
-                          {vendor}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    <div className="grid grid-cols-12 gap-2">
-                      <div className="col-span-5">
-                        <Label htmlFor="new-vendor">Vendor Name</Label>
-                        <Input 
-                          id="new-vendor"
-                          value={newVendorName} 
-                          onChange={(e) => setNewVendorName(e.target.value)}
-                          placeholder="Enter a vendor name"
-                        />
-                      </div>
-                      <div className="col-span-5">
-                        <Label htmlFor="vendor-type">Vendor Type (Optional)</Label>
-                        <Input 
-                          id="vendor-type"
-                          value={newVendorType} 
-                          onChange={(e) => setNewVendorType(e.target.value)}
-                          placeholder="Type (e.g. 'supplier', 'contractor')"
-                        />
-                      </div>
-                      <div className="col-span-2 flex items-end">
-                        <Button 
-                          onClick={() => handleAddVendor(newVendorName, newVendorType)}
-                          disabled={!newVendorName.trim() || isAddingVendor}
-                          className="w-full"
-                        >
-                          <UserPlus className="h-4 w-4 mr-1" />
-                          {isAddingVendor ? "Adding..." : "Add"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+
             
             {missingVendors.size > 0 && (
               <Card>
