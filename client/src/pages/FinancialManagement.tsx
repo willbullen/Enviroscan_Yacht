@@ -3245,13 +3245,15 @@ const FinancialManagement: React.FC = () => {
                   // Do not include transactionId to avoid foreign key constraints
                   createdById: user?.id || 5, // Required field - use current user ID or admin
                   category: item.category || "Other",
-                  vendorId: item.vendorId || (item.vendor ? -1 : null), // -1 will be handled to create a new vendor
+                  // Ensure vendorId is a number or null, not a string
+                  vendorId: item.vendorId ? Number(item.vendorId) : (item.vendor ? -1 : null), 
                   vendorName: item.vendor,
                   paymentMethod: item.paymentMethod || "Credit Card", // Must be non-empty
                   status: item.status || "pending", // Must be non-empty
                   referenceNumber: item.referenceNumber || "",
                   vesselId: currentVessel?.id,
-                  accountId: accountId, // Must be non-null
+                  // Ensure accountId is a number
+                  accountId: accountId ? Number(accountId) : null, // Must be non-null
                   notes: item.notes || "" // Optional but good to include
                 };
               });
