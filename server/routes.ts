@@ -4709,7 +4709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let lastMonthExpenses = 0;
 
     expenses.forEach(e => {
-      const amount = parseFloat(e.amount.toString());
+      const amount = parseFloat(e.total.toString());
       const expenseDate = new Date(e.expenseDate);
       const isCurrentMonth = 
         expenseDate.getMonth() === currentMonth && 

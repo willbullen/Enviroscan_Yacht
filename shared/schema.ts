@@ -654,8 +654,9 @@ export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   description: text("description").notNull(),
   expenseDate: timestamp("expense_date").notNull(),
-  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  total: decimal("total", { precision: 12, scale: 2 }).notNull(), // The column is named 'total' in the DB, not 'amount'
   currency: text("currency").default("USD").notNull(),
+  transactionId: integer("transaction_id"), // Reference to original transaction if needed
   vendorId: integer("vendor_id").references(() => vendors.id),
   vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
   paymentMethod: text("payment_method").notNull(), // credit card, bank transfer, cash, etc.

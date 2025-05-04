@@ -50,7 +50,7 @@ const ExpenseByCategoryWidget: React.FC<ExpenseByCategoryWidgetProps> = ({ vesse
   const processedData = Object.entries(
     expenses.reduce((acc: Record<string, number>, expense: any) => {
       const category = expense.category || 'uncategorized';
-      acc[category] = (acc[category] || 0) + parseFloat(expense.amount);
+      acc[category] = (acc[category] || 0) + parseFloat(expense.total || '0');
       return acc;
     }, {})
   ).map(([name, value]) => ({ name, value }));
