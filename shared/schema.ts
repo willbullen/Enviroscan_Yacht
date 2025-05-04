@@ -649,24 +649,21 @@ export const insertTransactionLineSchema = createInsertSchema(transactionLines).
 export type InsertTransactionLine = z.infer<typeof insertTransactionLineSchema>;
 export type TransactionLine = typeof transactionLines.$inferSelect;
 
-// Expense transactions
+// Expense transactions (independent table, not linked to transactions)
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
   description: text("description").notNull(),
   expenseDate: timestamp("expense_date").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
   vendorId: integer("vendor_id").references(() => vendors.id),
-  vesselId: integer("vessel_id").references(() => vessels.id),
+  vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
   paymentMethod: text("payment_method").notNull(), // credit card, bank transfer, cash, etc.
   referenceNumber: text("reference_number"),
-  total: decimal("total", { precision: 12, scale: 2 }).notNull(),
   status: text("status").notNull(), // draft, submitted, approved, paid
   receiptUrl: text("receipt_url"), // URL to receipt image/document
   notes: text("notes"),
-  // Category field as a text field - will use this until database migration is done
-  category: text("category").notNull(), // Current implementation, to be replaced with categoryId in future migration
-  // Category relationship planned for later implementation - commented out to prevent errors
-  // categoryId: integer("category_id").references(() => financialCategories.id),
+  category: text("category").notNull(), // fuel, maintenance, dockage, crew, provisions, etc.
   accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
   budgetId: integer("budget_id").references(() => budgets.id),
   approvedById: integer("approved_by_id").references(() => users.id),
