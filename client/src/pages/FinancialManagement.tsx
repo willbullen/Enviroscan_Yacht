@@ -2716,6 +2716,9 @@ const FinancialManagement: React.FC = () => {
         title={`Bulk Import ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
         description={`Upload a CSV file to bulk import ${activeTab}. Download the template for the correct format.`}
         templateFileName={`${activeTab}_template.csv`}
+        vendors={vendors || []}
+        accounts={accounts || []}
+        expenseCategories={expenseCategories}
         templateContent={
           activeTab === "expenses" 
             ? "date,description,category,amount,vendor,paymentMethod,status,referenceNumber,accountNumber\n2025-05-01,Fuel Purchase,Fuel,1500,Ocean Fuels,Credit Card,Paid,INV-123,FUEL-001"
