@@ -162,18 +162,24 @@ const FinancialManagement: React.FC = () => {
   });
   
   // Load vessel-specific expenses data directly from expenses table
-  const { data: expenses, isLoading: expensesLoading } = useQuery({
+  const { data: expenses, isLoading: expensesLoading, refetch: refetchExpenses } = useQuery({
     queryKey: ['/api/expenses/vessel', currentVessel?.id],
     queryFn: () => {
       if (!currentVessel?.id) return Promise.resolve([]);
       return fetch(`/api/expenses/vessel/${currentVessel.id}`)
         .then(res => res.json())
+        .then(data => {
+          console.log("Fetched expense data:", data);
+          return Array.isArray(data) ? data : [];
+        })
         .catch(err => {
           console.error("Error fetching vessel expenses:", err);
           return [];
         });
     },
-    enabled: !!currentVessel?.id
+    enabled: !!currentVessel?.id,
+    refetchOnWindowFocus: true, // Ensure data refreshes when window gets focus
+    staleTime: 5000, // Data becomes stale after 5 seconds
   });
   
   // Fetch vendors for dropdown selection
@@ -863,8 +869,11 @@ const FinancialManagement: React.FC = () => {
                           <TableCell>{expense.description}</TableCell>
                           <TableCell>{
                             // Find the account by ID and display its name
-                            accounts && Array.isArray(accounts) 
-                              ? accounts.find((a: any) => a.id === expense.accountId)?.name || '-'
+                            accounts && Array.isArray(accounts) && expense.accountId
+                              ? (() => {
+                                  const account = accounts.find((a: any) => a.id === expense.accountId);
+                                  return account ? `${account.name} (${account.accountNumber})` : '-';
+                                })()
                               : '-'
                           }</TableCell>
                           <TableCell className="text-right">
@@ -2091,27 +2100,32 @@ const FinancialManagement: React.FC = () => {
               // Force a complete data refresh for the expense table
               console.log("Invalidating queries for vessel ID:", currentVessel?.id);
               
+              // Force a direct refetch of expenses data
+              await refetchExpenses();
+              
               // Invalidate all expense queries with proper format
-              queryClient.invalidateQueries({ 
+              await queryClient.invalidateQueries({ 
                 queryKey: ['/api/expenses/vessel', currentVessel?.id],
-                refetchType: 'all'
+                refetchType: 'all',
+                exact: false
               });
               
               // Also invalidate all transaction and related queries to ensure full data consistency
-              queryClient.invalidateQueries({ 
+              await queryClient.invalidateQueries({ 
                 queryKey: ['/api/transactions/vessel', currentVessel?.id],
-                refetchType: 'all'
+                refetchType: 'all',
+                exact: false
               });
               
               // Invalidate vendor and account data
-              queryClient.invalidateQueries({ queryKey: ['/api/vendors'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel?.id] });
+              await queryClient.invalidateQueries({ queryKey: ['/api/vendors'], exact: false });
+              await queryClient.invalidateQueries({ queryKey: ['/api/financial-accounts/vessel', currentVessel?.id], exact: false });
               
               // Invalidate summary and stats queries
-              queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'summary'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'stats'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'summary'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'stats'] });
+              await queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'summary'], exact: false });
+              await queryClient.invalidateQueries({ queryKey: ['/api/transactions/vessel', currentVessel?.id, 'stats'], exact: false });
+              await queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'summary'], exact: false });
+              await queryClient.invalidateQueries({ queryKey: ['/api/expenses/vessel', currentVessel?.id, 'stats'], exact: false });
             } catch (error: any) {
               console.error('Failed to save transaction:', error);
               toast({
