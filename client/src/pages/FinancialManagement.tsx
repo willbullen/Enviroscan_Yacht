@@ -147,6 +147,39 @@ const FinancialManagement: React.FC = () => {
   // Get current vessel from context to filter financial data
   const { currentVessel } = useVessel();
   
+  // Fetch expense summary data for dashboard widgets
+  const { data: expenseSummary } = useQuery({
+    queryKey: ['/api/expenses/vessel', currentVessel?.id, 'summary'],
+    queryFn: () => {
+      if (!currentVessel?.id) return Promise.resolve(null);
+      console.log("Fetching financial summary for vessel", currentVessel.id);
+      return fetch(`/api/expenses/vessel/${currentVessel.id}/summary`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching expense summary:", err);
+          return null;
+        });
+    },
+    enabled: !!currentVessel?.id,
+    staleTime: 60000,
+  });
+  
+  // Fetch expense statistics data for dashboard widgets
+  const { data: expenseStats } = useQuery({
+    queryKey: ['/api/expenses/vessel', currentVessel?.id, 'stats'],
+    queryFn: () => {
+      if (!currentVessel?.id) return Promise.resolve(null);
+      return fetch(`/api/expenses/vessel/${currentVessel.id}/stats`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching expense stats:", err);
+          return null;
+        });
+    },
+    enabled: !!currentVessel?.id,
+    staleTime: 60000,
+  });
+  
   // Load current user information for auth and permissions
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
