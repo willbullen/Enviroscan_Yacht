@@ -91,21 +91,35 @@ const ReceiptReconciliationDialog: React.FC<ReceiptReconciliationDialogProps> = 
     formData.append("vesselId", currentVessel.id.toString());
 
     try {
-      const result = await fetch("/api/receipts/analyze", {
-        method: "POST",
-        body: formData,
-        credentials: "include" // Add this to include session cookies
-      }).then(res => {
-        if (!res.ok) {
-          if (res.status === 401) {
-            throw new Error("Authentication required. Please log in first.");
-          } else {
-            throw new Error(`Error: ${res.status}`);
+      // Use XMLHttpRequest for better control over multipart form uploads
+      // This ensures proper session cookie handling
+      const xhr = new XMLHttpRequest();
+      const promise = new Promise<any>((resolve, reject) => {
+        xhr.open("POST", "/api/receipts/analyze", true);
+        xhr.withCredentials = true; // This ensures cookies are sent with the request
+        
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const result = JSON.parse(xhr.responseText);
+                resolve(result);
+              } catch (e) {
+                reject(new Error("Failed to parse response"));
+              }
+            } else if (xhr.status === 401) {
+              reject(new Error("Authentication required. Please log in first."));
+            } else {
+              reject(new Error(`Error: ${xhr.status} - ${xhr.statusText || "Unknown error"}`));
+            }
           }
-        }
-        return res.json();
+        };
+        
+        xhr.send(formData);
       });
-
+      
+      const result = await promise;
+      
       setReceiptUrl(result.receiptUrl);
       setAnalysis(result.analysis);
       
@@ -134,7 +148,9 @@ const ReceiptReconciliationDialog: React.FC<ReceiptReconciliationDialogProps> = 
       console.error("Error analyzing receipt:", error);
       toast({
         title: "Error",
-        description: "Failed to analyze receipt. Please try again.",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to analyze receipt. Please try again.",
         variant: "destructive",
       });
     } finally {
