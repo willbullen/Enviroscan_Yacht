@@ -685,6 +685,23 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
               </AlertDescription>
             </Alert>
             
+            {previewData.some(row => row._isDuplicate) && (
+              <Alert variant="warning" className="bg-amber-50 border-amber-200">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTitle>Duplicate Records Detected</AlertTitle>
+                <AlertDescription className="space-y-1">
+                  <p>
+                    {previewData.filter(row => row._isDuplicate).length} of {previewData.length} records appear to be duplicates of existing expenses.
+                  </p>
+                  <ul className="list-disc list-inside text-sm pl-1 text-muted-foreground">
+                    <li>Unmodified duplicates will be skipped during import (highlighted in amber)</li>
+                    <li>Click on any field in a duplicate record to edit it and mark for import</li>
+                    <li>{previewData.filter(row => row._isDuplicate && row._isModified).length} duplicates have been modified and will be imported</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {(missingCategories.size > 0 || missingSubcategories.size > 0 || missingVendors.size > 0) && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
@@ -1213,7 +1230,11 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                 ? "Add Required Categories First" 
                 : missingVendors.size > 0
                   ? "Add Required Vendors First"
-                  : `Import ${previewData.length} Records`}
+                  : `Import ${previewData.filter(row => !row._isDuplicate || row._isModified).length} Records${
+                      previewData.some(row => row._isDuplicate && !row._isModified) 
+                        ? ` (${previewData.filter(row => row._isDuplicate && !row._isModified).length} duplicates will be skipped)`
+                        : ''
+                    }`}
             </Button>
           )}
         </DialogFooter>
