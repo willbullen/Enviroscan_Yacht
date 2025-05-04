@@ -31,6 +31,10 @@ import {
   transactions,
   transactionLines,
   deposits,
+  bankingApiProviders,
+  bankApiConnections,
+  bankApiTransactions,
+  bankSyncLogs,
   type User,
   type InsertUser,
   type Equipment,
@@ -90,11 +94,19 @@ import {
   type TransactionLine,
   type InsertTransactionLine,
   type Deposit,
-  type InsertDeposit
+  type InsertDeposit,
+  type BankingApiProvider,
+  type InsertBankingApiProvider,
+  type BankApiConnection,
+  type InsertBankApiConnection,
+  type BankApiTransaction,
+  type InsertBankApiTransaction,
+  type BankSyncLog,
+  type InsertBankSyncLog
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db, executeWithRetry } from "./db";
-import { and, eq, lte, gte, sql } from "drizzle-orm";
+import { and, eq, lte, gte, sql, between, desc, asc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";

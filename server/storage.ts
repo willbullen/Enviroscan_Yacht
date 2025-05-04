@@ -305,6 +305,7 @@ export interface IStorage {
   
   // Banking API Connection operations
   getBankApiConnection(id: number): Promise<BankApiConnection | undefined>;
+  getBankApiConnections(): Promise<BankApiConnection[]>; 
   getBankApiConnectionsByBankAccount(bankAccountId: number): Promise<BankApiConnection[]>;
   getActiveBankApiConnections(): Promise<BankApiConnection[]>;
   createBankApiConnection(connection: InsertBankApiConnection): Promise<BankApiConnection>;
