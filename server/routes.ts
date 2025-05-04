@@ -5474,11 +5474,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a sync log entry to track the process
       const syncLog = await storage.createBankSyncLog({
         connectionId: connectionId,
-        startTime: new Date(),
+        startDate: new Date(),
         status: 'in_progress',
-        transactionsRetrieved: 0,
-        transactionsImported: 0,
-        errors: null
+        recordsFetched: 0,
+        recordsProcessed: 0,
+        errorDetails: null
       });
       
       // In a real implementation, we would call the bank API here
@@ -5499,11 +5499,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update sync log with results
       const updatedSyncLog = await storage.updateBankSyncLog(syncLog.id, {
-        endTime: new Date(),
+        endDate: new Date(),
         status: syncResult.success ? 'completed' : 'failed',
-        transactionsRetrieved: syncResult.transactionsRetrieved,
-        transactionsImported: syncResult.transactionsImported,
-        errors: syncResult.errors
+        recordsFetched: syncResult.transactionsRetrieved,
+        recordsProcessed: syncResult.transactionsImported,
+        errorDetails: syncResult.errors ? JSON.stringify(syncResult.errors) : null,
+        responseDetails: syncResult.success ? JSON.stringify({
+          transactionCount: syncResult.transactionsRetrieved
+        }) : null
       });
       
       // Log activity

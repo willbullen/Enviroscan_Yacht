@@ -2604,6 +2604,25 @@ export class DatabaseStorage implements IStorage {
     return transaction;
   }
   
+  async getBankApiTransactions(connectionId: number, startDate?: Date, endDate?: Date): Promise<BankApiTransaction[]> {
+    let query = db
+      .select()
+      .from(bankApiTransactions)
+      .where(eq(bankApiTransactions.connectionId, connectionId));
+      
+    if (startDate && endDate) {
+      query = query.where(
+        between(bankApiTransactions.transactionDate, startDate, endDate)
+      );
+    } else if (startDate) {
+      query = query.where(gte(bankApiTransactions.transactionDate, startDate));
+    } else if (endDate) {
+      query = query.where(lte(bankApiTransactions.transactionDate, endDate));
+    }
+    
+    return query.orderBy(desc(bankApiTransactions.transactionDate));
+  }
+  
   async getBankApiTransactionsByConnection(connectionId: number): Promise<BankApiTransaction[]> {
     return db
       .select()
@@ -2681,6 +2700,10 @@ export class DatabaseStorage implements IStorage {
       .from(bankSyncLogs)
       .where(eq(bankSyncLogs.connectionId, connectionId))
       .orderBy(desc(bankSyncLogs.startDate));
+  }
+  
+  async getBankSyncLogs(connectionId: number): Promise<BankSyncLog[]> {
+    return this.getBankSyncLogsByConnection(connectionId);
   }
   
   async getRecentBankSyncLogs(limit: number = 10): Promise<BankSyncLog[]> {

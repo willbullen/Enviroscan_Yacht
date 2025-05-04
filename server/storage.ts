@@ -382,6 +382,40 @@ export interface IStorage {
   createTransactionLine(line: InsertTransactionLine): Promise<TransactionLine>;
   updateTransactionLine(id: number, line: Partial<TransactionLine>): Promise<TransactionLine | undefined>;
   deleteTransactionLine(id: number): Promise<boolean>;
+  
+  // Banking API Provider operations
+  getBankingApiProvider(id: number): Promise<BankingApiProvider | undefined>;
+  getBankingApiProviderByType(apiType: string): Promise<BankingApiProvider | undefined>;
+  getAllBankingApiProviders(): Promise<BankingApiProvider[]>;
+  getActiveBankingApiProviders(): Promise<BankingApiProvider[]>;
+  
+  // Banking API Connection operations
+  getBankApiConnection(id: number): Promise<BankApiConnection | undefined>;
+  getBankApiConnections(): Promise<BankApiConnection[]>;
+  getBankApiConnectionsByBankAccount(bankAccountId: number): Promise<BankApiConnection[]>;
+  getActiveBankApiConnections(): Promise<BankApiConnection[]>;
+  createBankApiConnection(connection: InsertBankApiConnection): Promise<BankApiConnection>;
+  updateBankApiConnection(id: number, connection: Partial<BankApiConnection>): Promise<BankApiConnection | undefined>;
+  deleteBankApiConnection(id: number): Promise<boolean>;
+  
+  // Banking API Transaction operations
+  getBankApiTransaction(id: number): Promise<BankApiTransaction | undefined>;
+  getBankApiTransactions(connectionId: number, startDate?: Date, endDate?: Date): Promise<BankApiTransaction[]>;
+  getBankApiTransactionsByConnection(connectionId: number): Promise<BankApiTransaction[]>;
+  getBankApiTransactionsByBankAccount(bankAccountId: number): Promise<BankApiTransaction[]>;
+  getBankApiTransactionsByDateRange(bankAccountId: number, startDate: Date, endDate: Date): Promise<BankApiTransaction[]>;
+  getUnreconciledBankApiTransactions(bankAccountId: number): Promise<BankApiTransaction[]>;
+  createBankApiTransaction(transaction: InsertBankApiTransaction): Promise<BankApiTransaction>;
+  createBulkBankApiTransactions(transactions: InsertBankApiTransaction[]): Promise<BankApiTransaction[]>;
+  updateBankApiTransaction(id: number, transaction: Partial<BankApiTransaction>): Promise<BankApiTransaction | undefined>;
+  
+  // Bank Sync Log operations
+  getBankSyncLog(id: number): Promise<BankSyncLog | undefined>;
+  getBankSyncLogs(connectionId: number): Promise<BankSyncLog[]>;
+  getBankSyncLogsByConnection(connectionId: number): Promise<BankSyncLog[]>;
+  getRecentBankSyncLogs(limit?: number): Promise<BankSyncLog[]>;
+  createBankSyncLog(log: InsertBankSyncLog): Promise<BankSyncLog>;
+  updateBankSyncLog(id: number, log: Partial<BankSyncLog>): Promise<BankSyncLog | undefined>;
 }
 
 export class MemStorage implements IStorage {
