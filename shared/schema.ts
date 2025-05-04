@@ -1222,3 +1222,115 @@ export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({
 });
 export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
 export type TaskComment = typeof taskComments.$inferSelect;
+
+// Banking Integration Schema
+
+// Banking API Providers
+export const bankingApiProviders = pgTable("banking_api_providers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  apiType: text("api_type").notNull(), // centtrip, revolut, etc.
+  baseUrl: text("base_url").notNull(),
+  isActive: boolean("is_active").default(true),
+  authType: text("auth_type").notNull(), // oauth, api_key, etc.
+  requiredCredentials: json("required_credentials").notNull(), // Fields needed for connection
+  defaultHeaders: json("default_headers"), // Default headers for API calls
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBankingApiProviderSchema = createInsertSchema(bankingApiProviders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBankingApiProvider = z.infer<typeof insertBankingApiProviderSchema>;
+export type BankingApiProvider = typeof bankingApiProviders.$inferSelect;
+
+// Banking API Connections - stores credentials and connection info
+export const bankApiConnections = pgTable("bank_api_connections", {
+  id: serial("id").primaryKey(),
+  bankAccountId: integer("bank_account_id").references(() => bankAccounts.id).notNull(),
+  providerId: integer("provider_id").references(() => bankingApiProviders.id).notNull(),
+  name: text("name").notNull(),
+  isActive: boolean("is_active").default(true),
+  credentials: json("credentials").notNull(), // Encrypted credentials (tokens, keys)
+  lastSyncDate: timestamp("last_sync_date"),
+  refreshToken: text("refresh_token"),
+  tokenExpiryDate: timestamp("token_expiry_date"),
+  connectionMetadata: json("connection_metadata"), // Additional data specific to provider
+  syncFrequency: text("sync_frequency").default("daily"), // daily, hourly, manual
+  syncStatus: text("sync_status").default("pending"), // pending, in_progress, completed, failed
+  lastSyncResult: text("last_sync_result"),
+  lastSyncError: text("last_sync_error"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBankApiConnectionSchema = createInsertSchema(bankApiConnections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBankApiConnection = z.infer<typeof insertBankApiConnectionSchema>;
+export type BankApiConnection = typeof bankApiConnections.$inferSelect;
+
+// Bank API Transactions - imported from banking API
+export const bankApiTransactions = pgTable("bank_api_transactions", {
+  id: serial("id").primaryKey(),
+  connectionId: integer("connection_id").references(() => bankApiConnections.id).notNull(),
+  bankAccountId: integer("bank_account_id").references(() => bankAccounts.id).notNull(),
+  externalId: text("external_id").notNull(), // ID from the external banking system
+  transactionDate: timestamp("transaction_date").notNull(),
+  description: text("description").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
+  type: text("type").notNull(), // debit, credit
+  category: text("category"), // From bank categorization if available
+  merchant: text("merchant"), // From bank information if available
+  reference: text("reference"),
+  status: text("status").notNull(), // pending, settled, rejected
+  metadata: json("metadata"), // Raw data from API
+  isReconciled: boolean("is_reconciled").default(false),
+  matchedTransactionId: integer("matched_transaction_id").references(() => transactions.id), // Link to internal transaction
+  matchedExpenseId: integer("matched_expense_id").references(() => expenses.id), // Link to expense
+  matchConfidence: real("match_confidence"), // Confidence score (0-1) for automated matching
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBankApiTransactionSchema = createInsertSchema(bankApiTransactions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBankApiTransaction = z.infer<typeof insertBankApiTransactionSchema>;
+export type BankApiTransaction = typeof bankApiTransactions.$inferSelect;
+
+// Sync history
+export const bankSyncLogs = pgTable("bank_sync_logs", {
+  id: serial("id").primaryKey(),
+  connectionId: integer("connection_id").references(() => bankApiConnections.id).notNull(),
+  startDate: timestamp("start_date").defaultNow().notNull(),
+  endDate: timestamp("end_date"),
+  status: text("status").notNull(), // started, completed, failed
+  recordsFetched: integer("records_fetched"),
+  recordsProcessed: integer("records_processed"),
+  recordsMatched: integer("records_matched"),
+  recordsFailed: integer("records_failed"),
+  errorMessage: text("error_message"),
+  requestDetails: json("request_details"), // Request parameters
+  responseDetails: json("response_details"), // API response summary
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBankSyncLogSchema = createInsertSchema(bankSyncLogs).omit({
+  id: true,
+  createdAt: true
+});
+export type InsertBankSyncLog = z.infer<typeof insertBankSyncLogSchema>;
+export type BankSyncLog = typeof bankSyncLogs.$inferSelect;
