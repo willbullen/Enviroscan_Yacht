@@ -213,7 +213,14 @@ const FinancialManagement: React.FC = () => {
     refetch: refetchAccounts 
   } = useQuery({
     queryKey: ['/api/financial-accounts/vessel', currentVessel?.id],
-    queryFn: () => currentVessel?.id ? fetch(`/api/financial-accounts/vessel/${currentVessel.id}`).then(res => res.json()) : Promise.resolve([]),
+    queryFn: () => currentVessel?.id ? 
+      fetch(`/api/financial-accounts/vessel/${currentVessel.id}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log("Fetched accounts data:", data);
+          return Array.isArray(data) ? data : [];
+        })
+      : Promise.resolve([]),
     enabled: !!currentVessel?.id
   });
 
@@ -869,12 +876,22 @@ const FinancialManagement: React.FC = () => {
                           <TableCell>{expense.description}</TableCell>
                           <TableCell>{
                             // Find the account by ID and display its name
-                            accounts && Array.isArray(accounts) && expense.accountId
-                              ? (() => {
-                                  const account = accounts.find((a: any) => a.id === expense.accountId);
-                                  return account ? `${account.name} (${account.accountNumber})` : '-';
-                                })()
-                              : '-'
+                            (() => {
+                              console.log("Expense accountId:", expense.accountId, "type:", typeof expense.accountId);
+                              console.log("Available accounts:", accounts);
+                              
+                              if (!accounts || !Array.isArray(accounts) || !expense.accountId) return '-';
+                              
+                              // Try to find account with both string and number comparison
+                              const accountIdNum = typeof expense.accountId === 'string' ? parseInt(expense.accountId) : expense.accountId;
+                              const account = accounts.find((a: any) => 
+                                a.id === accountIdNum || a.id === expense.accountId || a.id.toString() === expense.accountId.toString()
+                              );
+                              
+                              return account 
+                                ? `${account.accountName} (${account.accountNumber})` 
+                                : `Account ID: ${expense.accountId}`;
+                            })()
                           }</TableCell>
                           <TableCell className="text-right">
                             {new Intl.NumberFormat('en-US', { 
