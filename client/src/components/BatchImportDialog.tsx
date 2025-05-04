@@ -664,7 +664,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                                   defaultValue={row[header] || ""}
                                   onValueChange={(value) => {
                                     const updatedData = [...previewData];
-                                    updatedData[rowIndex] = { ...updatedData[rowIndex], [header]: value };
+                                    updatedData[rowIndex] = { ...updatedData[rowIndex], [header]: value, vendorId: vendors.find(v => v.name === value)?.id || null };
                                     setPreviewData(updatedData);
                                   }}
                                 >
@@ -672,7 +672,8 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                                     <SelectValue placeholder="Select vendor" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {vendors.map((vendor) => (
+                                    {/* Get unique vendors by name to prevent duplicates */}
+                                    {Array.from(new Map(vendors.map(vendor => [vendor.name, vendor])).values()).map((vendor) => (
                                       <SelectItem key={vendor.id.toString()} value={vendor.name}>
                                         {vendor.name}
                                       </SelectItem>
