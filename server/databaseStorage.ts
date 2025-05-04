@@ -2555,6 +2555,13 @@ export class DatabaseStorage implements IStorage {
     return connection;
   }
   
+  async getBankApiConnections(): Promise<BankApiConnection[]> {
+    return db
+      .select()
+      .from(bankApiConnections)
+      .orderBy(bankApiConnections.name);
+  }
+  
   async getBankApiConnectionsByBankAccount(bankAccountId: number): Promise<BankApiConnection[]> {
     return db
       .select()

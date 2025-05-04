@@ -5716,13 +5716,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // using the stored API credentials
     
     // Check if we have API credentials
-    if (!connection.authDetails || !connection.authDetails.apiKey) {
+    const credentials = connection.credentials as { apiKey?: string };
+    if (!credentials || !credentials.apiKey) {
       return {
         success: false,
         transactionsRetrieved: 0,
         transactionsImported: 0,
         transactions: [],
-        errors: "Missing API key in authentication details"
+        errors: "Missing API key in credentials"
       };
     }
     
@@ -5743,13 +5744,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const transaction = {
         connectionId: connection.id,
+        bankAccountId: connection.bankAccountId,
         externalId: `CENTTRIP-${Date.now()}-${i}`,
         transactionDate: transactionDate,
+        type: isExpense ? 'expense' : 'income',
         description: isExpense ? 
           `Payment to ${['Chandlery', 'Fuel Supplier', 'Port Fees', 'Maintenance'][Math.floor(Math.random() * 4)]}` : 
           `Deposit from ${['Charter Client', 'Owner', 'Insurance'][Math.floor(Math.random() * 3)]}`,
         amount: isExpense ? `-${amount}` : amount,
-        currency: connection.currency || 'USD',
+        currency: 'USD',
         category: isExpense ? 
           ['Fuel', 'Maintenance', 'Port Fees', 'Supplies'][Math.floor(Math.random() * 4)] : 
           ['Charter Revenue', 'Owner Contribution', 'Insurance Claim'][Math.floor(Math.random() * 3)],
@@ -5789,13 +5792,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // using OAuth token authentication
     
     // Check if we have OAuth credentials
-    if (!connection.authDetails || !connection.authDetails.accessToken) {
+    const credentials = connection.credentials as { accessToken?: string };
+    if (!credentials || !credentials.accessToken) {
       return {
         success: false,
         transactionsRetrieved: 0,
         transactionsImported: 0,
         transactions: [],
-        errors: "Missing OAuth access token in authentication details"
+        errors: "Missing OAuth access token in credentials"
       };
     }
     
@@ -5816,13 +5820,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const transaction = {
         connectionId: connection.id,
+        bankAccountId: connection.bankAccountId,
         externalId: `REVOLUT-${Date.now()}-${i}`,
         transactionDate: transactionDate,
+        type: isExpense ? 'expense' : 'income',
         description: isExpense ? 
           `Payment to ${['Marine Services', 'Crew Salaries', 'Insurance', 'Provisions'][Math.floor(Math.random() * 4)]}` : 
           `Deposit from ${['Charter Fee', 'Transfer', 'Refund'][Math.floor(Math.random() * 3)]}`,
         amount: isExpense ? `-${amount}` : amount,
-        currency: connection.currency || 'EUR',
+        currency: 'EUR',
         category: isExpense ? 
           ['Crew', 'Insurance', 'Provisions', 'Services'][Math.floor(Math.random() * 4)] : 
           ['Charter', 'Transfer', 'Refund'][Math.floor(Math.random() * 3)],
