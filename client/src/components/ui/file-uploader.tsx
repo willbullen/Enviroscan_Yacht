@@ -1,64 +1,63 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UploadCloud, File, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { X, Upload, AlertCircle, CheckCircle, FileIcon, Image, File } from 'lucide-react';
 
 interface FileUploaderProps {
   onFilesSelected: (files: File[]) => void;
-  onFileRemoved?: (fileIndex: number) => void;
+  onFileRemoved?: (index: number) => void;
   maxFiles?: number;
-  maxSize?: number; // in bytes
-  accept?: Record<string, string[]>;
-  className?: string;
+  maxSize?: number;
   uploading?: boolean;
   progress?: number;
-  uploadedFiles?: { name: string; size: number; status?: 'success' | 'error' | 'uploading' }[];
+  uploadedFiles?: Array<{
+    name: string;
+    size: number;
+    status?: 'uploading' | 'success' | 'error';
+  }>;
 }
 
-export const FileUploader: React.FC<FileUploaderProps> = ({
+export const FileUploader = ({
   onFilesSelected,
   onFileRemoved,
-  maxFiles = 10,
-  maxSize = 10 * 1024 * 1024, // 10MB default
-  accept = {
-    'image/*': ['.jpg', '.jpeg', '.png'],
-    'application/pdf': ['.pdf']
-  },
-  className = '',
+  maxFiles = 5,
+  maxSize = 5 * 1024 * 1024, // 5MB default
   uploading = false,
   progress = 0,
   uploadedFiles = []
-}) => {
-  const [fileRejections, setFileRejections] = useState<{ file: File; errors: { code: string; message: string }[] }[]>([]);
+}: FileUploaderProps) => {
+  const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[], rejectedFiles: any[]) => {
-      if (acceptedFiles.length > 0) {
-        onFilesSelected(acceptedFiles);
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles.length === 0) return;
+      
+      setError(null);
+      
+      // Check if adding these files would exceed the max file count
+      if (uploadedFiles.length + acceptedFiles.length > maxFiles) {
+        setError(`You can only upload a maximum of ${maxFiles} files at once.`);
+        return;
       }
-      setFileRejections(rejectedFiles);
+      
+      onFilesSelected(acceptedFiles);
     },
-    [onFilesSelected]
+    [maxFiles, onFilesSelected, uploadedFiles.length]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
-    maxFiles,
     maxSize,
-    accept,
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'application/pdf': ['.pdf'],
+    },
+    disabled: uploading,
   });
-
-  const handleRemoveFile = (index: number) => {
-    if (onFileRemoved) {
-      onFileRemoved(index);
-    }
-  };
-
-  const clearRejections = () => {
-    setFileRejections([]);
-  };
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' bytes';
@@ -67,116 +66,107 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   };
 
   const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase() || '';
-    if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(extension)) {
-      return <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-500">IMG</div>;
-    } else if (extension === 'pdf') {
-      return <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center text-red-500">PDF</div>;
-    } else {
-      return <File className="w-6 h-6 text-gray-400" />;
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension as string)) {
+      return <Image className="h-6 w-6 text-blue-500" />;
     }
+    
+    if (extension === 'pdf') {
+      return <FileIcon className="h-6 w-6 text-red-500" />;
+    }
+    
+    return <File className="h-6 w-6 text-gray-500" />;
+  };
+
+  const getStatusIcon = (status?: string) => {
+    if (status === 'uploading') {
+      return <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />;
+    }
+    
+    if (status === 'success') {
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    }
+    
+    if (status === 'error') {
+      return <AlertCircle className="h-5 w-5 text-red-500" />;
+    }
+    
+    return null;
   };
 
   return (
-    <div className={className}>
+    <div className="space-y-4">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
-          isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary/50'
-        }`}
+        className={cn(
+          'border-2 border-dashed rounded-lg p-8 transition-colors flex flex-col items-center justify-center cursor-pointer',
+          isDragActive && !isDragReject && 'border-primary bg-primary/5',
+          isDragReject && 'border-destructive bg-destructive/5',
+          uploading && 'opacity-50 cursor-not-allowed bg-muted',
+          'hover:border-primary hover:bg-primary/5'
+        )}
       >
         <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center text-center gap-2">
-          <UploadCloud className={`w-10 h-10 ${isDragActive ? 'text-primary' : 'text-gray-400'}`} />
-          <div className="mt-2">
-            <p className="text-sm font-medium">{isDragActive ? 'Drop files here...' : 'Drag files here or click to browse'}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Upload up to {maxFiles} files (max {formatFileSize(maxSize)} each)
+        <div className="flex flex-col items-center justify-center gap-2 text-center">
+          <Upload className={cn('h-10 w-10', isDragActive ? 'text-primary' : 'text-muted-foreground')} />
+          <div className="flex flex-col gap-1">
+            <p className="font-medium">
+              {isDragActive ? 'Drop files here' : 'Drag & drop files here or click to browse'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Accepts JPG, PNG, and PDF (max {formatFileSize(maxSize)} per file)
             </p>
           </div>
-          <Button type="button" size="sm" variant="outline" className="mt-2">
-            Browse files
-          </Button>
         </div>
       </div>
 
-      {/* Error messages */}
-      {fileRejections.length > 0 && (
-        <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-3">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2 mt-0.5" />
-            <div className="flex-1">
-              <div className="flex justify-between">
-                <h4 className="text-sm font-medium text-red-800">Some files couldn't be uploaded</h4>
-                <button onClick={clearRejections} className="text-red-500 hover:text-red-700">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <ul className="mt-1 text-xs text-red-700 list-disc list-inside">
-                {fileRejections.map((rejection, index) => (
-                  <li key={index}>
-                    {rejection.file.name}: {rejection.errors.map(e => e.message).join(', ')}
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {uploading && progress > 0 && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Uploading...</span>
+            <span>{progress}%</span>
           </div>
+          <Progress value={progress} />
         </div>
       )}
 
-      {/* File list */}
       {uploadedFiles.length > 0 && (
-        <div className="mt-4 space-y-2">
-          {uploading && (
-            <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span>Uploading...</span>
-                <span>{progress}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          )}
-
-          <h4 className="text-sm font-medium">Files ({uploadedFiles.length})</h4>
-          <div className="space-y-2">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Files</p>
+          <div className="rounded-md border divide-y">
             {uploadedFiles.map((file, index) => (
-              <Card key={index} className="p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div key={`${file.name}-${index}`} className="flex items-center justify-between p-3">
+                <div className="flex items-center space-x-3">
                   {getFileIcon(file.name)}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                  <div>
+                    <p className="font-medium text-sm truncate max-w-[240px]">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {file.status === 'success' && <CheckCircle className="w-5 h-5 text-green-500" />}
-                  {file.status === 'error' && <AlertCircle className="w-5 h-5 text-red-500" />}
-                  {file.status === 'uploading' && (
-                    <svg
-                      className="animate-spin h-5 w-5 text-primary"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(file.status)}
+                  {!uploading && onFileRemoved && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                      onClick={() => onFileRemoved(index)}
                     >
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
+                      <X className="h-4 w-4" />
+                    </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-gray-500 hover:text-red-500"
-                    onClick={() => handleRemoveFile(index)}
-                    disabled={uploading}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

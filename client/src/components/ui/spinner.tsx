@@ -1,29 +1,29 @@
-import React from 'react';
+import { cn } from '@/lib/utils';
+
+type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface SpinnerProps {
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: SpinnerSize;
   className?: string;
 }
 
-export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', className = '' }) => {
+export const Spinner = ({ size = 'md', className }: SpinnerProps) => {
   const sizeClasses = {
-    xs: 'h-4 w-4',
-    sm: 'h-5 w-5',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
+    xs: 'h-3 w-3 border-[1.5px]',
+    sm: 'h-4 w-4 border-2',
+    md: 'h-6 w-6 border-2',
+    lg: 'h-8 w-8 border-3',
+    xl: 'h-10 w-10 border-4'
   };
 
   return (
     <div
-      className={`inline-block animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] text-primary ${
-        sizeClasses[size]
-      } ${className}`}
-      role="status"
-    >
-      <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-        Loading...
-      </span>
-    </div>
+      className={cn(
+        'animate-spin rounded-full border-solid border-primary border-t-transparent',
+        sizeClasses[size],
+        className
+      )}
+    />
   );
 };
 

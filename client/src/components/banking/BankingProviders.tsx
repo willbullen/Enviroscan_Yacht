@@ -1,304 +1,233 @@
-import React, { useState, useEffect } from "react";
-import { useSystemSettings } from "@/contexts/SystemSettingsContext";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Spinner } from "@/components/ui/spinner"; 
-import { PlusCircle, Database, Shield, RefreshCw } from "lucide-react";
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSystemSettings } from '@/contexts/SystemSettingsContext';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  ChevronRight,
+  Wallet,
+  CreditCard,
+  RefreshCw,
+  Link,
+  AlertCircle,
+  CircleCheck,
+  Shield,
+  Lock,
+  CheckCircle2,
+  ExternalLink,
+  Clock,
+  Download,
+} from 'lucide-react';
 
-// Types
-interface BankingProvider {
-  id: number;
-  name: string;
-  description: string;
-  apiType: string;
-  baseUrl: string;
-  isActive: boolean;
-  authType: string;
-  requiredCredentials: Record<string, string>; // Fields needed for connection
+interface BankingProvidersProps {
+  vesselId: number;
 }
 
-interface ProviderCredentials {
-  apiKey?: string;
-  clientId?: string;
-  clientSecret?: string;
-  bearerToken?: string;
-  [key: string]: string | undefined;
-}
+export const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
+  const { useLiveBankingData, setUseLiveBankingData, bankingAPICredentialsSet } = useSystemSettings();
+  const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
 
-const BankingProviders: React.FC = () => {
-  const { settings } = useSystemSettings();
-  const { toast } = useToast();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<BankingProvider | null>(null);
-  const [providerCredentials, setProviderCredentials] = useState<ProviderCredentials>({});
+  // Mock provider data - in a real app this would come from an API call
+  const providers = [
+    {
+      id: 'centtrip',
+      name: 'Centtrip',
+      logo: <Wallet className="h-8 w-8 text-primary" />,
+      description: 'Centtrip multi-currency banking platform',
+      connected: useLiveBankingData ? bankingAPICredentialsSet.centtrip : true,
+      lastSynced: '2025-05-04T18:30:00Z',
+      accountCount: 3,
+      transactionCount: 127,
+    },
+    {
+      id: 'revolut',
+      name: 'Revolut',
+      logo: <CreditCard className="h-8 w-8 text-primary" />,
+      description: 'Revolut business banking platform',
+      connected: useLiveBankingData ? bankingAPICredentialsSet.revolut : true,
+      lastSynced: '2025-05-05T09:15:00Z',
+      accountCount: 2,
+      transactionCount: 84,
+    },
+  ];
 
-  // Fetch banking providers
-  const { data: providers = [], isLoading, refetch } = useQuery({
-    queryKey: ['/api/banking/providers'],
-    retry: false,
-    enabled: !settings.useMockBankingData, // Only fetch real providers if not using mock data
-  });
-
-  // If using mock data, provide some placeholder providers
-  const displayProviders: BankingProvider[] = settings.useMockBankingData
-    ? [
-      {
-        id: 1,
-        name: "Centtrip",
-        description: "Multi-currency banking and expense management",
-        apiType: "centtrip",
-        baseUrl: "https://api.centtrip.com",
-        isActive: true,
-        authType: "api_key",
-        requiredCredentials: { apiKey: "API Key" }
-      },
-      {
-        id: 2,
-        name: "Revolut",
-        description: "Business banking with multi-currency accounts",
-        apiType: "revolut",
-        baseUrl: "https://api.revolut.com",
-        isActive: false,
-        authType: "oauth2",
-        requiredCredentials: { clientId: "Client ID", clientSecret: "Client Secret" }
-      }
-    ]
-    : (providers as BankingProvider[]);
-
-  // Handle provider connection test
-  const testProviderConnection = async (provider: BankingProvider) => {
-    if (settings.useMockBankingData) {
-      // Simulate a connection test
-      toast({
-        title: "Test Connection Successful",
-        description: `Successfully connected to ${provider.name} API (demo mode)`,
-      });
-      return;
-    }
-
-    try {
-      // In a real app, this would test the connection to the banking API
-      const response = await fetch(`/api/banking/test-connection/${provider.id}`, {
-        method: "POST",
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Connection Successful",
-          description: `Successfully connected to ${provider.name} API`,
-        });
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Connection Failed",
-          description: errorData.message || "Failed to connect to banking API",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Connection Error",
-        description: "An error occurred while testing the connection",
-        variant: "destructive",
-      });
-    }
+  const handleToggleLiveData = () => {
+    setUseLiveBankingData(!useLiveBankingData);
   };
 
-  // Handle saving provider credentials
-  const saveProviderCredentials = async () => {
-    if (!selectedProvider) return;
-
-    if (settings.useMockBankingData) {
-      // Simulate saving credentials in demo mode
-      toast({
-        title: "Credentials Saved",
-        description: `${selectedProvider.name} credentials saved successfully (demo mode)`,
-      });
-      setIsEditDialogOpen(false);
-      return;
-    }
-
-    try {
-      // In a real app, this would save the API credentials securely
-      const response = await fetch(`/api/banking/providers/${selectedProvider.id}/credentials`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(providerCredentials),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Credentials Saved",
-          description: `${selectedProvider.name} credentials saved successfully`,
-        });
-        setIsEditDialogOpen(false);
-        refetch(); // Refresh the providers list
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Error",
-          description: errorData.message || "Failed to save credentials",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred while saving credentials",
-        variant: "destructive",
-      });
-    }
+  const handleSyncProvider = (providerId: string) => {
+    setSyncingProvider(providerId);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setSyncingProvider(null);
+    }, 2000);
   };
 
-  // Handle editing provider credentials
-  const editProviderCredentials = (provider: BankingProvider) => {
-    setSelectedProvider(provider);
-    setProviderCredentials({}); // Reset credentials
-    setIsEditDialogOpen(true);
+  const formatLastSyncTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Banking Providers</h3>
-        <Button variant="outline" onClick={() => setIsAddDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Provider
-        </Button>
+      <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+        <div className="flex-1">
+          <h3 className="text-lg font-medium">Banking Data Source</h3>
+          <p className="text-sm text-muted-foreground">
+            Toggle between live API data and generated test data
+          </p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="live-data-toggle" className={!useLiveBankingData ? 'text-muted-foreground' : ''}>
+            {useLiveBankingData ? 'Live Data' : 'Test Data'}
+          </Label>
+          <Switch
+            id="live-data-toggle"
+            checked={useLiveBankingData}
+            onCheckedChange={handleToggleLiveData}
+          />
+        </div>
       </div>
 
-      {settings.useMockBankingData && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <Database className="h-5 w-5 text-yellow-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                <strong>Demo Mode Active:</strong> Using simulated banking data. To connect to real banking APIs, disable demo mode in Settings.
+      {useLiveBankingData && !bankingAPICredentialsSet.centtrip && !bankingAPICredentialsSet.revolut && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>API Credentials Required</AlertTitle>
+          <AlertDescription>
+            You need to set up your banking API credentials in the Settings page before you can use live banking data.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {providers.map((provider) => (
+          <Card key={provider.id} className={!provider.connected ? 'border-dashed opacity-70' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <div className="flex items-center space-x-4">
+                {provider.logo}
+                <div>
+                  <CardTitle className="text-xl">{provider.name}</CardTitle>
+                  <CardDescription>{provider.description}</CardDescription>
+                </div>
+              </div>
+              <Badge variant={provider.connected ? 'default' : 'outline'}>
+                {provider.connected ? 'Connected' : 'Disconnected'}
+              </Badge>
+            </CardHeader>
+            <CardContent className="pb-2">
+              {provider.connected ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Last Sync</p>
+                    <div className="flex items-center mt-1">
+                      <Clock className="w-4 h-4 mr-1.5 text-muted-foreground" />
+                      <span className="text-sm">{formatLastSyncTime(provider.lastSynced)}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Accounts</p>
+                    <div className="flex items-center mt-1">
+                      <Wallet className="w-4 h-4 mr-1.5 text-muted-foreground" />
+                      <span className="text-sm">{provider.accountCount} accounts</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Transactions</p>
+                    <div className="flex items-center mt-1">
+                      <Download className="w-4 h-4 mr-1.5 text-muted-foreground" />
+                      <span className="text-sm">{provider.transactionCount} transactions</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Status</p>
+                    <div className="flex items-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 mr-1.5 text-green-500" />
+                      <span className="text-sm">Healthy</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center py-2">
+                  <AlertCircle className="h-5 w-5 text-muted-foreground mr-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {useLiveBankingData
+                      ? 'This provider is not connected. Configure API credentials in Settings.'
+                      : 'This provider is simulated in test mode.'}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex justify-between pt-2">
+              <Button variant="outline" size="sm" asChild>
+                <a href="#" className="inline-flex items-center">
+                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                  Go to {provider.name}
+                </a>
+              </Button>
+              <Button
+                disabled={!provider.connected || syncingProvider === provider.id}
+                variant="default"
+                size="sm"
+                onClick={() => handleSyncProvider(provider.id)}
+              >
+                {syncingProvider === provider.id ? (
+                  <>
+                    <Spinner size="xs" className="mr-1.5" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                    Sync Now
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+
+      {!useLiveBankingData && (
+        <Alert>
+          <Shield className="h-4 w-4" />
+          <AlertTitle>Test Mode Active</AlertTitle>
+          <AlertDescription>
+            You are using generated test data. All banking operations are simulated
+            and no actual API calls will be made.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {useLiveBankingData && (
+        <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
+          <div className="flex items-start space-x-4">
+            <Lock className="h-8 w-8 text-primary" />
+            <div>
+              <h3 className="font-medium">API Security</h3>
+              <p className="text-sm text-muted-foreground">
+                Your banking API credentials are securely stored and encrypted. All API
+                communications are made using secure HTTPS connections.
               </p>
             </div>
           </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href="/settings">
+              Configure
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </a>
+          </Button>
         </div>
       )}
-
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Spinner size="lg" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {displayProviders.map((provider) => (
-            <Card key={provider.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{provider.name}</CardTitle>
-                    <CardDescription>{provider.description}</CardDescription>
-                  </div>
-                  <Badge variant={provider.isActive ? "default" : "outline"}>
-                    {provider.isActive ? "Connected" : "Disconnected"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">API Type:</span>
-                    <span>{provider.apiType}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Auth Method:</span>
-                    <span>{provider.authType === "api_key" ? "API Key" : "OAuth2"}</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => testProviderConnection(provider)}>
-                  <RefreshCw className="mr-2 h-4 w-4" /> Test Connection
-                </Button>
-                <Button onClick={() => editProviderCredentials(provider)}>
-                  <Shield className="mr-2 h-4 w-4" /> Manage Credentials
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Add Provider Dialog - TODO: Implement in the future */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Banking Provider</DialogTitle>
-            <DialogDescription>
-              Add a new banking provider to integrate with your financial data.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-center text-muted-foreground">
-              This feature will be available in a future update. 
-              Currently, Centtrip and Revolut are the supported banking providers.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Provider Credentials Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {selectedProvider?.name} API Credentials
-            </DialogTitle>
-            <DialogDescription>
-              Enter your API credentials to connect to {selectedProvider?.name}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {selectedProvider && Object.entries(selectedProvider.requiredCredentials).map(([key, label]) => (
-              <div key={key} className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor={key} className="text-right">
-                  {label}
-                </Label>
-                <Input
-                  id={key}
-                  type="password"
-                  value={providerCredentials[key] || ""}
-                  onChange={(e) => setProviderCredentials({
-                    ...providerCredentials,
-                    [key]: e.target.value
-                  })}
-                  className="col-span-3"
-                  placeholder={`Enter your ${label}`}
-                />
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={saveProviderCredentials}>
-              Save Credentials
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

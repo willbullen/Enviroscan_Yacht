@@ -1,503 +1,531 @@
-import React, { useState } from "react";
-import { useSystemSettings } from "@/contexts/SystemSettingsContext";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Spinner } from "@/components/ui/spinner";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CheckCircle, RefreshCw, ExternalLink, Search, FileCheck, Upload, Filter } from "lucide-react";
-import { format } from "date-fns";
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { useSystemSettings } from '@/contexts/SystemSettingsContext';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  Search,
+  Filter,
+  RefreshCw,
+  Calendar,
+  CreditCard,
+  ArrowDownUp,
+  Link2,
+  Unlink,
+  AlertCircle,
+  FileCheck,
+  DownloadCloud,
+  ReceiptText,
+  ChevronDown,
+  Check,
+  X,
+  Eye,
+  Edit,
+  FileSpreadsheet
+} from 'lucide-react';
 
-// Types
+interface TransactionReconciliationProps {
+  vesselId: number;
+}
+
 interface Transaction {
-  id: number;
-  vesselId: number;
-  accountId: number;
-  amount: number;
-  currency: string;
+  id: string;
+  date: string;
   description: string;
-  transactionDate: string;
+  amount: number;
+  type: 'credit' | 'debit';
+  status: 'matched' | 'unmatched' | 'pending' | 'reconciled';
+  provider: 'centtrip' | 'revolut';
   category?: string;
-  status: "pending" | "reconciled" | "unmatched";
-  expenseId?: number;
-  bankReference?: string;
-  provider?: string;
-  merchant?: string;
+  matchedExpenseId?: number;
+  reference?: string;
 }
 
-interface Expense {
-  id: number;
-  vesselId: number;
-  accountId: number;
-  amount: number;
-  currency: string;
-  description: string;
-  purchaseDate: string;
-  category: string;
-  vendor: string;
-  receipt?: string;
-  status: "pending" | "matched" | "unmatched";
-  transactionId?: number;
-}
+export const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ vesselId }) => {
+  const { useLiveBankingData, bankingAPICredentialsSet } = useSystemSettings();
+  const [selectedTab, setSelectedTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<'all' | '7days' | '30days' | '90days'>('30days');
+  const [selectedProvider, setSelectedProvider] = useState<'all' | 'centtrip' | 'revolut'>('all');
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-const TransactionReconciliation: React.FC = () => {
-  const { settings } = useSystemSettings();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("unreconciled");
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [isMatchDialogOpen, setIsMatchDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedVessel, setSelectedVessel] = useState<number | null>(null);
-
-  // Fetch transactions
-  const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery({
-    queryKey: ['/api/transactions', selectedVessel],
-    enabled: !!selectedVessel,
-  });
-
-  // Fetch expenses
-  const { data: expenses = [], isLoading: isLoadingExpenses } = useQuery({
-    queryKey: ['/api/expenses', selectedVessel],
-    enabled: !!selectedVessel,
-  });
-
-  // Fetch vessels for dropdown
-  const { data: vessels = [], isLoading: isLoadingVessels } = useQuery({
-    queryKey: ['/api/vessels'],
-  });
-
-  // Filter transactions based on search and reconciliation status
-  const filteredTransactions = (transactions as Transaction[])
-    .filter(t => {
-      if (searchQuery) {
-        return (
-          t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          t.amount.toString().includes(searchQuery) ||
-          (t.merchant && t.merchant.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-      }
-      return true;
-    })
-    .filter(t => {
-      if (activeTab === "unreconciled") {
-        return t.status !== "reconciled";
-      } else if (activeTab === "reconciled") {
-        return t.status === "reconciled";
-      }
-      return true;
-    });
-
-  // Format amount with currency
-  const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
-    }).format(amount);
-  };
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch (e) {
-      return dateString;
+  // Mock transactions - in a real app these would come from an API call
+  const mockTransactions: Transaction[] = [
+    {
+      id: 'txn-1',
+      date: '2025-05-01',
+      description: 'Fuel purchase - Mediterranean Yacht Services',
+      amount: 8750.50,
+      type: 'debit',
+      status: 'matched',
+      provider: 'centtrip',
+      category: 'Fuel',
+      matchedExpenseId: 1234,
+      reference: 'INV-20250501'
+    },
+    {
+      id: 'txn-2',
+      date: '2025-05-02',
+      description: 'Docking fees - Port de Monaco',
+      amount: 12500.00,
+      type: 'debit',
+      status: 'unmatched',
+      provider: 'centtrip',
+      reference: 'DOCK-5578'
+    },
+    {
+      id: 'txn-3',
+      date: '2025-05-03',
+      description: 'Crew payroll payment',
+      amount: 28750.00,
+      type: 'debit',
+      status: 'reconciled',
+      provider: 'revolut',
+      category: 'Crew',
+      matchedExpenseId: 1235,
+      reference: 'PAYROLL-MAY-W1'
+    },
+    {
+      id: 'txn-4',
+      date: '2025-05-03',
+      description: 'Maintenance supplies - Marine Tech',
+      amount: 3245.75,
+      type: 'debit',
+      status: 'pending',
+      provider: 'revolut',
+      reference: 'MT-3456-89'
+    },
+    {
+      id: 'txn-5',
+      date: '2025-05-04',
+      description: 'Charter payment received',
+      amount: 75000.00,
+      type: 'credit',
+      status: 'unmatched',
+      provider: 'centtrip',
+      reference: 'CHARTER-0554'
+    },
+    {
+      id: 'txn-6',
+      date: '2025-04-29',
+      description: 'Insurance premium - Maritime Insurance Ltd',
+      amount: 8500.00,
+      type: 'debit',
+      status: 'matched',
+      provider: 'revolut',
+      category: 'Insurance',
+      matchedExpenseId: 1236,
+      reference: 'INS-POL-23445'
+    },
+    {
+      id: 'txn-7',
+      date: '2025-04-28',
+      description: 'Catering services - Luxury Yacht Provisions',
+      amount: 4250.00,
+      type: 'debit',
+      status: 'unmatched',
+      provider: 'centtrip',
+      reference: 'LYP-4589'
+    },
+    {
+      id: 'txn-8',
+      date: '2025-04-27',
+      description: 'Mechanical repairs - Marine Engineers',
+      amount: 15750.25,
+      type: 'debit',
+      status: 'pending',
+      provider: 'revolut',
+      reference: 'ME-REP-7788'
     }
-  };
+  ];
 
-  // Handle transaction reconciliation
-  const reconcileTransaction = async (transaction: Transaction, expense: Expense) => {
-    if (settings.useMockBankingData) {
-      // Simulate reconciliation in demo mode
-      toast({
-        title: "Transaction Reconciled",
-        description: "Transaction was successfully matched with the expense (demo mode)",
-      });
-      setIsMatchDialogOpen(false);
-      return;
-    }
+  // Filter transactions based on search, tab, date range, and provider
+  const filteredTransactions = mockTransactions.filter(transaction => {
+    // Search filter
+    const matchesSearch = searchQuery === '' || 
+      transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      transaction.reference?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    try {
-      // In a real app, this would reconcile the transaction with the expense
-      const response = await fetch(`/api/transactions/${transaction.id}/reconcile`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ expenseId: expense.id }),
-      });
+    // Tab filter
+    const matchesTab = 
+      selectedTab === 'all' || 
+      (selectedTab === 'unmatched' && transaction.status === 'unmatched') ||
+      (selectedTab === 'matched' && transaction.status === 'matched') ||
+      (selectedTab === 'reconciled' && transaction.status === 'reconciled') ||
+      (selectedTab === 'pending' && transaction.status === 'pending');
+    
+    // Date filter (simplified for demo)
+    const txnDate = new Date(transaction.date);
+    const now = new Date();
+    const daysDiff = Math.floor((now.getTime() - txnDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const matchesDateRange = 
+      dateRange === 'all' || 
+      (dateRange === '7days' && daysDiff <= 7) ||
+      (dateRange === '30days' && daysDiff <= 30) ||
+      (dateRange === '90days' && daysDiff <= 90);
+    
+    // Provider filter
+    const matchesProvider = 
+      selectedProvider === 'all' || 
+      transaction.provider === selectedProvider;
+    
+    return matchesSearch && matchesTab && matchesDateRange && matchesProvider;
+  });
 
-      if (response.ok) {
-        toast({
-          title: "Transaction Reconciled",
-          description: "Transaction was successfully matched with the expense",
-        });
-        setIsMatchDialogOpen(false);
-        // Refetch data to update the UI
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Reconciliation Failed",
-          description: errorData.message || "Failed to reconcile transaction",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during reconciliation",
-        variant: "destructive",
-      });
+  const handleSyncTransactions = () => {
+    setIsSyncing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSyncing(false);
+    }, 2000);
+  };
+
+  const handleExportTransactions = () => {
+    // In a real app, this would download a CSV or Excel file
+    alert('Exporting transactions...');
+  };
+
+  const handleToggleAllTransactions = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedTransactions(filteredTransactions.map(t => t.id));
+    } else {
+      setSelectedTransactions([]);
     }
   };
 
-  // Open match dialog
-  const openMatchDialog = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setIsMatchDialogOpen(true);
+  const handleToggleTransaction = (id: string) => {
+    if (selectedTransactions.includes(id)) {
+      setSelectedTransactions(selectedTransactions.filter(txnId => txnId !== id));
+    } else {
+      setSelectedTransactions([...selectedTransactions, id]);
+    }
   };
 
-  // Generate mock data if using demo mode
-  const demoTransactions: Transaction[] = settings.useMockBankingData ? [
-    {
-      id: 1,
-      vesselId: 1,
-      accountId: 1,
-      amount: -1250.00,
-      currency: "USD",
-      description: "MTU Engine Parts Purchase",
-      transactionDate: "2025-04-28",
-      category: "Maintenance",
-      status: "unmatched",
-      bankReference: "CENT-123456789",
-      provider: "Centtrip",
-      merchant: "MTU Supplies Ltd."
-    },
-    {
-      id: 2,
-      vesselId: 1,
-      accountId: 1,
-      amount: -350.50,
-      currency: "EUR",
-      description: "Vessel Cleaning Supplies",
-      transactionDate: "2025-04-29",
-      category: "Supplies",
-      status: "reconciled",
-      expenseId: 2,
-      bankReference: "CENT-987654321",
-      provider: "Centtrip",
-      merchant: "Marine Cleaning Co."
-    },
-    {
-      id: 3,
-      vesselId: 1,
-      accountId: 2,
-      amount: -2750.00,
-      currency: "GBP",
-      description: "Crew Uniform Order",
-      transactionDate: "2025-05-01",
-      category: "Crew",
-      status: "unmatched",
-      bankReference: "REV-567891234",
-      provider: "Revolut",
-      merchant: "Yacht Uniforms Inc."
-    }
-  ] : (transactions as Transaction[]);
-
-  const demoExpenses: Expense[] = settings.useMockBankingData ? [
-    {
-      id: 1,
-      vesselId: 1,
-      accountId: 1,
-      amount: 1250.00,
-      currency: "USD",
-      description: "MTU Engine Parts",
-      purchaseDate: "2025-04-28",
-      category: "Maintenance",
-      vendor: "MTU Supplies Ltd.",
-      receipt: "/uploads/receipts/mtu-parts.jpg",
-      status: "unmatched"
-    },
-    {
-      id: 2,
-      vesselId: 1,
-      accountId: 1,
-      amount: 350.50,
-      currency: "EUR",
-      description: "Cleaning Supplies",
-      purchaseDate: "2025-04-29",
-      category: "Supplies",
-      vendor: "Marine Cleaning Co.",
-      receipt: "/uploads/receipts/cleaning-supplies.jpg",
-      status: "matched",
-      transactionId: 2
-    },
-    {
-      id: 3,
-      vesselId: 1,
-      accountId: 2,
-      amount: 2750.00,
-      currency: "GBP",
-      description: "Crew Uniforms",
-      purchaseDate: "2025-05-01",
-      category: "Crew",
-      vendor: "Yacht Uniforms Inc.",
-      status: "unmatched"
-    }
-  ] : (expenses as Expense[]);
-
-  // Find potential matches for a transaction
-  const findPotentialMatches = (transaction: Transaction): Expense[] => {
-    return demoExpenses.filter(expense => 
-      expense.status !== "matched" && 
-      Math.abs(expense.amount) === Math.abs(transaction.amount) &&
-      expense.currency === transaction.currency
-    );
+  const handleBulkReconcile = () => {
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      // Reset selection after action
+      setSelectedTransactions([]);
+    }, 1500);
   };
 
-  // Check if we should use demo or real data
-  const displayTransactions = settings.useMockBankingData ? demoTransactions : filteredTransactions;
+  const formatAmount = (amount: number, type: 'credit' | 'debit') => {
+    return `${type === 'credit' ? '+' : '-'}$${amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  };
 
-  const isLoading = isLoadingTransactions || isLoadingExpenses || isLoadingVessels;
+  const getStatusBadgeProps = (status: Transaction['status']) => {
+    switch (status) {
+      case 'matched':
+        return { variant: 'outline' as const, className: 'bg-blue-50 text-blue-700 border-blue-200' };
+      case 'unmatched':
+        return { variant: 'outline' as const, className: 'bg-amber-50 text-amber-700 border-amber-200' };
+      case 'reconciled':
+        return { variant: 'outline' as const, className: 'bg-green-50 text-green-700 border-green-200' };
+      case 'pending':
+        return { variant: 'outline' as const, className: 'bg-purple-50 text-purple-700 border-purple-200' };
+      default:
+        return { variant: 'outline' as const };
+    }
+  };
+
+  const getStatusIcon = (status: Transaction['status']) => {
+    switch (status) {
+      case 'matched':
+        return <Link2 className="h-3.5 w-3.5 mr-1" />;
+      case 'unmatched':
+        return <Unlink className="h-3.5 w-3.5 mr-1" />;
+      case 'reconciled':
+        return <Check className="h-3.5 w-3.5 mr-1" />;
+      case 'pending':
+        return <AlertCircle className="h-3.5 w-3.5 mr-1" />;
+      default:
+        return null;
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    setSelectedTab(value);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <h3 className="text-lg font-medium">Transaction Reconciliation</h3>
-        
-        <div className="flex flex-col space-y-2 md:flex-row md:space-x-2 md:space-y-0">
-          <div className="relative w-full md:w-auto">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search transactions..."
-              className="pl-8 w-full md:w-[300px]"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" onClick={() => setSearchQuery("")}>
-            <Filter className="mr-2 h-4 w-4" /> Clear Filters
+      <div className="flex justify-between">
+        <h2 className="text-2xl font-bold">Transaction Reconciliation</h2>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportTransactions}
+            className="h-9"
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Export
           </Button>
-          <Button>
-            <RefreshCw className="mr-2 h-4 w-4" /> Sync Transactions
+          <Button 
+            onClick={handleSyncTransactions}
+            disabled={isSyncing}
+            className="h-9"
+          >
+            {isSyncing ? (
+              <>
+                <Spinner size="xs" className="mr-2" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <DownloadCloud className="h-4 w-4 mr-2" />
+                Sync Transactions
+              </>
+            )}
           </Button>
         </div>
       </div>
 
-      {settings.useMockBankingData && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <FileCheck className="h-5 w-5 text-yellow-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                <strong>Demo Mode Active:</strong> Using simulated transaction and expense data. To use real banking data, disable demo mode in Settings.
-              </p>
-            </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="flex">
+          <div className="relative w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search transactions..."
+              className="w-full pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
-      )}
 
-      <Card>
-        <CardHeader>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="unreconciled">
-                Unreconciled Transactions
-              </TabsTrigger>
-              <TabsTrigger value="reconciled">
-                Reconciled Transactions
-              </TabsTrigger>
-              <TabsTrigger value="all">
-                All Transactions
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Spinner size="lg" />
+        <div className="flex space-x-2">
+          <Select
+            defaultValue={dateRange}
+            onValueChange={(value) => setDateRange(value as any)}
+          >
+            <SelectTrigger className="h-9 w-[180px]">
+              <Calendar className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Date range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All dates</SelectItem>
+              <SelectItem value="7days">Last 7 days</SelectItem>
+              <SelectItem value="30days">Last 30 days</SelectItem>
+              <SelectItem value="90days">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            defaultValue={selectedProvider}
+            onValueChange={(value) => setSelectedProvider(value as any)}
+          >
+            <SelectTrigger className="h-9 w-[180px]">
+              <CreditCard className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Provider" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All providers</SelectItem>
+              <SelectItem value="centtrip">Centtrip</SelectItem>
+              <SelectItem value="revolut">Revolut</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex justify-end">
+          {selectedTransactions.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {selectedTransactions.length} selected
+              </span>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleBulkReconcile}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Spinner size="xs" className="mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <FileCheck className="mr-2 h-4 w-4" />
+                    Reconcile
+                  </>
+                )}
+              </Button>
             </div>
           ) : (
-            <div className="border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Merchant</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {displayTransactions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No transactions found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    displayTransactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>{formatDate(transaction.transactionDate)}</TableCell>
-                        <TableCell>{transaction.description}</TableCell>
-                        <TableCell>{transaction.merchant || 'Unknown'}</TableCell>
-                        <TableCell className={transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}>
-                          {formatAmount(transaction.amount, transaction.currency)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={transaction.status === 'reconciled' ? 'default' : 'outline'}>
-                            {transaction.status === 'reconciled' ? 'Reconciled' : 'Unmatched'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            {transaction.status !== 'reconciled' && (
-                              <Button size="sm" variant="outline" onClick={() => openMatchDialog(transaction)}>
-                                Match
-                              </Button>
-                            )}
-                            {transaction.status === 'reconciled' && (
-                              <Button size="sm" variant="outline" disabled>
-                                <CheckCircle className="mr-1 h-4 w-4" /> Matched
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <Button variant="outline" className="h-9">
+              <Filter className="mr-2 h-4 w-4" />
+              More Filters
+            </Button>
           )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div className="text-sm text-muted-foreground">
-            Showing {displayTransactions.length} transactions
-          </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
 
-      {/* Match Dialog */}
-      <Dialog open={isMatchDialogOpen} onOpenChange={setIsMatchDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Match Transaction</DialogTitle>
-            <DialogDescription>
-              Select an expense to match with this transaction. Only expenses with the same amount and currency are shown.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedTransaction && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <div className="text-sm font-medium">Transaction Details</div>
-                <div className="grid grid-cols-2 gap-4 p-4 border rounded-md bg-muted/50">
-                  <div>
-                    <span className="text-sm text-muted-foreground">Date:</span>
-                    <div className="font-medium">{formatDate(selectedTransaction.transactionDate)}</div>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Amount:</span>
-                    <div className="font-medium">{formatAmount(selectedTransaction.amount, selectedTransaction.currency)}</div>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Description:</span>
-                    <div className="font-medium">{selectedTransaction.description}</div>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Merchant:</span>
-                    <div className="font-medium">{selectedTransaction.merchant || 'Unknown'}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid gap-2">
-                <div className="text-sm font-medium">Potential Matches</div>
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
+      <Tabs defaultValue={selectedTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="all" className="relative">
+            All
+            <Badge variant="secondary" className="ml-1 px-1.5 h-5">
+              {mockTransactions.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="unmatched">
+            Unmatched
+            <Badge variant="secondary" className="ml-1 px-1.5 h-5">
+              {mockTransactions.filter(t => t.status === 'unmatched').length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="matched">
+            Matched
+            <Badge variant="secondary" className="ml-1 px-1.5 h-5">
+              {mockTransactions.filter(t => t.status === 'matched').length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="reconciled">
+            Reconciled
+            <Badge variant="secondary" className="ml-1 px-1.5 h-5">
+              {mockTransactions.filter(t => t.status === 'reconciled').length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="pending">
+            Pending
+            <Badge variant="secondary" className="ml-1 px-1.5 h-5">
+              {mockTransactions.filter(t => t.status === 'pending').length}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={selectedTab} className="mt-4">
+          <Card className="border-0 shadow-none">
+            <CardContent className="p-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12 text-center">
+                        <Checkbox
+                          onCheckedChange={handleToggleAllTransactions}
+                          checked={
+                            filteredTransactions.length > 0 &&
+                            selectedTransactions.length === filteredTransactions.length
+                          }
+                        />
+                      </TableHead>
+                      <TableHead className="w-32">Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="w-32 text-right">Amount</TableHead>
+                      <TableHead className="w-32">Provider</TableHead>
+                      <TableHead className="w-32">Status</TableHead>
+                      <TableHead className="w-32 text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransactions.length === 0 ? (
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Vendor</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Receipt</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          No transactions found.
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {findPotentialMatches(selectedTransaction).length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                            No matching expenses found
+                    ) : (
+                      filteredTransactions.map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={selectedTransactions.includes(transaction.id)}
+                              onCheckedChange={() => handleToggleTransaction(transaction.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {new Date(transaction.date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{transaction.description}</div>
+                            {transaction.reference && (
+                              <div className="text-xs text-muted-foreground">
+                                Ref: {transaction.reference}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className={`text-right font-medium ${
+                            transaction.type === 'credit' ? 'text-green-600' : ''
+                          }`}>
+                            {formatAmount(transaction.amount, transaction.type)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {transaction.provider === 'centtrip' ? 'Centtrip' : 'Revolut'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge {...getStatusBadgeProps(transaction.status)}>
+                              {getStatusIcon(transaction.status)}
+                              <span className="capitalize">{transaction.status}</span>
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-center space-x-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {transaction.status !== 'reconciled' && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Link2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {transaction.status === 'matched' && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <FileCheck className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {transaction.status === 'matched' && transaction.matchedExpenseId && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <ReceiptText className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        findPotentialMatches(selectedTransaction).map((expense) => (
-                          <TableRow key={expense.id}>
-                            <TableCell>{formatDate(expense.purchaseDate)}</TableCell>
-                            <TableCell>{expense.description}</TableCell>
-                            <TableCell>{expense.vendor}</TableCell>
-                            <TableCell>{formatAmount(expense.amount, expense.currency)}</TableCell>
-                            <TableCell>
-                              {expense.receipt ? (
-                                <Button size="sm" variant="ghost" asChild>
-                                  <a href={expense.receipt} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                              ) : 'No receipt'}
-                            </TableCell>
-                            <TableCell>
-                              <Button size="sm" onClick={() => reconcileTransaction(selectedTransaction, expense)}>
-                                Match
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-              
-              <div className="text-sm text-center text-muted-foreground">
-                {findPotentialMatches(selectedTransaction).length === 0 && (
-                  <div className="flex flex-col items-center">
-                    <p className="mb-2">No matching expenses found. You can:</p>
-                    <div className="flex space-x-4">
-                      <Button variant="outline" disabled>
-                        <Upload className="mr-2 h-4 w-4" /> Upload New Expense
-                      </Button>
-                      <Button variant="outline" disabled>
-                        <Search className="mr-2 h-4 w-4" /> Find Similar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsMatchDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {!useLiveBankingData && (
+        <Alert className="mt-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Using Test Data</AlertTitle>
+          <AlertDescription>
+            You're viewing simulated transaction data. To see real transactions, enable live banking data.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };
