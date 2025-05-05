@@ -49,6 +49,7 @@ import { Loader2, RefreshCw, ExternalLink, AlertCircle, CheckCircle } from "luci
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
+import { useVessel } from "@/contexts/VesselContext";
 
 // Define form schemas
 const connectionFormSchema = z.object({

@@ -5273,6 +5273,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ error: "Authentication required. Please log in." });
     }
     
+    // Check if vesselId is provided as a query parameter
+    const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : null;
+    
+    // If vesselId is provided, get accounts for that vessel
+    if (vesselId && !isNaN(vesselId)) {
+      const accounts = await storage.getBankAccountsByVessel(vesselId);
+      return res.json(accounts);
+    }
+    
+    // Otherwise return all accounts
     const accounts = await storage.getAllBankAccounts();
     res.json(accounts);
   }));
@@ -5432,6 +5442,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ error: "Authentication required. Please log in." });
     }
     
+    // Check if bankAccountId is provided as a query parameter
+    const bankAccountId = req.query.bankAccountId ? parseInt(req.query.bankAccountId as string) : null;
+    
+    // Check if vesselId is provided as a query parameter
+    const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : null;
+    
+    // If bankAccountId is provided, get connections for that bank account
+    if (bankAccountId && !isNaN(bankAccountId)) {
+      const connections = await storage.getBankApiConnectionsByBankAccount(bankAccountId);
+      return res.json(connections);
+    }
+    
+    // If vesselId is provided, we need to find all bank accounts for that vessel,
+    // then find connections for those accounts
+    if (vesselId && !isNaN(vesselId)) {
+      try {
+        // Get all bank accounts for this vessel
+        const accounts = await storage.getBankAccountsByVessel(vesselId);
+        
+        // If no accounts, return empty array
+        if (!accounts || accounts.length === 0) {
+          return res.json([]);
+        }
+        
+        // Get connections for each bank account
+        const accountIds = accounts.map(account => account.id);
+        let allConnections: BankApiConnection[] = [];
+        
+        // For each account, get its connections and add to our array
+        for (const accountId of accountIds) {
+          const connections = await storage.getBankApiConnectionsByBankAccount(accountId);
+          allConnections = [...allConnections, ...connections];
+        }
+        
+        return res.json(allConnections);
+      } catch (error) {
+        console.error(`Failed to get banking connections for vessel ${vesselId}:`, error);
+        return res.status(500).json({ message: "Failed to get banking connections for vessel" });
+      }
+    }
+    
+    // Otherwise return all connections
     const connections = await storage.getBankApiConnections();
     res.json(connections);
   }));
