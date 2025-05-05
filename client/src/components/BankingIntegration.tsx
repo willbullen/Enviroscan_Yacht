@@ -86,21 +86,31 @@ const BankingIntegration = () => {
     },
   });
 
+  // Get current vessel from context
+  const { currentVessel } = useVessel();
+  
   // Load bank accounts and providers
   useEffect(() => {
     const fetchData = async () => {
+      if (!currentVessel) {
+        console.log("No vessel selected, skipping bank account fetch");
+        return;
+      }
+      
       setLoading(true);
       try {
-        // Fetch bank accounts
-        const bankAccountsResp = await apiRequest("GET", "/api/banking/accounts");
+        console.log(`Fetching banking data for vessel ID ${currentVessel.id}`);
+        
+        // Fetch bank accounts for current vessel
+        const bankAccountsResp = await apiRequest("GET", `/api/banking/accounts?vesselId=${currentVessel.id}`);
         console.log("Bank Accounts Response:", bankAccountsResp);
         
         // Fetch API providers
         const providersResp = await apiRequest("GET", "/api/banking/providers");
         console.log("Providers Response:", providersResp);
         
-        // Fetch existing connections
-        const connectionsResp = await apiRequest("GET", "/api/banking/connections");
+        // Fetch existing connections for current vessel
+        const connectionsResp = await apiRequest("GET", `/api/banking/connections?vesselId=${currentVessel.id}`);
         console.log("Connections Response:", connectionsResp);
         
         setBankAccounts(Array.isArray(bankAccountsResp) ? bankAccountsResp : []);
@@ -119,10 +129,19 @@ const BankingIntegration = () => {
     };
     
     fetchData();
-  }, [toast]);
+  }, [toast, currentVessel]);
 
   // Handle connection form submission
   const onCreateConnection = async (data) => {
+    if (!currentVessel) {
+      toast({
+        title: "Error",
+        description: "No vessel selected. Please select a vessel first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setLoading(true);
       
@@ -130,9 +149,9 @@ const BankingIntegration = () => {
       const provider = providers.find(p => p.id === parseInt(data.providerId));
       let credentials = {};
       
-      if (provider.apiType === "centtrip") {
+      if (provider?.apiType === "centtrip") {
         credentials = { apiKey: data.credentials.apiKey };
-      } else if (provider.apiType === "revolut") {
+      } else if (provider?.apiType === "revolut") {
         credentials = { accessToken: data.credentials.accessToken };
       }
       
@@ -143,16 +162,16 @@ const BankingIntegration = () => {
         credentials,
       });
       
-      if (response.data) {
+      if (response) {
         toast({
           title: "Success",
           description: "Banking connection created successfully",
         });
         
-        // Refresh connections list
-        const connectionsResp = await apiRequest("GET", "/api/banking/connections");
+        // Refresh connections list with current vessel ID
+        const connectionsResp = await apiRequest("GET", `/api/banking/connections?vesselId=${currentVessel.id}`);
         
-        setConnections(connectionsResp.data || []);
+        setConnections(Array.isArray(connectionsResp) ? connectionsResp : []);
         setConnectionDialogOpen(false);
         connectionForm.reset();
       }
@@ -170,19 +189,32 @@ const BankingIntegration = () => {
 
   // Sync transactions
   const syncTransactions = async (connectionId) => {
+    if (!currentVessel) {
+      toast({
+        title: "Error",
+        description: "No vessel selected. Please select a vessel first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setSyncInProgress(true);
       
       const response = await apiRequest("POST", `/api/banking/connections/${connectionId}/sync`);
       
-      if (response.data) {
+      if (response && response.transactions) {
         toast({
           title: "Success",
-          description: `Synced ${response.data.transactions.length} transactions`,
+          description: `Synced ${response.transactions.length} transactions`,
         });
         
         // Refresh sync logs
         loadSyncHistory(connectionId);
+        
+        // Refresh connections list with current vessel ID
+        const connectionsResp = await apiRequest("GET", `/api/banking/connections?vesselId=${currentVessel.id}`);
+        setConnections(Array.isArray(connectionsResp) ? connectionsResp : []);
       }
     } catch (error) {
       console.error("Error syncing transactions:", error);
@@ -198,12 +230,19 @@ const BankingIntegration = () => {
 
   // Load sync history for a connection
   const loadSyncHistory = async (connectionId) => {
+    if (!connectionId) {
+      console.warn("No connection ID provided for sync history");
+      return;
+    }
+    
     try {
       setLoading(true);
       const response = await apiRequest("GET", `/api/banking/connections/${connectionId}/sync-history`);
       
-      if (response.data) {
-        setSyncLogs(response.data);
+      console.log("Sync history response:", response);
+      
+      if (response) {
+        setSyncLogs(Array.isArray(response) ? response : []);
         setSelectedConnection(connectionId);
       }
     } catch (error) {
