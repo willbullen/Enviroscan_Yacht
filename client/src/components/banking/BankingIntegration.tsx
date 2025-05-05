@@ -1,276 +1,263 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BankingConnectionGuide } from './BankingConnectionGuide';
-import { ReconciliationGuide } from './ReconciliationGuide';
-import { ReceiptMatchingGuide } from './ReceiptMatchingGuide';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSystemSettings } from '@/contexts/SystemSettingsContext';
 import BankingProviders from './BankingProviders';
 import TransactionReconciliation from './TransactionReconciliation';
 import ReceiptMatching from './ReceiptMatching';
-import { useSystemSettings } from '@/contexts/SystemSettingsContext';
+import BankingConnectionGuide from './BankingConnectionGuide';
+import ReconciliationGuide from './ReconciliationGuide';
+import ReceiptMatchingGuide from './ReceiptMatchingGuide';
 import { 
-  AlertCircle, 
+  BanknoteIcon, 
   CreditCard, 
-  CheckCircle2, 
+  BarChart3, 
   Receipt, 
-  RefreshCw, 
-  FileCheck,
-  BarChart,
-  BadgeInfo,
-  InfoIcon,
-  HelpCircle,
+  Building, 
+  Clock, 
+  AlertCircle, 
+  FileCheck, 
+  Info, 
+  RefreshCw,
+  Lightbulb
 } from 'lucide-react';
 
-interface BankingIntegrationProps {
+export interface BankingIntegrationProps {
   vesselId: number;
 }
 
 export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId }) => {
-  const [activeTab, setActiveTab] = useState('providers');
-  const [showConnectionGuide, setShowConnectionGuide] = useState(false);
-  const [showReconciliationGuide, setShowReconciliationGuide] = useState(false);
-  const [showReceiptMatchingGuide, setShowReceiptMatchingGuide] = useState(false);
-  const [guideSections, setGuideSections] = useState<{
-    connectionStep: number;
-    reconciliationStep: number;
-    receiptMatchingStep: number;
-  }>({
-    connectionStep: 0,
-    reconciliationStep: 0,
-    receiptMatchingStep: 0,
-  });
-  
   const { useLiveBankingData, bankingAPICredentialsSet } = useSystemSettings();
+  const [activeGuide, setActiveGuide] = useState<'connection' | 'reconciliation' | 'receipt' | null>(null);
+  const [guideStep, setGuideStep] = useState(0);
   
-  // Stats for summary cards (in a real app, these would come from API calls)
-  const bankConnections = {
-    total: 2,
-    active: useLiveBankingData 
-      ? (bankingAPICredentialsSet.centtrip ? 1 : 0) + (bankingAPICredentialsSet.revolut ? 1 : 0)
-      : 2,
+  const handleShowGuide = (guide: 'connection' | 'reconciliation' | 'receipt') => {
+    setActiveGuide(guide);
+    setGuideStep(0);
   };
   
-  const pendingReconciliations = {
-    count: 12,
-    value: 34250.75,
-  };
-  
-  const unmatchedReceipts = {
-    count: 8,
-  };
-  
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
-  
-  const handleShowConnectionGuide = () => {
-    setShowConnectionGuide(true);
-    setShowReconciliationGuide(false);
-    setShowReceiptMatchingGuide(false);
-  };
-  
-  const handleShowReconciliationGuide = () => {
-    setShowConnectionGuide(false);
-    setShowReconciliationGuide(true);
-    setShowReceiptMatchingGuide(false);
-  };
-  
-  const handleShowReceiptMatchingGuide = () => {
-    setShowConnectionGuide(false);
-    setShowReconciliationGuide(false);
-    setShowReceiptMatchingGuide(true);
-  };
-  
-  const handleHideGuides = () => {
-    setShowConnectionGuide(false);
-    setShowReconciliationGuide(false);
-    setShowReceiptMatchingGuide(false);
-  };
-  
-  const handleConnectionStepChange = (step: number) => {
-    if (step === -1) {
-      setShowConnectionGuide(false);
+  const handleGuideStepChange = (step: number) => {
+    if (step < 0) {
+      setActiveGuide(null);
       return;
     }
-    setGuideSections(prev => ({
-      ...prev,
-      connectionStep: step,
-    }));
-  };
-  
-  const handleReconciliationStepChange = (step: number) => {
-    if (step === -1) {
-      setShowReconciliationGuide(false);
-      return;
-    }
-    setGuideSections(prev => ({
-      ...prev,
-      reconciliationStep: step,
-    }));
-  };
-  
-  const handleReceiptMatchingStepChange = (step: number) => {
-    if (step === -1) {
-      setShowReceiptMatchingGuide(false);
-      return;
-    }
-    setGuideSections(prev => ({
-      ...prev,
-      receiptMatchingStep: step,
-    }));
+    setGuideStep(step);
   };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Banking Connections</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <div className="text-2xl font-bold">{bankConnections.active} / {bankConnections.total}</div>
-                <p className="text-xs text-muted-foreground">Active connections</p>
-              </div>
-              <CreditCard className="h-8 w-8 text-primary opacity-80" />
-            </div>
-            <div className="mt-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full" 
-                onClick={handleShowConnectionGuide}
-              >
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Connection Guide
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pending Reconciliations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <div className="text-2xl font-bold">{pendingReconciliations.count}</div>
-                <p className="text-xs text-muted-foreground">Value: ${pendingReconciliations.value.toLocaleString()}</p>
-              </div>
-              <FileCheck className="h-8 w-8 text-primary opacity-80" />
-            </div>
-            <div className="mt-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={handleShowReconciliationGuide}
-              >
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Reconciliation Guide
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Unmatched Receipts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <div className="text-2xl font-bold">{unmatchedReceipts.count}</div>
-                <p className="text-xs text-muted-foreground">Awaiting processing</p>
-              </div>
-              <Receipt className="h-8 w-8 text-primary opacity-80" />
-            </div>
-            <div className="mt-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={handleShowReceiptMatchingGuide}
-              >
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Receipt Matching Guide
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Banking & Reconciliation</h2>
+          <p className="text-muted-foreground">
+            Manage banking connections, reconcile transactions, and match receipts to expenses
+          </p>
+        </div>
+        <div className="flex items-center">
+          {!bankingAPICredentialsSet && (
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 mr-3 gap-1">
+              <AlertCircle className="h-3.5 w-3.5" />
+              Using Test Data
+            </Badge>
+          )}
+          <Button className="flex items-center gap-2" onClick={() => handleShowGuide('connection')}>
+            <Lightbulb className="h-4 w-4" />
+            Banking Guide
+          </Button>
+        </div>
       </div>
-      
-      {!useLiveBankingData && (
-        <Alert variant="warning" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Using Generated Test Data</AlertTitle>
-          <AlertDescription>
-            You are currently using generated test data for banking integration. 
-            To connect to live banking APIs, configure your API credentials in Settings and toggle to Live Data mode.
-          </AlertDescription>
-        </Alert>
+
+      {activeGuide === 'connection' && (
+        <BankingConnectionGuide 
+          currentStep={guideStep} 
+          onSelectStep={handleGuideStepChange} 
+        />
       )}
       
-      {useLiveBankingData && !bankingAPICredentialsSet.centtrip && !bankingAPICredentialsSet.revolut && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>No Active Banking Connections</AlertTitle>
+      {activeGuide === 'reconciliation' && (
+        <ReconciliationGuide 
+          currentStep={guideStep} 
+          onSelectStep={handleGuideStepChange} 
+        />
+      )}
+      
+      {activeGuide === 'receipt' && (
+        <ReceiptMatchingGuide 
+          currentStep={guideStep} 
+          onSelectStep={handleGuideStepChange} 
+        />
+      )}
+      
+      {!bankingAPICredentialsSet && (
+        <Alert className="bg-amber-50 text-amber-800 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-800" />
+          <AlertTitle>Using Test Data Mode</AlertTitle>
           <AlertDescription>
-            You have enabled live banking data but have not configured any API credentials. 
-            Please configure your banking provider credentials in the Settings page.
+            You're using test data for banking features. To connect real banking providers, add your API credentials in Settings.
           </AlertDescription>
         </Alert>
       )}
 
-      <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="providers">Banking Providers</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="receipts">Receipt Matching</TabsTrigger>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Banking Connections</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">2</div>
+            <p className="text-xs text-muted-foreground">
+              Active banking connections
+            </p>
+            <div className="mt-4 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center">
+                  <Building className="h-3.5 w-3.5 mr-1 text-primary" />
+                  Centtrip
+                </span>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                  Active
+                </Badge>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center">
+                  <Building className="h-3.5 w-3.5 mr-1 text-primary" />
+                  Revolut
+                </span>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                  Active
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Pending Reconciliation</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">14</div>
+            <p className="text-xs text-muted-foreground">
+              Unmatched transactions this month
+            </p>
+            <div className="mt-4 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>This week</span>
+                <span>8 transactions</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Previous weeks</span>
+                <span>6 transactions</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Unmatched Receipts</CardTitle>
+            <Receipt className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3</div>
+            <p className="text-xs text-muted-foreground">
+              Receipts awaiting processing or matching
+            </p>
+            <div className="mt-4 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center">
+                  <RefreshCw className="h-3.5 w-3.5 mr-1 text-blue-500" />
+                  Processing
+                </span>
+                <span>1 receipt</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center">
+                  <FileCheck className="h-3.5 w-3.5 mr-1 text-purple-500" />
+                  Processed
+                </span>
+                <span>2 receipts</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="providers">
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="providers" className="flex items-center">
+            <Building className="h-4 w-4 mr-2" />
+            Banking Providers
+          </TabsTrigger>
+          <TabsTrigger value="transactions" className="flex items-center">
+            <BanknoteIcon className="h-4 w-4 mr-2" />
+            Transactions
+          </TabsTrigger>
+          <TabsTrigger value="receipts" className="flex items-center">
+            <Receipt className="h-4 w-4 mr-2" />
+            Receipt Matching
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="providers">
+        
+        <TabsContent value="providers" className="space-y-4 pt-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-medium">Banking Providers</h3>
+              <p className="text-sm text-muted-foreground">
+                Configure and manage connections to your vessel's banking providers
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => handleShowGuide('connection')}>
+              <Info className="h-4 w-4 mr-2" />
+              Guide
+            </Button>
+          </div>
           <BankingProviders vesselId={vesselId} />
         </TabsContent>
-        <TabsContent value="transactions">
+        
+        <TabsContent value="transactions" className="space-y-4 pt-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-medium">Transaction Reconciliation</h3>
+              <p className="text-sm text-muted-foreground">
+                Match banking transactions to your vessel's expenses and deposits
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => handleShowGuide('reconciliation')}>
+              <Info className="h-4 w-4 mr-2" />
+              Guide
+            </Button>
+          </div>
           <TransactionReconciliation vesselId={vesselId} />
         </TabsContent>
-        <TabsContent value="receipts">
+        
+        <TabsContent value="receipts" className="space-y-4 pt-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-medium">AI Receipt Matching</h3>
+              <p className="text-sm text-muted-foreground">
+                Upload receipts for automatic extraction and expense matching
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => handleShowGuide('receipt')}>
+              <Info className="h-4 w-4 mr-2" />
+              Guide
+            </Button>
+          </div>
           <ReceiptMatching vesselId={vesselId} />
         </TabsContent>
       </Tabs>
-      
-      {/* Guides */}
-      {showConnectionGuide && (
-        <div className="mt-6">
-          <BankingConnectionGuide 
-            currentStep={guideSections.connectionStep} 
-            onSelectStep={handleConnectionStepChange} 
-          />
-        </div>
-      )}
-      
-      {showReconciliationGuide && (
-        <div className="mt-6">
-          <ReconciliationGuide 
-            currentStep={guideSections.reconciliationStep} 
-            onSelectStep={handleReconciliationStepChange} 
-          />
-        </div>
-      )}
-      
-      {showReceiptMatchingGuide && (
-        <div className="mt-6">
-          <ReceiptMatchingGuide 
-            currentStep={guideSections.receiptMatchingStep} 
-            onSelectStep={handleReceiptMatchingStepChange} 
-          />
-        </div>
-      )}
     </div>
   );
 };

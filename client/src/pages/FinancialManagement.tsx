@@ -812,7 +812,7 @@ const FinancialManagement: React.FC = () => {
       case "banking":
         return (
           <div className="space-y-4">
-            <BankingIntegration />
+            <BankingIntegration vesselId={currentVessel.id} />
           </div>
         );
         

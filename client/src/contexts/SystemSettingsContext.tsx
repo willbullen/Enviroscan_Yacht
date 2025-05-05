@@ -1,101 +1,46 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface SystemSettings {
+export interface SystemSettings {
   useLiveBankingData: boolean;
-  setUseLiveBankingData: (value: boolean) => void;
-  bankingAPICredentialsSet: {
-    centtrip: boolean;
-    revolut: boolean;
+  bankingAPICredentialsSet: boolean;
+  toggleLiveBankingData: () => void;
+  // Add more system settings as needed
+}
+
+const SystemSettingsContext = createContext<SystemSettings | undefined>(undefined);
+
+export const SystemSettingsProvider = ({ children }: { children: ReactNode }) => {
+  const [useLiveBankingData, setUseLiveBankingData] = useState(false);
+  
+  // In a real app, this would be determined by checking if the API credentials are set in the database
+  // For demo purposes, we'll assume they're not set
+  const [bankingAPICredentialsSet, setBankingAPICredentialsSet] = useState(false);
+  
+  const toggleLiveBankingData = () => {
+    setUseLiveBankingData(prev => !prev);
   };
-  setBankingAPICredentialsSet: (providers: {
-    centtrip?: boolean;
-    revolut?: boolean;
-  }) => void;
-}
 
-const defaultSettings: SystemSettings = {
-  useLiveBankingData: false,
-  setUseLiveBankingData: () => {},
-  bankingAPICredentialsSet: {
-    centtrip: false,
-    revolut: false,
-  },
-  setBankingAPICredentialsSet: () => {},
-};
-
-const SystemSettingsContext = createContext<SystemSettings>(defaultSettings);
-
-export const useSystemSettings = () => useContext(SystemSettingsContext);
-
-interface SystemSettingsProviderProps {
-  children: React.ReactNode;
-}
-
-export const SystemSettingsProvider: React.FC<SystemSettingsProviderProps> = ({ children }) => {
-  const [useLiveBankingData, setUseLiveBankingData] = useState<boolean>(false);
-  const [bankingAPICredentialsSet, setBankingAPICredentialsSetInternal] = useState<{
-    centtrip: boolean;
-    revolut: boolean;
-  }>({
-    centtrip: false,
-    revolut: false,
-  });
-
-  // Load settings from local storage on mount
-  useEffect(() => {
-    try {
-      const storedSettings = localStorage.getItem('systemSettings');
-      if (storedSettings) {
-        const parsed = JSON.parse(storedSettings);
-        if (typeof parsed.useLiveBankingData === 'boolean') {
-          setUseLiveBankingData(parsed.useLiveBankingData);
-        }
-        if (parsed.bankingAPICredentialsSet) {
-          setBankingAPICredentialsSetInternal(parsed.bankingAPICredentialsSet);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading system settings from localStorage:', error);
-    }
-  }, []);
-
-  // Save settings to local storage when they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        'systemSettings',
-        JSON.stringify({
-          useLiveBankingData,
-          bankingAPICredentialsSet,
-        })
-      );
-    } catch (error) {
-      console.error('Error saving system settings to localStorage:', error);
-    }
-  }, [useLiveBankingData, bankingAPICredentialsSet]);
-
-  const setBankingAPICredentialsSet = (providers: {
-    centtrip?: boolean;
-    revolut?: boolean;
-  }) => {
-    setBankingAPICredentialsSetInternal((prev) => ({
-      ...prev,
-      ...providers,
-    }));
+  const value = {
+    useLiveBankingData,
+    bankingAPICredentialsSet,
+    toggleLiveBankingData,
   };
 
   return (
-    <SystemSettingsContext.Provider
-      value={{
-        useLiveBankingData,
-        setUseLiveBankingData,
-        bankingAPICredentialsSet,
-        setBankingAPICredentialsSet,
-      }}
-    >
+    <SystemSettingsContext.Provider value={value}>
       {children}
     </SystemSettingsContext.Provider>
   );
 };
 
-export default SystemSettingsProvider;
+export const useSystemSettings = (): SystemSettings => {
+  const context = useContext(SystemSettingsContext);
+  
+  if (context === undefined) {
+    throw new Error('useSystemSettings must be used within a SystemSettingsProvider');
+  }
+  
+  return context;
+};
+
+export default SystemSettingsContext;
