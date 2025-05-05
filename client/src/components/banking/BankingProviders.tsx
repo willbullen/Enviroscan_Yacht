@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Building2, 
   RefreshCw, 
@@ -18,13 +20,23 @@ import {
   XCircle, 
   Link, 
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  Edit
 } from 'lucide-react';
 import { useSystemSettings } from '@/contexts/SystemSettingsContext';
 import { Spinner } from '@/components/ui/spinner';
+import { useQuery } from '@tanstack/react-query';
 
 interface BankingProvidersProps {
   vesselId: number;
+}
+
+interface MappedAccount {
+  id: number;
+  accountNumber: string;
+  accountName: string;
+  bankAccountId: string;
+  bankAccountName: string;
 }
 
 interface BankingProvider {
@@ -36,10 +48,32 @@ interface BankingProvider {
   accounts?: number;
   apiKeySet?: boolean;
   apiSecretSet?: boolean;
+  mappedAccounts?: MappedAccount[];
+}
+
+// Interface for financial accounts
+interface FinancialAccount {
+  id: number;
+  accountNumber: string;
+  accountName: string;
+  accountType: string;
+  category: string;
+  balance: string;
+  vesselId: number;
+}
+
+// Interface for bank accounts from provider
+interface BankAccount {
+  id: string;
+  name: string;
+  currency: string;
+  balance: string;
 }
 
 const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
   const { useMockBankingData, updateSettings, bankingAPICredentialsSet } = useSystemSettings();
+  
+  // Initial mock providers
   const [providers, setProviders] = useState<BankingProvider[]>([
     {
       id: 'centtrip',
@@ -49,7 +83,23 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
       lastSynced: '2025-05-05T09:30:00Z',
       accounts: 2,
       apiKeySet: true,
-      apiSecretSet: true
+      apiSecretSet: true,
+      mappedAccounts: [
+        {
+          id: 1,
+          accountNumber: 'FA-001',
+          accountName: 'Lazar Card',
+          bankAccountId: 'cent-001',
+          bankAccountName: 'Crew Card #1'
+        },
+        {
+          id: 2,
+          accountNumber: 'FA-002',
+          accountName: 'Maintenance Account',
+          bankAccountId: 'cent-002',
+          bankAccountName: 'Operations Account'
+        }
+      ]
     },
     {
       id: 'revolut',
@@ -59,18 +109,64 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
       lastSynced: '2025-05-05T08:45:00Z',
       accounts: 1,
       apiKeySet: true,
-      apiSecretSet: true
+      apiSecretSet: true,
+      mappedAccounts: [
+        {
+          id: 4,
+          accountNumber: 'FA-004',
+          accountName: 'Provisions Account',
+          bankAccountId: 'rev-001',
+          bankAccountName: 'Food & Beverage'
+        }
+      ]
     }
   ]);
   
+  // Fetch financial accounts for the vessel
+  const { data: financialAccounts = [], isLoading: isLoadingAccounts } = useQuery<FinancialAccount[]>({
+    queryKey: ['/api/financial-accounts/vessel', vesselId],
+    enabled: !!vesselId,
+  });
+  
+  // State variables
   const [selectedProvider, setSelectedProvider] = useState<BankingProvider | null>(null);
   const [showProviderDialog, setShowProviderDialog] = useState(false);
   const [showAddProviderDialog, setShowAddProviderDialog] = useState(false);
+  const [showMapAccountsDialog, setShowMapAccountsDialog] = useState(false);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [newProviderName, setNewProviderName] = useState('');
   const [newProviderId, setNewProviderId] = useState('');
+  
+  // Mock bank accounts from provider API
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  
+  // Account mapping state
+  const [accountMappings, setAccountMappings] = useState<{[key: string]: string}>({});
+  
+  // Fetch bank accounts when a provider is selected for mapping
+  useEffect(() => {
+    if (selectedProvider && showMapAccountsDialog) {
+      // In a real app, this would be an API call to fetch accounts from the provider
+      const mockBankAccounts: BankAccount[] = [
+        { id: `${selectedProvider.id}-001`, name: `${selectedProvider.name} Account #1`, currency: 'USD', balance: '250,000.00' },
+        { id: `${selectedProvider.id}-002`, name: `${selectedProvider.name} Account #2`, currency: 'EUR', balance: '150,000.00' },
+        { id: `${selectedProvider.id}-003`, name: `${selectedProvider.name} Card`, currency: 'GBP', balance: '75,000.00' },
+      ];
+      
+      setBankAccounts(mockBankAccounts);
+      
+      // Initialize account mappings from existing mapped accounts
+      const initialMappings: {[key: string]: string} = {};
+      if (selectedProvider.mappedAccounts) {
+        selectedProvider.mappedAccounts.forEach(mapping => {
+          initialMappings[mapping.id.toString()] = mapping.bankAccountId;
+        });
+      }
+      setAccountMappings(initialMappings);
+    }
+  }, [selectedProvider, showMapAccountsDialog]);
   
   const handleSyncProvider = (providerId: string) => {
     setIsSyncing(providerId);
@@ -130,6 +226,55 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
     setShowProviderDialog(false);
   };
   
+  // Handle opening the account mapping dialog
+  const handleMapAccounts = (provider: BankingProvider) => {
+    setSelectedProvider(provider);
+    setShowMapAccountsDialog(true);
+  };
+  
+  // Handle saving account mappings
+  const handleSaveAccountMappings = () => {
+    if (!selectedProvider) return;
+    
+    // Create mapped accounts from the selections
+    const newMappedAccounts: MappedAccount[] = [];
+    
+    // Create mappings for each selected account
+    Object.entries(accountMappings).forEach(([accountId, bankAccountId]) => {
+      // Find the financial account
+      const financialAccount = financialAccounts.find((acc: FinancialAccount) => acc.id.toString() === accountId);
+      if (!financialAccount) return;
+      
+      // Find the bank account
+      const bankAccount = bankAccounts.find((acc: BankAccount) => acc.id === bankAccountId);
+      if (!bankAccount) return;
+      
+      // Create the mapping
+      newMappedAccounts.push({
+        id: financialAccount.id,
+        accountNumber: financialAccount.accountNumber,
+        accountName: financialAccount.accountName,
+        bankAccountId: bankAccount.id,
+        bankAccountName: bankAccount.name
+      });
+    });
+    
+    // Update the provider
+    setProviders(providers.map(provider => 
+      provider.id === selectedProvider.id 
+        ? { 
+            ...provider, 
+            mappedAccounts: newMappedAccounts,
+            accounts: newMappedAccounts.length
+          } 
+        : provider
+    ));
+    
+    // Close the dialog
+    setShowMapAccountsDialog(false);
+  };
+  
+  // Format date for display
   const formatLastSynced = (dateString?: string) => {
     if (!dateString) return 'Never';
     
@@ -226,7 +371,7 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t pt-4 flex justify-between bg-muted/20">
+            <CardFooter className="border-t pt-4 flex flex-wrap gap-2 bg-muted/20">
               <Button 
                 variant="outline" 
                 size="sm"
@@ -234,6 +379,14 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
               >
                 <Settings className="h-4 w-4 mr-2" />
                 Configure
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleMapAccounts(provider)}
+              >
+                <Link className="h-4 w-4 mr-2" />
+                Map Accounts
               </Button>
               <Button 
                 variant="secondary" 
