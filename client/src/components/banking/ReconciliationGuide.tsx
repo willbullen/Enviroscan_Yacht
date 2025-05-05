@@ -1,16 +1,17 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
+  Link,
+  ChevronRight, 
+  ChevronLeft,
+  AlertCircle,
+  CheckCircle,
+  Filter,
+  Clock,
   FileCheck,
-  ArrowRight, 
-  ArrowLeft,
-  BarChartBig,
-  CheckSquare,
-  FileSearch,
-  BadgeAlert,
-  RefreshCw,
-  Banknote
+  LucideSearch
 } from 'lucide-react';
 
 interface ReconciliationGuideProps {
@@ -18,310 +19,209 @@ interface ReconciliationGuideProps {
   onSelectStep: (step: number) => void;
 }
 
-interface Step {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  content: React.ReactNode;
-}
-
-export const ReconciliationGuide: React.FC<ReconciliationGuideProps> = ({
-  currentStep,
-  onSelectStep,
+const ReconciliationGuide: React.FC<ReconciliationGuideProps> = ({ 
+  currentStep, 
+  onSelectStep
 }) => {
-  const steps: Step[] = [
+  const steps = [
     {
       title: 'Transaction Reconciliation Overview',
-      description: 'Understanding the reconciliation process',
-      icon: <Banknote className="h-8 w-8 text-primary" />,
+      icon: <Link className="h-6 w-6" />,
       content: (
         <div className="space-y-4">
           <p>
-            Transaction reconciliation is the process of matching financial transactions from bank statements with your vessel's recorded expenses and deposits to ensure accuracy and completeness.
+            Transaction reconciliation is the process of matching your banking transactions with your vessel's expenses and deposits to maintain accurate financial records.
           </p>
-
-          <div className="space-y-2">
-            <h4 className="font-medium">Why Reconcile Transactions?</h4>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Verify all financial transactions are properly recorded</li>
-              <li>Identify and resolve discrepancies in a timely manner</li>
-              <li>Prevent fraud and detect unauthorized transactions</li>
-              <li>Maintain accurate financial records for reporting</li>
-              <li>Ensure budget adherence and financial control</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-medium">Reconciliation Workflow:</h4>
-            <ol className="list-decimal pl-5 space-y-1">
-              <li>Import transactions from banking providers</li>
-              <li>Review unmatched transactions for categorization</li>
-              <li>Match transactions to existing expenses or deposits</li>
-              <li>Create new expense records for unmatched transactions</li>
-              <li>Finalize reconciliation and generate reports</li>
-            </ol>
-          </div>
-
-          <div className="rounded-md bg-muted p-3">
-            <p className="text-sm font-medium">Note: This guide will walk you through the process of reconciling transactions, handling exceptions, and maintaining accurate financial records.</p>
-          </div>
+          <h4 className="font-medium">Benefits:</h4>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Ensures all expenses are properly tracked</li>
+            <li>Identifies discrepancies between recorded and actual expenses</li>
+            <li>Provides accurate financial reporting</li>
+            <li>Reduces manual data entry through automation</li>
+          </ul>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Reconciliation Best Practices</AlertTitle>
+            <AlertDescription>
+              We recommend reconciling your transactions at least weekly to ensure your financial data stays up-to-date.
+            </AlertDescription>
+          </Alert>
         </div>
-      ),
+      )
     },
     {
-      title: 'Importing and Reviewing Transactions',
-      description: 'Getting transactions into the system',
-      icon: <FileSearch className="h-8 w-8 text-primary" />,
+      title: 'Understanding Transaction Status',
+      icon: <CheckCircle className="h-6 w-6" />,
       content: (
         <div className="space-y-4">
           <p>
-            The first step in the reconciliation process is importing transactions from your banking providers and reviewing them for accuracy.
+            Each transaction in the system has a status that indicates its reconciliation state:
           </p>
-
-          <div className="space-y-2">
-            <h4 className="font-medium">Importing Transactions:</h4>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Navigate to the Banking tab in Financial Management</li>
-              <li>Select the Transactions tab</li>
-              <li>Click "Sync Transactions" to import the latest data</li>
-              <li>The system will automatically import new transactions</li>
-              <li>Transactions will be initially marked as "Unmatched"</li>
-            </ol>
-          </div>
-
-          <div className="space-y-2 mt-4">
-            <h4 className="font-medium">Reviewing Imported Transactions:</h4>
-            <ul className="list-disc pl-5 space-y-2">
-              <li>Review the transaction list for accuracy and completeness</li>
-              <li>Use filters to sort by date, amount, or transaction type</li>
-              <li>Verify that all expected transactions are present</li>
-              <li>Check for any unusual or unexpected transactions</li>
-              <li>Mark any suspicious transactions for investigation</li>
-            </ul>
-          </div>
-
-          <div className="rounded-md bg-blue-50 p-3 border border-blue-200 text-blue-800 mt-4">
-            <h4 className="font-medium">Tip: Frequent Synchronization</h4>
-            <p className="text-sm mt-1">
-              For optimal financial management, sync transactions at least weekly to keep your records up-to-date and make reconciliation more manageable.
-            </p>
-          </div>
+          
+          <h4 className="font-medium">Transaction Status Types:</h4>
+          <ul className="space-y-3">
+            <li className="flex items-start">
+              <div className="bg-amber-50 text-amber-700 border border-amber-200 rounded px-2 py-0.5 flex items-center text-xs mr-2 mt-0.5">
+                <AlertCircle className="h-3.5 w-3.5 mr-1" />
+                Unmatched
+              </div>
+              <div>
+                <p className="font-medium">New transactions from your banking providers that have not been matched to any expense or deposit.</p>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <div className="bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-0.5 flex items-center text-xs mr-2 mt-0.5">
+                <Link className="h-3.5 w-3.5 mr-1" />
+                Matched
+              </div>
+              <div>
+                <p className="font-medium">Transactions that have been linked to a corresponding expense or deposit but need final verification.</p>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <div className="bg-green-50 text-green-700 border border-green-200 rounded px-2 py-0.5 flex items-center text-xs mr-2 mt-0.5">
+                <FileCheck className="h-3.5 w-3.5 mr-1" />
+                Reconciled
+              </div>
+              <div>
+                <p className="font-medium">Transactions that have been verified and confirmed as accurate, completing the reconciliation process.</p>
+              </div>
+            </li>
+          </ul>
         </div>
-      ),
+      )
     },
     {
-      title: 'Matching Transactions',
-      description: 'Connecting transactions to expenses',
-      icon: <CheckSquare className="h-8 w-8 text-primary" />,
+      title: 'Finding Transactions to Reconcile',
+      icon: <LucideSearch className="h-6 w-6" />,
       content: (
         <div className="space-y-4">
           <p>
-            Matching transactions involves linking bank transactions to corresponding expense or deposit records in your system.
+            The system provides several tools to help you find and filter transactions that need reconciliation:
           </p>
-
-          <div className="space-y-2">
-            <h4 className="font-medium">Automatic Matching:</h4>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>The system attempts to automatically match transactions based on:</li>
-              <li className="ml-5">Amount and date correspondence</li>
-              <li className="ml-5">Transaction reference numbers</li>
-              <li className="ml-5">Vendor information and descriptions</li>
-              <li>Automatic matches are marked as "Matched" and require verification</li>
-              <li>Confidence scores indicate the likelihood of correct matching</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2 mt-4">
-            <h4 className="font-medium">Manual Matching:</h4>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Select an unmatched transaction from the list</li>
-              <li>Click the "Match" button to view potential matches</li>
-              <li>Review the suggested expense records</li>
-              <li>Select the correct expense to link to the transaction</li>
-              <li>Confirm the match to update both records</li>
-            </ol>
-          </div>
-
-          <div className="space-y-2 mt-4">
-            <h4 className="font-medium">Batch Matching:</h4>
-            <p className="text-sm">
-              For multiple similar transactions, you can select several records and match them as a batch to save time. Use this feature for recurring expenses like crew salaries or regular service payments.
-            </p>
-          </div>
+          
+          <h4 className="font-medium">Search and Filter Options:</h4>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>
+              <span className="font-medium">Search Bar:</span> Find transactions by description, reference number, or provider
+            </li>
+            <li>
+              <span className="font-medium">Date Range Filter:</span> Focus on transactions from a specific time period
+            </li>
+            <li>
+              <span className="font-medium">Status Filter:</span> View only unmatched, matched, or reconciled transactions
+            </li>
+            <li>
+              <span className="font-medium">Type Filter:</span> Filter by credits (deposits) or debits (expenses)
+            </li>
+            <li>
+              <span className="font-medium">Provider Filter:</span> View transactions from specific banking providers
+            </li>
+          </ul>
+          
+          <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+            <Filter className="h-4 w-4 text-blue-800" />
+            <AlertTitle>Pro Tip: Quick Filters</AlertTitle>
+            <AlertDescription>
+              For routine reconciliation, start by filtering for "Unmatched" status to quickly find transactions that need attention.
+            </AlertDescription>
+          </Alert>
         </div>
-      ),
+      )
     },
     {
-      title: 'Handling Exceptions',
-      description: 'Managing unmatched and discrepant transactions',
-      icon: <BadgeAlert className="h-8 w-8 text-primary" />,
+      title: 'Matching and Reconciling Transactions',
+      icon: <FileCheck className="h-6 w-6" />,
       content: (
         <div className="space-y-4">
           <p>
-            Not all transactions will have matching expense records. This section covers how to handle unmatched transactions and reconciliation exceptions.
+            The matching and reconciliation process involves linking banking transactions to your vessel's expenses or deposits:
           </p>
-
-          <div className="space-y-2">
-            <h4 className="font-medium">Creating New Expense Records:</h4>
-            <ol className="list-decimal pl-5 space-y-1">
-              <li>Select an unmatched transaction</li>
-              <li>Click "Create Expense" to generate a new expense record</li>
-              <li>The system will pre-fill information from the transaction</li>
-              <li>Add any missing details such as category and description</li>
-              <li>Save the new expense record to complete the match</li>
-            </ol>
-          </div>
-
-          <div className="space-y-2 mt-4">
-            <h4 className="font-medium">Handling Discrepancies:</h4>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Amount discrepancies (transaction and expense amounts differ)</li>
-              <li>Date discrepancies (timing differences in recording)</li>
-              <li>Split transactions (one payment covering multiple expenses)</li>
-              <li>Bundled transactions (multiple payments in one transaction)</li>
-              <li>Unknown or unidentifiable transactions</li>
-            </ul>
-          </div>
-
-          <div className="rounded-md bg-amber-50 p-3 border border-amber-200 text-amber-800 mt-4">
-            <h4 className="font-medium">Important</h4>
-            <p className="text-sm mt-1">
-              Always investigate unmatched transactions thoroughly. Unknown transactions could represent errors, fraud, or forgotten expenses that need proper documentation.
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'Finalizing Reconciliation',
-      description: 'Completing the reconciliation process',
-      icon: <BarChartBig className="h-8 w-8 text-primary" />,
-      content: (
-        <div className="space-y-4">
+          
+          <h4 className="font-medium">Step-by-Step Reconciliation:</h4>
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>Locate an unmatched transaction in the list</li>
+            <li>Click the "Match" button to open the matching dialog</li>
+            <li>Review the system's suggested expense matches, which are ranked by confidence level</li>
+            <li>Select the correct expense or create a new one if needed</li>
+            <li>Confirm the match to update the transaction status to "Matched"</li>
+            <li>Review matched transactions and mark them as "Reconciled" when verified</li>
+          </ol>
+          
+          <h4 className="font-medium mt-4">Automated Matching:</h4>
           <p>
-            The final step is to mark transactions as reconciled and generate reports for financial review and record-keeping.
+            The system uses AI to automatically suggest the best matches based on:
           </p>
-
-          <div className="space-y-2">
-            <h4 className="font-medium">Verification Steps:</h4>
-            <ol className="list-decimal pl-5 space-y-1">
-              <li>Review all matched transactions for accuracy</li>
-              <li>Ensure no unmatched transactions remain (or document reasons)</li>
-              <li>Verify that totals match between bank statements and system records</li>
-              <li>Check for any pending transactions that should be considered</li>
-              <li>Generate a reconciliation summary for approval</li>
-            </ol>
-          </div>
-
-          <div className="space-y-2 mt-4">
-            <h4 className="font-medium">Mark as Reconciled:</h4>
-            <p className="text-sm">
-              Once all transactions are properly matched and verified, select the transactions and click "Mark as Reconciled." This action finalizes the reconciliation and updates the transaction status for reporting.
-            </p>
-          </div>
-
-          <div className="space-y-2 mt-4">
-            <h4 className="font-medium">Reconciliation Reporting:</h4>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Generate a reconciliation report for the period</li>
-              <li>Review reconciliation statistics and metrics</li>
-              <li>Export reconciliation data for accounting systems</li>
-              <li>Document any exceptions or special handling</li>
-              <li>Archive the reconciliation for audit purposes</li>
-            </ul>
-          </div>
-
-          <div className="rounded-md bg-green-50 p-3 border border-green-200 text-green-800 mt-4">
-            <h4 className="font-medium">Best Practice</h4>
-            <p className="text-sm mt-1">
-              Complete reconciliation on a regular schedule (weekly or monthly) rather than letting transactions accumulate, which makes the process more difficult and time-consuming.
-            </p>
-          </div>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Transaction amounts</li>
+            <li>Dates and timing</li>
+            <li>Description and vendor information</li>
+            <li>Historical matching patterns</li>
+          </ul>
+          
+          <Alert>
+            <Clock className="h-4 w-4" />
+            <AlertTitle>Batch Reconciliation</AlertTitle>
+            <AlertDescription>
+              You can select multiple transactions using the checkboxes and perform batch actions like marking them as reconciled.
+            </AlertDescription>
+          </Alert>
         </div>
-      ),
-    },
+      )
+    }
   ];
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      onSelectStep(currentStep + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      onSelectStep(currentStep - 1);
-    }
-  };
-
-  const handleClose = () => {
-    onSelectStep(-1);
-  };
-
   return (
-    <Card className="border shadow-md">
-      <CardHeader className="bg-muted/30 border-b">
-        <div className="flex items-center">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-            <FileCheck className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <CardTitle>Transaction Reconciliation Guide</CardTitle>
-            <CardDescription>Learn how to match and reconcile financial transactions</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="flex mb-6 border rounded-lg divide-x overflow-hidden">
-          {steps.map((step, index) => (
-            <button
-              key={index}
-              className={`flex-1 py-3 px-4 text-sm font-medium truncate transition-colors ${
-                currentStep === index
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-muted'
-              }`}
-              onClick={() => onSelectStep(index)}
-            >
-              {step.title}
-            </button>
-          ))}
-        </div>
-
-        <div className="mb-6">
-          <div className="flex items-center mb-4">
+    <Card className="border-primary/20 bg-primary/5 mb-6">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
             {steps[currentStep].icon}
-            <div className="ml-3">
-              <h3 className="text-lg font-semibold">{steps[currentStep].title}</h3>
-              <p className="text-sm text-muted-foreground">{steps[currentStep].description}</p>
-            </div>
-          </div>
-          <div className="prose prose-sm max-w-none">{steps[currentStep].content}</div>
-        </div>
-
-        <div className="flex justify-between pt-4 border-t">
-          <Button variant="outline" onClick={handleClose}>
+            <span>Guide: {steps[currentStep].title}</span>
+          </CardTitle>
+          <Button variant="outline" size="sm" onClick={() => onSelectStep(-1)}>
             Close Guide
           </Button>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 0}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Previous
-            </Button>
-            <Button
-              onClick={handleNext}
-              disabled={currentStep === steps.length - 1}
-            >
-              Next
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
         </div>
+        <CardDescription>
+          Step {currentStep + 1} of {steps.length}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {steps[currentStep].content}
       </CardContent>
+      <CardFooter className="flex justify-between border-t p-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onSelectStep(Math.max(0, currentStep - 1))}
+          disabled={currentStep === 0}
+        >
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Previous
+        </Button>
+        <div className="flex gap-1">
+          {steps.map((_, index) => (
+            <div 
+              key={index}
+              className={`w-2 h-2 rounded-full ${
+                index === currentStep ? 'bg-primary' : 'bg-muted'
+              }`}
+              onClick={() => onSelectStep(index)}
+              style={{ cursor: 'pointer' }}
+            />
+          ))}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onSelectStep(Math.min(steps.length - 1, currentStep + 1))}
+          disabled={currentStep === steps.length - 1}
+        >
+          Next
+          <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

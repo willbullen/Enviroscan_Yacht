@@ -1,29 +1,37 @@
-import { cn } from '@/lib/utils';
+import React from "react";
+import { cn } from "@/lib/utils";
 
-type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+type SpinnerSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 interface SpinnerProps {
   size?: SpinnerSize;
   className?: string;
 }
 
-export const Spinner = ({ size = 'md', className }: SpinnerProps) => {
+export const Spinner: React.FC<SpinnerProps> = ({ 
+  size = "md", 
+  className 
+}) => {
   const sizeClasses = {
-    xs: 'h-3 w-3 border-[1.5px]',
-    sm: 'h-4 w-4 border-2',
-    md: 'h-6 w-6 border-2',
-    lg: 'h-8 w-8 border-3',
-    xl: 'h-10 w-10 border-4'
+    xs: "w-3 h-3 border-[1.5px]",
+    sm: "w-4 h-4 border-2",
+    md: "w-6 h-6 border-2",
+    lg: "w-8 h-8 border-[3px]",
+    xl: "w-12 h-12 border-4"
   };
-
+  
   return (
     <div
       className={cn(
-        'animate-spin rounded-full border-solid border-primary border-t-transparent',
+        "animate-spin rounded-full border-primary border-t-transparent",
         sizeClasses[size],
         className
       )}
-    />
+      role="status"
+      aria-label="Loading"
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
   );
 };
 

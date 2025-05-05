@@ -265,8 +265,8 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
     setSelectedTransactions(newSelected);
   };
   
-  const handleSelectAllTransactions = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
+  const handleSelectAllTransactions = (checked: boolean) => {
+    if (checked) {
       const allIds = new Set(filteredTransactions.map(t => t.id));
       setSelectedTransactions(allIds);
     } else {
@@ -373,7 +373,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             className="max-w-md"
-            prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+            // Removed prefix prop since it's not supported
           />
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
