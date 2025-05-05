@@ -217,8 +217,151 @@ export async function generateExpenseRecord(receiptData: ReceiptAnalysisResult):
   }
 }
 
+/**
+ * Analyzes expense descriptions and suggests appropriate categories
+ * @param expenseDescription The expense description text
+ * @param amount The expense amount
+ * @returns Object with suggested category and confidence score
+ */
+export async function categorizeExpense(
+  expenseDescription: string,
+  amount: number
+): Promise<{ category: string; confidence: number; explanation: string }> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: 
+            "You are an expert financial categorization system for maritime vessels. " +
+            "Your task is to categorize expense descriptions into one of the following categories: " +
+            "- FUE: Fuel and energy costs " +
+            "- MNT: Maintenance and repairs " +
+            "- PRV: Provisions and supplies " +
+            "- CRW: Crew salaries and benefits " +
+            "- INS: Insurance " +
+            "- DOC: Dockage and port fees " +
+            "- COM: Communications and technology " +
+            "- TRV: Travel and transportation " +
+            "- ENT: Entertainment and guest expenses " +
+            "- ADM: Administrative and legal " +
+            "- MED: Medical supplies and services " +
+            "- SAF: Safety equipment and compliance " +
+            "- TRN: Training and certification " +
+            "- OTH: Other expenses " +
+            "\n\n" +
+            "Respond with valid JSON in this exact format: " +
+            "{ " +
+            "\"category\": string (one of the category codes above), " +
+            "\"confidence\": number (between 0 and 1, indicating confidence level), " +
+            "\"explanation\": string (brief explanation of why this category was chosen) " +
+            "}"
+        },
+        {
+          role: "user",
+          content: `Please categorize the following expense: "${expenseDescription}" with amount $${amount.toFixed(2)}`
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 500,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    return {
+      category: result.category || 'OTH',
+      confidence: result.confidence || 0,
+      explanation: result.explanation || 'No explanation provided'
+    };
+  } catch (error) {
+    console.error('Error categorizing expense:', error);
+    return {
+      category: 'OTH',
+      confidence: 0,
+      explanation: 'Error during categorization'
+    };
+  }
+}
+
+/**
+ * Batch categorizes multiple expenses at once
+ * @param expenses Array of expenses with descriptions and amounts
+ * @returns Array of categorization results
+ */
+export async function batchCategorizeExpenses(
+  expenses: Array<{ id: number; description: string; amount: number }>
+): Promise<Array<{ id: number; category: string; confidence: number; explanation: string }>> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: 
+            "You are an expert financial categorization system for maritime vessels. " +
+            "Your task is to categorize multiple expense descriptions into the following categories: " +
+            "- FUE: Fuel and energy costs " +
+            "- MNT: Maintenance and repairs " +
+            "- PRV: Provisions and supplies " +
+            "- CRW: Crew salaries and benefits " +
+            "- INS: Insurance " +
+            "- DOC: Dockage and port fees " +
+            "- COM: Communications and technology " +
+            "- TRV: Travel and transportation " +
+            "- ENT: Entertainment and guest expenses " +
+            "- ADM: Administrative and legal " +
+            "- MED: Medical supplies and services " +
+            "- SAF: Safety equipment and compliance " +
+            "- TRN: Training and certification " +
+            "- OTH: Other expenses " +
+            "\n\n" +
+            "Respond with valid JSON in this exact format: " +
+            "[ " +
+            "  { " +
+            "    \"id\": number (matching the input expense id), " +
+            "    \"category\": string (one of the category codes above), " +
+            "    \"confidence\": number (between 0 and 1, indicating confidence level), " +
+            "    \"explanation\": string (brief explanation of why this category was chosen) " +
+            "  }, " +
+            "  ... " +
+            "]"
+        },
+        {
+          role: "user",
+          content: `Please categorize the following expenses:\n\n${JSON.stringify(expenses, null, 2)}`
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 1000,
+    });
+
+    const results = JSON.parse(response.choices[0].message.content || '[]');
+    if (!Array.isArray(results)) {
+      throw new Error('Invalid response format from categorization service');
+    }
+    
+    return results.map(result => ({
+      id: result.id,
+      category: result.category || 'OTH',
+      confidence: result.confidence || 0,
+      explanation: result.explanation || 'No explanation provided'
+    }));
+  } catch (error) {
+    console.error('Error batch categorizing expenses:', error);
+    // Return a fallback with default values
+    return expenses.map(expense => ({
+      id: expense.id,
+      category: 'OTH',
+      confidence: 0,
+      explanation: 'Error during batch categorization'
+    }));
+  }
+}
+
 export default {
   analyzeReceiptImage,
   findPotentialMatches,
-  generateExpenseRecord
+  generateExpenseRecord,
+  categorizeExpense,
+  batchCategorizeExpenses
 };
