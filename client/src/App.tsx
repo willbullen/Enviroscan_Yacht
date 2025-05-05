@@ -24,16 +24,18 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import AuthPage from "@/pages/auth-page";
 import { VendorProvider } from "@/contexts/VendorContext";
+import { SystemSettingsProvider } from "@/contexts/SystemSettingsContext";
 
 function App() {
   return (
     <AuthProvider>
-      <VendorProvider>
-        <Switch>
-          {/* Public Routes */}
-          <Route path="/auth" component={AuthPage} />
-          
-          {/* Protected Routes */}
+      <SystemSettingsProvider>
+        <VendorProvider>
+          <Switch>
+            {/* Public Routes */}
+            <Route path="/auth" component={AuthPage} />
+            
+            {/* Protected Routes */}
           <ProtectedRoute path="/" component={Dashboard} />
           <ProtectedRoute path="/tasks" component={Tasks} />
           <ProtectedRoute path="/equipment" component={Equipment} />
@@ -69,7 +71,8 @@ function App() {
           <ProtectedRoute path="/settings" component={Settings} />
           <Route component={NotFound} />
         </Switch>
-      </VendorProvider>
+        </VendorProvider>
+      </SystemSettingsProvider>
     </AuthProvider>
   );
 }
