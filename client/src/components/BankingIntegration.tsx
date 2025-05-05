@@ -119,9 +119,23 @@ const BankingIntegration = () => {
         const connectionsResp = await apiRequest("GET", `/api/banking/connections?vesselId=${currentVessel.id}`);
         console.log("Connections Response:", connectionsResp);
         
+        // Update state with the fetched data
         setBankAccounts(Array.isArray(bankAccountsResp) ? bankAccountsResp : []);
         setProviders(Array.isArray(providersResp) ? providersResp : []);
         setConnections(Array.isArray(connectionsResp) ? connectionsResp : []);
+        
+        // Reset the connection form if it's open to use the current vessel's accounts
+        if (connectionDialogOpen) {
+          connectionForm.reset({
+            name: "",
+            bankAccountId: "",
+            providerId: "",
+            credentials: {
+              apiKey: "",
+              accessToken: "",
+            },
+          });
+        }
       } catch (error) {
         console.error("Error fetching banking data:", error);
         toast({
@@ -135,7 +149,7 @@ const BankingIntegration = () => {
     };
     
     fetchData();
-  }, [toast, currentVessel]);
+  }, [toast, currentVessel, connectionDialogOpen]);
 
   // Handle connection form submission
   const onCreateConnection = async (data: any) => {
@@ -300,7 +314,30 @@ const BankingIntegration = () => {
         <TabsContent value="connections" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Banking Connections</h2>
-            <Dialog open={connectionDialogOpen} onOpenChange={setConnectionDialogOpen}>
+            <Dialog open={connectionDialogOpen} onOpenChange={async (open) => {
+                if (open && currentVessel) {
+                  // Refresh bank accounts for the current vessel before opening dialog
+                  try {
+                    const bankAccountsResp = await apiRequest("GET", `/api/banking/accounts?vesselId=${currentVessel.id}`);
+                    setBankAccounts(Array.isArray(bankAccountsResp) ? bankAccountsResp : []);
+                    console.log(`Refreshed bank accounts for vessel ${currentVessel.name} (ID: ${currentVessel.id})`, bankAccountsResp);
+                  } catch (error) {
+                    console.error("Error refreshing bank accounts:", error);
+                  }
+                  
+                  // Reset form when dialog opens
+                  connectionForm.reset({
+                    name: "",
+                    bankAccountId: "",
+                    providerId: "",
+                    credentials: {
+                      apiKey: "",
+                      accessToken: "",
+                    },
+                  });
+                }
+                setConnectionDialogOpen(open);
+              }}>
               <DialogTrigger asChild>
                 <Button>Add New Connection</Button>
               </DialogTrigger>
