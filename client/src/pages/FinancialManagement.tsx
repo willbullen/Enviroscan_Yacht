@@ -559,6 +559,9 @@ const FinancialManagement: React.FC = () => {
   const renderFinancialOverview = () => {
     if (!currentVessel) return null;
     
+    // Don't render financial overview widgets when on the banking tab
+    if (activeTab === "banking") return null;
+    
     // Get the total expenses from the summary data or calculate from raw expenses
     const totalExpenseAmount = expenseSummary?.totalExpenses || 
       expenses?.reduce((sum, exp) => sum + parseFloat(exp.total || '0'), 0) || 0;
