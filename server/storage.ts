@@ -293,6 +293,7 @@ export interface IStorage {
   getBankAccount(id: number): Promise<BankAccount | undefined>;
   getAllBankAccounts(): Promise<BankAccount[]>;
   getActiveBankAccounts(): Promise<BankAccount[]>;
+  getBankAccountsByVessel(vesselId: number): Promise<BankAccount[]>;
   createBankAccount(account: InsertBankAccount): Promise<BankAccount>;
   updateBankAccount(id: number, account: Partial<BankAccount>): Promise<BankAccount | undefined>;
   deleteBankAccount(id: number): Promise<boolean>;
