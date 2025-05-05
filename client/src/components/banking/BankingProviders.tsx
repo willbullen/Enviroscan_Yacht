@@ -305,7 +305,7 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
             </div>
             
             <Alert className="bg-blue-50 border-blue-200 text-blue-800">
-              <Info className="h-4 w-4 text-blue-800" />
+              <AlertCircle className="h-4 w-4 text-blue-800" />
               <AlertTitle>Additional Configuration Required</AlertTitle>
               <AlertDescription className="text-xs">
                 After adding a new provider, you'll need to configure its API credentials separately.
