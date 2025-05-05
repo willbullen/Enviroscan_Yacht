@@ -126,6 +126,7 @@ import {
   Search,
   Settings,
   Ship,
+  Sparkles,
   Trash,
   TrendingDown,
   TrendingUp,
