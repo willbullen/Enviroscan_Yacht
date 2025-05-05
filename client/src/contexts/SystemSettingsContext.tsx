@@ -1,65 +1,98 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Define the settings structure
 interface SystemSettings {
-  useMockBankingData: boolean;
-  aiReceiptMatching: boolean;
-  // Add other system-wide settings here as needed
+  useLiveBankingData: boolean;
+  setUseLiveBankingData: (value: boolean) => void;
+  bankingAPICredentialsSet: {
+    centtrip: boolean;
+    revolut: boolean;
+  };
+  setBankingAPICredentialsSet: (providers: {
+    centtrip?: boolean;
+    revolut?: boolean;
+  }) => void;
 }
 
-// Default settings
 const defaultSettings: SystemSettings = {
-  useMockBankingData: true, // Default to using mock data
-  aiReceiptMatching: true, // Default to using AI for receipt matching
+  useLiveBankingData: false,
+  setUseLiveBankingData: () => {},
+  bankingAPICredentialsSet: {
+    centtrip: false,
+    revolut: false,
+  },
+  setBankingAPICredentialsSet: () => {},
 };
 
-// Context type definition
-interface SystemSettingsContextType {
-  settings: SystemSettings;
-  updateSettings: (newSettings: Partial<SystemSettings>) => void;
-}
+const SystemSettingsContext = createContext<SystemSettings>(defaultSettings);
 
-// Create the context with default values
-const SystemSettingsContext = createContext<SystemSettingsContextType>({
-  settings: defaultSettings,
-  updateSettings: () => {},
-});
-
-// Hook for using the context
 export const useSystemSettings = () => useContext(SystemSettingsContext);
 
-// Provider component
 interface SystemSettingsProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const SystemSettingsProvider: React.FC<SystemSettingsProviderProps> = ({ children }) => {
-  // Initialize state with defaults, overridden by localStorage if available
-  const [settings, setSettings] = useState<SystemSettings>(() => {
-    const savedSettings = localStorage.getItem('systemSettings');
-    if (savedSettings) {
-      try {
-        return { ...defaultSettings, ...JSON.parse(savedSettings) };
-      } catch (error) {
-        console.error('Error parsing saved settings:', error);
-        return defaultSettings;
-      }
-    }
-    return defaultSettings;
+  const [useLiveBankingData, setUseLiveBankingData] = useState<boolean>(false);
+  const [bankingAPICredentialsSet, setBankingAPICredentialsSetInternal] = useState<{
+    centtrip: boolean;
+    revolut: boolean;
+  }>({
+    centtrip: false,
+    revolut: false,
   });
 
-  // Save settings to localStorage whenever they change
+  // Load settings from local storage on mount
   useEffect(() => {
-    localStorage.setItem('systemSettings', JSON.stringify(settings));
-  }, [settings]);
+    try {
+      const storedSettings = localStorage.getItem('systemSettings');
+      if (storedSettings) {
+        const parsed = JSON.parse(storedSettings);
+        if (typeof parsed.useLiveBankingData === 'boolean') {
+          setUseLiveBankingData(parsed.useLiveBankingData);
+        }
+        if (parsed.bankingAPICredentialsSet) {
+          setBankingAPICredentialsSetInternal(parsed.bankingAPICredentialsSet);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading system settings from localStorage:', error);
+    }
+  }, []);
 
-  // Function to update settings
-  const updateSettings = (newSettings: Partial<SystemSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
+  // Save settings to local storage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        'systemSettings',
+        JSON.stringify({
+          useLiveBankingData,
+          bankingAPICredentialsSet,
+        })
+      );
+    } catch (error) {
+      console.error('Error saving system settings to localStorage:', error);
+    }
+  }, [useLiveBankingData, bankingAPICredentialsSet]);
+
+  const setBankingAPICredentialsSet = (providers: {
+    centtrip?: boolean;
+    revolut?: boolean;
+  }) => {
+    setBankingAPICredentialsSetInternal((prev) => ({
+      ...prev,
+      ...providers,
+    }));
   };
 
   return (
-    <SystemSettingsContext.Provider value={{ settings, updateSettings }}>
+    <SystemSettingsContext.Provider
+      value={{
+        useLiveBankingData,
+        setUseLiveBankingData,
+        bankingAPICredentialsSet,
+        setBankingAPICredentialsSet,
+      }}
+    >
       {children}
     </SystemSettingsContext.Provider>
   );
