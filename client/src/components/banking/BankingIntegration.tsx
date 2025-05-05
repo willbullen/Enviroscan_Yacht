@@ -15,7 +15,7 @@ const BankingSummaryWidgets = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
           <CardTitle className="flex justify-between items-center text-base">
             <span>Pending Reconciliation</span>
             <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
@@ -33,7 +33,7 @@ const BankingSummaryWidgets = () => {
       </Card>
       
       <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
           <CardTitle className="flex justify-between items-center text-base">
             <span>Unmatched Receipts</span>
             <ReceiptText className="h-4 w-4 text-muted-foreground" />
@@ -51,7 +51,7 @@ const BankingSummaryWidgets = () => {
       </Card>
       
       <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
           <CardTitle className="flex justify-between items-center text-base">
             <span>Banking Connections</span>
             <CreditCard className="h-4 w-4 text-muted-foreground" />

@@ -624,7 +624,7 @@ const FinancialManagement: React.FC = () => {
           <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
             <CardTitle className="text-lg flex items-center">
               <ChartPie className="h-4 w-4 mr-2 text-primary" />
-              Expense Categories
+              *Expense Categories
             </CardTitle>
             <CardDescription>Top spending categories</CardDescription>
           </CardHeader>
