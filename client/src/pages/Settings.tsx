@@ -38,8 +38,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useSystemSettings } from "@/contexts/SystemSettingsContext";
 
 // Define the form schemas
+const bankingSettingsFormSchema = z.object({
+  useMockBankingData: z.boolean(),
+  aiReceiptMatching: z.boolean()
+});
+
 const profileFormSchema = z.object({
   yachtName: z.string().min(2, {
     message: "Yacht name must be at least 2 characters.",
@@ -86,6 +92,7 @@ const Settings = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [themeLoaded, setThemeLoaded] = useState(false);
+  const { settings, updateSettings } = useSystemSettings();
 
   // Profile form
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
@@ -183,14 +190,21 @@ const Settings = () => {
 
   const onAppearanceSubmit = async (data: z.infer<typeof appearanceFormSchema>) => {
     try {
-      await apiRequest("/api/update-theme", {
+      // Prepare the theme data
+      const themeData = {
+        primary: data.colorScheme,
+        radius: data.radius,
+        appearance: data.theme,
+        variant: "tint" // Default to tint variant
+      };
+      
+      // Update theme via API
+      await fetch("/api/update-theme", {
         method: "POST",
-        data: {
-          primary: data.colorScheme,
-          radius: data.radius,
-          appearance: data.theme,
-          variant: "tint" // Default to tint variant
-        }
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(themeData)
       });
       
       toast({
@@ -199,14 +213,7 @@ const Settings = () => {
       });
       
       // Save theme to localStorage too for immediate effect
-      const themeData = {
-        primary: data.colorScheme,
-        radius: data.radius,
-        appearance: data.theme,
-        variant: "tint"
-      };
       localStorage.setItem('theme', JSON.stringify(themeData));
-      
       // Apply the theme immediately
       document.documentElement.setAttribute("data-theme", data.theme);
       
@@ -240,16 +247,56 @@ const Settings = () => {
     }
   };
 
+  // Banking settings form
+  const bankingSettingsForm = useForm<z.infer<typeof bankingSettingsFormSchema>>({
+    resolver: zodResolver(bankingSettingsFormSchema),
+    defaultValues: {
+      useMockBankingData: settings.useMockBankingData,
+      aiReceiptMatching: settings.aiReceiptMatching
+    },
+  });
+
+  // Load banking settings from context
+  useEffect(() => {
+    bankingSettingsForm.reset({
+      useMockBankingData: settings.useMockBankingData,
+      aiReceiptMatching: settings.aiReceiptMatching
+    });
+  }, [settings, bankingSettingsForm]);
+
+  // Handle banking settings submission
+  const onBankingSettingsSubmit = async (data: z.infer<typeof bankingSettingsFormSchema>) => {
+    try {
+      // Update the system settings in context (stored in localStorage)
+      updateSettings({
+        useMockBankingData: data.useMockBankingData,
+        aiReceiptMatching: data.aiReceiptMatching
+      });
+      
+      toast({
+        title: "Banking settings updated",
+        description: "Your banking integration settings have been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update banking settings.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <MainLayout title="Settings">
       <div className="container mx-auto py-6">
         <h1 className="text-2xl font-bold mb-6">Settings</h1>
         
         <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="profile">Yacht Profile</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="banking">Banking</TabsTrigger>
           </TabsList>
           
           {/* Profile Settings */}
@@ -629,6 +676,69 @@ const Settings = () => {
                     </div>
                     
                     <Button type="submit">Save Notification Settings</Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Banking Settings */}
+          <TabsContent value="banking">
+            <Card>
+              <CardHeader>
+                <CardTitle>Banking & Reconciliation</CardTitle>
+                <CardDescription>
+                  Configure banking connections and financial integration settings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...bankingSettingsForm}>
+                  <form onSubmit={bankingSettingsForm.handleSubmit(onBankingSettingsSubmit)} className="space-y-6">
+                    <div className="space-y-4">
+                      <FormField
+                        control={bankingSettingsForm.control}
+                        name="useMockBankingData"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">Use Demo Banking Data</FormLabel>
+                              <FormDescription>
+                                Toggle between real banking API connections and demo data. Use this for testing until you configure your API keys.
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={bankingSettingsForm.control}
+                        name="aiReceiptMatching"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">AI Receipt Matching</FormLabel>
+                              <FormDescription>
+                                Use AI to automatically analyze and match receipts to banking transactions.
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <Button type="submit">Save Banking Settings</Button>
                   </form>
                 </Form>
               </CardContent>
