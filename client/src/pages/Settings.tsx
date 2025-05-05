@@ -96,7 +96,8 @@ const Settings = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [themeLoaded, setThemeLoaded] = useState(false);
-  // Direct reference to useSystemSettings() will be used throughout the component
+  // Get system settings at component level
+  const { useMockBankingData, aiReceiptMatching, bankingAPICredentialsSet, updateSettings } = useSystemSettings();
 
   // Profile form
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
@@ -266,8 +267,7 @@ const Settings = () => {
 
   // Load banking settings from context
   useEffect(() => {
-    if (Object.keys(useSystemSettings()).length > 0) {
-      const { useMockBankingData, aiReceiptMatching, bankingAPICredentialsSet } = useSystemSettings();
+    if (Object.keys(bankingAPICredentialsSet || {}).length > 0) {
       bankingSettingsForm.reset({
         useMockBankingData,
         aiReceiptMatching,
@@ -277,14 +277,11 @@ const Settings = () => {
         }
       });
     }
-  }, [bankingSettingsForm]);
+  }, [bankingSettingsForm, useMockBankingData, aiReceiptMatching, bankingAPICredentialsSet]);
 
   // Handle banking settings submission
   const onBankingSettingsSubmit = async (data: z.infer<typeof bankingSettingsFormSchema>) => {
     try {
-      // Update the system settings in context (stored in localStorage)
-      const { updateSettings } = useSystemSettings();
-      
       // Update API credentials status based on whether values were entered
       const centripApiUpdated = data.apiKeys.centtrip && data.apiKeys.centtrip !== '********';
       const revolutApiUpdated = data.apiKeys.revolut && data.apiKeys.revolut !== '********';
@@ -295,8 +292,8 @@ const Settings = () => {
         useMockBankingData: data.useMockBankingData,
         aiReceiptMatching: data.aiReceiptMatching,
         bankingAPICredentialsSet: {
-          centtrip: centripApiUpdated || (useSystemSettings().bankingAPICredentialsSet?.centtrip || false),
-          revolut: revolutApiUpdated || (useSystemSettings().bankingAPICredentialsSet?.revolut || false)
+          centtrip: centripApiUpdated || (bankingAPICredentialsSet?.centtrip || false),
+          revolut: revolutApiUpdated || (bankingAPICredentialsSet?.revolut || false)
         }
       });
       
