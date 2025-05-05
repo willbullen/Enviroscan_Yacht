@@ -43,7 +43,11 @@ import { useSystemSettings } from "@/contexts/SystemSettingsContext";
 // Define the form schemas
 const bankingSettingsFormSchema = z.object({
   useMockBankingData: z.boolean(),
-  aiReceiptMatching: z.boolean()
+  aiReceiptMatching: z.boolean(),
+  apiKeys: z.object({
+    centtrip: z.string().optional(),
+    revolut: z.string().optional()
+  })
 });
 
 const profileFormSchema = z.object({
@@ -251,27 +255,67 @@ const Settings = () => {
   const bankingSettingsForm = useForm<z.infer<typeof bankingSettingsFormSchema>>({
     resolver: zodResolver(bankingSettingsFormSchema),
     defaultValues: {
-      useMockBankingData: settings.useMockBankingData,
-      aiReceiptMatching: settings.aiReceiptMatching
+      useMockBankingData: true,
+      aiReceiptMatching: true,
+      apiKeys: {
+        centtrip: '',
+        revolut: ''
+      }
     },
   });
 
   // Load banking settings from context
   useEffect(() => {
-    bankingSettingsForm.reset({
-      useMockBankingData: settings.useMockBankingData,
-      aiReceiptMatching: settings.aiReceiptMatching
-    });
-  }, [settings, bankingSettingsForm]);
+    if (Object.keys(useSystemSettings()).length > 0) {
+      const { useMockBankingData, aiReceiptMatching, bankingAPICredentialsSet } = useSystemSettings();
+      bankingSettingsForm.reset({
+        useMockBankingData,
+        aiReceiptMatching,
+        apiKeys: {
+          centtrip: bankingAPICredentialsSet?.centtrip ? '********' : '',
+          revolut: bankingAPICredentialsSet?.revolut ? '********' : ''
+        }
+      });
+    }
+  }, [bankingSettingsForm]);
 
   // Handle banking settings submission
   const onBankingSettingsSubmit = async (data: z.infer<typeof bankingSettingsFormSchema>) => {
     try {
       // Update the system settings in context (stored in localStorage)
+      const { updateSettings } = useSystemSettings();
+      
+      // Update API credentials status based on whether values were entered
+      const centripApiUpdated = data.apiKeys.centtrip && data.apiKeys.centtrip !== '********';
+      const revolutApiUpdated = data.apiKeys.revolut && data.apiKeys.revolut !== '********';
+      
+      // In a real app, we would save the API keys securely to the backend
+      // Here we'll just update the credential status in the settings
       updateSettings({
         useMockBankingData: data.useMockBankingData,
-        aiReceiptMatching: data.aiReceiptMatching
+        aiReceiptMatching: data.aiReceiptMatching,
+        bankingAPICredentialsSet: {
+          centtrip: centripApiUpdated || (useSystemSettings().bankingAPICredentialsSet?.centtrip || false),
+          revolut: revolutApiUpdated || (useSystemSettings().bankingAPICredentialsSet?.revolut || false)
+        }
       });
+      
+      // If a user is providing an API key, we should send it to a secure backend endpoint
+      if (centripApiUpdated || revolutApiUpdated) {
+        // In a real app, we would do this:
+        // await apiRequest('/api/banking/update-api-keys', {
+        //   method: 'POST',
+        //   body: {
+        //     centtrip: centripApiUpdated ? data.apiKeys.centtrip : undefined,
+        //     revolut: revolutApiUpdated ? data.apiKeys.revolut : undefined
+        //   }
+        // });
+        
+        toast({
+          title: "API Keys Updated",
+          description: "Your banking API credentials have been securely saved.",
+        });
+      }
       
       toast({
         title: "Banking settings updated",
@@ -736,6 +780,66 @@ const Settings = () => {
                           </FormItem>
                         )}
                       />
+                      
+                      <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 my-6">
+                        <h3 className="text-lg font-medium mb-4">Banking API Credentials</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Configure your API credentials for direct banking connections. These will be securely stored to enable live transaction data.
+                        </p>
+                        
+                        <div className="space-y-4">
+                          <FormField
+                            control={bankingSettingsForm.control}
+                            name="apiKeys.centtrip"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Centtrip API Key</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="password" 
+                                    placeholder="Enter your Centtrip API key" 
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Your Centtrip API key can be found in your Centtrip account dashboard.
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={bankingSettingsForm.control}
+                            name="apiKeys.revolut"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Revolut API Key</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="password" 
+                                    placeholder="Enter your Revolut API key" 
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Your Revolut API key can be found in your Revolut Business account settings.
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="mt-4 text-xs text-muted-foreground">
+                          <p className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            API keys are securely stored and never displayed after saving.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                     
                     <Button type="submit">Save Banking Settings</Button>

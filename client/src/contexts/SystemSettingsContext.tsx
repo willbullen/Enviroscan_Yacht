@@ -1,29 +1,77 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
+// Define settings types
 export interface SystemSettings {
-  useLiveBankingData: boolean;
-  bankingAPICredentialsSet: boolean;
-  toggleLiveBankingData: () => void;
-  // Add more system settings as needed
+  useMockBankingData: boolean;
+  aiReceiptMatching: boolean;
+  bankingAPICredentialsSet: {
+    centtrip: boolean;
+    revolut: boolean;
+  };
+  updateSettings: (settings: Partial<SystemSettingsState>) => void;
 }
+
+interface SystemSettingsState {
+  useMockBankingData: boolean;
+  aiReceiptMatching: boolean;
+  bankingAPICredentialsSet: {
+    centtrip: boolean;
+    revolut: boolean;
+  };
+}
+
+const STORAGE_KEY = 'eastwind_system_settings';
+
+const defaultSettings: SystemSettingsState = {
+  useMockBankingData: true, // Default to use mock data until real API keys are configured
+  aiReceiptMatching: true,  // Enable AI receipt matching by default
+  bankingAPICredentialsSet: {
+    centtrip: false,
+    revolut: false
+  }
+};
 
 const SystemSettingsContext = createContext<SystemSettings | undefined>(undefined);
 
 export const SystemSettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [useLiveBankingData, setUseLiveBankingData] = useState(false);
+  const [settings, setSettings] = useState<SystemSettingsState>(defaultSettings);
   
-  // In a real app, this would be determined by checking if the API credentials are set in the database
-  // For demo purposes, we'll assume they're not set
-  const [bankingAPICredentialsSet, setBankingAPICredentialsSet] = useState(false);
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const storedSettings = localStorage.getItem(STORAGE_KEY);
+        if (storedSettings) {
+          const parsedSettings = JSON.parse(storedSettings);
+          setSettings(prev => ({
+            ...prev,
+            ...parsedSettings
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load system settings:', error);
+      }
+    };
+    
+    loadSettings();
+  }, []);
   
-  const toggleLiveBankingData = () => {
-    setUseLiveBankingData(prev => !prev);
+  // Save settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }, [settings]);
+  
+  // Update settings
+  const updateSettings = (newSettings: Partial<SystemSettingsState>) => {
+    setSettings(prev => ({
+      ...prev,
+      ...newSettings
+    }));
   };
 
-  const value = {
-    useLiveBankingData,
-    bankingAPICredentialsSet,
-    toggleLiveBankingData,
+  const value: SystemSettings = {
+    ...settings,
+    updateSettings
   };
 
   return (
