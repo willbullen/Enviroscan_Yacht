@@ -159,6 +159,10 @@ const FinancialManagement: React.FC = () => {
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
   
+  // AI categorization states
+  const [aiCategorizing, setAiCategorizing] = useState(false);
+  const [categoryResult, setCategoryResult] = useState<{category: string; confidence: number; explanation: string} | null>(null);
+  
   // State for currently editing items
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [editingExpense, setEditingExpense] = useState<any>(null);
@@ -416,6 +420,75 @@ const FinancialManagement: React.FC = () => {
     );
   };
 
+  // Function to handle AI categorization of expenses
+  const categorizeExpenseWithAI = async (description: string, amount: string) => {
+    if (!description) {
+      toast({
+        title: "Missing Description",
+        description: "Please enter an expense description to categorize.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setAiCategorizing(true);
+      setCategoryResult(null);
+      
+      const response = await fetch('/api/expenses/categorize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          expenseDescription: description,
+          amount: parseFloat(amount || '0')
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      setCategoryResult(result);
+      
+      // Update the category select field
+      const formCategoryMapping: Record<string, string> = {
+        'FUE': 'fuel',
+        'MNT': 'maintenance',
+        'DOC': 'dockage',
+        'CRW': 'crew',
+        'PRV': 'provisions',
+        'OTH': 'other'
+      };
+      
+      const formCategory = formCategoryMapping[result.category] || 'other';
+      
+      // Find the select element for category and update its value
+      const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
+      if (categorySelect) {
+        categorySelect.value = formCategory;
+      }
+      
+      toast({
+        title: "Expense Categorized",
+        description: `Category: ${result.category} (${Math.round(result.confidence * 100)}% confidence)`,
+        variant: "default"
+      });
+      
+    } catch (error) {
+      console.error("Error categorizing expense:", error);
+      toast({
+        title: "Categorization Failed",
+        description: error instanceof Error ? error.message : "An error occurred during categorization",
+        variant: "destructive"
+      });
+    } finally {
+      setAiCategorizing(false);
+    }
+  };
+  
   // Handle form submission for account creation/editing
   const accountForm = useForm({
     defaultValues: {
@@ -2722,13 +2795,48 @@ const FinancialManagement: React.FC = () => {
               
               <div className="flex flex-col space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea 
-                  id="description" 
-                  name="description" 
-                  placeholder="Enter details about this expense"
-                  defaultValue={editingExpense?.description || ""}
-                  rows={2}
-                />
+                <div className="relative">
+                  <Textarea 
+                    id="description" 
+                    name="description" 
+                    placeholder="Enter details about this expense"
+                    defaultValue={editingExpense?.description || ""}
+                    rows={2}
+                    ref={descriptionInputRef}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="absolute right-2 bottom-2 flex items-center gap-1 bg-primary/10 hover:bg-primary/20"
+                    onClick={() => {
+                      const description = descriptionInputRef.current?.value || "";
+                      const amount = amountInputRef.current?.value || "";
+                      categorizeExpenseWithAI(description, amount);
+                    }}
+                    disabled={aiCategorizing}
+                  >
+                    {aiCategorizing ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Categorizing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3 w-3" />
+                        <span>Categorize</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {categoryResult && (
+                  <div className="text-xs bg-muted/50 p-2 rounded border border-border/40">
+                    <p><span className="font-semibold">Suggested category:</span> {categoryResult.category} ({Math.round(categoryResult.confidence * 100)}% confidence)</p>
+                    {categoryResult.explanation && (
+                      <p className="mt-1 text-muted-foreground">{categoryResult.explanation}</p>
+                    )}
+                  </div>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-4">
