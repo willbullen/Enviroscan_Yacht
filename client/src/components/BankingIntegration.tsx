@@ -67,6 +67,7 @@ const BankingIntegration = () => {
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<any[]>([]);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [financialAccounts, setFinancialAccounts] = useState<any[]>([]);
   const [connections, setConnections] = useState<any[]>([]);
   const [syncLogs, setSyncLogs] = useState<any[]>([]);
   const [selectedConnection, setSelectedConnection] = useState<number | null>(null);
@@ -89,11 +90,11 @@ const BankingIntegration = () => {
   // Get current vessel from context
   const { currentVessel } = useVessel();
   
-  // Load bank accounts and providers
+  // Load accounts and providers
   useEffect(() => {
     const fetchData = async () => {
       if (!currentVessel) {
-        console.log("No vessel selected, skipping bank account fetch");
+        console.log("No vessel selected, skipping account fetch");
         return;
       }
       
@@ -111,6 +112,16 @@ const BankingIntegration = () => {
           console.log("No bank accounts found for this vessel. We need to create bank accounts with vessel association.");
         }
         
+        // Fetch financial accounts for current vessel
+        console.log(`Fetching financial accounts for vessel ID: ${currentVessel.id}`);
+        const financialAccountsResp = await apiRequest("GET", `/api/financial-accounts/vessel/${currentVessel.id}`);
+        console.log("Financial Accounts Response:", financialAccountsResp);
+        
+        // If no financial accounts for this vessel, log the issue
+        if (Array.isArray(financialAccountsResp) && financialAccountsResp.length === 0) {
+          console.log("No financial accounts found for this vessel.");
+        }
+        
         // Fetch API providers
         const providersResp = await apiRequest("GET", "/api/banking/providers");
         console.log("Providers Response:", providersResp);
@@ -121,6 +132,7 @@ const BankingIntegration = () => {
         
         // Update state with the fetched data
         setBankAccounts(Array.isArray(bankAccountsResp) ? bankAccountsResp : []);
+        setFinancialAccounts(Array.isArray(financialAccountsResp) ? financialAccountsResp : []);
         setProviders(Array.isArray(providersResp) ? providersResp : []);
         setConnections(Array.isArray(connectionsResp) ? connectionsResp : []);
         
@@ -286,6 +298,11 @@ const BankingIntegration = () => {
   const getBankAccountById = (id: number) => {
     return bankAccounts.find(a => a.id === id) || { accountName: "Unknown" };
   };
+  
+  // Get financial account by ID
+  const getFinancialAccountById = (id: number) => {
+    return financialAccounts.find(a => a.id === id) || { accountName: "Unknown", accountType: "Unknown" };
+  };
 
   // Render bank status badge
   const renderStatusBadge = (status: string) => {
@@ -316,13 +333,17 @@ const BankingIntegration = () => {
             <h2 className="text-2xl font-bold">Banking Connections</h2>
             <Dialog open={connectionDialogOpen} onOpenChange={async (open) => {
                 if (open && currentVessel) {
-                  // Refresh bank accounts for the current vessel before opening dialog
+                  // Refresh financial accounts for the current vessel before opening dialog
                   try {
+                    const financialAccountsResp = await apiRequest("GET", `/api/financial-accounts/vessel/${currentVessel.id}`);
+                    setFinancialAccounts(Array.isArray(financialAccountsResp) ? financialAccountsResp : []);
+                    console.log(`Refreshed financial accounts for vessel ${currentVessel.name} (ID: ${currentVessel.id})`, financialAccountsResp);
+                    
+                    // Also refresh bank accounts
                     const bankAccountsResp = await apiRequest("GET", `/api/banking/accounts?vesselId=${currentVessel.id}`);
                     setBankAccounts(Array.isArray(bankAccountsResp) ? bankAccountsResp : []);
-                    console.log(`Refreshed bank accounts for vessel ${currentVessel.name} (ID: ${currentVessel.id})`, bankAccountsResp);
                   } catch (error) {
-                    console.error("Error refreshing bank accounts:", error);
+                    console.error("Error refreshing accounts:", error);
                   }
                   
                   // Reset form when dialog opens
@@ -373,29 +394,29 @@ const BankingIntegration = () => {
                       name="bankAccountId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Account</FormLabel>
+                          <FormLabel>Financial Account</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select an account" />
+                                <SelectValue placeholder="Select a financial account" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {bankAccounts.map((account) => (
+                              {financialAccounts.map((account) => (
                                 <SelectItem 
                                   key={account.id} 
                                   value={account.id.toString()}
                                 >
-                                  {account.accountName}
+                                  {account.accountName} ({account.accountType})
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Select the account to link
+                            Select the financial account to link to the bank account
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -521,7 +542,7 @@ const BankingIntegration = () => {
                       </Badge>
                     </div>
                     <CardDescription>
-                      {getProviderById(connection.providerId).name} | {getBankAccountById(connection.bankAccountId).accountName}
+                      {getProviderById(connection.providerId).name} | {getFinancialAccountById(connection.bankAccountId).accountName} ({getFinancialAccountById(connection.bankAccountId).accountType})
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pb-2">
