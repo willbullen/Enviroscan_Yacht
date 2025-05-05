@@ -38,7 +38,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import BatchImportDialog from "@/components/BatchImportDialog";
 import CashFlowTrendsChart from "@/components/financial/CashFlowTrendsChart";
 import { VendorTable } from "@/components/financial/VendorTable";
-import BankingIntegration from "@/components/BankingIntegration";
+import BankingIntegration from "@/components/banking/BankingIntegration";
 import { VendorDialog } from "@/components/financial/VendorDialog";
 import { VendorSelect } from "@/components/financial/VendorSelect";
 import { AccountSelect } from "@/components/financial/AccountSelect";

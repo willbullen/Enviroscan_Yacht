@@ -1,87 +1,68 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+// Define the settings structure
 interface SystemSettings {
   useMockBankingData: boolean;
   aiReceiptMatching: boolean;
   // Add other system-wide settings here as needed
 }
 
+// Default settings
+const defaultSettings: SystemSettings = {
+  useMockBankingData: true, // Default to using mock data
+  aiReceiptMatching: true, // Default to using AI for receipt matching
+};
+
+// Context type definition
 interface SystemSettingsContextType {
   settings: SystemSettings;
   updateSettings: (newSettings: Partial<SystemSettings>) => void;
-  isLoading: boolean;
 }
 
-const defaultSettings: SystemSettings = {
-  useMockBankingData: true, // Default to mock data until API keys are configured
-  aiReceiptMatching: true,
-};
+// Create the context with default values
+const SystemSettingsContext = createContext<SystemSettingsContextType>({
+  settings: defaultSettings,
+  updateSettings: () => {},
+});
 
-const SystemSettingsContext = createContext<SystemSettingsContextType | undefined>(undefined);
+// Hook for using the context
+export const useSystemSettings = () => useContext(SystemSettingsContext);
 
-export const useSystemSettings = () => {
-  const context = useContext(SystemSettingsContext);
-  if (context === undefined) {
-    throw new Error('useSystemSettings must be used within a SystemSettingsProvider');
-  }
-  return context;
-};
-
+// Provider component
 interface SystemSettingsProviderProps {
   children: ReactNode;
 }
 
-export const SystemSettingsProvider = ({ children }: SystemSettingsProviderProps) => {
-  const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
-  const [isLoading, setIsLoading] = useState(true);
+export const SystemSettingsProvider: React.FC<SystemSettingsProviderProps> = ({ children }) => {
+  // Initialize state with defaults, overridden by localStorage if available
+  const [settings, setSettings] = useState<SystemSettings>(() => {
+    const savedSettings = localStorage.getItem('systemSettings');
+    if (savedSettings) {
+      try {
+        return { ...defaultSettings, ...JSON.parse(savedSettings) };
+      } catch (error) {
+        console.error('Error parsing saved settings:', error);
+        return defaultSettings;
+      }
+    }
+    return defaultSettings;
+  });
 
-  // Load settings from localStorage on initial mount
+  // Save settings to localStorage whenever they change
   useEffect(() => {
-    const loadSettings = () => {
-      try {
-        const storedSettings = localStorage.getItem('systemSettings');
-        if (storedSettings) {
-          const parsedSettings = JSON.parse(storedSettings);
-          setSettings(prevSettings => ({
-            ...prevSettings,
-            ...parsedSettings
-          }));
-        }
-      } catch (error) {
-        console.warn('Failed to load system settings from localStorage:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    localStorage.setItem('systemSettings', JSON.stringify(settings));
+  }, [settings]);
 
-    loadSettings();
-  }, []);
-
-  // Update settings function
+  // Function to update settings
   const updateSettings = (newSettings: Partial<SystemSettings>) => {
-    setSettings(prevSettings => {
-      const updatedSettings = { ...prevSettings, ...newSettings };
-      
-      // Save to localStorage
-      try {
-        localStorage.setItem('systemSettings', JSON.stringify(updatedSettings));
-      } catch (error) {
-        console.error('Failed to save system settings to localStorage:', error);
-      }
-      
-      return updatedSettings;
-    });
-  };
-
-  const value = {
-    settings,
-    updateSettings,
-    isLoading
+    setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   return (
-    <SystemSettingsContext.Provider value={value}>
+    <SystemSettingsContext.Provider value={{ settings, updateSettings }}>
       {children}
     </SystemSettingsContext.Provider>
   );
 };
+
+export default SystemSettingsProvider;
