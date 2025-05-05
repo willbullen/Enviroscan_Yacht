@@ -96,7 +96,7 @@ const Settings = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [themeLoaded, setThemeLoaded] = useState(false);
-  const { settings, updateSettings } = useSystemSettings();
+  // Direct reference to useSystemSettings() will be used throughout the component
 
   // Profile form
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({

@@ -80,7 +80,7 @@ interface ExpenseMatch {
 }
 
 const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ vesselId }) => {
-  const { useLiveBankingData, bankingAPICredentialsSet } = useSystemSettings();
+  const { useMockBankingData, bankingAPICredentialsSet } = useSystemSettings();
   const [searchValue, setSearchValue] = useState('');
   const [dateFilter, setDateFilter] = useState<{from?: Date; to?: Date}>({});
   const [statusFilter, setStatusFilter] = useState<'all' | 'matched' | 'unmatched' | 'reconciled'>('all');

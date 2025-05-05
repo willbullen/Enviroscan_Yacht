@@ -36,7 +36,7 @@ export interface BankingIntegrationProps {
 }
 
 export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId }) => {
-  const { useLiveBankingData, bankingAPICredentialsSet } = useSystemSettings();
+  const { useMockBankingData, bankingAPICredentialsSet } = useSystemSettings();
   const [activeGuide, setActiveGuide] = useState<'connection' | 'reconciliation' | 'receipt' | null>(null);
   const [guideStep, setGuideStep] = useState(0);
   

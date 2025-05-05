@@ -39,7 +39,7 @@ interface BankingProvider {
 }
 
 const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
-  const { useLiveBankingData, toggleLiveBankingData, bankingAPICredentialsSet } = useSystemSettings();
+  const { useMockBankingData, updateSettings, bankingAPICredentialsSet } = useSystemSettings();
   const [providers, setProviders] = useState<BankingProvider[]>([
     {
       id: 'centtrip',
@@ -129,13 +129,15 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Label htmlFor="live-data-mode" className="cursor-pointer">
-            {useLiveBankingData ? 'Using Live API Data' : 'Using Test Data'}
+          <Label htmlFor="mock-data-mode" className="cursor-pointer">
+            {useMockBankingData ? 'Using Test Data' : 'Using Live API Data'}
           </Label>
           <Switch
-            id="live-data-mode"
-            checked={useLiveBankingData}
-            onCheckedChange={toggleLiveBankingData}
+            id="mock-data-mode"
+            checked={useMockBankingData}
+            onCheckedChange={(checked) => {
+              updateSettings({ useMockBankingData: checked });
+            }}
           />
         </div>
       </div>
@@ -216,7 +218,7 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
                 variant="secondary" 
                 size="sm"
                 onClick={() => handleSyncProvider(provider.id)}
-                disabled={isSyncing === provider.id || !useLiveBankingData}
+                disabled={isSyncing === provider.id || useMockBankingData}
               >
                 {isSyncing === provider.id ? (
                   <>
