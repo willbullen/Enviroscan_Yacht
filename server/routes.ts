@@ -4634,6 +4634,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // Categorize a single expense using AI
+  apiRouter.post("/expenses/categorize", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    try {
+      const { expenseDescription, amount } = req.body;
+      
+      if (!expenseDescription) {
+        return res.status(400).json({ error: "Expense description is required" });
+      }
+      
+      // Call OpenAI to categorize the expense
+      const result = await categorizeExpense(expenseDescription, amount);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error categorizing expense:", error);
+      res.status(500).json({ error: "Failed to categorize expense", message: error.message });
+    }
+  }));
+  
+  // Batch categorize multiple expenses using AI
+  apiRouter.post("/expenses/categorize-batch", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    try {
+      const { expenses } = req.body;
+      
+      if (!Array.isArray(expenses) || expenses.length === 0) {
+        return res.status(400).json({ error: "Invalid data format. Expected an array of expenses." });
+      }
+      
+      // Validate that each expense has a description
+      for (const expense of expenses) {
+        if (!expense.description) {
+          return res.status(400).json({ 
+            error: "All expenses must have a description",
+            invalidExpense: expense
+          });
+        }
+      }
+      
+      // Call OpenAI to categorize all expenses
+      const results = await batchCategorizeExpenses(expenses);
+      
+      res.json(results);
+    } catch (error) {
+      console.error("Error batch categorizing expenses:", error);
+      res.status(500).json({ error: "Failed to categorize expenses", message: error.message });
+    }
+  }));
+  
   // Update an expense
   apiRouter.patch("/expenses/:id", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
