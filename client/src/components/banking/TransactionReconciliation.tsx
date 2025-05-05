@@ -516,7 +516,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
         <div className="flex items-center space-x-2">
           <Button 
             variant="outline"
-            disabled={isRefreshing || !useLiveBankingData}
+            disabled={isRefreshing || useMockBankingData}
             onClick={handleRefreshTransactions}
           >
             {isRefreshing ? (
@@ -532,7 +532,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
             )}
           </Button>
           <Button 
-            disabled={isSyncingData || !useLiveBankingData}
+            disabled={isSyncingData || useMockBankingData}
             onClick={handleSyncBankingData}
           >
             {isSyncingData ? (
@@ -677,7 +677,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
         </Table>
       </div>
       
-      {!useLiveBankingData && (
+      {useMockBankingData && (
         <Alert className="bg-amber-50 text-amber-800 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-800" />
           <AlertTitle>Using Test Data</AlertTitle>

@@ -64,7 +64,7 @@ interface Receipt {
 }
 
 const ReceiptMatching: React.FC<ReceiptMatchingProps> = ({ vesselId }) => {
-  const { useLiveBankingData, bankingAPICredentialsSet } = useSystemSettings();
+  const { useMockBankingData, bankingAPICredentialsSet } = useSystemSettings();
   const [receipts, setReceipts] = useState<Receipt[]>([
     {
       id: 'r-001',
@@ -409,7 +409,7 @@ const ReceiptMatching: React.FC<ReceiptMatchingProps> = ({ vesselId }) => {
         </Table>
       </div>
       
-      {!useLiveBankingData && (
+      {useMockBankingData && (
         <Alert className="bg-amber-50 text-amber-800 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-800" />
           <AlertTitle>Using Test Data</AlertTitle>
