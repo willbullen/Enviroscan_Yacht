@@ -65,9 +65,12 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
   
   const [selectedProvider, setSelectedProvider] = useState<BankingProvider | null>(null);
   const [showProviderDialog, setShowProviderDialog] = useState(false);
+  const [showAddProviderDialog, setShowAddProviderDialog] = useState(false);
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
+  const [newProviderName, setNewProviderName] = useState('');
+  const [newProviderId, setNewProviderId] = useState('');
   
   const handleSyncProvider = (providerId: string) => {
     setIsSyncing(providerId);
@@ -105,6 +108,24 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
           } 
         : provider
     ));
+    
+    // Update SystemSettingsContext
+    const updatedCredentials = {
+      ...bankingAPICredentialsSet,
+      [selectedProvider.id]: true
+    };
+    
+    // Save API credentials securely (this would normally call an API endpoint)
+    console.log(`Saving API credentials for ${selectedProvider.name}:`, {
+      apiKey: apiKey.slice(0, 3) + '...',
+      apiSecret: '•••••••••'
+    });
+    
+    // Update the context
+    updateSettings({
+      bankingAPICredentialsSet: updatedCredentials,
+      useMockBankingData: false // Automatically switch to live data mode when credentials are added
+    });
     
     setShowProviderDialog(false);
   };
@@ -241,7 +262,7 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
             <Plus className="h-8 w-8 text-muted-foreground mb-2" />
             <h3 className="font-medium mb-1">Add Banking Provider</h3>
             <p className="text-sm text-muted-foreground mb-4">Connect to additional banking providers</p>
-            <Button>
+            <Button onClick={() => setShowAddProviderDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Provider
             </Button>
@@ -249,6 +270,78 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
         </Card>
       </div>
       
+      {/* Add new provider dialog */}
+      <Dialog open={showAddProviderDialog} onOpenChange={setShowAddProviderDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Banking Provider</DialogTitle>
+            <DialogDescription>
+              Add a new banking provider to integrate with your vessel's financial management system.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="provider-name">Provider Name</Label>
+              <Input
+                id="provider-name"
+                type="text"
+                placeholder="Enter provider name (e.g. Barclays)"
+                value={newProviderName}
+                onChange={(e) => setNewProviderName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="provider-id">Provider ID</Label>
+              <Input
+                id="provider-id"
+                type="text"
+                placeholder="Enter provider ID (e.g. barclays)"
+                value={newProviderId}
+                onChange={(e) => setNewProviderId(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+              />
+              <p className="text-xs text-muted-foreground">
+                This will be used as a unique identifier for this provider
+              </p>
+            </div>
+            
+            <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+              <Info className="h-4 w-4 text-blue-800" />
+              <AlertTitle>Additional Configuration Required</AlertTitle>
+              <AlertDescription className="text-xs">
+                After adding a new provider, you'll need to configure its API credentials separately.
+              </AlertDescription>
+            </Alert>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddProviderDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                // Create a new provider and add it to the list
+                const newProvider: BankingProvider = {
+                  id: newProviderId || newProviderName.toLowerCase().replace(/\s+/g, '-'),
+                  name: newProviderName,
+                  icon: <Building2 className="h-8 w-8 text-gray-600" />,
+                  status: 'disconnected',
+                  apiKeySet: false,
+                  apiSecretSet: false
+                };
+                
+                setProviders([...providers, newProvider]);
+                setShowAddProviderDialog(false);
+                setNewProviderName('');
+                setNewProviderId('');
+              }} 
+              disabled={!newProviderName}
+            >
+              Add Provider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Configure existing provider dialog */}
       <Dialog open={showProviderDialog} onOpenChange={setShowProviderDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
