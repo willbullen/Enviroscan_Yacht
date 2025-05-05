@@ -65,11 +65,11 @@ const connectionFormSchema = z.object({
 const BankingIntegration = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [providers, setProviders] = useState([]);
-  const [bankAccounts, setBankAccounts] = useState([]);
-  const [connections, setConnections] = useState([]);
-  const [syncLogs, setSyncLogs] = useState([]);
-  const [selectedConnection, setSelectedConnection] = useState(null);
+  const [providers, setProviders] = useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [connections, setConnections] = useState<any[]>([]);
+  const [syncLogs, setSyncLogs] = useState<any[]>([]);
+  const [selectedConnection, setSelectedConnection] = useState<number | null>(null);
   const [syncInProgress, setSyncInProgress] = useState(false);
   const [connectionDialogOpen, setConnectionDialogOpen] = useState(false);
   
@@ -138,7 +138,7 @@ const BankingIntegration = () => {
   }, [toast, currentVessel]);
 
   // Handle connection form submission
-  const onCreateConnection = async (data) => {
+  const onCreateConnection = async (data: any) => {
     if (!currentVessel) {
       toast({
         title: "Error",
@@ -194,7 +194,7 @@ const BankingIntegration = () => {
   };
 
   // Sync transactions
-  const syncTransactions = async (connectionId) => {
+  const syncTransactions = async (connectionId: number) => {
     if (!currentVessel) {
       toast({
         title: "Error",
@@ -235,7 +235,7 @@ const BankingIntegration = () => {
   };
 
   // Load sync history for a connection
-  const loadSyncHistory = async (connectionId) => {
+  const loadSyncHistory = async (connectionId: number) => {
     if (!connectionId) {
       console.warn("No connection ID provided for sync history");
       return;
@@ -264,17 +264,17 @@ const BankingIntegration = () => {
   };
 
   // Get provider by ID
-  const getProviderById = (id) => {
+  const getProviderById = (id: number) => {
     return providers.find(p => p.id === id) || { name: "Unknown", apiType: "unknown" };
   };
 
   // Get bank account by ID
-  const getBankAccountById = (id) => {
-    return bankAccounts.find(a => a.id === id) || { name: "Unknown" };
+  const getBankAccountById = (id: number) => {
+    return bankAccounts.find(a => a.id === id) || { name: "Unknown", accountName: "Unknown" };
   };
 
   // Render bank status badge
-  const renderStatusBadge = (status) => {
+  const renderStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
         return <Badge className="bg-green-500 hover:bg-green-600">Completed</Badge>;
@@ -375,7 +375,7 @@ const BankingIntegration = () => {
                             onValueChange={(value) => {
                               field.onChange(value);
                               // Reset credentials when provider changes
-                              connectionForm.setValue("credentials", {});
+                              connectionForm.setValue("credentials", { apiKey: "", accessToken: "" });
                             }} 
                             defaultValue={field.value}
                           >
