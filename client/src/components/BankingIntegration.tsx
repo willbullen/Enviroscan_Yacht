@@ -102,8 +102,14 @@ const BankingIntegration = () => {
         console.log(`Fetching banking data for vessel ID ${currentVessel.id}`);
         
         // Fetch bank accounts for current vessel
+        console.log(`Fetching bank accounts for vessel ID: ${currentVessel.id}`);
         const bankAccountsResp = await apiRequest("GET", `/api/banking/accounts?vesselId=${currentVessel.id}`);
         console.log("Bank Accounts Response:", bankAccountsResp);
+        
+        // If no accounts for this vessel, log the issue
+        if (Array.isArray(bankAccountsResp) && bankAccountsResp.length === 0) {
+          console.log("No bank accounts found for this vessel. We need to create bank accounts with vessel association.");
+        }
         
         // Fetch API providers
         const providersResp = await apiRequest("GET", "/api/banking/providers");
