@@ -205,6 +205,74 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
       setIsAddingVendor(false);
     }
   };
+  
+  // Function to handle adding all missing vendors at once
+  const handleAddAllVendors = async () => {
+    if (missingVendors.size === 0) return;
+    
+    try {
+      setIsAddingVendor(true);
+      
+      // Create a copy of the current preview data
+      let updatedPreviewData = [...previewData];
+      
+      // Process each missing vendor
+      for (const vendorName of Array.from(missingVendors)) {
+        try {
+          // Make API request to create vendor
+          const response = await fetch('/api/vendors', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ 
+              name: vendorName.trim(),
+              // Default type is "Imported"
+              type: "Imported"
+            }),
+          });
+          
+          if (!response.ok) {
+            console.error(`Failed to create vendor ${vendorName}: ${response.statusText}`);
+            continue; // Skip to next vendor if this one fails
+          }
+          
+          const newVendor = await response.json();
+          
+          // Update vendors list in previewData for this vendor
+          updatedPreviewData = updatedPreviewData.map(row => {
+            if (row.vendor === vendorName && row._vendorMissing) {
+              return {
+                ...row,
+                vendorId: newVendor.id.toString(),
+                _vendorMissing: false
+              };
+            }
+            return row;
+          });
+          
+          // Add to vendors array so it's available in dropdowns
+          vendors.push(newVendor);
+          
+        } catch (error) {
+          console.error(`Error adding vendor ${vendorName}:`, error);
+          // Continue with other vendors even if one fails
+        }
+      }
+      
+      // Update state with all changes
+      setPreviewData(updatedPreviewData);
+      setMissingVendors(new Set()); // Clear all missing vendors
+      setNewVendorName("");
+      setNewVendorType("");
+      
+    } catch (error) {
+      console.error("Error adding all vendors:", error);
+    } finally {
+      setIsAddingVendor(false);
+    }
+  };
 
   const handleDownloadTemplate = () => {
     const blob = new Blob([templateContent], { type: 'text/csv' });
@@ -819,6 +887,30 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                         </Button>
                       </div>
                     </div>
+                    
+                    {/* "Add All" button */}
+                    {missingVendors.size > 1 && (
+                      <div className="flex justify-end mt-2">
+                        <Button 
+                          onClick={handleAddAllVendors}
+                          disabled={isAddingVendor}
+                          variant="outline"
+                          className="flex items-center"
+                        >
+                          {isAddingVendor ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin w-4 h-4 border-2 border-muted border-t-transparent rounded-full mr-2"></div>
+                              <span>Adding All...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <UserPlus className="h-4 w-4 mr-1" />
+                              Add All Vendors
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
