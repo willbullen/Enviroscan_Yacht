@@ -494,6 +494,82 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
         </DialogContent>
       </Dialog>
       
+      {/* Map accounts dialog */}
+      <Dialog open={showMapAccountsDialog} onOpenChange={setShowMapAccountsDialog}>
+        <DialogContent className="sm:max-w-[650px]">
+          <DialogHeader>
+            <DialogTitle>Map Financial Accounts to {selectedProvider?.name}</DialogTitle>
+            <DialogDescription>
+              Associate your vessel's financial accounts with bank accounts from {selectedProvider?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {isLoadingAccounts ? (
+              <div className="flex items-center justify-center py-8">
+                <Spinner size="md" />
+                <span className="ml-2">Loading accounts...</span>
+              </div>
+            ) : financialAccounts.length === 0 ? (
+              <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                <AlertCircle className="h-4 w-4 text-amber-800" />
+                <AlertTitle>No Financial Accounts Found</AlertTitle>
+                <AlertDescription className="text-xs">
+                  Please add financial accounts to your vessel before mapping them to banking providers.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Select which bank account from {selectedProvider?.name} corresponds to each financial account in your system.
+                </p>
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                  {financialAccounts.map((account: FinancialAccount) => (
+                    <div key={account.id} className="border rounded-lg p-4 bg-muted/20">
+                      <h4 className="font-medium mb-2">{account.accountName} ({account.accountNumber})</h4>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Type: {account.accountType} | Category: {account.category} | Balance: {account.balance}
+                        </p>
+                        <Label htmlFor={`map-account-${account.id}`}>Select {selectedProvider?.name} Account</Label>
+                        <Select 
+                          value={accountMappings[account.id.toString()] || ''} 
+                          onValueChange={(value) => {
+                            setAccountMappings({
+                              ...accountMappings,
+                              [account.id.toString()]: value
+                            });
+                          }}
+                        >
+                          <SelectTrigger id={`map-account-${account.id}`} className="w-full">
+                            <SelectValue placeholder="Select a bank account" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">-- Not Mapped --</SelectItem>
+                            {bankAccounts.map((bankAccount: BankAccount) => (
+                              <SelectItem key={bankAccount.id} value={bankAccount.id}>
+                                {bankAccount.name} ({bankAccount.currency} {bankAccount.balance})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMapAccountsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAccountMappings} disabled={isLoadingAccounts}>
+              Save Mappings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {/* Configure existing provider dialog */}
       <Dialog open={showProviderDialog} onOpenChange={setShowProviderDialog}>
         <DialogContent className="sm:max-w-[500px]">
