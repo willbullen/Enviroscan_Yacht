@@ -2730,6 +2730,7 @@ const FinancialManagement: React.FC = () => {
                       defaultValue={editingExpense ? editingExpense.total : ''}
                       className="pl-7"
                       required
+                      ref={amountInputRef}
                     />
                   </div>
                 </div>
