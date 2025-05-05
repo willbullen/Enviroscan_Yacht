@@ -10,6 +10,7 @@ import marineRouter, { initAisStreamWebsocket } from "./routes/marine";
 import { setupApiKeysRoutes } from "./routes/apiKeys";
 import { setupAuth } from "./auth";
 import setupReceiptRoutes from "./routes/receiptReconciliation";
+import { categorizeExpense, batchCategorizeExpenses } from "./openai";
 import { 
   insertUserSchema, 
   insertEquipmentSchema, 
