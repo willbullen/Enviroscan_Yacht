@@ -532,11 +532,11 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
                         </p>
                         <Label htmlFor={`map-account-${account.id}`}>Select {selectedProvider?.name} Account</Label>
                         <Select 
-                          value={accountMappings[account.id.toString()] || ''} 
+                          value={accountMappings[account.id.toString()] || 'not_mapped'} 
                           onValueChange={(value) => {
                             setAccountMappings({
                               ...accountMappings,
-                              [account.id.toString()]: value
+                              [account.id.toString()]: value === 'not_mapped' ? '' : value
                             });
                           }}
                         >
@@ -544,7 +544,7 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
                             <SelectValue placeholder="Select a bank account" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">-- Not Mapped --</SelectItem>
+                            <SelectItem value="not_mapped">-- Not Mapped --</SelectItem>
                             {bankAccounts.map((bankAccount: BankAccount) => (
                               <SelectItem key={bankAccount.id} value={bankAccount.id}>
                                 {bankAccount.name} ({bankAccount.currency} {bankAccount.balance})
