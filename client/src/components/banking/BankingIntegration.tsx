@@ -10,65 +10,9 @@ import TransactionReconciliation from "./TransactionReconciliation";
 import ReceiptMatching from "./ReceiptMatching";
 import { Grid } from "@tremor/react";
 
-// Summary widgets for banking dashboard
+// Banking summary component (removed widgets as requested)
 const BankingSummaryWidgets = () => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
-          <CardTitle className="flex justify-between items-center text-base">
-            <span>Pending Reconciliation</span>
-            <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-          <CardDescription>Transactions waiting to be reconciled</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold">12</div>
-            <div className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">
-              Requires attention
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
-          <CardTitle className="flex justify-between items-center text-base">
-            <span>Unmatched Receipts</span>
-            <ReceiptText className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-          <CardDescription>Receipts without matched transactions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold">5</div>
-            <div className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-              Pending review
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
-          <CardTitle className="flex justify-between items-center text-base">
-            <span>Banking Connections</span>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-          <CardDescription>Connected banking providers</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold">2</div>
-            <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-              Active
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return null;
 };
 
 const BankingIntegration: React.FC = () => {
@@ -106,8 +50,7 @@ const BankingIntegration: React.FC = () => {
         </div>
       )}
 
-      {/* Banking Summary Widgets */}
-      <BankingSummaryWidgets />
+      {/* Banking Summary Widgets removed */}
       
       {/* Banking Tabs */}
       <Tabs defaultValue="providers" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
