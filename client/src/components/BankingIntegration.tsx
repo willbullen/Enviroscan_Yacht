@@ -336,14 +336,14 @@ const BankingIntegration = () => {
                       name="bankAccountId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Bank Account</FormLabel>
+                          <FormLabel>Account</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a bank account" />
+                                <SelectValue placeholder="Select an account" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -358,7 +358,7 @@ const BankingIntegration = () => {
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Select the bank account to link
+                            Select the account to link
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
