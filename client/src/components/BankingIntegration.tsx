@@ -270,7 +270,7 @@ const BankingIntegration = () => {
 
   // Get bank account by ID
   const getBankAccountById = (id: number) => {
-    return bankAccounts.find(a => a.id === id) || { name: "Unknown", accountName: "Unknown" };
+    return bankAccounts.find(a => a.id === id) || { accountName: "Unknown" };
   };
 
   // Render bank status badge
@@ -352,7 +352,7 @@ const BankingIntegration = () => {
                                   key={account.id} 
                                   value={account.id.toString()}
                                 >
-                                  {account.name}
+                                  {account.accountName}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -484,7 +484,7 @@ const BankingIntegration = () => {
                       </Badge>
                     </div>
                     <CardDescription>
-                      {getProviderById(connection.providerId).name} | {getBankAccountById(connection.bankAccountId).name}
+                      {getProviderById(connection.providerId).name} | {getBankAccountById(connection.bankAccountId).accountName}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pb-2">
