@@ -5603,6 +5603,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // Get unmatched/pending transactions for reconciliation
+  apiRouter.get("/banking/transactions/unmatched/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    try {
+      // Get time period from query params (thisWeek, previousWeeks, thisMonth, all)
+      const period = req.query.period as string || 'all';
+      
+      const currentDate = new Date();
+      let startDate = new Date();
+      
+      // Calculate date ranges based on the requested period
+      if (period === 'thisWeek') {
+        // Get start of this week (Sunday)
+        const day = currentDate.getDay();
+        startDate.setDate(currentDate.getDate() - day);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === 'previousWeeks') {
+        // Get start of this week, then go back to start of previous week
+        const day = currentDate.getDay();
+        startDate.setDate(currentDate.getDate() - day - 7);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === 'thisMonth') {
+        // Start of current month
+        startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      }
+      
+      // Get unmatched transactions for this vessel within the specified period
+      const transactions = await storage.getUnmatchedTransactions(vesselId);
+      
+      // Filter by date if needed
+      const filteredTransactions = period === 'all'
+        ? transactions
+        : transactions.filter(t => {
+            const txDate = new Date(t.transactionDate);
+            return txDate >= startDate && txDate <= currentDate;
+          });
+      
+      // Count transactions by period
+      const thisWeekCount = transactions.filter(t => {
+        const txDate = new Date(t.transactionDate);
+        const startOfWeek = new Date(currentDate);
+        const day = startOfWeek.getDay();
+        startOfWeek.setDate(currentDate.getDate() - day);
+        startOfWeek.setHours(0, 0, 0, 0);
+        return txDate >= startOfWeek;
+      }).length;
+      
+      const previousWeeksCount = transactions.filter(t => {
+        const txDate = new Date(t.transactionDate);
+        const startOfWeek = new Date(currentDate);
+        const day = startOfWeek.getDay();
+        startOfWeek.setDate(currentDate.getDate() - day);
+        startOfWeek.setHours(0, 0, 0, 0);
+        
+        const startOfPreviousWeek = new Date(startOfWeek);
+        startOfPreviousWeek.setDate(startOfWeek.getDate() - 7);
+        
+        return txDate < startOfWeek && txDate >= startOfPreviousWeek;
+      }).length;
+      
+      // Return both the transactions and the counts
+      res.json({
+        transactions: filteredTransactions,
+        counts: {
+          total: transactions.length,
+          thisWeek: thisWeekCount,
+          previousWeeks: previousWeeksCount,
+        }
+      });
+    } catch (error) {
+      logger.error(`Error fetching unmatched transactions for vessel ${vesselId}:`, error);
+      res.status(500).json({ error: "Failed to fetch unmatched transactions" });
+    }
+  }));
+  
+  // Get unmatched receipts for a vessel
+  apiRouter.get("/receipts/unmatched/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    try {
+      // Get expenses with receipts that haven't been matched yet
+      const expenses = await storage.getExpensesByVessel(vesselId);
+      
+      // Filter expenses that have receipts but no associated transactions
+      const receipts = expenses
+        .filter(e => e.receiptUrl && !e.reconciled)
+        .map(e => ({
+          id: e.id,
+          receiptUrl: e.receiptUrl,
+          amount: e.total,
+          date: e.expenseDate,
+          description: e.description,
+          status: e.status === 'pending' ? 'processing' : 'processed',
+          vendorId: e.vendorId,
+          expenseId: e.id
+        }));
+      
+      // Count receipts by processing status
+      const processingCount = receipts.filter(r => r.status === 'processing').length;
+      const processedCount = receipts.filter(r => r.status === 'processed').length;
+      
+      res.json({
+        receipts,
+        counts: {
+          total: receipts.length,
+          processing: processingCount,
+          processed: processedCount
+        }
+      });
+    } catch (error) {
+      logger.error(`Error fetching unmatched receipts for vessel ${vesselId}:`, error);
+      res.status(500).json({ error: "Failed to fetch unmatched receipts" });
+    }
+  }));
+  
   // Create a new banking provider
   apiRouter.post("/banking/providers", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
