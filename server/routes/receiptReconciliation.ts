@@ -33,7 +33,7 @@ const upload = multer({
 
 export default function setupReceiptRoutes(storage: IStorage) {
   // Get all receipts for a vessel
-  router.get('/receipts/:vesselId', async (req, res) => {
+  router.get('/:vesselId', async (req, res) => {
     try {
       // Check authentication first
       if (!req.isAuthenticated || !req.isAuthenticated()) {
