@@ -28,7 +28,8 @@ import {
   budgets,
   budgetAllocations,
   expenses,
-  transactions,
+  transactions, // Legacy transactions table
+  bankingTransactions, // New banking transactions table
   transactionLines,
   deposits,
   bankAccounts,
@@ -114,7 +115,9 @@ import {
   type BankConnection,
   type InsertBankConnection,
   type TransactionReconciliation,
-  type InsertTransactionReconciliation
+  type InsertTransactionReconciliation,
+  type BankingTransaction,
+  type InsertBankingTransaction
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db, executeWithRetry } from "./db";
@@ -2384,30 +2387,32 @@ export class DatabaseStorage implements IStorage {
   
   // =========== Financial Management - Transaction operations =============
   
-  async getTransaction(id: number): Promise<Transaction | undefined> {
+  // Legacy Transaction methods (to be phased out)
+  async getTransaction(id: number): Promise<any | undefined> {
     const [transaction] = await db.select().from(transactions).where(eq(transactions.id, id));
     return transaction || undefined;
   }
   
-  async getTransactionsByVessel(vesselId: number): Promise<Transaction[]> {
+  async getTransactionsByVessel(vesselId: number): Promise<any[]> {
     return db
       .select()
       .from(transactions)
       .where(eq(transactions.vesselId, vesselId));
   }
   
-  async getAllTransactions(): Promise<Transaction[]> {
+  async getAllTransactions(): Promise<any[]> {
     return db
       .select()
       .from(transactions);
   }
   
-  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
-    const [newTransaction] = await db.insert(transactions).values(transaction).returning();
-    return newTransaction;
+  async createTransaction(transaction: any): Promise<any> {
+    // Legacy method - redirect to new banking transactions
+    console.log("Legacy createTransaction called - redirecting to createBankingTransaction");
+    return this.createBankingTransaction(transaction as InsertBankingTransaction);
   }
   
-  async updateTransaction(id: number, transaction: Partial<Transaction>): Promise<Transaction | undefined> {
+  async updateTransaction(id: number, transaction: any): Promise<any | undefined> {
     const [updatedTransaction] = await db
       .update(transactions)
       .set(transaction)
@@ -2422,6 +2427,49 @@ export class DatabaseStorage implements IStorage {
       return result.rowCount ? result.rowCount > 0 : false;
     } catch (error) {
       console.error(`Error deleting transaction ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // New Banking Transaction methods
+  async getBankingTransaction(id: number): Promise<BankingTransaction | undefined> {
+    const [transaction] = await db.select().from(bankingTransactions).where(eq(bankingTransactions.id, id));
+    return transaction || undefined;
+  }
+  
+  async getBankingTransactionsByVessel(vesselId: number): Promise<BankingTransaction[]> {
+    return db
+      .select()
+      .from(bankingTransactions)
+      .where(eq(bankingTransactions.vesselId, vesselId));
+  }
+  
+  async getAllBankingTransactions(): Promise<BankingTransaction[]> {
+    return db
+      .select()
+      .from(bankingTransactions);
+  }
+  
+  async createBankingTransaction(transaction: InsertBankingTransaction): Promise<BankingTransaction> {
+    const [newTransaction] = await db.insert(bankingTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+  
+  async updateBankingTransaction(id: number, transaction: Partial<BankingTransaction>): Promise<BankingTransaction | undefined> {
+    const [updatedTransaction] = await db
+      .update(bankingTransactions)
+      .set(transaction)
+      .where(eq(bankingTransactions.id, id))
+      .returning();
+    return updatedTransaction;
+  }
+  
+  async deleteBankingTransaction(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(bankingTransactions).where(eq(bankingTransactions.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting banking transaction ${id}:`, error);
       return false;
     }
   }

@@ -4964,7 +4964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ error: "Transaction not found" });
     }
     
-    const validationResult = insertTransactionSchema.safeParse(req.body);
+    const validationResult = insertBankingTransactionSchema.safeParse(req.body);
     if (!validationResult.success) {
       return res.status(400).json({ 
         error: "Invalid transaction data", 
