@@ -143,40 +143,63 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   const [activeView, setActiveView] = useState<'for-review' | 'categorized' | 'excluded'>('for-review');
   const [showManageProviders, setShowManageProviders] = useState(false);
   
-  // Vessel-specific bank accounts data
-  const mockBankAccounts: BankAccount[] = [
-    {
-      id: `bank-${vesselId}-001`,
-      name: `${vesselId === 6 ? 'M/Y MONTKAJ' : vesselId === 5 ? 'M/Y TAKNM' : vesselId === 4 ? 'M/Y NOURAH OF RIYAD' : 'General'} Current Account`,
-      currentBalance: 87467.84,
-      lastSync: '2025-05-05T12:00:00Z',
-      transactionsCount: 267,
-      provider: 'Allied Irish Banks'
-    },
-    {
-      id: `bank-${vesselId}-002`,
-      name: `${vesselId === 6 ? 'M/Y MONTKAJ' : vesselId === 5 ? 'M/Y TAKNM' : vesselId === 4 ? 'M/Y NOURAH OF RIYAD' : 'General'} Expense Account`,
-      currentBalance: 12500.35,
-      lastSync: '2025-05-05T11:30:00Z',
-      transactionsCount: 124,
-      provider: 'Revolut'
-    },
-    {
-      id: `bank-${vesselId}-003`,
-      name: `${vesselId === 6 ? 'M/Y MONTKAJ' : vesselId === 5 ? 'M/Y TAKNM' : vesselId === 4 ? 'M/Y NOURAH OF RIYAD' : 'General'} Payroll Account`,
-      currentBalance: 45000.00,
-      lastSync: '2025-05-04T15:00:00Z',
-      transactionsCount: 42,
-      provider: 'Centtrip'
-    }
-  ];
+  // Fetch banking transactions from the API
+  const {
+    data: bankingTransactions = [],
+    isLoading: isLoadingTransactions,
+    error: transactionsError,
+    refetch: refetchTransactions
+  } = useQuery<any[]>({
+    queryKey: ['/api/banking/transactions/vessel', vesselId],
+    enabled: !!vesselId,
+  });
+
+  // Fetch bank connections from the API
+  const {
+    data: bankConnections = [],
+    isLoading: isLoadingBankConnections,
+    error: bankConnectionsError
+  } = useQuery<any[]>({
+    queryKey: ['/api/banking/connections/vessel', vesselId],
+    enabled: !!vesselId,
+  });
+  
+  // Transform API transaction data to match our UI component format
+  const transformedTransactions: Transaction[] = React.useMemo(() => {
+    return bankingTransactions.map((transaction) => ({
+      id: transaction.id.toString(),
+      date: transaction.date || transaction.createdAt,
+      description: transaction.description || 'No description',
+      amount: parseFloat(transaction.amount),
+      type: parseFloat(transaction.amount) >= 0 ? 'credit' : 'debit',
+      status: transaction.status || 'unmatched',
+      matchedExpenseId: transaction.matchedExpenseId,
+      matchConfidence: transaction.matchConfidence,
+      provider: transaction.provider || 'Bank',
+      category: transaction.category,
+      payee: transaction.payee,
+      reference: transaction.reference
+    }));
+  }, [bankingTransactions]);
+  
+  // Transform bank connections to BankAccount format
+  const bankAccounts: BankAccount[] = React.useMemo(() => {
+    return bankConnections.map((connection) => ({
+      id: connection.id.toString(),
+      name: connection.accountName || `Account ${connection.accountIdentifier}`,
+      currentBalance: parseFloat(connection.balance || '0'),
+      lastSync: connection.lastSyncedAt || new Date().toISOString(),
+      transactionsCount: bankingTransactions.filter(t => String(t.providerId) === String(connection.providerId)).length,
+      provider: connection.providerName || 'Unknown Provider'
+    }));
+  }, [bankConnections, bankingTransactions]);
   
   // Set default selected bank account
   React.useEffect(() => {
-    if (mockBankAccounts.length > 0 && !selectedBankAccount) {
-      setSelectedBankAccount(mockBankAccounts[0]);
+    if (bankAccounts.length > 0 && !selectedBankAccount) {
+      setSelectedBankAccount(bankAccounts[0]);
     }
-  }, []);
+  }, [bankAccounts]);
   
   // Mock categories
   const mockCategories: ExpenseCategory[] = [
@@ -224,35 +247,6 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
       autoConfirm: true
     }
   ];
-  
-  // Fetch banking transactions from the API
-  const {
-    data: bankingTransactions = [],
-    isLoading: isLoadingTransactions,
-    error: transactionsError,
-    refetch: refetchTransactions
-  } = useQuery<any[]>({
-    queryKey: ['/api/banking/transactions/vessel', vesselId],
-    enabled: !!vesselId,
-  });
-  
-  // Transform API transaction data to match our UI component format
-  const transformedTransactions: Transaction[] = React.useMemo(() => {
-    return bankingTransactions.map((transaction) => ({
-      id: transaction.id.toString(),
-      date: transaction.date || transaction.createdAt,
-      description: transaction.description || 'No description',
-      amount: parseFloat(transaction.amount),
-      type: parseFloat(transaction.amount) >= 0 ? 'credit' : 'debit',
-      status: transaction.status || 'unmatched',
-      matchedExpenseId: transaction.matchedExpenseId,
-      matchConfidence: transaction.matchConfidence,
-      provider: transaction.provider || 'Bank',
-      category: transaction.category,
-      payee: transaction.payee,
-      reference: transaction.reference
-    }));
-  }, [bankingTransactions]);
   
   // Mock expense matches for the selected transaction
   const mockExpenseMatches: ExpenseMatch[] = [
@@ -339,7 +333,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   // Helper to get unique providers for filtering
   const getProviderFilters = () => {
     const providers = new Set<string>();
-    mockTransactions.forEach(t => providers.add(t.provider));
+    transformedTransactions.forEach(t => providers.add(t.provider));
     return Array.from(providers);
   };
   
@@ -501,7 +495,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
               
               {showBankAccountDropdown && (
                 <div className="absolute z-10 mt-1 w-full rounded-md border border-input bg-white shadow-lg">
-                  {mockBankAccounts.map(account => (
+                  {bankAccounts.map(account => (
                     <div
                       key={account.id}
                       className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-0"
@@ -548,19 +542,19 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                     <div className="rounded-md bg-yellow-50 p-1">
                       <p className="font-medium text-yellow-700">For Review</p>
                       <p className="text-yellow-700">
-                        {mockTransactions.filter(t => t.status === 'unmatched').length}
+                        {transformedTransactions.filter(t => t.status === 'unmatched').length}
                       </p>
                     </div>
                     <div className="rounded-md bg-green-50 p-1">
                       <p className="font-medium text-green-700">Categorized</p>
                       <p className="text-green-700">
-                        {mockTransactions.filter(t => t.status === 'matched' || t.status === 'reconciled').length}
+                        {transformedTransactions.filter(t => t.status === 'matched' || t.status === 'reconciled').length}
                       </p>
                     </div>
                     <div className="rounded-md bg-gray-50 p-1">
                       <p className="font-medium text-gray-700">Excluded</p>
                       <p className="text-gray-700">
-                        {mockTransactions.filter(t => t.status === 'excluded').length}
+                        {transformedTransactions.filter(t => t.status === 'excluded').length}
                       </p>
                     </div>
                   </div>
@@ -740,7 +734,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                   onClick={() => setActiveView('for-review')}
                   className="flex items-center justify-center gap-1.5"
                 >
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-200 text-yellow-700">{mockTransactions.filter(t => t.status === 'unmatched').length}</Badge>
+                  <Badge variant="outline" className="bg-yellow-50 border-yellow-200 text-yellow-700">{transformedTransactions.filter(t => t.status === 'unmatched').length}</Badge>
                   For Review
                 </TabsTrigger>
                 <TabsTrigger 
@@ -748,7 +742,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                   onClick={() => setActiveView('categorized')}
                   className="flex items-center justify-center gap-1.5"
                 >
-                  <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">{mockTransactions.filter(t => t.status === 'matched' || t.status === 'reconciled').length}</Badge>
+                  <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">{transformedTransactions.filter(t => t.status === 'matched' || t.status === 'reconciled').length}</Badge>
                   Categorized
                 </TabsTrigger>
                 <TabsTrigger 
@@ -756,7 +750,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                   onClick={() => setActiveView('excluded')}
                   className="flex items-center justify-center gap-1.5"
                 >
-                  <Badge variant="outline" className="bg-gray-50 border-gray-200">{mockTransactions.filter(t => t.status === 'excluded').length}</Badge>
+                  <Badge variant="outline" className="bg-gray-50 border-gray-200">{transformedTransactions.filter(t => t.status === 'excluded').length}</Badge>
                   Excluded
                 </TabsTrigger>
               </TabsList>
