@@ -5573,6 +5573,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get banking transactions for a specific vessel
   apiRouter.get("/banking/transactions/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    // First log the authentication state for debugging
+    console.log('Authentication state for /banking/transactions/vessel/:vesselId:', {
+      isAuthenticated: req.isAuthenticated(),
+      hasUser: !!req.user,
+      userId: req.user?.id
+    });
+    
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Authentication required. Please log in." });
     }
@@ -5585,6 +5592,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get banking transactions for this vessel
       const transactions = await storage.getBankingTransactionsByVessel(vesselId);
+      
+      // Log for debugging
+      console.log(`Retrieved ${transactions.length} banking transactions for vessel ${vesselId}`);
+      
       res.json(transactions);
     } catch (error) {
       logger.error(`Error fetching banking transactions for vessel ${vesselId}:`, error);

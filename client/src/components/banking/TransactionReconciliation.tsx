@@ -152,6 +152,12 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   } = useQuery<any[]>({
     queryKey: ['/api/banking/transactions/vessel', vesselId],
     enabled: !!vesselId,
+    onError: (error) => {
+      console.error('Error fetching banking transactions for vessel', vesselId, error);
+    },
+    onSuccess: (data) => {
+      console.log(`Fetched ${data.length} banking transactions for vessel ${vesselId}`);
+    }
   });
 
   // Fetch bank connections from the API
