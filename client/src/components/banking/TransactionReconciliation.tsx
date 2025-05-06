@@ -249,36 +249,28 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
     }
   ];
   
-  // Mock expense matches for the selected transaction
-  const mockExpenseMatches: ExpenseMatch[] = [
-    {
-      id: 2001,
-      date: '2025-05-02T14:00:00Z',
-      description: 'Port de Monaco - Berth Fees May 2025',
-      amount: 8750.50,
-      category: 'Docking',
-      vendor: 'Port de Monaco',
-      confidence: 0.92
-    },
-    {
-      id: 2002,
-      date: '2025-05-02T15:30:00Z',
-      description: 'Monaco Harbor - Monthly Docking',
-      amount: 8740.00,
-      category: 'Docking',
-      vendor: 'Monaco Harbor',
-      confidence: 0.84
-    },
-    {
-      id: 2003,
-      date: '2025-05-01T11:00:00Z',
-      description: 'Port Authority Fees - Monaco',
-      amount: 8800.00,
-      category: 'Port Fees',
-      vendor: 'Port Authority',
-      confidence: 0.76
-    }
-  ];
+  // Fetch expense data that could match with transactions
+  const {
+    data: expensesData = [],
+    isLoading: isLoadingExpenses,
+    error: expensesError
+  } = useQuery<any[]>({
+    queryKey: [`/api/expenses/vessel/${vesselId}`, vesselId],
+    enabled: !!vesselId,
+  });
+  
+  // Transform expenses to match ExpenseMatch format
+  const expenseMatches: ExpenseMatch[] = React.useMemo(() => {
+    return expensesData.map(expense => ({
+      id: expense.id,
+      date: expense.expenseDate || expense.createdAt,
+      description: expense.description || 'No description',
+      amount: parseFloat(expense.total),
+      category: expense.category || 'Uncategorized',
+      vendor: expense.vendorName || 'Unknown Vendor',
+      confidence: expense.matchConfidence || 0.85 // Default confidence if not provided
+    }));
+  }, [expensesData]);
   
   // Filter transactions based on the active view tab
   const getStatusFilteredTransactions = (transactions: Transaction[]) => {
@@ -1139,11 +1131,17 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
               
               <div className="mb-4">
                 <h3 className="text-base font-semibold mb-2">Suggested Matches</h3>
-                {mockExpenseMatches.length === 0 ? (
+                {isLoadingExpenses ? (
+                  <div className="flex justify-center items-center p-4">
+                    <Spinner className="h-6 w-6" />
+                  </div>
+                ) : expensesError ? (
+                  <p className="text-sm text-red-500">Error loading expenses. Please try again.</p>
+                ) : expenseMatches.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No matching expenses found.</p>
                 ) : (
                   <div className="space-y-2">
-                    {mockExpenseMatches.map(expense => (
+                    {expenseMatches.map(expense => (
                       <div 
                         key={expense.id} 
                         className="p-3 border rounded-md cursor-pointer hover:border-primary hover:bg-muted/20"
