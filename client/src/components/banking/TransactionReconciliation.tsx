@@ -149,15 +149,9 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
     isLoading: isLoadingTransactions,
     error: transactionsError,
     refetch: refetchTransactions
-  } = useQuery<any[]>({
+  } = useQuery<BankingTransaction[]>({
     queryKey: ['/api/banking/transactions/vessel', vesselId],
-    enabled: !!vesselId,
-    onError: (error) => {
-      console.error('Error fetching banking transactions for vessel', vesselId, error);
-    },
-    onSuccess: (data) => {
-      console.log(`Fetched ${data.length} banking transactions for vessel ${vesselId}`);
-    }
+    enabled: !!vesselId
   });
 
   // Fetch bank connections from the API
@@ -174,17 +168,17 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   const transformedTransactions: Transaction[] = React.useMemo(() => {
     return bankingTransactions.map((transaction) => ({
       id: transaction.id.toString(),
-      date: transaction.date || transaction.createdAt,
+      date: transaction.transactionDate || transaction.createdAt,
       description: transaction.description || 'No description',
       amount: parseFloat(transaction.amount),
       type: parseFloat(transaction.amount) >= 0 ? 'credit' : 'debit',
-      status: transaction.status || 'unmatched',
-      matchedExpenseId: transaction.matchedExpenseId,
-      matchConfidence: transaction.matchConfidence,
-      provider: transaction.provider || 'Bank',
-      category: transaction.category,
-      payee: transaction.payee,
-      reference: transaction.reference
+      status: 'unmatched', // Default status until we implement reconciliation
+      matchedExpenseId: null,
+      matchConfidence: null,
+      provider: 'Bank', // Default provider until we implement provider tracking
+      category: transaction.transactionType || 'Uncategorized',
+      payee: null,
+      reference: `${transaction.currency} ${transaction.exchangeRate !== "1" ? `(Rate: ${transaction.exchangeRate})` : ''}`
     }));
   }, [bankingTransactions]);
   
