@@ -70,9 +70,9 @@ const ReceiptMatching: React.FC<ReceiptMatchingProps> = ({ vesselId }) => {
   
   // Fetch receipts from the API
   const { data: apiReceipts, isLoading, error } = useQuery({
-    queryKey: ['/api/receipts/reconciliation/receipts', vesselId],
+    queryKey: ['/api/receipts', vesselId],
     queryFn: async () => {
-      const response = await fetch(`/api/receipts/reconciliation/receipts/${vesselId}`);
+      const response = await fetch(`/api/receipts/${vesselId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch receipts');
       }
