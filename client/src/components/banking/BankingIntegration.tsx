@@ -57,7 +57,6 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Banking & Reconciliation</h2>
           <p className="text-muted-foreground">
             Manage banking connections, reconcile transactions, and match receipts to expenses
           </p>
