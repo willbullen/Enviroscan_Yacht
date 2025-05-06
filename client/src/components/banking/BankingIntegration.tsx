@@ -55,12 +55,10 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <p className="text-muted-foreground">
-            Manage banking connections, reconcile transactions, and match receipts to expenses
-          </p>
-        </div>
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-sm text-muted-foreground">
+          Manage banking connections, reconcile transactions, and match receipts to expenses
+        </p>
         <div className="flex items-center">
           {!bankingAPICredentialsSet && (
             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 mr-3 gap-1">
@@ -68,9 +66,9 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
               Using Test Data
             </Badge>
           )}
-          <Button className="flex items-center gap-2" onClick={() => handleShowGuide('connection')}>
+          <Button size="sm" className="flex items-center gap-2" onClick={() => handleShowGuide('connection')}>
             <Lightbulb className="h-4 w-4" />
-            Banking Guide
+            Guide
           </Button>
         </div>
       </div>
@@ -97,99 +95,94 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
       )}
       
       {!bankingAPICredentialsSet && (
-        <Alert className="bg-amber-50 text-amber-800 border-amber-200">
+        <Alert className="bg-amber-50 text-amber-800 border-amber-200 mb-4">
           <AlertCircle className="h-4 w-4 text-amber-800" />
-          <AlertTitle>Using Test Data Mode</AlertTitle>
           <AlertDescription>
-            You're using test data for banking features. To connect real banking providers, add your API credentials in Settings.
+            Using test data for banking features. Add API credentials in Settings to connect real banking providers.
           </AlertDescription>
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Banking Connections</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">
-              Active banking connections
-            </p>
-            <div className="mt-4 space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="flex items-center">
-                  <Building className="h-3.5 w-3.5 mr-1 text-primary" />
-                  Centtrip
-                </span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                  Active
-                </Badge>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <Card className="overflow-hidden">
+          <div className="flex p-3">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium">Banking Connections</h4>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="flex items-center">
-                  <Building className="h-3.5 w-3.5 mr-1 text-primary" />
-                  Revolut
-                </span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                  Active
-                </Badge>
+              <div className="text-2xl font-bold">2</div>
+              <p className="text-xs text-muted-foreground mb-2">Active banking connections</p>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="flex items-center">
+                    <Building className="h-3 w-3 mr-1 text-primary" />
+                    Centtrip
+                  </span>
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs py-0 h-5">Active</Badge>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="flex items-center">
+                    <Building className="h-3 w-3 mr-1 text-primary" />
+                    Revolut
+                  </span>
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs py-0 h-5">Active</Badge>
+                </div>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Pending Reconciliation</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">14</div>
-            <p className="text-xs text-muted-foreground">
-              Unmatched transactions this month
-            </p>
-            <div className="mt-4 space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>This week</span>
-                <span>8 transactions</span>
+        <Card className="overflow-hidden">
+          <div className="flex p-3">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium">Pending Reconciliation</h4>
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div className="flex justify-between text-sm">
-                <span>Previous weeks</span>
-                <span>6 transactions</span>
+              <div className="text-2xl font-bold">14</div>
+              <p className="text-xs text-muted-foreground mb-2">Unmatched transactions this month</p>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span>This week</span>
+                  <span>8 transactions</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span>Previous weeks</span>
+                  <span>6 transactions</span>
+                </div>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Unmatched Receipts</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">
-              Receipts awaiting processing or matching
-            </p>
-            <div className="mt-4 space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="flex items-center">
-                  <RefreshCw className="h-3.5 w-3.5 mr-1 text-blue-500" />
-                  Processing
-                </span>
-                <span>1 receipt</span>
+        <Card className="overflow-hidden">
+          <div className="flex p-3">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium">Unmatched Receipts</h4>
+                <Receipt className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="flex items-center">
-                  <FileCheck className="h-3.5 w-3.5 mr-1 text-purple-500" />
-                  Processed
-                </span>
-                <span>2 receipts</span>
+              <div className="text-2xl font-bold">3</div>
+              <p className="text-xs text-muted-foreground mb-2">Receipts awaiting processing or matching</p>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="flex items-center">
+                    <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
+                    Processing
+                  </span>
+                  <span>1 receipt</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="flex items-center">
+                    <FileCheck className="h-3 w-3 mr-1 text-purple-500" />
+                    Processed
+                  </span>
+                  <span>2 receipts</span>
+                </div>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
 
@@ -209,14 +202,11 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="providers" className="space-y-4 pt-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">Banking Providers</h3>
-              <p className="text-sm text-muted-foreground">
-                Configure and manage connections to your vessel's banking providers
-              </p>
-            </div>
+        <TabsContent value="providers" className="pt-3">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm text-muted-foreground">
+              Configure and manage connections to your vessel's banking providers
+            </p>
             <Button variant="outline" size="sm" onClick={() => handleShowGuide('connection')}>
               <Info className="h-4 w-4 mr-2" />
               Guide
@@ -225,14 +215,11 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
           <BankingProviders vesselId={vesselId} />
         </TabsContent>
         
-        <TabsContent value="transactions" className="space-y-4 pt-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">Transaction Reconciliation</h3>
-              <p className="text-sm text-muted-foreground">
-                Match banking transactions to your vessel's expenses and deposits
-              </p>
-            </div>
+        <TabsContent value="transactions" className="pt-3">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm text-muted-foreground">
+              Match banking transactions to your vessel's expenses and deposits
+            </p>
             <Button variant="outline" size="sm" onClick={() => handleShowGuide('reconciliation')}>
               <Info className="h-4 w-4 mr-2" />
               Guide
@@ -241,14 +228,11 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
           <TransactionReconciliation vesselId={vesselId} />
         </TabsContent>
         
-        <TabsContent value="receipts" className="space-y-4 pt-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">AI Receipt Matching</h3>
-              <p className="text-sm text-muted-foreground">
-                Upload receipts for automatic extraction and expense matching
-              </p>
-            </div>
+        <TabsContent value="receipts" className="pt-3">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm text-muted-foreground">
+              Upload receipts for automatic extraction and expense matching
+            </p>
             <Button variant="outline" size="sm" onClick={() => handleShowGuide('receipt')}>
               <Info className="h-4 w-4 mr-2" />
               Guide
