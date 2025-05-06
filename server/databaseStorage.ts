@@ -121,7 +121,7 @@ import {
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db, executeWithRetry } from "./db";
-import { and, eq, lte, gte, sql, between, desc, asc } from "drizzle-orm";
+import { and, eq, lte, gte, sql, between, desc, asc, ne, isNotNull } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -2442,6 +2442,29 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(bankingTransactions)
       .where(eq(bankingTransactions.vesselId, vesselId));
+  }
+  
+  async getUnmatchedBankingTransactions(vesselId: number): Promise<BankingTransaction[]> {
+    // Get all banking transactions for the vessel
+    const allBankingTransactions = await this.getBankingTransactionsByVessel(vesselId);
+    
+    // Get all reconciled banking transaction IDs
+    const reconciledBankingTransactionIds = await db
+      .select({ id: transactionReconciliations.transactionId })
+      .from(transactionReconciliations)
+      .where(
+        and(
+          // Get only reconciled transactions (either matched or reviewed as unmatched)
+          ne(transactionReconciliations.status, "unmatched"),
+          // Ensure the transaction belongs to a reconciliation record
+          isNotNull(transactionReconciliations.transactionId)
+        )
+      );
+    
+    const reconciledIds = new Set(reconciledBankingTransactionIds.map(r => r.id));
+    
+    // Filter banking transactions that are not in the reconciled set
+    return allBankingTransactions.filter(t => !reconciledIds.has(t.id));
   }
   
   async getAllBankingTransactions(): Promise<BankingTransaction[]> {

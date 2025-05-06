@@ -416,7 +416,7 @@ export interface IStorage {
   createBankingTransaction(transaction: InsertBankingTransaction): Promise<BankingTransaction>;
   updateBankingTransaction(id: number, transaction: Partial<BankingTransaction>): Promise<BankingTransaction | undefined>;
   deleteBankingTransaction(id: number): Promise<boolean>;
-  getUnmatchedTransactions(vesselId: number): Promise<BankingTransaction[]>;
+  getUnmatchedBankingTransactions(vesselId: number): Promise<BankingTransaction[]>;
   
   // Transaction Line operations
   getTransactionLines(transactionId: number): Promise<TransactionLine[]>;

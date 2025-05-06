@@ -5637,8 +5637,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       }
       
-      // Get unmatched transactions for this vessel within the specified period
-      const transactions = await storage.getUnmatchedTransactions(vesselId);
+      // Get unmatched banking transactions for this vessel within the specified period
+      const transactions = await storage.getUnmatchedBankingTransactions(vesselId);
       
       // Filter by date if needed
       const filteredTransactions = period === 'all'
