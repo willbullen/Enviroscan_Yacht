@@ -2768,4 +2768,176 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedLog;
   }
+
+  // Banking Provider Operations
+  async getBankingProvider(id: number): Promise<BankingProvider | undefined> {
+    const [provider] = await db.select().from(bankingProviders).where(eq(bankingProviders.id, id));
+    return provider || undefined;
+  }
+
+  async getBankingProvidersByVessel(vesselId: number): Promise<BankingProvider[]> {
+    return db.select().from(bankingProviders).where(eq(bankingProviders.vesselId, vesselId));
+  }
+
+  async getAllBankingProviders(): Promise<BankingProvider[]> {
+    return db.select().from(bankingProviders);
+  }
+
+  async getActiveBankingProviders(): Promise<BankingProvider[]> {
+    return db.select().from(bankingProviders).where(eq(bankingProviders.isActive, true));
+  }
+
+  async createBankingProvider(provider: InsertBankingProvider): Promise<BankingProvider> {
+    const [newProvider] = await db.insert(bankingProviders).values(provider).returning();
+    return newProvider;
+  }
+
+  async updateBankingProvider(id: number, updates: Partial<BankingProvider>): Promise<BankingProvider | undefined> {
+    const [updatedProvider] = await db
+      .update(bankingProviders)
+      .set(updates)
+      .where(eq(bankingProviders.id, id))
+      .returning();
+    return updatedProvider || undefined;
+  }
+
+  async deleteBankingProvider(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(bankingProviders).where(eq(bankingProviders.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting banking provider:", error);
+      return false;
+    }
+  }
+
+  // Bank Connection Operations
+  async getBankConnection(id: number): Promise<BankConnection | undefined> {
+    const [connection] = await db.select().from(bankConnections).where(eq(bankConnections.id, id));
+    return connection || undefined;
+  }
+
+  async getBankConnectionsByVessel(vesselId: number): Promise<BankConnection[]> {
+    return db.select().from(bankConnections).where(eq(bankConnections.vesselId, vesselId));
+  }
+
+  async getBankConnectionsByProvider(providerId: number): Promise<BankConnection[]> {
+    return db.select().from(bankConnections).where(eq(bankConnections.providerId, providerId));
+  }
+
+  async getActiveBankConnections(vesselId: number): Promise<BankConnection[]> {
+    return db
+      .select()
+      .from(bankConnections)
+      .where(
+        and(
+          eq(bankConnections.vesselId, vesselId),
+          eq(bankConnections.status, "active")
+        )
+      );
+  }
+
+  async createBankConnection(connection: InsertBankConnection): Promise<BankConnection> {
+    const [newConnection] = await db.insert(bankConnections).values(connection).returning();
+    return newConnection;
+  }
+
+  async updateBankConnection(id: number, updates: Partial<BankConnection>): Promise<BankConnection | undefined> {
+    const [updatedConnection] = await db
+      .update(bankConnections)
+      .set(updates)
+      .where(eq(bankConnections.id, id))
+      .returning();
+    return updatedConnection || undefined;
+  }
+
+  async deleteBankConnection(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(bankConnections).where(eq(bankConnections.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting bank connection:", error);
+      return false;
+    }
+  }
+
+  // Transaction Reconciliation Operations
+  async getTransactionReconciliation(id: number): Promise<TransactionReconciliation | undefined> {
+    const [reconciliation] = await db.select().from(transactionReconciliations).where(eq(transactionReconciliations.id, id));
+    return reconciliation || undefined;
+  }
+
+  async getTransactionReconciliationByTransaction(transactionId: number): Promise<TransactionReconciliation | undefined> {
+    const [reconciliation] = await db
+      .select()
+      .from(transactionReconciliations)
+      .where(eq(transactionReconciliations.transactionId, transactionId));
+    return reconciliation || undefined;
+  }
+
+  async getTransactionReconciliationByExpense(expenseId: number): Promise<TransactionReconciliation | undefined> {
+    const [reconciliation] = await db
+      .select()
+      .from(transactionReconciliations)
+      .where(eq(transactionReconciliations.expenseId, expenseId));
+    return reconciliation || undefined;
+  }
+
+  async getUnmatchedTransactions(vesselId: number): Promise<Transaction[]> {
+    // Get all transactions for the vessel
+    const allTransactions = await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.vesselId, vesselId));
+
+    // Get all reconciled transaction IDs
+    const reconciledTransactionIds = await db
+      .select({ id: transactionReconciliations.transactionId })
+      .from(transactionReconciliations);
+    
+    const reconciledIds = new Set(reconciledTransactionIds.map(r => r.id));
+    
+    // Filter transactions that are not in the reconciled set
+    return allTransactions.filter(t => !reconciledIds.has(t.id));
+  }
+
+  async getMatchedTransactions(vesselId: number): Promise<Transaction[]> {
+    // Join transactions with reconciliations to get matched transactions
+    const result = await db
+      .select({
+        transaction: transactions,
+      })
+      .from(transactions)
+      .innerJoin(
+        transactionReconciliations,
+        eq(transactions.id, transactionReconciliations.transactionId)
+      )
+      .where(eq(transactions.vesselId, vesselId));
+    
+    return result.map(r => r.transaction);
+  }
+
+  async createTransactionReconciliation(reconciliation: InsertTransactionReconciliation): Promise<TransactionReconciliation> {
+    const [newReconciliation] = await db.insert(transactionReconciliations).values(reconciliation).returning();
+    return newReconciliation;
+  }
+
+  async updateTransactionReconciliation(id: number, updates: Partial<TransactionReconciliation>): Promise<TransactionReconciliation | undefined> {
+    const [updatedReconciliation] = await db
+      .update(transactionReconciliations)
+      .set(updates)
+      .where(eq(transactionReconciliations.id, id))
+      .returning();
+    return updatedReconciliation || undefined;
+  }
+
+  async deleteTransactionReconciliation(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(transactionReconciliations).where(eq(transactionReconciliations.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting transaction reconciliation:", error);
+      return false;
+    }
+  }
 }
