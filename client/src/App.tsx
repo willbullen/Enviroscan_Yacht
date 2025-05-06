@@ -10,7 +10,6 @@ import PredictiveMaintenance from "@/pages/PredictiveMaintenance";
 import ISMManagement from "@/pages/ISMManagement";
 import CrewManagement from "@/pages/CrewManagement";
 import FinancialManagement from "@/pages/FinancialManagement";
-import BankingPage from "@/pages/BankingPage";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 import VesselAdmin from "@/pages/VesselAdmin";
@@ -47,7 +46,6 @@ function App() {
           <ProtectedRoute path="/ism-management" component={ISMManagement} />
           <ProtectedRoute path="/crew-management" component={CrewManagement} />
           <ProtectedRoute path="/financial-management" component={FinancialManagement} />
-          <ProtectedRoute path="/banking" component={BankingPage} />
           <ProtectedRoute path="/forms-administration" component={FormsAdministration} />
           
           {/* Admin Routes */}
