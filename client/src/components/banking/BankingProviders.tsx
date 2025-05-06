@@ -268,10 +268,11 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
       apiSecret?: string;
       isActive: boolean;
     }) => {
-      return apiRequest('/api/banking/providers', {
-        method: 'POST',
-        data: newProvider
-      });
+      return apiRequest(
+        'POST',
+        '/api/banking/providers',
+        newProvider
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
@@ -306,10 +307,11 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
       id: number;
       updates: Partial<BankingProvider>;
     }) => {
-      return apiRequest(`/api/banking/providers/${id}`, {
-        method: 'PATCH',
-        data: updates
-      });
+      return apiRequest(
+        'PATCH',
+        `/api/banking/providers/${id}`,
+        updates
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
@@ -356,9 +358,10 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
   // Sync provider mutation
   const syncProviderMutation = useMutation({
     mutationFn: (providerId: number) => {
-      return apiRequest(`/api/banking/providers/${providerId}/sync`, {
-        method: 'POST'
-      });
+      return apiRequest(
+        'POST',
+        `/api/banking/providers/${providerId}/sync`
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
@@ -421,7 +424,7 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
     const updates = {
       apiKey,
       apiSecret,
-      status: 'active',
+      status: 'connected' as const,
       isActive: true
     };
     
@@ -459,7 +462,8 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
         bankAccountId: string;
       }>;
     }) => {
-      return apiRequest(`/api/banking/providers/${providerId}/account-mappings`, {
+      return apiRequest({
+        url: `/api/banking/providers/${providerId}/account-mappings`,
         method: 'PATCH',
         data: { mappings }
       });
