@@ -2710,6 +2710,71 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  // Banking Transaction operations
+  async getBankingTransaction(id: number): Promise<BankingTransaction | undefined> {
+    const [transaction] = await db.select().from(bankingTransactions).where(eq(bankingTransactions.id, id));
+    return transaction;
+  }
+  
+  async getBankingTransactionsByVessel(vesselId: number): Promise<BankingTransaction[]> {
+    return db
+      .select()
+      .from(bankingTransactions)
+      .where(eq(bankingTransactions.vesselId, vesselId))
+      .orderBy(desc(bankingTransactions.transactionDate));
+  }
+  
+  async getAllBankingTransactions(): Promise<BankingTransaction[]> {
+    return db
+      .select()
+      .from(bankingTransactions)
+      .orderBy(desc(bankingTransactions.transactionDate));
+  }
+  
+  async createBankingTransaction(transaction: InsertBankingTransaction): Promise<BankingTransaction> {
+    const [newTransaction] = await db.insert(bankingTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+  
+  async updateBankingTransaction(id: number, transaction: Partial<BankingTransaction>): Promise<BankingTransaction | undefined> {
+    const [updatedTransaction] = await db
+      .update(bankingTransactions)
+      .set({
+        ...transaction,
+        updatedAt: new Date()
+      })
+      .where(eq(bankingTransactions.id, id))
+      .returning();
+    return updatedTransaction;
+  }
+  
+  async deleteBankingTransaction(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(bankingTransactions).where(eq(bankingTransactions.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error(`Error deleting banking transaction ${id}:`, error);
+      return false;
+    }
+  }
+  
+  async getUnmatchedBankingTransactions(vesselId: number): Promise<BankingTransaction[]> {
+    // Retrieve banking transactions that haven't been matched yet
+    // In a real application, you'd need criteria to determine what "unmatched" means
+    // This implementation assumes unmatched transactions are determined by a status or flag
+    return db
+      .select()
+      .from(bankingTransactions)
+      .where(
+        and(
+          eq(bankingTransactions.vesselId, vesselId),
+          // Add additional criteria for "unmatched" status
+          // For example: eq(bankingTransactions.status, "unmatched")
+        )
+      )
+      .orderBy(desc(bankingTransactions.transactionDate));
+  }
+  
   // Banking API Transaction operations
   async getBankApiTransaction(id: number): Promise<BankApiTransaction | undefined> {
     const [transaction] = await db.select().from(bankApiTransactions).where(eq(bankApiTransactions.id, id));
