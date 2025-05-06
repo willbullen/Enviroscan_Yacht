@@ -137,6 +137,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   const [isCreatingExpense, setIsCreatingExpense] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [activeView, setActiveView] = useState<'for-review' | 'categorized' | 'excluded'>('for-review');
+  const [showManageProviders, setShowManageProviders] = useState(false);
   
   // Mock bank accounts data
   const mockBankAccounts: BankAccount[] = [
@@ -557,11 +558,17 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
         <Card className="col-span-12 lg:col-span-4">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Bank Account</CardTitle>
-              <Button size="sm" variant="outline" onClick={handleSyncBankData}>
-                {isSyncingData ? <Spinner className="h-4 w-4 mr-2" /> : <LinkIcon className="h-4 w-4 mr-2" />}
-                Sync
-              </Button>
+              <CardTitle className="text-lg">Bank Accounts</CardTitle>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowManageProviders(true)}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Providers
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleSyncBankData}>
+                  {isSyncingData ? <Spinner className="h-4 w-4 mr-2" /> : <LinkIcon className="h-4 w-4 mr-2" />}
+                  Sync
+                </Button>
+              </div>
             </div>
           </CardHeader>
           

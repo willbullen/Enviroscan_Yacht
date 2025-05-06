@@ -186,15 +186,11 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
         </Card>
       </div>
 
-      <Tabs defaultValue="providers">
-        <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="providers" className="flex items-center">
-            <Building className="h-4 w-4 mr-2" />
-            Banking Providers
-          </TabsTrigger>
+      <Tabs defaultValue="transactions">
+        <TabsList className="grid grid-cols-2">
           <TabsTrigger value="transactions" className="flex items-center">
             <BanknoteIcon className="h-4 w-4 mr-2" />
-            Transactions
+            Banking & Transactions
           </TabsTrigger>
           <TabsTrigger value="receipts" className="flex items-center">
             <Receipt className="h-4 w-4 mr-2" />
@@ -202,23 +198,10 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="providers" className="pt-3">
-          <div className="flex justify-between items-center mb-3">
-            <p className="text-sm text-muted-foreground">
-              Configure and manage connections to your vessel's banking providers
-            </p>
-            <Button variant="outline" size="sm" onClick={() => handleShowGuide('connection')}>
-              <Info className="h-4 w-4 mr-2" />
-              Guide
-            </Button>
-          </div>
-          <BankingProviders vesselId={vesselId} />
-        </TabsContent>
-        
         <TabsContent value="transactions" className="pt-3">
           <div className="flex justify-between items-center mb-3">
             <p className="text-sm text-muted-foreground">
-              Match banking transactions to your vessel's expenses and deposits
+              Manage bank connections and match transactions to your vessel's expenses
             </p>
             <Button variant="outline" size="sm" onClick={() => handleShowGuide('reconciliation')}>
               <Info className="h-4 w-4 mr-2" />
