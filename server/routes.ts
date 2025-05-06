@@ -5772,6 +5772,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(400).json({ error: "Missing vessel ID. Please use /api/banking/connections/vessel/:vesselId" });
   }));
   
+  // Get banking transactions for reconciliation (unmatched transactions)
+  apiRouter.get("/banking/transactions/reconciliation/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    try {
+      // Get all banking transactions for this vessel
+      const transactions = await storage.getBankingTransactionsByVessel(vesselId);
+      
+      // Get existing reconciliations
+      const reconciliations = await storage.getTransactionReconciliations(vesselId);
+      
+      // Get the IDs of transactions that are already reconciled
+      const reconciledIds = new Set(reconciliations.map(r => r.transactionId));
+      
+      // Filter out transactions that are already reconciled
+      const unmatchedTransactions = transactions.filter(t => !reconciledIds.has(t.id));
+      
+      res.json({
+        transactions: unmatchedTransactions,
+        reconciliations,
+        totalCount: transactions.length,
+        unmatchedCount: unmatchedTransactions.length,
+        matchedCount: reconciliations.length
+      });
+    } catch (error) {
+      logger.error(`Error fetching banking transactions for reconciliation for vessel ${vesselId}:`, error instanceof Error ? error : new Error(String(error)));
+      res.status(500).json({ error: "Failed to fetch banking transactions for reconciliation" });
+    }
+  }));
+  
   // Get all bank API connections
   apiRouter.get("/banking/connections", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {

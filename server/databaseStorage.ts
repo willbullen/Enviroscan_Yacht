@@ -3013,6 +3013,31 @@ export class DatabaseStorage implements IStorage {
       .where(eq(transactionReconciliations.expenseId, expenseId));
     return reconciliation || undefined;
   }
+  
+  async getTransactionReconciliations(vesselId: number): Promise<TransactionReconciliation[]> {
+    try {
+      // First get all banking transactions for this vessel
+      const bankingTxs = await this.getBankingTransactionsByVessel(vesselId);
+      
+      if (!bankingTxs.length) {
+        return [];
+      }
+      
+      // Extract their IDs
+      const transactionIds = bankingTxs.map(tx => tx.id);
+      
+      // Get all reconciliations for these transactions
+      const reconciliations = await db
+        .select()
+        .from(transactionReconciliations)
+        .where(inArray(transactionReconciliations.transactionId, transactionIds));
+      
+      return reconciliations;
+    } catch (error) {
+      console.error(`Error fetching transaction reconciliations for vessel ${vesselId}:`, error);
+      return [];
+    }
+  }
 
   async getUnmatchedTransactions(vesselId: number): Promise<Transaction[]> {
     // Get all transactions for the vessel
