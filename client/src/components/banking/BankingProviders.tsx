@@ -462,11 +462,11 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
         bankAccountId: string;
       }>;
     }) => {
-      return apiRequest({
-        url: `/api/banking/providers/${providerId}/account-mappings`,
-        method: 'PATCH',
-        data: { mappings }
-      });
+      return apiRequest(
+        'PATCH',
+        `/api/banking/providers/${providerId}/account-mappings`,
+        { mappings }
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
