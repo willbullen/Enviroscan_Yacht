@@ -27,7 +27,8 @@ import {
   Clock,
   Shield,
   Map,
-  UserCircle
+  UserCircle,
+  Building2
 } from "lucide-react";
 import eastwindLogo from '@/assets/eastwind_logo.svg';
 import { Button } from "@/components/ui/button";
@@ -344,6 +345,22 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               {location === "/financial-management" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
               <DollarSign className={cn("h-5 w-5", isOpen && "mr-3")} />
               {isOpen && <span>Finances</span>}
+            </div>
+          </NavLink>
+          
+          <NavLink href="/banking">
+            <div 
+              className={cn(
+                "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all relative group", 
+                location === "/banking" 
+                  ? "bg-primary/15 text-primary" 
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                !isOpen && "justify-center p-2"
+              )} 
+            >
+              {location === "/banking" && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-5 bg-primary rounded-full"></div>}
+              <Building2 className={cn("h-5 w-5", isOpen && "mr-3")} />
+              {isOpen && <span>Banking</span>}
             </div>
           </NavLink>
           
