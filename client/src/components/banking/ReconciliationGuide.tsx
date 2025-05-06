@@ -11,7 +11,9 @@ import {
   Filter,
   Clock,
   FileCheck,
-  LucideSearch
+  Search as LucideSearch,
+  FileSpreadsheet,
+  Building2
 } from 'lucide-react';
 
 interface ReconciliationGuideProps {
@@ -25,25 +27,26 @@ const ReconciliationGuide: React.FC<ReconciliationGuideProps> = ({
 }) => {
   const steps = [
     {
-      title: 'Transaction Reconciliation Overview',
-      icon: <Link className="h-6 w-6" />,
+      title: 'Banking & Transactions Overview',
+      icon: <Building2 className="h-6 w-6" />,
       content: (
         <div className="space-y-4">
           <p>
-            Transaction reconciliation is the process of matching your banking transactions with your vessel's expenses and deposits to maintain accurate financial records.
+            The Banking & Transactions feature streamlines managing your vessel's financial transactions with integrated banking connections, transaction matching, and reconciliation in one consolidated interface.
           </p>
-          <h4 className="font-medium">Benefits:</h4>
+          <h4 className="font-medium">Key Features:</h4>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Ensures all expenses are properly tracked</li>
-            <li>Identifies discrepancies between recorded and actual expenses</li>
-            <li>Provides accurate financial reporting</li>
-            <li>Reduces manual data entry through automation</li>
+            <li>Centralized bank account and transaction management</li>
+            <li>Direct banking provider connections with synchronization options</li>
+            <li>Automated transaction matching and classification</li>
+            <li>Comprehensive reconciliation workflow</li>
+            <li>Customizable transaction rules to reduce manual effort</li>
           </ul>
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Reconciliation Best Practices</AlertTitle>
+            <AlertTitle>Streamlined Access</AlertTitle>
             <AlertDescription>
-              We recommend reconciling your transactions at least weekly to ensure your financial data stays up-to-date.
+              Banking provider settings are now accessed directly from the Bank Account card using the "Providers" button, eliminating the need for a separate tab.
             </AlertDescription>
           </Alert>
         </div>
@@ -88,6 +91,42 @@ const ReconciliationGuide: React.FC<ReconciliationGuideProps> = ({
               </div>
             </li>
           </ul>
+        </div>
+      )
+    },
+    {
+      title: 'Managing Banking Providers',
+      icon: <Building2 className="h-6 w-6" />,
+      content: (
+        <div className="space-y-4">
+          <p>
+            Banking providers give you direct access to your vessel's bank accounts for automated transaction synchronization.
+          </p>
+          
+          <h4 className="font-medium">Accessing Banking Providers:</h4>
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>In the Bank Account card, click the "Providers" button next to the "Sync" button</li>
+            <li>A dialog will open showing all your configured banking providers</li>
+            <li>Add new providers or manage existing connections from this dialog</li>
+            <li>Configure API credentials and connection settings as needed</li>
+            <li>Close the dialog when finished to return to the transactions view</li>
+          </ol>
+          
+          <h4 className="font-medium mt-4">Supported Banking Providers:</h4>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Revolut Business - For digital banking with multi-currency support</li>
+            <li>Centtrip - For specialized maritime financial services</li>
+            <li>Allied Irish Banks - For traditional banking services</li>
+            <li>Additional providers can be added upon request</li>
+          </ul>
+          
+          <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+            <AlertCircle className="h-4 w-4 text-blue-800" />
+            <AlertTitle>Improved Organization</AlertTitle>
+            <AlertDescription>
+              Banking provider settings have been integrated with transaction management for a more streamlined workflow, reducing the need to switch between different tabs.
+            </AlertDescription>
+          </Alert>
         </div>
       )
     },
@@ -164,6 +203,43 @@ const ReconciliationGuide: React.FC<ReconciliationGuideProps> = ({
             <AlertTitle>Batch Reconciliation</AlertTitle>
             <AlertDescription>
               You can select multiple transactions using the checkboxes and perform batch actions like marking them as reconciled.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )
+    },
+    {
+      title: 'Working with Transaction Rules',
+      icon: <FileSpreadsheet className="h-6 w-6" />,
+      content: (
+        <div className="space-y-4">
+          <p>
+            Transaction rules automate the categorization and matching process for recurring transactions, saving you time and ensuring consistency.
+          </p>
+          
+          <h4 className="font-medium">Creating Transaction Rules:</h4>
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>Click the "Rules" button in the transaction toolbar</li>
+            <li>Select "Create New Rule" from the dropdown menu</li>
+            <li>Define conditions that identify the transaction (description, amount, provider)</li>
+            <li>Specify actions to take (assign category, set payee, auto-match)</li>
+            <li>Set the priority level and choose whether to auto-confirm matches</li>
+            <li>Save the rule to apply it to current and future transactions</li>
+          </ol>
+          
+          <h4 className="font-medium mt-4">Rule Management:</h4>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Rules are applied in priority order (highest priority first)</li>
+            <li>You can edit, disable, or delete existing rules</li>
+            <li>Test rules on sample transactions before applying them broadly</li>
+            <li>Create vessel-specific rules or apply them across your fleet</li>
+          </ul>
+          
+          <Alert className="bg-green-50 border-green-200 text-green-800">
+            <Check className="h-4 w-4 text-green-800" />
+            <AlertTitle>Enhanced Efficiency</AlertTitle>
+            <AlertDescription>
+              With properly configured rules, up to 90% of your transactions can be automatically categorized and reconciled, reducing manual effort significantly.
             </AlertDescription>
           </Alert>
         </div>
