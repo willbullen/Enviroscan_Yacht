@@ -564,31 +564,27 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
 
   return (
     <div className="space-y-4">
-      {/* Bank Account Selection Area */}
+      {/* Transaction Reconciliation Header Section */}
       <div className="flex flex-col space-y-2">
+        {/* Current Account Selector - Based exactly on QuickBooks screenshot */}
         <div className="relative">
           <div 
-            className="flex justify-between items-center border p-3 rounded-md cursor-pointer hover:bg-slate-50"
+            className="flex justify-between items-center border rounded-t-md p-3 cursor-pointer hover:bg-slate-50 bg-white"
             onClick={() => setShowBankAccountDropdown(!showBankAccountDropdown)}
           >
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-50 p-1.5 rounded-full">
-                <Building2 className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">
-                  {selectedBankAccount ? selectedBankAccount.name : 'Select Account'}
-                </h3>
-                {selectedBankAccount && (
-                  <div className="text-xs text-muted-foreground flex items-center space-x-2">
-                    <span>{selectedBankAccount.provider}</span>
-                    <span>•</span>
-                    <span className="flex items-center">
-                      <Clock className="h-3.5 w-3.5 mr-1" />
-                      Updated {selectedBankAccount.lastSync ? format(new Date(selectedBankAccount.lastSync), 'MMM d, h:mm a') : 'never'}
-                    </span>
-                  </div>
-                )}
+            <div className="flex items-center">
+              <div className="pr-2">
+                <h3 className="font-semibold text-sm">Current Account</h3>
+                <div className="text-xs text-muted-foreground flex items-center">
+                  {selectedBankAccount ? (
+                    <>
+                      <span>{selectedBankAccount.name} · </span>
+                      <span>Updated May 5, 1:00 PM</span>
+                    </>
+                  ) : (
+                    <>Select an account</>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center">
@@ -598,7 +594,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
           
           {/* Bank Account Dropdown */}
           {showBankAccountDropdown && (
-            <div className="absolute top-full left-0 w-full mt-1 z-30 bg-white rounded-md border shadow-md">
+            <div className="absolute top-full left-0 w-full z-30 bg-white rounded-b-md border-x border-b shadow-md">
               <div className="p-2">
                 <button 
                   className="text-xs text-blue-600 hover:underline w-full text-left pb-2"
@@ -634,65 +630,52 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
         
         {/* Account Summary Card */}
         {selectedBankAccount && (
-          <div className="border rounded-md p-4 bg-blue-50/30">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium text-lg">{selectedBankAccount.name}</h3>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs"
-                onClick={() => {}}
-              >
-                <Pencil className="h-3 w-3 mr-1.5" /> Edit
-              </Button>
+          <div className="rounded-md bg-white border">
+            <div className="grid grid-cols-2 divide-x divide-gray-200">
+              <div className="p-4">
+                <div className="text-xs text-muted-foreground uppercase">Balance</div>
+                <div className="text-2xl font-semibold mt-1">${selectedBankAccount.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              </div>
+              <div className="p-4">
+                <div className="text-xs text-muted-foreground uppercase">Transactions</div>
+                <div className="text-2xl font-semibold mt-1">{selectedBankAccount.transactionsCount}</div>
+                <div className="text-xs text-orange-500 mt-1">{Math.round(selectedBankAccount.transactionsCount * 0.18)} for review</div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 divide-x divide-slate-200">
-              <div className="pr-4">
-                <div className="text-sm text-muted-foreground mb-1">Balance</div>
-                <div className="text-xl font-bold">${selectedBankAccount.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                <div className="text-xs text-muted-foreground">Last updated: {format(new Date(selectedBankAccount.lastSync), 'MMM d, yyyy')}</div>
-              </div>
-              <div className="px-4">
-                <div className="text-sm text-muted-foreground mb-1">Transactions</div>
-                <div className="text-xl font-bold">{selectedBankAccount.transactionsCount}</div>
-                <div className="text-xs text-orange-500">{Math.round(selectedBankAccount.transactionsCount * 0.12)} need review</div>
-              </div>
-              <div className="pl-4 flex items-center space-x-2">
+            
+            <div className="border-t p-3 flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenReconcileDialog}
+                className="text-xs px-3 py-1 h-7 rounded"
+              >
+                Reconcile
+              </Button>
+              
+              <div className="flex items-center gap-2">
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="text-xs"
-                  onClick={handleOpenReconcileDialog}
+                  className="text-xs px-3 py-1 h-7 rounded"
                 >
-                  <FileCheck className="h-3.5 w-3.5 mr-1.5" />
-                  Reconcile
+                  Upload from file
                 </Button>
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => {}}
-                  >
-                    <Upload className="h-3.5 w-3.5 mr-1.5" />
-                    Upload from file
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem>
-                        Manage connections
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        Go to bank register
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs px-2 h-7 rounded">
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>
+                      Manage connections
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      Go to bank register
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
@@ -774,37 +757,87 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              initialFocus
-              mode="range"
-              selected={{
-                from: dateFilter.from,
-                to: dateFilter.to
-              }}
-              onSelect={(range) => {
-                setDateFilter(range || {});
-                if (range?.to) {
-                  setCalendarOpen(false);
-                }
-              }}
-            />
-            <div className="flex items-center justify-between p-3 border-t">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setDateFilter({});
-                  setCalendarOpen(false);
-                }}
-              >
-                Clear
-              </Button>
-              <Button 
-                size="sm"
-                onClick={() => setCalendarOpen(false)}
-              >
-                Apply
-              </Button>
+            <div className="p-3">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <div className="text-sm mb-2 font-medium">Start Date</div>
+                  <div className="border rounded-md p-2 flex items-center justify-between">
+                    <div>
+                      {dateFilter.from ? format(dateFilter.from, "MMM d, yyyy") : "Select date"}
+                    </div>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm mb-2 font-medium">End Date</div>
+                  <div className="border rounded-md p-2 flex items-center justify-between">
+                    <div>
+                      {dateFilter.to ? format(dateFilter.to, "MMM d, yyyy") : "Select date"}
+                    </div>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const today = new Date();
+                      const sevenDaysAgo = new Date();
+                      sevenDaysAgo.setDate(today.getDate() - 7);
+                      setDateFilter({ from: sevenDaysAgo, to: today });
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    Last 7 days
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const today = new Date();
+                      const thirtyDaysAgo = new Date();
+                      thirtyDaysAgo.setDate(today.getDate() - 30);
+                      setDateFilter({ from: thirtyDaysAgo, to: today });
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    Last 30 days
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const today = new Date();
+                      const ninetyDaysAgo = new Date();
+                      ninetyDaysAgo.setDate(today.getDate() - 90);
+                      setDateFilter({ from: ninetyDaysAgo, to: today });
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    Last 90 days
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between pt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setDateFilter({});
+                      setCalendarOpen(false);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => setCalendarOpen(false)}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
             </div>
           </PopoverContent>
         </Popover>
@@ -928,25 +961,25 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
       )}
       
       {/* Transactions Table */}
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border overflow-hidden bg-white">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40px]">
+            <TableRow className="bg-gray-50 border-b">
+              <TableHead className="w-[40px] py-2">
                 <Checkbox
                   checked={selectedTransactions.size === filteredTransactions.length && filteredTransactions.length > 0}
                   onCheckedChange={handleSelectAllTransactions}
                   aria-label="Select all transactions"
                 />
               </TableHead>
-              <TableHead>DATE</TableHead>
-              <TableHead>DESCRIPTION</TableHead>
-              <TableHead>PAYEE</TableHead>
-              <TableHead>CATEGORY OR MATCH</TableHead>
-              <TableHead>TAX</TableHead>
-              <TableHead className="text-right">SPENT</TableHead>
-              <TableHead className="text-right">RECEIVED</TableHead>
-              <TableHead className="text-right">ACTION</TableHead>
+              <TableHead className="py-2 text-xs font-semibold">DATE</TableHead>
+              <TableHead className="py-2 text-xs font-semibold">DESCRIPTION</TableHead>
+              <TableHead className="py-2 text-xs font-semibold">PAYEE</TableHead>
+              <TableHead className="py-2 text-xs font-semibold">CATEGORY OR MATCH</TableHead>
+              <TableHead className="py-2 text-xs font-semibold">TAX</TableHead>
+              <TableHead className="py-2 text-xs font-semibold text-right">SPENT</TableHead>
+              <TableHead className="py-2 text-xs font-semibold text-right">RECEIVED</TableHead>
+              <TableHead className="py-2 text-xs font-semibold text-right">ACTION</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -961,50 +994,59 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id} className="hover:bg-slate-50">
-                  <TableCell>
+              filteredTransactions.map((transaction, index) => (
+                <TableRow 
+                  key={transaction.id} 
+                  className={`hover:bg-slate-50 border-t ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'}`}
+                >
+                  <TableCell className="py-2">
                     <Checkbox
                       checked={selectedTransactions.has(transaction.id)}
                       onCheckedChange={() => handleSelectTransaction(transaction.id)}
                       aria-label={`Select transaction ${transaction.description}`}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2 text-sm">
                     {formatDate(transaction.date)}
                   </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{transaction.description}</div>
-                    <div className="text-xs text-muted-foreground">{transaction.reference || ''}</div>
+                  <TableCell className="py-2">
+                    <div className="text-sm">{transaction.description}</div>
+                    {transaction.reference && (
+                      <div className="text-xs text-muted-foreground">{transaction.reference}</div>
+                    )}
                   </TableCell>
-                  <TableCell>
-                    {transaction.payee || 'Uncategorized'}
+                  <TableCell className="py-2 text-sm">
+                    {transaction.payee || (
+                      <span className="text-blue-600 hover:underline cursor-pointer">Add payee</span>
+                    )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     <div className="flex items-center space-x-2">
                       {transaction.status === 'matched' || transaction.status === 'reconciled' ? (
                         <Badge variant="outline" className={
                           transaction.status === 'reconciled' 
-                            ? "bg-green-50 text-green-700 border-green-200" 
-                            : "bg-blue-50 text-blue-700 border-blue-200"
+                            ? "bg-green-50 text-green-700 border-green-200 text-xs px-2 py-0.5" 
+                            : "bg-blue-50 text-blue-700 border-blue-200 text-xs px-2 py-0.5"
                         }>
                           {transaction.category || 'Uncategorized'}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground">Uncategorized {transaction.type === 'debit' ? 'Expense' : 'Income'}</span>
+                        <span className="text-sm text-gray-500">
+                          {transaction.type === 'debit' ? 'Uncategorized expense' : 'Uncategorized income'}
+                        </span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="text-xs">No VAT</div>
+                  <TableCell className="py-2">
+                    <div className="text-xs text-gray-500">No VAT</div>
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="py-2 text-right font-medium text-sm">
                     {transaction.type === 'debit' ? formatAmount(transaction.amount, transaction.type) : ''}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="py-2 text-right font-medium text-sm">
                     {transaction.type === 'credit' ? formatAmount(transaction.amount, transaction.type) : ''}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="py-2 text-right">
                     <Button 
                       variant="ghost" 
                       size="sm"
@@ -1015,7 +1057,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                           : handleOpenMatchDialog(transaction)
                       }
                     >
-                      Add
+                      {transaction.status === 'unmatched' ? 'Add' : 'Edit'}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -1023,6 +1065,27 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
             )}
           </TableBody>
         </Table>
+        
+        {/* Add pagination control at the bottom */}
+        <div className="p-2 border-t flex items-center justify-between text-sm">
+          <div className="text-muted-foreground">
+            Showing {Math.min(filteredTransactions.length, 10)} of {filteredTransactions.length} transactions
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+              <span>1</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <span>2</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <span>3</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <span>...</span>
+            </Button>
+          </div>
+        </div>
       </div>
       
       {useMockBankingData && (
