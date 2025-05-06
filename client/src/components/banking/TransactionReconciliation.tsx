@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Filter, RefreshCw, Search, AlertCircle, FileCheck, Link as LinkIcon, FileInput, Plus, Pencil, X, ArrowUpDown, Download, Eye, Upload, ChevronDown, Building2, Clock, CreditCard, ListChecks, MoreHorizontal, Link2, FileSpreadsheet, Calendar as CalendarIcon, Settings } from 'lucide-react';
+import { Check, Filter, RefreshCw, Search, AlertCircle, FileCheck, Link as LinkIcon, FileInput, Plus, Pencil, X, ArrowUpDown, Download, Eye, Upload, ChevronDown, Building2, Clock, CreditCard, ListChecks, MoreHorizontal, Link2, FileSpreadsheet, Calendar as CalendarIcon, Settings, Loader2 } from 'lucide-react';
 import BankingProviders from './BankingProviders';
 import type { BankingTransaction } from '@shared/schema';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -561,91 +561,74 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                     </div>
                   </div>
                 </div>
+                
+                <div className="flex justify-between space-x-2">
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setShowReconcileDialog(true)}>
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    Reconcile
+                  </Button>
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setShowRuleDialog(true)}>
+                    <FileInput className="h-4 w-4 mr-2" />
+                    Rules
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
         
-        {/* Transactions list and filters card */}
-        <Card className="col-span-12 lg:col-span-8">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Banking Transactions</CardTitle>
-              <div className="flex gap-2 items-center">
-                <div className="flex items-center space-x-2">
-                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="h-4 w-4 mr-2" />
-                        {dateFilter.from ? (
-                          dateFilter.to ? (
-                            <>
-                              {format(dateFilter.from, "LLL dd, y")} - {format(dateFilter.to, "LLL dd, y")}
-                            </>
-                          ) : (
-                            format(dateFilter.from, "LLL dd, y")
-                          )
-                        ) : (
-                          <span>Pick a date range</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
-                      <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateFilter.from}
-                        selected={{ from: dateFilter.from, to: dateFilter.to }}
-                        onSelect={(range) => {
-                          setDateFilter({ from: range?.from, to: range?.to });
-                          setCalendarOpen(false);
-                        }}
-                        numberOfMonths={2}
-                      />
-                      <div className="flex items-center justify-end gap-2 p-3 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setDateFilter({});
-                            setCalendarOpen(false);
-                          }}
-                        >
-                          Clear
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => setCalendarOpen(false)}
-                        >
-                          Apply
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Filters
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel>Transaction Filters</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      
-                      <div className="p-2">
-                        <p className="mb-2 text-sm font-medium">Status</p>
+        {/* Tabs and transaction list */}
+        <div className="col-span-12 lg:col-span-8 space-y-4">
+          <Tabs defaultValue="for-review" onValueChange={(value) => setActiveView(value as any)}>
+            <div className="flex items-center justify-between pb-2">
+              <TabsList>
+                <TabsTrigger value="for-review" className="relative">
+                  For Review
+                  <Badge className="ml-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                    {transformedTransactions.filter(t => t.status === 'unmatched').length}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="categorized">
+                  Categorized
+                  <Badge className="ml-2 bg-green-100 text-green-700 hover:bg-green-100">
+                    {transformedTransactions.filter(t => t.status === 'matched' || t.status === 'reconciled').length}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="excluded">
+                  Excluded
+                  <Badge className="ml-2 bg-gray-100 text-gray-700 hover:bg-gray-100">
+                    {transformedTransactions.filter(t => t.status === 'excluded').length}
+                  </Badge>
+                </TabsTrigger>
+              </TabsList>
+              
+              <div className="flex gap-2">
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
+                  <Input 
+                    className="pl-9 w-60" 
+                    placeholder="Search transactions" 
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                  />
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Filter Transactions</h4>
+                      <div className="space-y-2">
+                        <Label htmlFor="statusFilter">Status</Label>
                         <Select
                           value={statusFilter}
                           onValueChange={(value) => setStatusFilter(value as any)}
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Filter by status" />
+                          <SelectTrigger id="statusFilter">
+                            <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Statuses</SelectItem>
@@ -657,31 +640,31 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                         </Select>
                       </div>
                       
-                      <div className="p-2">
-                        <p className="mb-2 text-sm font-medium">Type</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="typeFilter">Type</Label>
                         <Select
                           value={typeFilter}
                           onValueChange={(value) => setTypeFilter(value as any)}
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Filter by type" />
+                          <SelectTrigger id="typeFilter">
+                            <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="credit">Credits</SelectItem>
-                            <SelectItem value="debit">Debits</SelectItem>
+                            <SelectItem value="credit">Credit</SelectItem>
+                            <SelectItem value="debit">Debit</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       
-                      <div className="p-2">
-                        <p className="mb-2 text-sm font-medium">Provider</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="providerFilter">Provider</Label>
                         <Select
                           value={providerFilter}
-                          onValueChange={(value) => setProviderFilter(value)}
+                          onValueChange={setProviderFilter}
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Filter by provider" />
+                          <SelectTrigger id="providerFilter">
+                            <SelectValue placeholder="Select provider" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Providers</SelectItem>
@@ -692,12 +675,68 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                         </Select>
                       </div>
                       
-                      <DropdownMenuSeparator />
-                      <div className="p-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="dateRange">Date Range</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                id="dateRange"
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateFilter.from ? (
+                                  format(dateFilter.from, "PPP")
+                                ) : (
+                                  <span>From date</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={dateFilter.from}
+                                onSelect={(date) => {
+                                  setDateFilter(prev => ({ ...prev, from: date || undefined }));
+                                  setCalendarOpen(false);
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateFilter.to ? (
+                                  format(dateFilter.to, "PPP")
+                                ) : (
+                                  <span>To date</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={dateFilter.to}
+                                onSelect={(date) => 
+                                  setDateFilter(prev => ({ ...prev, to: date || undefined }))
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between pt-2">
                         <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full"
+                          variant="ghost" 
                           onClick={() => {
                             setStatusFilter('all');
                             setTypeFilter('all');
@@ -705,638 +744,966 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                             setDateFilter({});
                           }}
                         >
-                          Reset Filters
+                          Reset filters
+                        </Button>
+                        <Button variant="default">
+                          Apply filters
                         </Button>
                       </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  <div className="relative w-48 md:w-64">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search transactions..."
-                      value={searchValue}
-                      onChange={e => setSearchValue(e.target.value)}
-                      className="pl-8"
-                    />
-                    {searchValue && (
-                      <X
-                        className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer"
-                        onClick={() => setSearchValue('')}
-                      />
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
-            <Tabs defaultValue="for-review" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger 
-                  value="for-review" 
-                  onClick={() => setActiveView('for-review')}
-                  className="flex items-center justify-center gap-1.5"
-                >
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-200 text-yellow-700">{transformedTransactions.filter(t => t.status === 'unmatched').length}</Badge>
-                  For Review
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="categorized" 
-                  onClick={() => setActiveView('categorized')}
-                  className="flex items-center justify-center gap-1.5"
-                >
-                  <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">{transformedTransactions.filter(t => t.status === 'matched' || t.status === 'reconciled').length}</Badge>
-                  Categorized
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="excluded" 
-                  onClick={() => setActiveView('excluded')}
-                  className="flex items-center justify-center gap-1.5"
-                >
-                  <Badge variant="outline" className="bg-gray-50 border-gray-200">{transformedTransactions.filter(t => t.status === 'excluded').length}</Badge>
-                  Excluded
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="for-review" className="pt-2">
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="border rounded-md overflow-hidden">
-                      <Table>
-                        <TableHeader className="bg-muted/50">
-                          <TableRow>
-                            <TableHead className="w-10">
-                              <Checkbox
-                                checked={filteredTransactions.length > 0 && 
-                                  filteredTransactions.every(t => selectedTransactions.has(t.id))}
-                                onCheckedChange={handleSelectAllTransactions}
-                                aria-label="Select all"
-                              />
-                            </TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-1.5">
-                                Date
-                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-                              </div>
-                            </TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-1.5">
-                                Amount
-                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-                              </div>
-                            </TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Provider</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredTransactions.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={7} className="text-center py-4">
-                                <p className="text-muted-foreground">No transactions match the current filters</p>
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredTransactions.map((transaction, index) => (
-                              <TableRow key={transaction.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <TableCell>
-                                  <Checkbox
-                                    checked={selectedTransactions.has(transaction.id)}
-                                    onCheckedChange={() => handleSelectTransaction(transaction.id)}
-                                    aria-label={`Select transaction ${transaction.id}`}
-                                  />
-                                </TableCell>
-                                <TableCell>{formatDate(transaction.date)}</TableCell>
-                                <TableCell className="max-w-[200px] truncate" title={transaction.description}>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{transaction.description}</span>
-                                    {transaction.payee && <span className="text-xs text-muted-foreground">{transaction.payee}</span>}
-                                  </div>
-                                </TableCell>
-                                <TableCell className={transaction.type === 'credit' ? 'text-green-600 font-medium' : ''}>
-                                  {formatAmount(transaction.amount, transaction.type)}
-                                </TableCell>
-                                <TableCell>
-                                  {transaction.status === 'matched' && (
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Matched</Badge>
-                                  )}
-                                  {transaction.status === 'unmatched' && (
-                                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Unmatched</Badge>
-                                  )}
-                                  {transaction.status === 'reconciled' && (
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Reconciled</Badge>
-                                  )}
-                                  {transaction.status === 'excluded' && (
-                                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Excluded</Badge>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-muted-foreground text-sm">{transaction.provider}</TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    {transaction.status === 'unmatched' && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button variant="outline" size="icon" onClick={() => handleOpenMatchDialog(transaction)}>
-                                              <Link2 className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Match to expense</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                    
-                                    {transaction.status === 'matched' && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button variant="outline" size="icon" onClick={() => handleOpenReviewDialog(transaction)}>
-                                              <Eye className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Review match</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                    
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="icon">
-                                          <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => alert(`Edit ${transaction.id}`)}>
-                                          <Pencil className="h-4 w-4 mr-2" />
-                                          Edit Details
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => alert(`Download ${transaction.id}`)}>
-                                          <Download className="h-4 w-4 mr-2" />
-                                          Download
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => alert(`Exclude ${transaction.id}`)}>
-                                          <X className="h-4 w-4 mr-2" />
-                                          Exclude Transaction
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
+            
+            <TabsContent value="for-review" className="mt-0">
+              <Card>
+                <CardContent className="p-0">
+                  {isLoadingTransactions ? (
+                    <div className="flex justify-center items-center py-12">
+                      <Spinner className="h-8 w-8 text-primary" />
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="categorized" className="pt-2">
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="border rounded-md overflow-hidden">
-                      <Table>
-                        <TableHeader className="bg-muted/50">
-                          <TableRow>
-                            <TableHead className="w-10">
-                              <Checkbox
-                                checked={filteredTransactions.length > 0 && 
-                                  filteredTransactions.every(t => selectedTransactions.has(t.id))}
-                                onCheckedChange={handleSelectAllTransactions}
-                                aria-label="Select all"
+                  ) : filteredTransactions.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">No transactions to review</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <Checkbox 
+                              checked={selectedTransactions.size > 0 && selectedTransactions.size === filteredTransactions.length}
+                              onCheckedChange={handleSelectAllTransactions}
+                            />
+                          </TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTransactions.map(transaction => (
+                          <TableRow 
+                            key={transaction.id}
+                            className={selectedTransactions.has(transaction.id) ? 'bg-primary/5' : ''}
+                          >
+                            <TableCell>
+                              <Checkbox 
+                                checked={selectedTransactions.has(transaction.id)} 
+                                onCheckedChange={() => handleSelectTransaction(transaction.id)}
                               />
-                            </TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-1.5">
-                                Date
-                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-                              </div>
-                            </TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-1.5">
-                                Amount
-                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-                              </div>
-                            </TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredTransactions.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={7} className="text-center py-4">
-                                <p className="text-muted-foreground">No categorized transactions match the current filters</p>
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredTransactions.map((transaction, index) => (
-                              <TableRow key={transaction.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <TableCell>
-                                  <Checkbox
-                                    checked={selectedTransactions.has(transaction.id)}
-                                    onCheckedChange={() => handleSelectTransaction(transaction.id)}
-                                    aria-label={`Select transaction ${transaction.id}`}
-                                  />
-                                </TableCell>
-                                <TableCell>{formatDate(transaction.date)}</TableCell>
-                                <TableCell className="max-w-[200px] truncate" title={transaction.description}>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{transaction.description}</span>
-                                    {transaction.reference && <span className="text-xs text-muted-foreground">{transaction.reference}</span>}
-                                  </div>
-                                </TableCell>
-                                <TableCell className={transaction.type === 'credit' ? 'text-green-600 font-medium' : ''}>
-                                  {formatAmount(transaction.amount, transaction.type)}
-                                </TableCell>
-                                <TableCell>{transaction.category}</TableCell>
-                                <TableCell>
-                                  {transaction.status === 'matched' && (
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Matched</Badge>
-                                  )}
-                                  {transaction.status === 'reconciled' && (
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Reconciled</Badge>
-                                  )}
-                                  {transaction.matchConfidence && (
-                                    <div className="mt-1">
-                                      {getConfidenceBadge(transaction.matchConfidence)}
+                            </TableCell>
+                            <TableCell>{formatDate(transaction.date)}</TableCell>
+                            <TableCell>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="max-w-[250px] truncate">
+                                      {transaction.description}
                                     </div>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button variant="outline" size="icon" onClick={() => handleOpenReviewDialog(transaction)}>
-                                            <Eye className="h-4 w-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Review match</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="icon">
-                                          <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => alert('Mark as reconciled')}>
-                                          <Check className="h-4 w-4 mr-2" />
-                                          Mark Reconciled
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => alert('Unmatch transaction')}>
-                                          <Link2 className="h-4 w-4 mr-2 text-red-500" />
-                                          Unmatch
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => alert(`Exclude ${transaction.id}`)}>
-                                          <X className="h-4 w-4 mr-2" />
-                                          Exclude Transaction
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="excluded" className="pt-2">
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="border rounded-md overflow-hidden">
-                      <Table>
-                        <TableHeader className="bg-muted/50">
-                          <TableRow>
-                            <TableHead className="w-10">
-                              <Checkbox
-                                checked={filteredTransactions.length > 0 && 
-                                  filteredTransactions.every(t => selectedTransactions.has(t.id))}
-                                onCheckedChange={handleSelectAllTransactions}
-                                aria-label="Select all"
-                              />
-                            </TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-1.5">
-                                Date
-                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{transaction.description}</p>
+                                    {transaction.reference && <p className="text-xs text-muted-foreground">{transaction.reference}</p>}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell className={`text-right font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatAmount(transaction.amount, transaction.type)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleOpenMatchDialog(transaction)}
+                                >
+                                  <Link2 className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleOpenReviewDialog(transaction)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Export
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-red-600">
+                                      <X className="h-4 w-4 mr-2" />
+                                      Exclude
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
-                            </TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-1.5">
-                                Amount
-                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-                              </div>
-                            </TableHead>
-                            <TableHead>Provider</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredTransactions.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center py-4">
-                                <p className="text-muted-foreground">No excluded transactions match the current filters</p>
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredTransactions.map((transaction, index) => (
-                              <TableRow key={transaction.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <TableCell>
-                                  <Checkbox
-                                    checked={selectedTransactions.has(transaction.id)}
-                                    onCheckedChange={() => handleSelectTransaction(transaction.id)}
-                                    aria-label={`Select transaction ${transaction.id}`}
-                                  />
-                                </TableCell>
-                                <TableCell>{formatDate(transaction.date)}</TableCell>
-                                <TableCell className="max-w-[200px] truncate" title={transaction.description}>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{transaction.description}</span>
-                                    {transaction.reference && <span className="text-xs text-muted-foreground">{transaction.reference}</span>}
-                                  </div>
-                                </TableCell>
-                                <TableCell className={transaction.type === 'credit' ? 'text-green-600 font-medium' : ''}>
-                                  {formatAmount(transaction.amount, transaction.type)}
-                                </TableCell>
-                                <TableCell className="text-muted-foreground text-sm">{transaction.provider}</TableCell>
-                                <TableCell className="text-right">
-                                  <Button variant="outline" size="sm" onClick={() => alert('Restore transaction')}>
-                                    Restore
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+                {selectedTransactions.size > 0 && (
+                  <CardFooter className="justify-between py-4">
+                    <div className="text-sm">
+                      {selectedTransactions.size} transactions selected
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </CardHeader>
-        </Card>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setSelectedTransactions(new Set())}>
+                        Clear Selection
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Export Selected
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <X className="h-4 w-4 mr-2" />
+                        Exclude Selected
+                      </Button>
+                    </div>
+                  </CardFooter>
+                )}
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="categorized" className="mt-0">
+              <Card>
+                <CardContent className="p-0">
+                  {isLoadingTransactions ? (
+                    <div className="flex justify-center items-center py-12">
+                      <Spinner className="h-8 w-8 text-primary" />
+                    </div>
+                  ) : filteredTransactions.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">No categorized transactions</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <Checkbox 
+                              checked={selectedTransactions.size > 0 && selectedTransactions.size === filteredTransactions.length}
+                              onCheckedChange={handleSelectAllTransactions}
+                            />
+                          </TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTransactions.map(transaction => (
+                          <TableRow 
+                            key={transaction.id}
+                            className={selectedTransactions.has(transaction.id) ? 'bg-primary/5' : ''}
+                          >
+                            <TableCell>
+                              <Checkbox 
+                                checked={selectedTransactions.has(transaction.id)} 
+                                onCheckedChange={() => handleSelectTransaction(transaction.id)}
+                              />
+                            </TableCell>
+                            <TableCell>{formatDate(transaction.date)}</TableCell>
+                            <TableCell>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="max-w-[200px] truncate">
+                                      {transaction.description}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{transaction.description}</p>
+                                    {transaction.reference && <p className="text-xs text-muted-foreground">{transaction.reference}</p>}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{transaction.category}</Badge>
+                            </TableCell>
+                            <TableCell className={`text-right font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatAmount(transaction.amount, transaction.type)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleOpenReviewDialog(transaction)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Export
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                      <Link2 className="h-4 w-4 mr-2" />
+                                      Change Match
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="excluded" className="mt-0">
+              <Card>
+                <CardContent className="p-0">
+                  {isLoadingTransactions ? (
+                    <div className="flex justify-center items-center py-12">
+                      <Spinner className="h-8 w-8 text-primary" />
+                    </div>
+                  ) : filteredTransactions.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">No excluded transactions</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <Checkbox 
+                              checked={selectedTransactions.size > 0 && selectedTransactions.size === filteredTransactions.length}
+                              onCheckedChange={handleSelectAllTransactions}
+                            />
+                          </TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTransactions.map(transaction => (
+                          <TableRow 
+                            key={transaction.id}
+                            className={selectedTransactions.has(transaction.id) ? 'bg-primary/5' : ''}
+                          >
+                            <TableCell>
+                              <Checkbox 
+                                checked={selectedTransactions.has(transaction.id)} 
+                                onCheckedChange={() => handleSelectTransaction(transaction.id)}
+                              />
+                            </TableCell>
+                            <TableCell>{formatDate(transaction.date)}</TableCell>
+                            <TableCell>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="max-w-[250px] truncate">
+                                      {transaction.description}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{transaction.description}</p>
+                                    {transaction.reference && <p className="text-xs text-muted-foreground">{transaction.reference}</p>}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell className={`text-right font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatAmount(transaction.amount, transaction.type)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleOpenReviewDialog(transaction)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>
+                                      <ArrowUpDown className="h-4 w-4 mr-2" />
+                                      Restore
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
       
-      {/* Transaction Match Dialog */}
-      {selectedTransaction && (
-        <Dialog open={showMatchDialog} onOpenChange={setShowMatchDialog}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Match Transaction</DialogTitle>
-              <DialogDescription>
-                Match this transaction to an existing expense or create a new one.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-2">
-              <div className="mb-4 p-3 rounded-md bg-muted/50">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Date</p>
-                    <p className="font-medium">{formatDate(selectedTransaction.date)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Amount</p>
-                    <p className={`font-medium ${selectedTransaction.type === 'credit' ? 'text-green-600' : ''}`}>
-                      {formatAmount(selectedTransaction.amount, selectedTransaction.type)}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-2">
-                  <p className="text-sm font-medium text-muted-foreground">Description</p>
-                  <p className="font-medium">{selectedTransaction.description}</p>
-                </div>
-                {selectedTransaction.payee && (
-                  <div className="mt-2">
-                    <p className="text-sm font-medium text-muted-foreground">Payee</p>
-                    <p className="font-medium">{selectedTransaction.payee}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="mb-4">
-                <h3 className="text-base font-semibold mb-2">Suggested Matches</h3>
-                {isLoadingExpenses ? (
-                  <div className="flex justify-center items-center p-4">
-                    <Spinner className="h-6 w-6" />
-                  </div>
-                ) : expensesError ? (
-                  <p className="text-sm text-red-500">Error loading expenses. Please try again.</p>
-                ) : expenseMatches.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No matching expenses found.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {expenseMatches.map(expense => (
-                      <div 
-                        key={expense.id} 
-                        className="p-3 border rounded-md cursor-pointer hover:border-primary hover:bg-muted/20"
-                        onClick={() => handleMatchTransaction(expense.id)}
-                      >
-                        <div className="flex justify-between items-center mb-1">
-                          <p className="font-medium">{expense.description}</p>
-                          {getConfidenceBadge(expense.confidence)}
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 mt-2 text-sm">
-                          <div>
-                            <p className="text-muted-foreground">Date</p>
-                            <p>{formatDate(expense.date)}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Amount</p>
-                            <p>{formatAmount(expense.amount, 'debit')}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Category</p>
-                            <p>{expense.category}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <Button 
-                className="w-full" 
-                variant="outline"
-                onClick={() => {
-                  setIsCreatingExpense(true);
-                  // In a real app this would open a form to create a new expense
-                  setTimeout(() => {
-                    setIsCreatingExpense(false);
-                    setShowMatchDialog(false);
-                    alert('New expense created and matched');
-                  }, 1000);
-                }}
-              >
-                {isCreatingExpense ? <Spinner className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
-                Create New Expense
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-      
-      {/* Banking Providers Dialog */}
-      <Dialog open={showManageProviders} onOpenChange={setShowManageProviders}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <BankingProviders
-            vesselId={vesselId}
-            onClose={() => setShowManageProviders(false)}
-          />
-        </DialogContent>
-      </Dialog>
-      
-      {/* Review Match Dialog */}
-      {selectedTransaction && (
-        <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Review Match</DialogTitle>
-              <DialogDescription>
-                Review the matched transaction and expense details.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="p-3 rounded-md bg-muted/50 relative">
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Transaction</Badge>
-                  </div>
-                  <h3 className="font-semibold text-sm mb-2 mt-4">Details</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Date</p>
-                      <p className="font-medium">{formatDate(selectedTransaction.date)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Amount</p>
-                      <p className={`font-medium ${selectedTransaction.type === 'credit' ? 'text-green-600' : ''}`}>
-                        {formatAmount(selectedTransaction.amount, selectedTransaction.type)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <p className="text-muted-foreground">Description</p>
-                    <p className="font-medium">{selectedTransaction.description}</p>
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <p className="text-muted-foreground">Reference</p>
-                    <p className="font-medium">{selectedTransaction.reference || '—'}</p>
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <p className="text-muted-foreground">Provider</p>
-                    <p className="font-medium">{selectedTransaction.provider}</p>
-                  </div>
-                </div>
-                
-                <div className="p-3 rounded-md bg-muted/50 relative">
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Expense</Badge>
-                  </div>
-                  <h3 className="font-semibold text-sm mb-2 mt-4">Details</h3>
-                  {isLoadingExpenses ? (
-                    <div className="flex justify-center items-center p-4">
-                      <Spinner className="h-6 w-6" />
-                    </div>
-                  ) : expensesError ? (
-                    <p className="text-sm text-red-500">Error loading expense details.</p>
-                  ) : expenseMatches.length > 0 ? (
+      {/* Match Transaction Dialog */}
+      <Dialog open={showMatchDialog} onOpenChange={setShowMatchDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Match Transaction</DialogTitle>
+            <DialogDescription>
+              Select an expense to match with this transaction.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12 md:col-span-5">
+              <div className="space-y-4">
+                <div className="rounded-md border p-4">
+                  <h3 className="font-semibold mb-2">Transaction Details</h3>
+                  {selectedTransaction && (
                     <>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Date</p>
-                          <p className="font-medium">{formatDate(expenseMatches[0].date)}</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Date:</span>
+                          <span className="text-sm font-medium">{formatDate(selectedTransaction.date)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Amount:</span>
+                          <span className={`text-sm font-medium ${selectedTransaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatAmount(selectedTransaction.amount, selectedTransaction.type)}
+                          </span>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Amount</p>
-                          <p className="font-medium">{formatAmount(expenseMatches[0].amount, 'debit')}</p>
+                          <span className="text-sm text-muted-foreground">Description:</span>
+                          <p className="text-sm">{selectedTransaction.description}</p>
                         </div>
-                      </div>
-                      <div className="mt-2 text-sm">
-                        <p className="text-muted-foreground">Description</p>
-                        <p className="font-medium">{expenseMatches[0].description}</p>
-                      </div>
-                      <div className="mt-2 text-sm">
-                        <p className="text-muted-foreground">Vendor</p>
-                        <p className="font-medium">{expenseMatches[0].vendor}</p>
-                      </div>
-                      <div className="mt-2 text-sm">
-                        <p className="text-muted-foreground">Category</p>
-                        <p className="font-medium">{expenseMatches[0].category}</p>
+                        {selectedTransaction.reference && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Reference:</span>
+                            <p className="text-sm">{selectedTransaction.reference}</p>
+                          </div>
+                        )}
                       </div>
                     </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No matching expense data available.</p>
                   )}
                 </div>
+                
+                <div className="rounded-md border p-4">
+                  <h3 className="font-semibold mb-2">No Match Found?</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    If you cannot find a matching expense, you can create a new expense from this transaction.
+                  </p>
+                  <Button 
+                    className="w-full"
+                    onClick={() => {
+                      setShowMatchDialog(false);
+                      setIsCreatingExpense(true);
+                      // In a real app, this would navigate to the expense creation form
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Expense
+                  </Button>
+                </div>
               </div>
+            </div>
+            
+            <div className="col-span-12 md:col-span-7">
+              <h3 className="font-semibold mb-2">Available Expense Matches</h3>
               
-              {expenseMatches.length > 0 && (
-                <div className="rounded-md bg-green-50 p-3 border border-green-100 text-sm">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 mr-2">
-                      <Check className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-green-800">
-                        Match Confidence: {Math.round(expenseMatches[0].confidence * 100)}%
-                      </p>
-                      <p className="text-green-700 mt-0.5">
-                        This transaction appears to match the expense based on date, amount, and description similarities.
-                      </p>
-                    </div>
-                  </div>
+              {isLoadingExpenses ? (
+                <div className="flex justify-center items-center py-12">
+                  <Spinner className="h-8 w-8 text-primary" />
+                </div>
+              ) : expenseMatches.length === 0 ? (
+                <div className="text-center py-12 border rounded-md">
+                  <p className="text-muted-foreground">No matching expenses found</p>
+                </div>
+              ) : (
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Match</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Conf.</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {expenseMatches.map(expense => (
+                        <TableRow 
+                          key={expense.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleMatchTransaction(expense.id)}
+                        >
+                          <TableCell>
+                            <Button variant="ghost" size="sm">Select</Button>
+                          </TableCell>
+                          <TableCell>{formatDate(expense.date)}</TableCell>
+                          <TableCell>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="max-w-[200px] truncate">
+                                    {expense.description}
+                                    <div className="text-xs text-muted-foreground">{expense.vendor}</div>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{expense.description}</p>
+                                  <p className="text-xs text-muted-foreground">{expense.vendor}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                          <TableCell>
+                            {formatAmount(expense.amount, 'debit')}
+                          </TableCell>
+                          <TableCell>
+                            {getConfidenceBadge(expense.confidence)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               )}
             </div>
-            
-            <DialogFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => {
-                setShowReviewDialog(false);
-                alert('Match removed');
-              }}>
-                <X className="mr-2 h-4 w-4" />
-                Remove Match
-              </Button>
-              <div className="flex gap-2">
-                <Button onClick={() => {
-                  setShowReviewDialog(false);
-                  alert('Match confirmed');
-                }}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Confirm Match
-                </Button>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMatchDialog(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Transaction Review Dialog */}
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+            <DialogDescription>
+              Review and edit this transaction.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTransaction && (
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12 md:col-span-6 space-y-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-date">Date</Label>
+                    <div className="flex">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            id="transaction-date"
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {formatDate(selectedTransaction.date)}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={new Date(selectedTransaction.date)}
+                            onSelect={() => {}}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-description">Description</Label>
+                    <Input 
+                      id="transaction-description"
+                      defaultValue={selectedTransaction.description}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-amount">Amount</Label>
+                    <Input 
+                      id="transaction-amount"
+                      defaultValue={selectedTransaction.amount.toString()}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-status">Status</Label>
+                    <Select defaultValue={selectedTransaction.status}>
+                      <SelectTrigger id="transaction-status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unmatched">Unmatched</SelectItem>
+                        <SelectItem value="matched">Matched</SelectItem>
+                        <SelectItem value="reconciled">Reconciled</SelectItem>
+                        <SelectItem value="excluded">Excluded</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-category">Category</Label>
+                    <Select defaultValue={selectedTransaction.category || 'uncategorized'}>
+                      <SelectTrigger id="transaction-category">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                        {mockCategories.map(category => (
+                          <SelectItem key={category.id} value={category.name.toLowerCase()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              
+              <div className="col-span-12 md:col-span-6 space-y-4">
+                <div className="rounded-md border p-4">
+                  <h3 className="font-semibold mb-4">Matched Expense Details</h3>
+                  {selectedTransaction.matchedExpenseId ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Expense ID:</span>
+                        <span className="text-sm font-medium">{selectedTransaction.matchedExpenseId}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Match Confidence:</span>
+                        <span className="text-sm font-medium">
+                          {selectedTransaction.matchConfidence ? 
+                            `${Math.round(selectedTransaction.matchConfidence * 100)}%` : 
+                            'N/A'}
+                        </span>
+                      </div>
+                      <div className="pt-2">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Expense
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground mb-4">No matched expense</p>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => {
+                          setShowReviewDialog(false);
+                          setShowMatchDialog(true);
+                        }}
+                      >
+                        <Link2 className="h-4 w-4 mr-2" />
+                        Match to Expense
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="rounded-md border p-4 space-y-4">
+                  <h3 className="font-semibold">Additional Details</h3>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-ref">Reference</Label>
+                    <Input 
+                      id="transaction-ref"
+                      defaultValue={selectedTransaction.reference || ''}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="transaction-payee">Payee</Label>
+                    <Input 
+                      id="transaction-payee"
+                      defaultValue={selectedTransaction.payee || ''}
+                    />
+                  </div>
+                </div>
+                
+                <div className="rounded-md border p-4">
+                  <h3 className="font-semibold mb-2">Transaction History</h3>
+                  <div className="text-sm space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Created:</span>
+                      <span>{formatDate(selectedTransaction.date)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Last Modified:</span>
+                      <span>{formatDate(selectedTransaction.date)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Last Synced:</span>
+                      <span>{formatDate(selectedTransaction.date)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
+              Cancel
+            </Button>
+            <Button>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Transaction Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Transaction</DialogTitle>
+            <DialogDescription>
+              Enter details for a new transaction.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="add-date">Date</Label>
+              <div className="flex">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="add-date"
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(new Date(), "PPP")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={new Date()}
+                      onSelect={() => {}}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="add-description">Description</Label>
+              <Input 
+                id="add-description"
+                placeholder="Transaction description"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="add-amount">Amount</Label>
+              <Input 
+                id="add-amount"
+                placeholder="0.00"
+                type="number"
+                step="0.01"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="add-type">Type</Label>
+              <Select defaultValue="debit">
+                <SelectTrigger id="add-type">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="credit">Credit (Incoming)</SelectItem>
+                  <SelectItem value="debit">Debit (Outgoing)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="add-category">Category</Label>
+              <Select defaultValue="uncategorized">
+                <SelectTrigger id="add-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                  {mockCategories.map(category => (
+                    <SelectItem key={category.id} value={category.name.toLowerCase()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="add-reference">Reference (Optional)</Label>
+              <Input 
+                id="add-reference"
+                placeholder="Transaction reference"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setShowAddDialog(false)}>
+              Add Transaction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Transaction Rules Dialog */}
+      <Dialog open={showRuleDialog} onOpenChange={setShowRuleDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Transaction Rules</DialogTitle>
+            <DialogDescription>
+              Create and manage rules for automatic transaction categorization.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Active Rules</h3>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Rule
+              </Button>
+            </div>
+            
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Rule Name</TableHead>
+                    <TableHead>Conditions</TableHead>
+                    <TableHead>Actions</TableHead>
+                    <TableHead>Auto</TableHead>
+                    <TableHead className="text-right">Manage</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockRules.map((rule, index) => (
+                    <TableRow key={rule.id}>
+                      <TableCell>{rule.priority}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{rule.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {rule.appliedTo === 'all' ? 'All Accounts' : rule.appliedTo}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {rule.conditions.map((condition, idx) => (
+                          <div key={idx} className="text-sm">
+                            {condition.field} {condition.operator} "{condition.value}"
+                          </div>
+                        ))}
+                      </TableCell>
+                      <TableCell>
+                        {rule.actions.map((action, idx) => (
+                          <div key={idx} className="text-sm">
+                            Set {action.type} to {action.value}
+                          </div>
+                        ))}
+                      </TableCell>
+                      <TableCell>
+                        <Switch checked={rule.autoConfirm} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Rule History</h3>
+              <Button variant="outline" size="sm">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Export Rules
+              </Button>
+            </div>
+            
+            <div className="rounded-md border p-4">
+              <p className="text-center text-muted-foreground">
+                Rules applied statistics and history will appear here.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRuleDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Reconcile Dialog */}
+      <Dialog open={showReconcileDialog} onOpenChange={setShowReconcileDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Reconcile Account</DialogTitle>
+            <DialogDescription>
+              Compare your bank statement with the recorded transactions.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="statement-balance">Statement Balance</Label>
+                <Input id="statement-balance" placeholder="0.00" type="number" step="0.01" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="statement-date">Statement Date</Label>
+                <div className="flex">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="statement-date"
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(new Date(), "PPP")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={new Date()}
+                        onSelect={() => {}}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <h3 className="font-semibold">Account Summary</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedBankAccount?.name}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-md border p-3">
+                  <p className="text-sm text-muted-foreground">Bank Balance</p>
+                  <p className="text-lg font-semibold">
+                    {selectedBankAccount ? formatAmount(selectedBankAccount.currentBalance, 'balance') : 'N/A'}
+                  </p>
+                </div>
+                <div className="rounded-md border p-3">
+                  <p className="text-sm text-muted-foreground">Statement Balance</p>
+                  <p className="text-lg font-semibold">€0.00</p>
+                </div>
+              </div>
+              
+              <div className="rounded-md border p-3">
+                <p className="text-sm text-muted-foreground">Difference</p>
+                <p className="text-lg font-semibold text-red-600">€0.00</p>
+                <p className="text-xs text-muted-foreground">0 transactions unreconciled</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="reconcile-notes">Notes</Label>
+              <Input id="reconcile-notes" placeholder="Add notes about this reconciliation" />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReconcileDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setShowReconcileDialog(false)}>
+              Complete Reconciliation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Banking Providers Dialog */}
+      {showManageProviders && (
+        <BankingProviders 
+          open={showManageProviders} 
+          onOpenChange={setShowManageProviders}
+          vesselId={vesselId}
+        />
       )}
     </div>
   );
