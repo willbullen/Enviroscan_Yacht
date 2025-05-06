@@ -5598,7 +5598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(transactions);
     } catch (error) {
-      logger.error(`Error fetching banking transactions for vessel ${vesselId}:`, error);
+      logger.error(`Error fetching banking transactions for vessel ${vesselId}:`, error instanceof Error ? error : new Error(String(error)));
       res.status(500).json({ error: "Failed to fetch banking transactions" });
     }
   }));
@@ -5681,7 +5681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      logger.error(`Error fetching unmatched transactions for vessel ${vesselId}:`, error);
+      logger.error(`Error fetching unmatched transactions for vessel ${vesselId}:`, error instanceof Error ? error : new Error(String(error)));
       res.status(500).json({ error: "Failed to fetch unmatched transactions" });
     }
   }));
@@ -5703,7 +5703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Filter expenses that have receipts but no associated transactions
       const receipts = expenses
-        .filter(e => e.receiptUrl && !e.reconciled)
+        .filter(e => e.receiptUrl && !(e as any).reconciled)
         .map(e => ({
           id: e.id,
           receiptUrl: e.receiptUrl,
@@ -5728,7 +5728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      logger.error(`Error fetching unmatched receipts for vessel ${vesselId}:`, error);
+      logger.error(`Error fetching unmatched receipts for vessel ${vesselId}:`, error instanceof Error ? error : new Error(String(error)));
       res.status(500).json({ error: "Failed to fetch unmatched receipts" });
     }
   }));

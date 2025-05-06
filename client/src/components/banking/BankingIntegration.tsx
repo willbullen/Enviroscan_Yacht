@@ -17,6 +17,8 @@ import ReceiptMatching from './ReceiptMatching';
 import BankingConnectionGuide from './BankingConnectionGuide';
 import ReconciliationGuide from './ReconciliationGuide';
 import ReceiptMatchingGuide from './ReceiptMatchingGuide';
+import { Spinner } from '@/components/ui/spinner';
+import { useQuery } from '@tanstack/react-query';
 import { 
   BanknoteIcon, 
   CreditCard, 
@@ -31,6 +33,41 @@ import {
   Lightbulb
 } from 'lucide-react';
 
+// Type definitions
+interface BankConnection {
+  id: number;
+  providerId: number;
+  vesselId: number;
+  connectionStatus: string;
+  lastSyncAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  provider?: { 
+    name: string;
+    logoUrl?: string;
+  };
+}
+
+interface BankingProvider {
+  id: number;
+  name: string;
+  logoUrl?: string;
+  code: string;
+  isActive: boolean;
+}
+
+interface UnmatchedTransactionCounts {
+  total: number;
+  thisWeek: number;
+  previousWeeks: number;
+}
+
+interface UnmatchedReceiptCounts {
+  total: number;
+  processing: number;
+  processed: number;
+}
+
 export interface BankingIntegrationProps {
   vesselId: number;
 }
@@ -39,6 +76,68 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
   const { useMockBankingData, bankingAPICredentialsSet } = useSystemSettings();
   const [activeGuide, setActiveGuide] = useState<'connection' | 'reconciliation' | 'receipt' | null>(null);
   const [guideStep, setGuideStep] = useState(0);
+  
+  // Fetch banking connections
+  const { 
+    data: connectionsData, 
+    isLoading: isLoadingConnections,
+    error: connectionsError
+  } = useQuery({
+    queryKey: ['/api/banking/connections/vessel', vesselId],
+    enabled: !!vesselId && !useMockBankingData
+  });
+  
+  // Fetch banking providers for display
+  const {
+    data: providersData,
+    isLoading: isLoadingProviders,
+    error: providersError
+  } = useQuery({
+    queryKey: ['/api/banking/providers/vessel', vesselId],
+    enabled: !!vesselId && !useMockBankingData
+  });
+  
+  // Fetch unmatched transactions
+  const {
+    data: unmatchedTransactionsData,
+    isLoading: isLoadingUnmatchedTx,
+    error: unmatchedTxError
+  } = useQuery<{ counts: UnmatchedTransactionCounts, transactions: any[] }>({
+    queryKey: ['/api/banking/transactions/unmatched', vesselId],
+    enabled: !!vesselId && !useMockBankingData
+  });
+  
+  // Fetch unmatched receipts
+  const {
+    data: unmatchedReceiptsData,
+    isLoading: isLoadingUnmatchedReceipts,
+    error: unmatchedReceiptsError
+  } = useQuery<{ counts: UnmatchedReceiptCounts, receipts: any[] }>({
+    queryKey: ['/api/receipts/unmatched', vesselId],
+    enabled: !!vesselId && !useMockBankingData
+  });
+  
+  // Combine connections with provider data for display
+  const connections: BankConnection[] = Array.isArray(connectionsData) ? connectionsData : [];
+  const providers: BankingProvider[] = Array.isArray(providersData) ? providersData : [];
+  
+  // Enrich connections with provider information
+  const enrichedConnections = connections.map(conn => {
+    const provider = providers.find(p => p.id === conn.providerId);
+    return {
+      ...conn,
+      provider
+    };
+  });
+  
+  // Filter active connections for display
+  const activeConnections = enrichedConnections.filter(conn => 
+    conn.connectionStatus === 'active' || conn.connectionStatus === 'connected'
+  );
+  
+  // Get counts from API responses or use zeros if data isn't available yet
+  const txCounts = unmatchedTransactionsData?.counts || { total: 0, thisWeek: 0, previousWeeks: 0 };
+  const receiptCounts = unmatchedReceiptsData?.counts || { total: 0, processing: 0, processed: 0 };
   
   const handleShowGuide = (guide: 'connection' | 'reconciliation' | 'receipt') => {
     setActiveGuide(guide);
@@ -104,6 +203,7 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        {/* Banking Connections Widget */}
         <Card className="overflow-hidden">
           <div className="flex p-3">
             <div className="flex-1">
@@ -111,28 +211,60 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
                 <h4 className="text-sm font-medium">Banking Connections</h4>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground mb-2">Active banking connections</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="flex items-center">
-                    <Building className="h-3 w-3 mr-1 text-primary" />
-                    Centtrip
-                  </span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs py-0 h-5">Active</Badge>
+              
+              {/* Loading indicator */}
+              {isLoadingConnections && (
+                <div className="flex items-center justify-center p-4">
+                  <Spinner size="sm" className="mr-2" />
+                  <span className="text-sm text-muted-foreground">Loading connections...</span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="flex items-center">
-                    <Building className="h-3 w-3 mr-1 text-primary" />
-                    Revolut
-                  </span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs py-0 h-5">Active</Badge>
+              )}
+              
+              {/* Error message */}
+              {connectionsError && (
+                <div className="text-sm text-red-500 p-2">
+                  Failed to load banking connections
                 </div>
-              </div>
+              )}
+              
+              {/* Real data display */}
+              {!isLoadingConnections && !connectionsError && (
+                <>
+                  <div className="text-2xl font-bold">{activeConnections.length}</div>
+                  <p className="text-xs text-muted-foreground mb-2">Active banking connections</p>
+                  
+                  {activeConnections.length === 0 ? (
+                    <div className="text-xs text-muted-foreground py-2">
+                      No active banking connections
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {activeConnections.slice(0, 3).map(conn => (
+                        <div key={conn.id} className="flex justify-between text-xs">
+                          <span className="flex items-center">
+                            <Building className="h-3 w-3 mr-1 text-primary" />
+                            {conn.provider?.name || `Provider #${conn.providerId}`}
+                          </span>
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs py-0 h-5">
+                            Active
+                          </Badge>
+                        </div>
+                      ))}
+                      
+                      {activeConnections.length > 3 && (
+                        <div className="text-xs text-muted-foreground text-center pt-1">
+                          +{activeConnections.length - 3} more connections
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </Card>
 
+        {/* Pending Reconciliation Widget */}
         <Card className="overflow-hidden">
           <div className="flex p-3">
             <div className="flex-1">
@@ -140,22 +272,45 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
                 <h4 className="text-sm font-medium">Pending Reconciliation</h4>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div className="text-2xl font-bold">14</div>
-              <p className="text-xs text-muted-foreground mb-2">Unmatched transactions this month</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span>This week</span>
-                  <span>8 transactions</span>
+              
+              {/* Loading indicator */}
+              {isLoadingUnmatchedTx && (
+                <div className="flex items-center justify-center p-4">
+                  <Spinner size="sm" className="mr-2" />
+                  <span className="text-sm text-muted-foreground">Loading data...</span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span>Previous weeks</span>
-                  <span>6 transactions</span>
+              )}
+              
+              {/* Error message */}
+              {unmatchedTxError && (
+                <div className="text-sm text-red-500 p-2">
+                  Failed to load reconciliation data
                 </div>
-              </div>
+              )}
+              
+              {/* Real data display */}
+              {!isLoadingUnmatchedTx && !unmatchedTxError && (
+                <>
+                  <div className="text-2xl font-bold">{txCounts.total}</div>
+                  <p className="text-xs text-muted-foreground mb-2">Unmatched transactions this month</p>
+                  
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>This week</span>
+                      <span>{txCounts.thisWeek} transaction{txCounts.thisWeek !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>Previous weeks</span>
+                      <span>{txCounts.previousWeeks} transaction{txCounts.previousWeeks !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </Card>
 
+        {/* Unmatched Receipts Widget */}
         <Card className="overflow-hidden">
           <div className="flex p-3">
             <div className="flex-1">
@@ -163,24 +318,46 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
                 <h4 className="text-sm font-medium">Unmatched Receipts</h4>
                 <Receipt className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground mb-2">Receipts awaiting processing or matching</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="flex items-center">
-                    <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
-                    Processing
-                  </span>
-                  <span>1 receipt</span>
+              
+              {/* Loading indicator */}
+              {isLoadingUnmatchedReceipts && (
+                <div className="flex items-center justify-center p-4">
+                  <Spinner size="sm" className="mr-2" />
+                  <span className="text-sm text-muted-foreground">Loading receipts...</span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="flex items-center">
-                    <FileCheck className="h-3 w-3 mr-1 text-purple-500" />
-                    Processed
-                  </span>
-                  <span>2 receipts</span>
+              )}
+              
+              {/* Error message */}
+              {unmatchedReceiptsError && (
+                <div className="text-sm text-red-500 p-2">
+                  Failed to load receipt data
                 </div>
-              </div>
+              )}
+              
+              {/* Real data display */}
+              {!isLoadingUnmatchedReceipts && !unmatchedReceiptsError && (
+                <>
+                  <div className="text-2xl font-bold">{receiptCounts.total}</div>
+                  <p className="text-xs text-muted-foreground mb-2">Receipts awaiting processing or matching</p>
+                  
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center">
+                        <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
+                        Processing
+                      </span>
+                      <span>{receiptCounts.processing} receipt{receiptCounts.processing !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center">
+                        <FileCheck className="h-3 w-3 mr-1 text-purple-500" />
+                        Processed
+                      </span>
+                      <span>{receiptCounts.processed} receipt{receiptCounts.processed !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </Card>
