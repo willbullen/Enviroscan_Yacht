@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +41,7 @@ import { format } from 'date-fns';
 import { useSystemSettings } from '@/contexts/SystemSettingsContext';
 import { Spinner } from '@/components/ui/spinner';
 import { useDropzone } from 'react-dropzone';
+import { useQuery } from '@tanstack/react-query';
 
 interface ReceiptMatchingProps {
   vesselId: number;

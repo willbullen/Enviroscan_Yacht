@@ -121,7 +121,7 @@ import {
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db, executeWithRetry } from "./db";
-import { and, eq, lte, gte, sql, between, desc, asc, ne, isNotNull } from "drizzle-orm";
+import { and, eq, lte, gte, sql, between, desc, asc, ne, isNotNull, not, isNull } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -2349,6 +2349,24 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Error deleting expense ${id}:`, error);
       return false;
+    }
+  }
+  
+  async getExpensesWithReceiptsByVessel(vesselId: number): Promise<Expense[]> {
+    try {
+      // Find expenses with non-null receipt URLs for this vessel
+      const expensesWithReceipts = await db
+        .select()
+        .from(expenses)
+        .where(and(
+          eq(expenses.vesselId, vesselId),
+          not(isNull(expenses.receiptUrl))
+        ));
+      
+      return expensesWithReceipts;
+    } catch (error) {
+      console.error(`Error fetching expenses with receipts for vessel ${vesselId}:`, error);
+      return [];
     }
   }
 
