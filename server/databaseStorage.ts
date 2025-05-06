@@ -121,7 +121,7 @@ import {
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db, executeWithRetry } from "./db";
-import { and, eq, lte, gte, sql, between, desc, asc, ne, isNotNull } from "drizzle-orm";
+import { and, eq, lte, gte, sql, between, desc, asc, ne, isNotNull, inArray } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -3027,10 +3027,11 @@ export class DatabaseStorage implements IStorage {
       const transactionIds = bankingTxs.map(tx => tx.id);
       
       // Get all reconciliations for these transactions
+      // Use SQL for flexibility with array filtering
       const reconciliations = await db
         .select()
         .from(transactionReconciliations)
-        .where(inArray(transactionReconciliations.transactionId, transactionIds));
+        .where(sql`${transactionReconciliations.transactionId} IN (${sql.join(transactionIds)})`);
       
       return reconciliations;
     } catch (error) {

@@ -1,407 +1,622 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { toast } from '@/hooks/use-toast';
+import { useVessel } from '@/contexts/VesselContext';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useSystemSettings } from '@/contexts/SystemSettingsContext';
-import BankingProviders from './BankingProviders';
-import TransactionReconciliation from './TransactionReconciliation';
-import ReceiptMatching from './ReceiptMatching';
-import BankingConnectionGuide from './BankingConnectionGuide';
-import ReconciliationGuide from './ReconciliationGuide';
-import ReceiptMatchingGuide from './ReceiptMatchingGuide';
-import { Spinner } from '@/components/ui/spinner';
-import { useQuery } from '@tanstack/react-query';
-import { 
-  BanknoteIcon, 
-  CreditCard, 
-  BarChart3, 
-  Receipt, 
-  Building, 
-  Clock, 
-  AlertCircle, 
-  FileCheck, 
-  Info, 
-  RefreshCw,
-  Lightbulb
-} from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { formatDate, formatCurrency } from '@/lib/utils';
+import { PlusCircle, RefreshCw, Trash2, ExternalLink, Link2, Building2, LinkIcon } from 'lucide-react';
 
-// Type definitions
-interface BankConnection {
+type BankingProvider = {
+  id: number;
+  name: string;
+  apiType: string;
+  logoUrl?: string;
+  isActive: boolean;
+};
+
+type BankConnection = {
   id: number;
   providerId: number;
   vesselId: number;
-  connectionStatus: string;
-  lastSyncAt: string | null;
+  accountName: string;
+  bankAccountId: string;
+  status: string;
+  lastSyncedAt?: string;
   createdAt: string;
   updatedAt: string;
-  provider?: { 
-    name: string;
-    logoUrl?: string;
-  };
-}
+  provider?: BankingProvider;
+};
 
-interface BankingProvider {
+type SyncLog = {
   id: number;
-  name: string;
-  logoUrl?: string;
-  code: string;
-  isActive: boolean;
-}
+  connectionId: number;
+  status: string;
+  startDate: string;
+  endDate?: string;
+  recordsFetched?: number;
+  recordsProcessed?: number;
+  errorDetails?: string;
+};
 
-interface UnmatchedTransactionCounts {
-  total: number;
-  thisWeek: number;
-  previousWeeks: number;
-}
+const connectionFormSchema = z.object({
+  providerId: z.number({ required_error: "Please select a banking provider" }),
+  accountName: z.string().min(3, { message: "Account name must be at least 3 characters" }),
+  bankAccountId: z.string().min(1, { message: "Bank account ID is required" }),
+  apiKey: z.string().optional(),
+  clientId: z.string().optional(),
+  clientSecret: z.string().optional(),
+  accessToken: z.string().optional(),
+});
 
-interface UnmatchedReceiptCounts {
-  total: number;
-  processing: number;
-  processed: number;
-}
+const BankingIntegration = () => {
+  const { currentVessel } = useVessel();
+  const queryClient = useQueryClient();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<BankingProvider | null>(null);
+  const [showSyncHistory, setShowSyncHistory] = useState<number | null>(null);
 
-export interface BankingIntegrationProps {
-  vesselId: number;
-}
+  // Get all banking providers
+  const { data: providers = [], isLoading: isLoadingProviders } = useQuery({
+    queryKey: ['/api/banking/providers'],
+    queryFn: () => apiRequest('/api/banking/providers'),
+  });
 
-export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId }) => {
-  const { useMockBankingData, bankingAPICredentialsSet } = useSystemSettings();
-  const [activeGuide, setActiveGuide] = useState<'connection' | 'reconciliation' | 'receipt' | null>(null);
-  const [guideStep, setGuideStep] = useState(0);
-  
-  // Fetch banking connections
-  const { 
-    data: connectionsData, 
-    isLoading: isLoadingConnections,
-    error: connectionsError
-  } = useQuery({
-    queryKey: ['/api/banking/connections/vessel', vesselId],
-    enabled: !!vesselId && !useMockBankingData
+  // Get all bank connections for this vessel
+  const { data: connections = [], isLoading: isLoadingConnections } = useQuery({
+    queryKey: ['/api/banking/connections/vessel', currentVessel?.id],
+    queryFn: async () => {
+      if (!currentVessel) return [];
+      return apiRequest(`/api/banking/connections/vessel/${currentVessel.id}`);
+    },
+    enabled: !!currentVessel,
   });
-  
-  // Fetch banking providers for display
-  const {
-    data: providersData,
-    isLoading: isLoadingProviders,
-    error: providersError
-  } = useQuery({
-    queryKey: ['/api/banking/providers/vessel', vesselId],
-    enabled: !!vesselId && !useMockBankingData
+
+  // Get sync history for a specific connection
+  const { data: syncHistory = [], isLoading: isLoadingSyncHistory } = useQuery({
+    queryKey: ['/api/banking/connections/sync-history', showSyncHistory],
+    queryFn: async () => {
+      if (!showSyncHistory) return [];
+      return apiRequest(`/api/banking/connections/${showSyncHistory}/sync-history`);
+    },
+    enabled: !!showSyncHistory,
   });
-  
-  // Fetch unmatched transactions
-  const {
-    data: unmatchedTransactionsData,
-    isLoading: isLoadingUnmatchedTx,
-    error: unmatchedTxError
-  } = useQuery<{ counts: UnmatchedTransactionCounts, transactions: any[] }>({
-    queryKey: ['/api/banking/transactions/unmatched', vesselId],
-    enabled: !!vesselId && !useMockBankingData
+
+  // Create a new bank connection
+  const createConnectionMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/banking/connections', {
+        method: 'POST',
+        data,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Bank connection created successfully',
+      });
+      setIsAddDialogOpen(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/banking/connections/vessel'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.error || 'Failed to create bank connection',
+        variant: 'destructive',
+      });
+    },
   });
-  
-  // Fetch unmatched receipts
-  const {
-    data: unmatchedReceiptsData,
-    isLoading: isLoadingUnmatchedReceipts,
-    error: unmatchedReceiptsError
-  } = useQuery<{ counts: UnmatchedReceiptCounts, receipts: any[] }>({
-    queryKey: ['/api/receipts/unmatched', vesselId],
-    enabled: !!vesselId && !useMockBankingData
+
+  // Delete a bank connection
+  const deleteConnectionMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/banking/connections/${id}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Bank connection deleted successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/banking/connections/vessel'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.error || 'Failed to delete bank connection',
+        variant: 'destructive',
+      });
+    },
   });
-  
-  // Combine connections with provider data for display
-  const connections: BankConnection[] = Array.isArray(connectionsData) ? connectionsData : [];
-  const providers: BankingProvider[] = Array.isArray(providersData) ? providersData : [];
-  
-  // Enrich connections with provider information
-  const enrichedConnections = connections.map(conn => {
-    const provider = providers.find(p => p.id === conn.providerId);
-    return {
-      ...conn,
-      provider
-    };
+
+  // Sync a bank connection
+  const syncConnectionMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/banking/connections/${id}/sync`, {
+        method: 'POST',
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Success',
+        description: `Synced ${data.transactions?.length || 0} transactions successfully`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/banking/connections/vessel'] });
+      if (showSyncHistory) {
+        queryClient.invalidateQueries({ queryKey: ['/api/banking/connections/sync-history'] });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.error || 'Failed to sync bank connection',
+        variant: 'destructive',
+      });
+    },
   });
-  
-  // Filter active connections for display
-  const activeConnections = enrichedConnections.filter(conn => 
-    conn.connectionStatus === 'active' || conn.connectionStatus === 'connected'
-  );
-  
-  // Get counts from API responses or use zeros if data isn't available yet
-  const txCounts = unmatchedTransactionsData?.counts || { total: 0, thisWeek: 0, previousWeeks: 0 };
-  const receiptCounts = unmatchedReceiptsData?.counts || { total: 0, processing: 0, processed: 0 };
-  
-  const handleShowGuide = (guide: 'connection' | 'reconciliation' | 'receipt') => {
-    setActiveGuide(guide);
-    setGuideStep(0);
+
+  const form = useForm<z.infer<typeof connectionFormSchema>>({
+    resolver: zodResolver(connectionFormSchema),
+  });
+
+  const handleProviderChange = (value: string) => {
+    const providerId = parseInt(value);
+    const provider = providers.find(p => p.id === providerId);
+    setSelectedProvider(provider || null);
+    form.setValue('providerId', providerId);
   };
-  
-  const handleGuideStepChange = (step: number) => {
-    if (step < 0) {
-      setActiveGuide(null);
+
+  const onSubmit = (values: z.infer<typeof connectionFormSchema>) => {
+    if (!currentVessel) {
+      toast({
+        title: 'Error',
+        description: 'Please select a vessel first',
+        variant: 'destructive',
+      });
       return;
     }
-    setGuideStep(step);
+
+    // Prepare credentials based on provider type
+    let credentials = {};
+    if (selectedProvider?.apiType === 'api_key') {
+      credentials = { apiKey: values.apiKey };
+    } else if (selectedProvider?.apiType === 'oauth') {
+      credentials = {
+        clientId: values.clientId,
+        clientSecret: values.clientSecret,
+        accessToken: values.accessToken,
+      };
+    }
+
+    createConnectionMutation.mutate({
+      providerId: values.providerId,
+      vesselId: currentVessel.id,
+      accountName: values.accountName,
+      bankAccountId: values.bankAccountId,
+      credentials,
+    });
   };
 
+  const handleDelete = (connection: BankConnection) => {
+    if (confirm(`Are you sure you want to delete the connection to ${connection.accountName}?`)) {
+      deleteConnectionMutation.mutate(connection.id);
+    }
+  };
+
+  const handleSync = (connection: BankConnection) => {
+    syncConnectionMutation.mutate(connection.id);
+  };
+
+  if (!currentVessel) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Banking Integrations</CardTitle>
+          <CardDescription>Connect to your vessel's banking accounts</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-40">
+            <p className="text-muted-foreground">Please select a vessel to view banking integrations</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-2">
-        <p className="text-sm text-muted-foreground">
-          Manage banking connections, reconcile transactions, and match receipts to expenses
-        </p>
-        <div className="flex items-center">
-          {!bankingAPICredentialsSet && (
-            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 mr-3 gap-1">
-              <AlertCircle className="h-3.5 w-3.5" />
-              Using Test Data
-            </Badge>
-          )}
-          <Button size="sm" className="flex items-center gap-2" onClick={() => handleShowGuide('connection')}>
-            <Lightbulb className="h-4 w-4" />
-            Guide
-          </Button>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Banking Integrations</CardTitle>
+          <CardDescription>Connect to banking providers for {currentVessel.name}</CardDescription>
         </div>
-      </div>
-
-      {activeGuide === 'connection' && (
-        <BankingConnectionGuide 
-          currentStep={guideStep} 
-          onSelectStep={handleGuideStepChange} 
-        />
-      )}
-      
-      {activeGuide === 'reconciliation' && (
-        <ReconciliationGuide 
-          currentStep={guideStep} 
-          onSelectStep={handleGuideStepChange} 
-        />
-      )}
-      
-      {activeGuide === 'receipt' && (
-        <ReceiptMatchingGuide 
-          currentStep={guideStep} 
-          onSelectStep={handleGuideStepChange} 
-        />
-      )}
-      
-      {!bankingAPICredentialsSet && (
-        <Alert className="bg-amber-50 text-amber-800 border-amber-200 mb-4">
-          <AlertCircle className="h-4 w-4 text-amber-800" />
-          <AlertDescription>
-            Using test data for banking features. Add API credentials in Settings to connect real banking providers.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        {/* Banking Connections Widget */}
-        <Card className="overflow-hidden">
-          <div className="flex p-3">
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium">Banking Connections</h4>
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-              </div>
-              
-              {/* Loading indicator */}
-              {isLoadingConnections && (
-                <div className="flex items-center justify-center p-4">
-                  <Spinner size="sm" className="mr-2" />
-                  <span className="text-sm text-muted-foreground">Loading connections...</span>
-                </div>
-              )}
-              
-              {/* Error message */}
-              {connectionsError && (
-                <div className="text-sm text-red-500 p-2">
-                  Failed to load banking connections
-                </div>
-              )}
-              
-              {/* Real data display */}
-              {!isLoadingConnections && !connectionsError && (
-                <>
-                  <div className="text-2xl font-bold">{activeConnections.length}</div>
-                  <p className="text-xs text-muted-foreground mb-2">Active banking connections</p>
-                  
-                  {activeConnections.length === 0 ? (
-                    <div className="text-xs text-muted-foreground py-2">
-                      No active banking connections
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {activeConnections.slice(0, 3).map(conn => (
-                        <div key={conn.id} className="flex justify-between text-xs">
-                          <span className="flex items-center">
-                            <Building className="h-3 w-3 mr-1 text-primary" />
-                            {conn.provider?.name || `Provider #${conn.providerId}`}
-                          </span>
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs py-0 h-5">
-                            Active
-                          </Badge>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Connection
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {isLoadingConnections ? (
+          <div className="flex justify-center py-8">
+            <p className="text-muted-foreground">Loading banking connections...</p>
+          </div>
+        ) : connections.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 border rounded-md bg-muted/20">
+            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">No Banking Connections</h3>
+            <p className="text-muted-foreground mb-6">Connect to your banking providers to import transactions automatically</p>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Connect a Bank
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="border rounded-md">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Provider</TableHead>
+                    <TableHead>Account Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Synced</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {connections.map((connection) => (
+                    <TableRow key={connection.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {connection.provider?.logoUrl ? (
+                            <img 
+                              src={connection.provider.logoUrl} 
+                              alt={connection.provider.name} 
+                              className="h-6 w-6 rounded" 
+                            />
+                          ) : (
+                            <Building2 className="h-5 w-5 text-muted-foreground" />
+                          )}
+                          <span>{connection.provider?.name || 'Unknown Provider'}</span>
                         </div>
-                      ))}
-                      
-                      {activeConnections.length > 3 && (
-                        <div className="text-xs text-muted-foreground text-center pt-1">
-                          +{activeConnections.length - 3} more connections
+                      </TableCell>
+                      <TableCell>{connection.accountName}</TableCell>
+                      <TableCell>
+                        <Badge variant={connection.status === 'active' ? 'outline' : 'secondary'}>
+                          {connection.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {connection.lastSyncedAt ? formatDate(connection.lastSyncedAt) : 'Never'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleSync(connection)}
+                            title="Sync data"
+                            disabled={syncConnectionMutation.isPending}
+                          >
+                            <RefreshCw className={`h-4 w-4 ${syncConnectionMutation.isPending ? 'animate-spin' : ''}`} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowSyncHistory(connection.id)}
+                            title="Show sync history"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(connection)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            title="Delete connection"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      )}
-                    </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Sync History Dialog */}
+            <Dialog open={!!showSyncHistory} onOpenChange={(open) => !open && setShowSyncHistory(null)}>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Sync History</DialogTitle>
+                  <DialogDescription>
+                    Recent synchronization history for this banking connection
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {isLoadingSyncHistory ? (
+                  <div className="flex justify-center py-8">
+                    <p className="text-muted-foreground">Loading sync history...</p>
+                  </div>
+                ) : syncHistory.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <p className="text-muted-foreground">No sync history found</p>
+                  </div>
+                ) : (
+                  <div className="border rounded-md">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Records Fetched</TableHead>
+                          <TableHead>Records Processed</TableHead>
+                          <TableHead>Duration</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {syncHistory.map((log: SyncLog) => (
+                          <TableRow key={log.id}>
+                            <TableCell>{formatDate(log.startDate)}</TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                log.status === 'completed' ? 'outline' :
+                                log.status === 'failed' ? 'destructive' :
+                                log.status === 'in_progress' ? 'secondary' : 'default'
+                              }>
+                                {log.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{log.recordsFetched || 0}</TableCell>
+                            <TableCell>{log.recordsProcessed || 0}</TableCell>
+                            <TableCell>
+                              {log.endDate ? (
+                                `${Math.round((new Date(log.endDate).getTime() - new Date(log.startDate).getTime()) / 1000)}s`
+                              ) : 'In progress'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowSyncHistory(null)}>
+                    Close
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+      </CardContent>
+
+      {/* Add Connection Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Connect Banking Provider</DialogTitle>
+            <DialogDescription>
+              Add a new banking connection for {currentVessel.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="providerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Banking Provider</FormLabel>
+                    <Select onValueChange={handleProviderChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a banking provider" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingProviders ? (
+                          <SelectItem value="loading" disabled>Loading providers...</SelectItem>
+                        ) : providers.length === 0 ? (
+                          <SelectItem value="none" disabled>No providers available</SelectItem>
+                        ) : (
+                          providers.map((provider) => (
+                            <SelectItem 
+                              key={provider.id} 
+                              value={provider.id.toString()}
+                              disabled={!provider.isActive}
+                            >
+                              {provider.name}
+                              {!provider.isActive && ' (Inactive)'}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Choose your banking provider
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="accountName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Account Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Vessel Operations Account" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      A descriptive name for this bank account
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="bankAccountId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bank Account ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. 12345678" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      The account number or ID at your banking provider
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {selectedProvider?.apiType === 'api_key' && (
+                <FormField
+                  control={form.control}
+                  name="apiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API Key</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Your API key" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        The API key provided by {selectedProvider.name}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Pending Reconciliation Widget */}
-        <Card className="overflow-hidden">
-          <div className="flex p-3">
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium">Pending Reconciliation</h4>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </div>
-              
-              {/* Loading indicator */}
-              {isLoadingUnmatchedTx && (
-                <div className="flex items-center justify-center p-4">
-                  <Spinner size="sm" className="mr-2" />
-                  <span className="text-sm text-muted-foreground">Loading data...</span>
-                </div>
+                />
               )}
               
-              {/* Error message */}
-              {unmatchedTxError && (
-                <div className="text-sm text-red-500 p-2">
-                  Failed to load reconciliation data
-                </div>
-              )}
-              
-              {/* Real data display */}
-              {!isLoadingUnmatchedTx && !unmatchedTxError && (
+              {selectedProvider?.apiType === 'oauth' && (
                 <>
-                  <div className="text-2xl font-bold">{txCounts.total}</div>
-                  <p className="text-xs text-muted-foreground mb-2">Unmatched transactions this month</p>
+                  <FormField
+                    control={form.control}
+                    name="clientId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="OAuth Client ID" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span>This week</span>
-                      <span>{txCounts.thisWeek} transaction{txCounts.thisWeek !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span>Previous weeks</span>
-                      <span>{txCounts.previousWeeks} transaction{txCounts.previousWeeks !== 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="clientSecret"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client Secret</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="OAuth Client Secret" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="accessToken"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Access Token</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="OAuth Access Token" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </>
               )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Unmatched Receipts Widget */}
-        <Card className="overflow-hidden">
-          <div className="flex p-3">
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium">Unmatched Receipts</h4>
-                <Receipt className="h-4 w-4 text-muted-foreground" />
-              </div>
               
-              {/* Loading indicator */}
-              {isLoadingUnmatchedReceipts && (
-                <div className="flex items-center justify-center p-4">
-                  <Spinner size="sm" className="mr-2" />
-                  <span className="text-sm text-muted-foreground">Loading receipts...</span>
-                </div>
-              )}
-              
-              {/* Error message */}
-              {unmatchedReceiptsError && (
-                <div className="text-sm text-red-500 p-2">
-                  Failed to load receipt data
-                </div>
-              )}
-              
-              {/* Real data display */}
-              {!isLoadingUnmatchedReceipts && !unmatchedReceiptsError && (
-                <>
-                  <div className="text-2xl font-bold">{receiptCounts.total}</div>
-                  <p className="text-xs text-muted-foreground mb-2">Receipts awaiting processing or matching</p>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="flex items-center">
-                        <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
-                        Processing
-                      </span>
-                      <span>{receiptCounts.processing} receipt{receiptCounts.processing !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="flex items-center">
-                        <FileCheck className="h-3 w-3 mr-1 text-purple-500" />
-                        Processed
-                      </span>
-                      <span>{receiptCounts.processed} receipt{receiptCounts.processed !== 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="transactions">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="transactions" className="flex items-center">
-            <BanknoteIcon className="h-4 w-4 mr-2" />
-            Banking & Transactions
-          </TabsTrigger>
-          <TabsTrigger value="receipts" className="flex items-center">
-            <Receipt className="h-4 w-4 mr-2" />
-            Receipt Matching
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="transactions" className="pt-3">
-          <div className="flex justify-between items-center mb-3">
-            <p className="text-sm text-muted-foreground">
-              Manage bank connections and match transactions to your vessel's expenses
-            </p>
-            <Button variant="outline" size="sm" onClick={() => handleShowGuide('reconciliation')}>
-              <Info className="h-4 w-4 mr-2" />
-              Guide
-            </Button>
-          </div>
-          <TransactionReconciliation vesselId={vesselId} />
-        </TabsContent>
-        
-        <TabsContent value="receipts" className="pt-3">
-          <div className="flex justify-between items-center mb-3">
-            <p className="text-sm text-muted-foreground">
-              Upload receipts for automatic extraction and expense matching
-            </p>
-            <Button variant="outline" size="sm" onClick={() => handleShowGuide('receipt')}>
-              <Info className="h-4 w-4 mr-2" />
-              Guide
-            </Button>
-          </div>
-          <ReceiptMatching vesselId={vesselId} />
-        </TabsContent>
-      </Tabs>
-    </div>
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsAddDialogOpen(false);
+                    form.reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={createConnectionMutation.isPending}
+                >
+                  {createConnectionMutation.isPending ? 'Creating...' : 'Create Connection'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 };
 
