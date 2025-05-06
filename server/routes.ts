@@ -4899,13 +4899,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(transactions);
   }));
   
-  // Create a transaction
+  // Create a transaction (legacy endpoint - being migrated)
   apiRouter.post("/transactions", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Authentication required. Please log in." });
     }
     
-    const validationResult = insertTransactionSchema.safeParse(req.body);
+    // Temporary compatibility layer while migrating
+    const validationResult = insertBankingTransactionSchema.safeParse(req.body);
     if (!validationResult.success) {
       return res.status(400).json({ 
         error: "Invalid transaction data", 
@@ -4919,7 +4920,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       createdById: req.user.id
     };
     
-    const transaction = await storage.createTransaction(transactionData);
+    const transaction = await storage.createBankingTransaction(transactionData);
+    return res.status(201).json(transaction);
+  }));
+  
+  // Create a banking transaction (new endpoint)
+  apiRouter.post("/banking-transactions", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const validationResult = insertBankingTransactionSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid transaction data", 
+        details: validationResult.error.format() 
+      });
+    }
+    
+    // Add the created_by_id to the data
+    const transactionData = {
+      ...validationResult.data,
+      createdById: req.user.id
+    };
+    
+    const transaction = await storage.createBankingTransaction(transactionData);
     return res.status(201).json(transaction);
   }));
   

@@ -918,7 +918,7 @@ export type BankReconciliation = typeof bankReconciliations.$inferSelect;
 export const bankReconciliationItems = pgTable("bank_reconciliation_items", {
   id: serial("id").primaryKey(),
   reconciliationId: integer("reconciliation_id").references(() => bankReconciliations.id).notNull(),
-  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id).notNull(),
   isReconciled: boolean("is_reconciled").default(false),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -979,7 +979,7 @@ export type BankConnection = typeof bankConnections.$inferSelect;
 // Transaction Reconciliations
 export const transactionReconciliations = pgTable("transaction_reconciliations", {
   id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id).notNull(),
   expenseId: integer("expense_id").references(() => expenses.id),
   status: text("status").default("unmatched").notNull(),
   matchConfidence: real("match_confidence"),
@@ -1036,7 +1036,7 @@ export const payrollItems = pgTable("payroll_items", {
   netPay: decimal("net_pay", { precision: 12, scale: 2 }).notNull(),
   taxJurisdiction: text("tax_jurisdiction"),
   notes: text("notes"),
-  transactionId: integer("transaction_id").references(() => transactions.id),
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id),
   createdById: integer("created_by_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -31,7 +31,8 @@ import {
   budgets, type Budget, type InsertBudget,
   budgetAllocations, type BudgetAllocation, type InsertBudgetAllocation,
   expenses, type Expense, type InsertExpense, 
-  transactions, type Transaction, type InsertTransaction,
+  // transactions, type Transaction, type InsertTransaction, // Old transaction table - being migrated
+  bankingTransactions, type BankingTransaction, type InsertBankingTransaction,
   transactionLines, type TransactionLine, type InsertTransactionLine,
   deposits, type Deposit, type InsertDeposit,
   // Banking Integration imports
@@ -401,11 +402,17 @@ export interface IStorage {
   updateDeposit(id: number, deposit: Partial<Deposit>): Promise<Deposit | undefined>;
   deleteDeposit(id: number): Promise<boolean>;
   
-  // Transaction operations
+  // Legacy Transaction operations (to be migrated)
   getTransaction(id: number): Promise<Transaction | undefined>;
   getTransactionsByVessel(vesselId: number): Promise<Transaction[]>;
   getAllTransactions(): Promise<Transaction[]>;
-  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  createTransaction(transaction: any): Promise<Transaction>;
+  
+  // Banking Transaction operations
+  getBankingTransaction(id: number): Promise<BankingTransaction | undefined>;
+  getBankingTransactionsByVessel(vesselId: number): Promise<BankingTransaction[]>;
+  getAllBankingTransactions(): Promise<BankingTransaction[]>;
+  createBankingTransaction(transaction: InsertBankingTransaction): Promise<BankingTransaction>;
   updateTransaction(id: number, transaction: Partial<Transaction>): Promise<Transaction | undefined>;
   deleteTransaction(id: number): Promise<boolean>;
   
