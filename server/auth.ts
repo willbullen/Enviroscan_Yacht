@@ -124,7 +124,8 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  // Handle both /api/login (old) and /api/auth/login (new) endpoints for backwards compatibility
+  const loginHandler = (req: any, res: any, next: any) => {
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) {
         return next(err);
@@ -151,7 +152,10 @@ export function setupAuth(app: Express) {
         return res.status(200).json(userResponse);
       });
     })(req, res, next);
-  });
+  };
+  
+  app.post("/api/login", loginHandler);
+  app.post("/api/auth/login", loginHandler);
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
