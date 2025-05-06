@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Check, Filter, RefreshCw, Search, AlertCircle, FileCheck, Link as LinkIcon, FileInput, Plus, Pencil, X, ArrowUpDown, Download, Eye, Upload, ChevronDown, Building2, Clock, CreditCard, ListChecks, MoreHorizontal, Link2, FileSpreadsheet, Calendar as CalendarIcon } from 'lucide-react';
+import { Check, Filter, RefreshCw, Search, AlertCircle, FileCheck, Link as LinkIcon, FileInput, Plus, Pencil, X, ArrowUpDown, Download, Eye, Upload, ChevronDown, Building2, Clock, CreditCard, ListChecks, MoreHorizontal, Link2, FileSpreadsheet, Calendar as CalendarIcon, Settings } from 'lucide-react';
+import BankingProviders from './BankingProviders';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -1450,6 +1451,26 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowMatchDialog(false)}>
               Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Banking Providers Dialog */}
+      <Dialog open={showManageProviders} onOpenChange={setShowManageProviders}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Banking Providers</DialogTitle>
+            <DialogDescription>
+              Configure banking connections and API credentials for this vessel
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <BankingProviders vesselId={vesselId} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowManageProviders(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
