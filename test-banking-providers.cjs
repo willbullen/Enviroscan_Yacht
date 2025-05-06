@@ -29,21 +29,23 @@ async function checkAndCreateData() {
     } else {
       console.log("No banking providers found. Creating test data...");
       
-      // Insert sample banking providers for different vessels
+      // Insert sample banking providers for different vessels using correct schema
       await db.execute(`
-        INSERT INTO banking_providers (name, provider_type, api_url, authentication_type, description, is_active, vessel_id, created_at, updated_at)
+        INSERT INTO banking_providers (name, code, logo_url, api_endpoint, is_active, vessel_id, created_at, updated_at)
         VALUES 
-        ('Revolut Business', 'api', 'https://api.revolut.com/business', 'oauth2', 'API integration with Revolut Business banking', true, 4, now(), now()),
-        ('Centtrip Maritime', 'api', 'https://api.centtrip.com/v1', 'api_key', 'Centtrip specialized maritime banking', true, 5, now(), now()),
-        ('HSBC Corporate', 'batch', 'https://api.hsbc.com/corporate', 'certificate', 'HSBC corporate banking integration', true, 6, now(), now())
+        ('Revolut Business', 'REVOLUT', 'https://logos.eastwindyachts.com/revolut.svg', 'https://api.revolut.com/business', true, 4, now(), now()),
+        ('Centtrip Maritime', 'CENTTRIP', 'https://logos.eastwindyachts.com/centtrip.svg', 'https://api.centtrip.com/v1', true, 5, now(), now()),
+        ('HSBC Corporate', 'HSBC', 'https://logos.eastwindyachts.com/hsbc.svg', 'https://api.hsbc.com/corporate', true, 6, now(), now())
       `);
       
       console.log("Banking providers created.");
       
       // Get the IDs of the providers we just created
-      const newProviders = await db.execute(
+      const newProvidersResult = await db.execute(
         `SELECT * FROM banking_providers WHERE vessel_id IN (4, 5, 6)`
       );
+      
+      const newProviders = newProvidersResult.rows || [];
       
       console.log("Created providers:");
       console.table(newProviders);
@@ -51,27 +53,31 @@ async function checkAndCreateData() {
       // Create bank connections for each provider
       for (const provider of newProviders) {
         await db.execute(`
-          INSERT INTO bank_connections (provider_id, vessel_id, connection_name, status, last_synced_at, credentials, created_at, updated_at)
+          INSERT INTO bank_connections (provider_id, vessel_id, connection_status, last_sync_at, credentials, connection_details, created_at, updated_at)
           VALUES 
-          (${provider.id}, ${provider.vessel_id}, '${provider.name} Connection', 'active', now(), '{"encrypted": "credential_placeholder_${provider.id}"}', now(), now())
+          (${provider.id}, ${provider.vessel_id}, 'active', now(), '{"encrypted": "credential_placeholder_${provider.id}"}', '{"name": "${provider.name} Connection", "account_type": "business"}', now(), now())
         `);
       }
       
       console.log("Bank connections created.");
       
       // Get the bank connections we just created
-      const connections = await db.execute(
+      const connectionsResult = await db.execute(
         `SELECT * FROM bank_connections`
       );
+      
+      const connections = connectionsResult.rows || [];
       
       console.log("Created connections:");
       console.table(connections);
     }
     
     // Check for existing transaction reconciliations
-    const reconciliations = await db.execute(
+    const reconciliationsResult = await db.execute(
       `SELECT * FROM transaction_reconciliations LIMIT 5`
     );
+    
+    const reconciliations = reconciliationsResult.rows || [];
     
     if (reconciliations.length > 0) {
       console.log("Existing transaction reconciliations found:");
@@ -80,30 +86,35 @@ async function checkAndCreateData() {
       console.log("No transaction reconciliations found.");
       
       // Get some transactions and expenses to link
-      const transactions = await db.execute(
+      const transactionsResult = await db.execute(
         `SELECT * FROM transactions LIMIT 3`
       );
       
-      const expenses = await db.execute(
+      const expensesResult = await db.execute(
         `SELECT * FROM expenses LIMIT 3`
       );
+      
+      const transactions = transactionsResult.rows || [];
+      const expenses = expensesResult.rows || [];
       
       if (transactions.length > 0 && expenses.length > 0) {
         // Create sample reconciliations
         for (let i = 0; i < Math.min(transactions.length, expenses.length); i++) {
           await db.execute(`
-            INSERT INTO transaction_reconciliations (transaction_id, expense_id, reconciled_by, reconciled_at, created_at, updated_at)
+            INSERT INTO transaction_reconciliations (transaction_id, expense_id, status, match_confidence, reconciled_by, reconciled_at, notes, created_at, updated_at)
             VALUES 
-            (${transactions[i].id}, ${expenses[i].id}, 5, now(), now(), now())
+            (${transactions[i].id}, ${expenses[i].id}, 'matched', 0.95, 5, now(), 'Automatically matched transaction with expense', now(), now())
           `);
         }
         
         console.log("Transaction reconciliations created.");
         
         // Get the reconciliations we just created
-        const newReconciliations = await db.execute(
+        const newReconciliationsResult = await db.execute(
           `SELECT * FROM transaction_reconciliations`
         );
+        
+        const newReconciliations = newReconciliationsResult.rows || [];
         
         console.log("Created reconciliations:");
         console.table(newReconciliations);
