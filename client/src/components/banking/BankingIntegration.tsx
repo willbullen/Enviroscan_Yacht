@@ -108,7 +108,7 @@ const BankingIntegration = () => {
   // Get all banking providers
   const { data: providers = [], isLoading: isLoadingProviders } = useQuery({
     queryKey: ['/api/banking/providers'],
-    queryFn: () => apiRequest('/api/banking/providers'),
+    queryFn: () => apiRequest('GET', '/api/banking/providers'),
   });
 
   // Get all bank connections for this vessel
@@ -116,7 +116,7 @@ const BankingIntegration = () => {
     queryKey: ['/api/banking/connections/vessel', currentVessel?.id],
     queryFn: async () => {
       if (!currentVessel) return [];
-      return apiRequest(`/api/banking/connections/vessel/${currentVessel.id}`);
+      return apiRequest('GET', `/api/banking/connections/vessel/${currentVessel.id}`);
     },
     enabled: !!currentVessel,
   });
@@ -126,7 +126,7 @@ const BankingIntegration = () => {
     queryKey: ['/api/banking/connections/sync-history', showSyncHistory],
     queryFn: async () => {
       if (!showSyncHistory) return [];
-      return apiRequest(`/api/banking/connections/${showSyncHistory}/sync-history`);
+      return apiRequest('GET', `/api/banking/connections/${showSyncHistory}/sync-history`);
     },
     enabled: !!showSyncHistory,
   });
@@ -134,10 +134,7 @@ const BankingIntegration = () => {
   // Create a new bank connection
   const createConnectionMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('/api/banking/connections', {
-        method: 'POST',
-        data,
-      });
+      return apiRequest('POST', '/api/banking/connections', data);
     },
     onSuccess: () => {
       toast({
@@ -160,9 +157,7 @@ const BankingIntegration = () => {
   // Delete a bank connection
   const deleteConnectionMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/banking/connections/${id}`, {
-        method: 'DELETE',
-      });
+      return apiRequest('DELETE', `/api/banking/connections/${id}`);
     },
     onSuccess: () => {
       toast({
@@ -183,9 +178,7 @@ const BankingIntegration = () => {
   // Sync a bank connection
   const syncConnectionMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/banking/connections/${id}/sync`, {
-        method: 'POST',
-      });
+      return apiRequest('POST', `/api/banking/connections/${id}/sync`);
     },
     onSuccess: (data) => {
       toast({

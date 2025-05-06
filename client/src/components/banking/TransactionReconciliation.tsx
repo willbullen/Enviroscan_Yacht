@@ -95,7 +95,7 @@ const TransactionReconciliation = () => {
     queryKey: ['/api/banking/transactions/reconciliation', currentVessel?.id],
     queryFn: async () => {
       if (!currentVessel) return { transactions: [], reconciliations: [], totalCount: 0, unmatchedCount: 0, matchedCount: 0 };
-      return apiRequest(`/api/banking/transactions/reconciliation/${currentVessel.id}`);
+      return apiRequest('GET', `/api/banking/transactions/reconciliation/${currentVessel.id}`);
     },
     enabled: !!currentVessel,
   });
@@ -105,7 +105,7 @@ const TransactionReconciliation = () => {
     queryKey: ['/api/expenses/vessel', currentVessel?.id],
     queryFn: async () => {
       if (!currentVessel) return [];
-      return apiRequest(`/api/expenses/vessel/${currentVessel.id}`);
+      return apiRequest('GET', `/api/expenses/vessel/${currentVessel.id}`);
     },
     enabled: !!currentVessel,
   });
@@ -115,7 +115,7 @@ const TransactionReconciliation = () => {
     queryKey: ['/api/banking/reconciliation/vessel', currentVessel?.id],
     queryFn: async () => {
       if (!currentVessel) return [];
-      return apiRequest(`/api/banking/reconciliation/vessel/${currentVessel.id}`);
+      return apiRequest('GET', `/api/banking/reconciliation/vessel/${currentVessel.id}`);
     },
     enabled: !!currentVessel,
   });
@@ -123,10 +123,7 @@ const TransactionReconciliation = () => {
   // Create a reconciliation
   const createReconciliationMutation = useMutation({
     mutationFn: async (data: { transactionId: number; expenseId: number; notes?: string }) => {
-      return apiRequest('/api/banking/reconciliation', {
-        method: 'POST',
-        data,
-      });
+      return apiRequest('POST', '/api/banking/reconciliation', data);
     },
     onSuccess: () => {
       toast({
@@ -154,9 +151,7 @@ const TransactionReconciliation = () => {
   // Delete a reconciliation
   const deleteReconciliationMutation = useMutation({
     mutationFn: async (reconciliationId: number) => {
-      return apiRequest(`/api/banking/reconciliation/${reconciliationId}`, {
-        method: 'DELETE',
-      });
+      return apiRequest('DELETE', `/api/banking/reconciliation/${reconciliationId}`);
     },
     onSuccess: () => {
       toast({
