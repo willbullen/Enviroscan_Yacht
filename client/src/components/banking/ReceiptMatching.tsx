@@ -66,44 +66,70 @@ interface Receipt {
 
 const ReceiptMatching: React.FC<ReceiptMatchingProps> = ({ vesselId }) => {
   const { useMockBankingData, bankingAPICredentialsSet } = useSystemSettings();
-  const [receipts, setReceipts] = useState<Receipt[]>([
-    {
-      id: 'r-001',
-      uploadDate: '2025-05-01T10:20:00Z',
-      filename: 'fuel_receipt_monaco.jpg',
-      status: 'matched',
-      extractedData: {
-        date: '2025-05-01T09:45:00Z',
-        vendor: 'Monaco Yacht Services',
-        amount: 12500.00,
-        description: 'Fuel Purchase - 5000L Marine Diesel',
-        category: 'Fuel'
-      },
-      matchedExpenseId: 1001,
-      thumbnailUrl: '/receipts/fuel_receipt_thumb.jpg'
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  
+  // Fetch receipts from the API
+  const { data: apiReceipts, isLoading, error } = useQuery({
+    queryKey: ['/api/receipts/reconciliation/receipts', vesselId],
+    queryFn: async () => {
+      const response = await fetch(`/api/receipts/reconciliation/receipts/${vesselId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch receipts');
+      }
+      const data = await response.json();
+      console.log('Fetched receipts data:', data);
+      return data as Receipt[];
     },
-    {
-      id: 'r-002',
-      uploadDate: '2025-05-03T14:30:00Z',
-      filename: 'port_fees_may2025.pdf',
-      status: 'processed',
-      extractedData: {
-        date: '2025-05-02T14:00:00Z',
-        vendor: 'Port de Monaco',
-        amount: 8750.50,
-        description: 'Docking Fees - May 2025',
-        category: 'Port Fees'
-      },
-      thumbnailUrl: '/receipts/port_fees_thumb.jpg'
-    },
-    {
-      id: 'r-003',
-      uploadDate: '2025-05-05T09:15:00Z',
-      filename: 'catering_invoice.jpg',
-      status: 'processing',
-      thumbnailUrl: '/receipts/catering_thumb.jpg'
+    enabled: !!vesselId
+  });
+  
+  // Update receipts state when API data is loaded
+  useEffect(() => {
+    if (apiReceipts) {
+      // If we have real data, use it
+      setReceipts(apiReceipts);
+    } else if (useMockBankingData) {
+      // If using mock data, load this default set
+      setReceipts([
+        {
+          id: 'r-001',
+          uploadDate: '2025-05-01T10:20:00Z',
+          filename: 'fuel_receipt_monaco.jpg',
+          status: 'matched',
+          extractedData: {
+            date: '2025-05-01T09:45:00Z',
+            vendor: 'Monaco Yacht Services',
+            amount: 12500.00,
+            description: 'Fuel Purchase - 5000L Marine Diesel',
+            category: 'Fuel'
+          },
+          matchedExpenseId: 1001,
+          thumbnailUrl: '/receipts/fuel_receipt_thumb.jpg'
+        },
+        {
+          id: 'r-002',
+          uploadDate: '2025-05-03T14:30:00Z',
+          filename: 'port_fees_may2025.pdf',
+          status: 'processed',
+          extractedData: {
+            date: '2025-05-02T14:00:00Z',
+            vendor: 'Port de Monaco',
+            amount: 8750.50,
+            description: 'Docking Fees - May 2025',
+            category: 'Port Fees'
+          },
+          thumbnailUrl: '/receipts/port_fees_thumb.jpg'
+        },
+        {
+          id: 'r-003',
+          uploadDate: '2025-05-05T09:15:00Z',
+          filename: 'catering_invoice.jpg',
+          status: 'processing',
+          thumbnailUrl: '/receipts/catering_thumb.jpg'
+        }
+      ]);
     }
-  ]);
+  }, [apiReceipts, useMockBankingData]);
   
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
@@ -315,7 +341,26 @@ const ReceiptMatching: React.FC<ReceiptMatchingProps> = ({ vesselId }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {receipts.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <Spinner size="md" className="mb-2" />
+                    <p>Loading receipts...</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <AlertCircle className="h-8 w-8 mb-1 text-red-500" />
+                    <p>Error loading receipts</p>
+                    <p className="text-sm text-red-500">{error instanceof Error ? error.message : 'Unknown error'}</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : receipts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
@@ -410,12 +455,33 @@ const ReceiptMatching: React.FC<ReceiptMatchingProps> = ({ vesselId }) => {
         </Table>
       </div>
       
+      {/* Show different alerts based on data state */}
       {useMockBankingData && (
         <Alert className="bg-amber-50 text-amber-800 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-800" />
           <AlertTitle>Using Test Data</AlertTitle>
           <AlertDescription>
             You're viewing simulated receipt data. Toggle to live mode in settings to use actual AI receipt processing.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>API Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : 'Error connecting to the receipt database. Please try again later.'}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {!error && !useMockBankingData && apiReceipts && apiReceipts.length === 0 && (
+        <Alert className="bg-blue-50 text-blue-800 border-blue-200">
+          <AlertCircle className="h-4 w-4 text-blue-800" />
+          <AlertTitle>No Receipts Found</AlertTitle>
+          <AlertDescription>
+            No receipts found for this vessel. Upload receipts to begin tracking expenses.
           </AlertDescription>
         </Alert>
       )}

@@ -53,10 +53,10 @@ export default function setupReceiptRoutes(storage: IStorage) {
         id: `r-${expense.id}`,
         uploadDate: expense.createdAt.toISOString(),
         filename: expense.receiptUrl ? expense.receiptUrl.split('/').pop() || 'receipt.jpg' : 'unknown.jpg',
-        status: expense.reconciled ? 'matched' : 'processed',
+        status: 'processed', // Default to processed since reconciled doesn't exist on the type
         extractedData: {
           date: expense.expenseDate.toISOString(),
-          vendor: expense.vendorName || 'Unknown Vendor',
+          vendor: expense.vendorId ? `Vendor #${expense.vendorId}` : 'Unknown Vendor',
           amount: parseFloat(expense.total),
           description: expense.description || 'No description',
           category: expense.category || 'Uncategorized'
