@@ -413,8 +413,8 @@ export interface IStorage {
   getBankingTransactionsByVessel(vesselId: number): Promise<BankingTransaction[]>;
   getAllBankingTransactions(): Promise<BankingTransaction[]>;
   createBankingTransaction(transaction: InsertBankingTransaction): Promise<BankingTransaction>;
-  updateTransaction(id: number, transaction: Partial<Transaction>): Promise<Transaction | undefined>;
-  deleteTransaction(id: number): Promise<boolean>;
+  updateBankingTransaction(id: number, transaction: Partial<BankingTransaction>): Promise<BankingTransaction | undefined>;
+  deleteBankingTransaction(id: number): Promise<boolean>;
   
   // Transaction Line operations
   getTransactionLines(transactionId: number): Promise<TransactionLine[]>;

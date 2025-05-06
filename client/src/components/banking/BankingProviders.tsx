@@ -137,83 +137,21 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
   });
   
   // Transform API data to component format with UI enhancements
-  const providers: BankingProvider[] = useMockBankingData 
-    ? [
-        {
-          id: 1,
-          name: 'Centtrip',
-          apiType: 'REST',
-          authType: 'API_KEY',
-          baseUrl: 'https://api.centtrip.com',
-          status: 'connected',
-          vesselId: vesselId,
-          isActive: true,
-          apiKeySet: true,
-          apiSecretSet: true,
-          lastSynced: '2025-05-05T09:30:00Z',
-          createdAt: '2025-01-01T00:00:00Z',
-          updatedAt: '2025-05-05T09:30:00Z',
-          icon: <Building2 className="h-8 w-8 text-blue-600" />,
-          accounts: 2,
-          mappedAccounts: [
-            {
-              id: 1,
-              accountNumber: 'FA-001',
-              accountName: 'Lazar Card',
-              bankAccountId: 'cent-001',
-              bankAccountName: 'Crew Card #1'
-            },
-            {
-              id: 2,
-              accountNumber: 'FA-002',
-              accountName: 'Maintenance Account',
-              bankAccountId: 'cent-002',
-              bankAccountName: 'Operations Account'
-            }
-          ]
-        },
-        {
-          id: 2,
-          name: 'Revolut',
-          apiType: 'REST',
-          authType: 'OAUTH2',
-          baseUrl: 'https://api.revolut.com',
-          status: 'connected',
-          vesselId: vesselId,
-          isActive: true,
-          apiKeySet: true,
-          apiSecretSet: true,
-          lastSynced: '2025-05-05T08:45:00Z',
-          createdAt: '2025-01-01T00:00:00Z',
-          updatedAt: '2025-05-05T08:45:00Z',
-          icon: <Building2 className="h-8 w-8 text-purple-600" />,
-          accounts: 1,
-          mappedAccounts: [
-            {
-              id: 4,
-              accountNumber: 'FA-004',
-              accountName: 'Provisions Account',
-              bankAccountId: 'rev-001',
-              bankAccountName: 'Food & Beverage'
-            }
-          ]
-        }
-      ]
-    : apiProviders.map(provider => {
-        // Find connections for this provider
-        const providerConnections = bankConnections.filter(conn => conn.providerId === provider.id);
-        
-        // Create the enhanced provider object
-        return {
-          ...provider,
-          icon: getProviderIcon(provider.name),
-          status: provider.status === 'active' ? 'connected' : 'disconnected',
-          accounts: providerConnections.length,
-          apiKeySet: !!provider.apiKey,
-          apiSecretSet: !!provider.apiSecret,
-          lastSynced: provider.lastSyncedAt || undefined,
-        };
-      });
+  const providers: BankingProvider[] = apiProviders.map(provider => {
+    // Find connections for this provider
+    const providerConnections = bankConnections.filter(conn => conn.providerId === provider.id);
+    
+    // Create the enhanced provider object
+    return {
+      ...provider,
+      icon: getProviderIcon(provider.name),
+      status: provider.status === 'active' ? 'connected' : 'disconnected',
+      accounts: providerConnections.length,
+      apiKeySet: !!provider.apiKey,
+      apiSecretSet: !!provider.apiSecret,
+      lastSynced: provider.lastSyncedAt || undefined,
+    };
+  });
       
   // Helper to get icon based on provider name
   function getProviderIcon(providerName: string): React.ReactNode {
@@ -335,14 +273,34 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
   // Fetch bank accounts when a provider is selected for mapping
   useEffect(() => {
     if (selectedProvider && showMapAccountsDialog) {
-      // In a real app, this would be an API call to fetch accounts from the provider
-      const mockBankAccounts: BankAccount[] = [
-        { id: `${selectedProvider.id}-001`, name: `${selectedProvider.name} Account #1`, currency: 'USD', balance: '250,000.00' },
-        { id: `${selectedProvider.id}-002`, name: `${selectedProvider.name} Account #2`, currency: 'EUR', balance: '150,000.00' },
-        { id: `${selectedProvider.id}-003`, name: `${selectedProvider.name} Card`, currency: 'GBP', balance: '75,000.00' },
-      ];
+      // Get bank accounts from API
+      const fetchBankAccounts = async () => {
+        try {
+          const response = await fetch(`/api/banking/providers/${selectedProvider.id}/accounts`);
+          if (response.ok) {
+            const data = await response.json();
+            setBankAccounts(data);
+          } else {
+            console.error("Failed to fetch bank accounts:", await response.text());
+            toast({
+              title: "Error",
+              description: "Failed to fetch bank accounts from provider",
+              variant: "destructive"
+            });
+            setBankAccounts([]);
+          }
+        } catch (error) {
+          console.error("Error fetching bank accounts:", error);
+          toast({
+            title: "Error",
+            description: "An error occurred while fetching bank accounts",
+            variant: "destructive"
+          });
+          setBankAccounts([]);
+        }
+      };
       
-      setBankAccounts(mockBankAccounts);
+      fetchBankAccounts();
       
       // Initialize account mappings from existing mapped accounts
       const initialMappings: {[key: string]: string} = {};
