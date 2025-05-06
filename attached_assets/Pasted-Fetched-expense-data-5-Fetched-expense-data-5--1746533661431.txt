@@ -1,0 +1,47 @@
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+API Error: GET /api/banking/transactions/vessel (200) Received HTML instead of JSON response. undefined
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+API Error: GET /api/banking/transactions/vessel (200) Failed to parse response: Received HTML instead of JSON response. undefined
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+API Error: GET https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/api/banking/connections/vessel (400) 400: Bad Request 
+Object {error: "Invalid connection ID"}
+error: "Invalid connection ID"
+[[Prototype]]: Object
+
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://fead71cf-ed0f-4dc9-965c-4c90df83140c-00-2aqewwmae7psg.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+Fetched expense data: 
+(5) [{…}, {…}, {…}, {…}, {…}]
