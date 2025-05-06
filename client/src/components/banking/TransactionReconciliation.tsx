@@ -55,6 +55,9 @@ import { format } from 'date-fns';
 import { useSystemSettings } from '@/contexts/SystemSettingsContext';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface TransactionReconciliationProps {
   vesselId: number;
@@ -222,144 +225,34 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
     }
   ];
   
-  // Vessel-specific transaction data function
-  const getVesselSpecificTransactions = (): Transaction[] => {
-    // Get vessel name for more specific descriptions
-    const getVesselName = () => {
-      if (vesselId === 6) return 'M/Y MONTKAJ';
-      if (vesselId === 5) return 'M/Y TAKNM';
-      if (vesselId === 4) return 'M/Y NOURAH OF RIYAD';
-      return 'Vessel';
-    };
-    
-    const vesselName = getVesselName();
-    
-    return [
-      {
-        id: `t-${vesselId}-001`,
-        date: '2025-05-01T10:30:00Z',
-        description: `Fuel Purchase for ${vesselName} - Monaco Yacht Services`,
-        amount: 12500.00,
-        type: 'debit',
-        status: 'matched',
-        matchedExpenseId: 1001,
-        matchConfidence: 0.95,
-        provider: 'Centtrip',
-        category: 'Fuel',
-        payee: 'Monaco Yacht Services',
-        reference: `INV-${vesselId}-2025-001`
-      },
-      {
-        id: `t-${vesselId}-002`,
-        date: '2025-05-02T14:15:00Z',
-        description: `${vesselName} - Port de Monaco Docking Fees`,
-        amount: 8750.50,
-        type: 'debit',
-        status: 'unmatched',
-        provider: 'Centtrip',
-        payee: 'Port de Monaco',
-        reference: `DOC-${vesselId}-2025-042`
-      },
-      {
-        id: `t-${vesselId}-003`,
-        date: '2025-05-03T09:00:00Z',
-        description: `${vesselName} Crew Payroll Payment`,
-        amount: 45000.00,
-        type: 'debit',
-        status: 'reconciled',
-        matchedExpenseId: 1002,
-        provider: 'Revolut',
-        category: 'Crew Salaries',
-        payee: 'Crew Payroll',
-        reference: `PAY-${vesselId}-2025-MAY`
-      },
-      {
-        id: `t-${vesselId}-004`,
-        date: '2025-05-03T11:30:00Z',
-        description: `${vesselName} - Owner Transfer - Monthly Budget`,
-        amount: 150000.00,
-        type: 'credit',
-        status: 'reconciled',
-        matchedExpenseId: 1003,
-        provider: 'Revolut',
-        category: 'Owner Funding',
-        payee: 'Owner',
-        reference: `TRF-${vesselId}-MAY2025`
-      },
-      {
-        id: `t-${vesselId}-005`,
-        date: '2025-05-04T08:45:00Z',
-        description: `${vesselName} Provisions - Maritime Supplies Ltd`,
-        amount: 3250.75,
-        type: 'debit',
-        status: 'unmatched',
-        provider: 'Centtrip',
-        payee: 'Maritime Supplies Ltd',
-        reference: `PO-${vesselId}-2025-118`
-      },
-      {
-        id: `t-${vesselId}-006`,
-        date: '2025-05-04T15:20:00Z',
-        description: `${vesselName} Charter Revenue - Weekly Charter`,
-        amount: 85000.00,
-        type: 'credit',
-        status: 'matched',
-        matchedExpenseId: 1004,
-        matchConfidence: 0.98,
-        provider: 'Centtrip',
-        category: 'Charter Income',
-        payee: 'Charter Client',
-        reference: `CHR-${vesselId}-2025-042`
-      },
-      {
-        id: `t-${vesselId}-007`,
-        date: '2025-05-05T10:10:00Z',
-        description: `${vesselName} Insurance Premium Payment`,
-        amount: 12850.00,
-        type: 'debit',
-        status: 'unmatched',
-        provider: 'Revolut',
-        payee: 'Maritime Insurance Co.',
-        reference: `INS-${vesselId}-2025-Q2`
-      },
-      {
-        id: `t-${vesselId}-008`,
-        date: '2025-05-05T14:30:00Z',
-        description: `${vesselName} Fuel Top-Up XXXXXXXXX232`,
-        amount: 8750.00,
-        type: 'debit',
-        status: 'unmatched',
-        provider: 'Centtrip',
-        payee: 'Marina Fuel Services',
-        reference: `FUEL-${vesselId}-232-2025`
-      },
-      {
-        id: `t-${vesselId}-009`,
-        date: '2025-05-06T09:15:00Z',
-        description: `${vesselName} Crew Uniform Purchase`,
-        amount: 4250.50,
-        type: 'debit',
-        status: 'excluded',
-        provider: 'Revolut',
-        payee: 'Maritime Apparel',
-        reference: `UNI-${vesselId}-2025-045`
-      },
-      {
-        id: `t-${vesselId}-010`,
-        date: '2025-05-06T11:00:00Z',
-        description: `${vesselName} MOBI ACCOUNTANT MOBI ACCOUNT`,
-        amount: 1756.50,
-        type: 'debit',
-        status: 'unmatched',
-        provider: 'Centtrip',
-        payee: 'Accounting Services',
-        reference: `ACC-${vesselId}-2025-042`
-      }
-    ];
-  };
+  // Fetch banking transactions from the API
+  const {
+    data: bankingTransactions = [],
+    isLoading: isLoadingTransactions,
+    error: transactionsError,
+    refetch: refetchTransactions
+  } = useQuery<any[]>({
+    queryKey: ['/api/banking/transactions/vessel', vesselId],
+    enabled: !!vesselId,
+  });
   
-  // Create vessel-specific transactions using memoization to avoid re-renders
-  const mockTransactions = React.useMemo(() => getVesselSpecificTransactions(), [vesselId]);
+  // Transform API transaction data to match our UI component format
+  const transformedTransactions: Transaction[] = React.useMemo(() => {
+    return bankingTransactions.map((transaction) => ({
+      id: transaction.id.toString(),
+      date: transaction.date || transaction.createdAt,
+      description: transaction.description || 'No description',
+      amount: parseFloat(transaction.amount),
+      type: parseFloat(transaction.amount) >= 0 ? 'credit' : 'debit',
+      status: transaction.status || 'unmatched',
+      matchedExpenseId: transaction.matchedExpenseId,
+      matchConfidence: transaction.matchConfidence,
+      provider: transaction.provider || 'Bank',
+      category: transaction.category,
+      payee: transaction.payee,
+      reference: transaction.reference
+    }));
+  }, [bankingTransactions]);
   
   // Mock expense matches for the selected transaction
   const mockExpenseMatches: ExpenseMatch[] = [
@@ -404,7 +297,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   };
   
   // Filter transactions based on search, date and status
-  const filteredTransactions = getStatusFilteredTransactions(mockTransactions)
+  const filteredTransactions = getStatusFilteredTransactions(transformedTransactions)
     .filter(transaction => {
       // Search filter
       if (searchValue && !transaction.description.toLowerCase().includes(searchValue.toLowerCase()) && 
