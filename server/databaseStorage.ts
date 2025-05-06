@@ -2437,12 +2437,7 @@ export class DatabaseStorage implements IStorage {
     return transaction || undefined;
   }
   
-  async getBankingTransactionsByVessel(vesselId: number): Promise<BankingTransaction[]> {
-    return db
-      .select()
-      .from(bankingTransactions)
-      .where(eq(bankingTransactions.vesselId, vesselId));
-  }
+  // Method moved to line 2719 to avoid duplication
   
   async getUnmatchedBankingTransactions(vesselId: number): Promise<BankingTransaction[]> {
     // Get all banking transactions for the vessel
