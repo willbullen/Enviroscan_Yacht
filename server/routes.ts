@@ -5796,6 +5796,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(connections);
   }));
   
+  // Get all bank API connections for a specific vessel
+  apiRouter.get("/banking/connections/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    try {
+      // Get all bank accounts for this vessel
+      const accounts = await storage.getBankAccountsByVessel(vesselId);
+      
+      // If no accounts, return empty array
+      if (!accounts || accounts.length === 0) {
+        return res.json([]);
+      }
+      
+      // Get connections for each bank account
+      const accountIds = accounts.map(account => account.id);
+      let allConnections: BankApiConnection[] = [];
+      
+      // For each account, get its connections and add to our array
+      for (const accountId of accountIds) {
+        const connections = await storage.getBankApiConnectionsByBankAccount(accountId);
+        allConnections = [...allConnections, ...connections];
+      }
+      
+      return res.json(allConnections);
+    } catch (error) {
+      console.error(`Failed to get banking connections for vessel ${vesselId}:`, error);
+      return res.status(500).json({ message: "Failed to get banking connections for vessel" });
+    }
+  }));
+  
   // Get a specific bank API connection
   apiRouter.get("/banking/connections/:id", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
