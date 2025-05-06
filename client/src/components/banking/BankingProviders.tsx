@@ -408,18 +408,28 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
   const handleSubmitApiCredentials = () => {
     if (!selectedProvider) return;
     
-    // Update the provider status
-    setProviders(providers.map(provider => 
-      provider.id === selectedProvider.id 
-        ? { 
-            ...provider, 
-            status: 'connected',
-            apiKeySet: true,
-            apiSecretSet: true,
-            lastSynced: new Date().toISOString()
-          } 
-        : provider
-    ));
+    if (!apiKey || !apiSecret) {
+      toast({
+        title: "Validation Error",
+        description: "Both API key and secret are required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Update provider with new credentials
+    const updates = {
+      apiKey,
+      apiSecret,
+      status: 'active',
+      isActive: true
+    };
+    
+    // Use the update mutation to save changes
+    updateProviderMutation.mutate({ 
+      id: selectedProvider.id,
+      updates
+    });
     
     // Update SystemSettingsContext
     const updatedCredentials = {
@@ -427,19 +437,11 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
       [selectedProvider.id]: true
     };
     
-    // Save API credentials securely (this would normally call an API endpoint)
-    console.log(`Saving API credentials for ${selectedProvider.name}:`, {
-      apiKey: apiKey.slice(0, 3) + '...',
-      apiSecret: '•••••••••'
-    });
-    
-    // Update the context
+    // Update the context to use live data
     updateSettings({
       bankingAPICredentialsSet: updatedCredentials,
       useMockBankingData: false // Automatically switch to live data mode when credentials are added
     });
-    
-    setShowProviderDialog(false);
   };
   
   // Handle opening the account mapping dialog
@@ -448,46 +450,56 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
     setShowMapAccountsDialog(true);
   };
   
+  // Account mappings mutation
+  const updateAccountMappingsMutation = useMutation({
+    mutationFn: ({ providerId, mappings }: { 
+      providerId: number;
+      mappings: Array<{
+        accountId: number;
+        bankAccountId: string;
+      }>;
+    }) => {
+      return apiRequest(`/api/banking/providers/${providerId}/account-mappings`, {
+        method: 'PATCH',
+        data: { mappings }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
+      setShowMapAccountsDialog(false);
+      toast({
+        title: "Success",
+        description: "Account mappings updated successfully",
+        variant: "default"
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to update account mappings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update account mappings",
+        variant: "destructive"
+      });
+    }
+  });
+  
   // Handle saving account mappings
   const handleSaveAccountMappings = () => {
     if (!selectedProvider) return;
     
-    // Create mapped accounts from the selections
-    const newMappedAccounts: MappedAccount[] = [];
+    // Create mappings array for the API
+    const mappings = Object.entries(accountMappings)
+      .filter(([_, bankAccountId]) => bankAccountId && bankAccountId !== 'not_mapped')
+      .map(([accountId, bankAccountId]) => ({
+        accountId: parseInt(accountId),
+        bankAccountId
+      }));
     
-    // Create mappings for each selected account
-    Object.entries(accountMappings).forEach(([accountId, bankAccountId]) => {
-      // Find the financial account
-      const financialAccount = financialAccounts.find((acc: FinancialAccount) => acc.id.toString() === accountId);
-      if (!financialAccount) return;
-      
-      // Find the bank account
-      const bankAccount = bankAccounts.find((acc: BankAccount) => acc.id === bankAccountId);
-      if (!bankAccount) return;
-      
-      // Create the mapping
-      newMappedAccounts.push({
-        id: financialAccount.id,
-        accountNumber: financialAccount.accountNumber,
-        accountName: financialAccount.accountName,
-        bankAccountId: bankAccount.id,
-        bankAccountName: bankAccount.name
-      });
+    // Use mutation to update mappings
+    updateAccountMappingsMutation.mutate({
+      providerId: selectedProvider.id,
+      mappings
     });
-    
-    // Update the provider
-    setProviders(providers.map(provider => 
-      provider.id === selectedProvider.id 
-        ? { 
-            ...provider, 
-            mappedAccounts: newMappedAccounts,
-            accounts: newMappedAccounts.length
-          } 
-        : provider
-    ));
-    
-    // Close the dialog
-    setShowMapAccountsDialog(false);
   };
   
   // Format date for display
@@ -660,24 +672,76 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="provider-id">Provider ID</Label>
+              <Label htmlFor="api-type">API Type</Label>
+              <Select 
+                value={newProviderApiType}
+                onValueChange={setNewProviderApiType}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select API type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="REST">REST API</SelectItem>
+                  <SelectItem value="GRAPHQL">GraphQL API</SelectItem>
+                  <SelectItem value="SOAP">SOAP API</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="auth-type">Authentication Type</Label>
+              <Select 
+                value={newProviderAuthType}
+                onValueChange={setNewProviderAuthType}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select authentication type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="API_KEY">API Key</SelectItem>
+                  <SelectItem value="OAUTH2">OAuth 2.0</SelectItem>
+                  <SelectItem value="BASIC">Basic Auth</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="base-url">Base URL</Label>
               <Input
-                id="provider-id"
+                id="base-url"
                 type="text"
-                placeholder="Enter provider ID (e.g. barclays)"
-                value={newProviderId}
-                onChange={(e) => setNewProviderId(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                placeholder="Enter base URL (e.g. https://api.barclays.com)"
+                value={newProviderBaseUrl}
+                onChange={(e) => setNewProviderBaseUrl(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                This will be used as a unique identifier for this provider
-              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="api-key">API Key (Optional)</Label>
+              <Input
+                id="api-key"
+                type="password"
+                placeholder="Enter API key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="api-secret">API Secret (Optional)</Label>
+              <Input
+                id="api-secret"
+                type="password"
+                placeholder="Enter API secret"
+                value={apiSecret}
+                onChange={(e) => setApiSecret(e.target.value)}
+              />
             </div>
             
             <Alert className="bg-blue-50 border-blue-200 text-blue-800">
-              <AlertCircle className="h-4 w-4 text-blue-800" />
-              <AlertTitle>Additional Configuration Required</AlertTitle>
+              <HelpCircle className="h-4 w-4 text-blue-800" />
               <AlertDescription className="text-xs">
-                After adding a new provider, you'll need to configure its API credentials separately.
+                API credentials are stored securely and encrypted. You can get these from your banking provider's developer portal.
               </AlertDescription>
             </Alert>
           </div>
@@ -687,24 +751,57 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
             </Button>
             <Button 
               onClick={() => {
-                // Create a new provider and add it to the list
-                const newProvider: BankingProvider = {
-                  id: newProviderId || newProviderName.toLowerCase().replace(/\s+/g, '-'),
+                if (!newProviderName) {
+                  toast({
+                    title: "Validation Error",
+                    description: "Please enter provider name",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                if (!newProviderBaseUrl) {
+                  toast({
+                    title: "Validation Error",
+                    description: "Please enter base URL",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                // Create provider data
+                const newProvider = {
                   name: newProviderName,
-                  icon: <Building2 className="h-8 w-8 text-gray-600" />,
-                  status: 'disconnected',
-                  apiKeySet: false,
-                  apiSecretSet: false
+                  apiType: newProviderApiType,
+                  authType: newProviderAuthType,
+                  baseUrl: newProviderBaseUrl,
+                  vesselId: vesselId,
+                  isActive: true,
+                  status: 'active'
                 };
                 
-                setProviders([...providers, newProvider]);
-                setShowAddProviderDialog(false);
-                setNewProviderName('');
-                setNewProviderId('');
-              }} 
-              disabled={!newProviderName}
+                // Add API credentials if provided
+                if (apiKey) {
+                  Object.assign(newProvider, { apiKey });
+                }
+                
+                if (apiSecret) {
+                  Object.assign(newProvider, { apiSecret });
+                }
+                
+                // Use mutation to create provider
+                createProviderMutation.mutate(newProvider);
+              }}
+              disabled={createProviderMutation.isPending || !newProviderName}
             >
-              Add Provider
+              {createProviderMutation.isPending ? (
+                <>
+                  <Spinner size="xs" className="mr-2" />
+                  Adding...
+                </>
+              ) : (
+                'Add Provider'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -779,8 +876,18 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
             <Button variant="outline" onClick={() => setShowMapAccountsDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveAccountMappings} disabled={isLoadingAccounts}>
-              Save Mappings
+            <Button 
+              onClick={handleSaveAccountMappings} 
+              disabled={isLoadingAccounts || updateAccountMappingsMutation.isPending}
+            >
+              {updateAccountMappingsMutation.isPending ? (
+                <>
+                  <Spinner size="xs" className="mr-2" />
+                  Saving...
+                </>
+              ) : (
+                'Save Mappings'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -837,8 +944,18 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
             <Button variant="outline" onClick={() => setShowProviderDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmitApiCredentials} disabled={!apiKey || !apiSecret}>
-              Save Credentials
+            <Button 
+              onClick={handleSubmitApiCredentials} 
+              disabled={!apiKey || !apiSecret || updateProviderMutation.isPending}
+            >
+              {updateProviderMutation.isPending ? (
+                <>
+                  <Spinner size="xs" className="mr-2" />
+                  Saving...
+                </>
+              ) : (
+                'Save Credentials'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
