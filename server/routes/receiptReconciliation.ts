@@ -32,6 +32,49 @@ const upload = multer({
 });
 
 export default function setupReceiptRoutes(storage: IStorage) {
+  // Get all receipts for a vessel
+  router.get('/receipts/:vesselId', async (req, res) => {
+    try {
+      // Check authentication first
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required. Please log in.' });
+      }
+      
+      const vesselId = parseInt(req.params.vesselId);
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ error: 'Invalid vessel ID' });
+      }
+      
+      // Get expenses with receipts for this vessel
+      const expenses = await storage.getExpensesWithReceiptsByVessel(vesselId);
+      
+      // Convert expenses to receipt format
+      const receipts = expenses.map(expense => ({
+        id: `r-${expense.id}`,
+        uploadDate: expense.createdAt.toISOString(),
+        filename: expense.receiptUrl ? expense.receiptUrl.split('/').pop() || 'receipt.jpg' : 'unknown.jpg',
+        status: expense.reconciled ? 'matched' : 'processed',
+        extractedData: {
+          date: expense.expenseDate.toISOString(),
+          vendor: expense.vendorName || 'Unknown Vendor',
+          amount: parseFloat(expense.total),
+          description: expense.description || 'No description',
+          category: expense.category || 'Uncategorized'
+        },
+        matchedExpenseId: expense.id,
+        thumbnailUrl: expense.receiptUrl,
+        errorMessage: ''
+      }));
+      
+      return res.json(receipts);
+    } catch (error) {
+      console.error('Error fetching receipts:', error);
+      return res.status(500).json({ 
+        error: 'Failed to fetch receipts', 
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   // Define a route for receipt analysis
   router.post('/analyze', upload.single('receipt'), async (req, res) => {
     try {

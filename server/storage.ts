@@ -390,6 +390,7 @@ export interface IStorage {
   createBulkExpenses(expenses: InsertExpense[]): Promise<Expense[]>;
   updateExpense(id: number, expense: Partial<Expense>): Promise<Expense | undefined>;
   deleteExpense(id: number): Promise<boolean>;
+  getExpensesWithReceiptsByVessel(vesselId: number): Promise<Expense[]>;
   // Receipt reconciliation methods
   getUnreconciledExpenses(vesselId?: number): Promise<Expense[]>;
   updateExpenseReceipt(id: number, receiptUrl: string): Promise<Expense | undefined>;
