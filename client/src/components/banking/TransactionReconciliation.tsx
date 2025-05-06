@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Filter, RefreshCw, Search, AlertCircle, FileCheck, Link as LinkIcon, FileInput, Plus, Pencil, X, ArrowUpDown, Download, Eye, Upload, ChevronDown, Building2, Clock } from 'lucide-react';
+import { Check, Filter, RefreshCw, Search, AlertCircle, FileCheck, Link as LinkIcon, FileInput, Plus, Pencil, X, ArrowUpDown, Download, Eye, Upload, ChevronDown, Building2, Clock, CreditCard, ListChecks, MoreHorizontal, Link2, FileSpreadsheet, Calendar as CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useSystemSettings } from '@/contexts/SystemSettingsContext';
 import { Spinner } from '@/components/ui/spinner';
@@ -564,119 +565,150 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
 
   return (
     <div className="space-y-4">
-      {/* Transaction Reconciliation Header Section */}
-      <div className="flex flex-col space-y-2">
-        {/* Current Account Selector - Based exactly on QuickBooks screenshot */}
+      {/* Transaction Reconciliation Header Section - Compact Version */}
+      <div className="space-y-3">
+        {/* Account Selector Dropdown */}
         <div className="relative">
-          <div 
-            className="flex justify-between items-center border rounded-t-md p-3 cursor-pointer hover:bg-slate-50 bg-white"
-            onClick={() => setShowBankAccountDropdown(!showBankAccountDropdown)}
+          <Select
+            value={selectedBankAccount?.id || ''}
+            onValueChange={(value) => {
+              const account = mockBankAccounts.find(a => a.id === value);
+              if (account) setSelectedBankAccount(account);
+            }}
           >
-            <div className="flex items-center">
-              <div className="pr-2">
-                <h3 className="font-semibold text-sm">Current Account</h3>
-                <div className="text-xs text-muted-foreground flex items-center">
-                  {selectedBankAccount ? (
-                    <>
-                      <span>{selectedBankAccount.name} · </span>
-                      <span>Updated May 5, 1:00 PM</span>
-                    </>
-                  ) : (
-                    <>Select an account</>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <ChevronDown className={`h-4 w-4 transition-transform ${showBankAccountDropdown ? 'rotate-180' : ''}`} />
-            </div>
-          </div>
-          
-          {/* Bank Account Dropdown */}
-          {showBankAccountDropdown && (
-            <div className="absolute top-full left-0 w-full z-30 bg-white rounded-b-md border-x border-b shadow-md">
-              <div className="p-2">
-                <button 
-                  className="text-xs text-blue-600 hover:underline w-full text-left pb-2"
-                  onClick={() => setShowBankAccountDropdown(false)}
-                >
-                  Hide account cards
-                </button>
-              </div>
-              {mockBankAccounts.map((account) => (
-                <div 
-                  key={account.id}
-                  className={`p-3 hover:bg-slate-50 cursor-pointer ${selectedBankAccount?.id === account.id ? 'bg-blue-50' : ''}`}
-                  onClick={() => {
-                    setSelectedBankAccount(account);
-                    setShowBankAccountDropdown(false);
-                  }}
-                >
-                  <div className="flex justify-between">
+            <SelectTrigger className="w-full bg-white border">
+              <SelectValue placeholder="Select account">
+                {selectedBankAccount ? (
+                  <div className="flex items-center">
+                    <Building2 className="h-4 w-4 mr-2 text-primary" />
                     <div>
-                      <h4 className="font-medium">{account.name}</h4>
-                      <div className="text-xs text-muted-foreground">{account.provider}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-right">${account.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                      <div className="text-xs text-muted-foreground text-right">{account.transactionsCount} Transactions</div>
+                      <span className="font-medium">{selectedBankAccount.name}</span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({selectedBankAccount.provider})
+                      </span>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <span>Select a bank account</span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {mockBankAccounts.map((account) => (
+                <SelectItem key={account.id} value={account.id}>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center">
+                      <Building2 className="h-4 w-4 mr-2 text-primary" />
+                      <div>
+                        <span className="font-medium">{account.name}</span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({account.provider})
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm font-medium">
+                      ${account.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                </SelectItem>
               ))}
-            </div>
-          )}
+            </SelectContent>
+          </Select>
         </div>
         
-        {/* Account Summary Card */}
+        {/* Account Summary and Actions */}
         {selectedBankAccount && (
-          <div className="rounded-md bg-white border">
-            <div className="grid grid-cols-2 divide-x divide-gray-200">
-              <div className="p-4">
-                <div className="text-xs text-muted-foreground uppercase">Balance</div>
-                <div className="text-2xl font-semibold mt-1">${selectedBankAccount.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          <div className="grid grid-cols-12 gap-3 items-center">
+            <div className="col-span-3 flex items-center bg-white border rounded-md p-2">
+              <div className="mr-3">
+                <CreditCard className="h-5 w-5 text-muted-foreground" />
               </div>
-              <div className="p-4">
-                <div className="text-xs text-muted-foreground uppercase">Transactions</div>
-                <div className="text-2xl font-semibold mt-1">{selectedBankAccount.transactionsCount}</div>
-                <div className="text-xs text-orange-500 mt-1">{Math.round(selectedBankAccount.transactionsCount * 0.18)} for review</div>
+              <div>
+                <div className="text-xs text-muted-foreground">Balance</div>
+                <div className="font-semibold">${selectedBankAccount.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
               </div>
             </div>
             
-            <div className="border-t p-3 flex items-center justify-between">
+            <div className="col-span-3 flex items-center bg-white border rounded-md p-2">
+              <div className="mr-3">
+                <ListChecks className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Transactions</div>
+                <div className="font-semibold">
+                  {selectedBankAccount.transactionsCount} 
+                  <span className="text-xs text-orange-500 ml-1">
+                    ({Math.round(selectedBankAccount.transactionsCount * 0.15)} for review)
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="col-span-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleOpenReconcileDialog}
-                className="text-xs px-3 py-1 h-7 rounded"
+                className="w-full"
               >
+                <FileCheck className="h-4 w-4 mr-1.5" />
                 Reconcile
               </Button>
+            </div>
+            
+            <div className="col-span-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="w-full"
+              >
+                <Upload className="h-4 w-4 mr-1.5" />
+                Upload
+              </Button>
+            </div>
+            
+            <div className="col-span-2 flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshTransactions}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? (
+                  <>
+                    <Spinner size="xs" className="mr-1.5" />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-1.5" />
+                    Refresh
+                  </>
+                )}
+              </Button>
               
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="text-xs px-3 py-1 h-7 rounded"
-                >
-                  Upload from file
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-xs px-2 h-7 rounded">
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>
-                      Manage connections
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      Go to bank register
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="px-2">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => {}}>
+                    <Link2 className="h-4 w-4 mr-2" />
+                    Manage connections
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {}}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Go to bank register
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSyncBankingData} disabled={isSyncingData}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Sync Banking Data
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         )}
@@ -739,108 +771,95 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
           />
         </div>
         
-        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10">
-              <Calendar className="mr-2 h-4 w-4" />
-              {dateFilter.from ? (
-                dateFilter.to ? (
-                  <>
-                    {format(dateFilter.from, "MMM d, yyyy")} - {format(dateFilter.to, "MMM d, yyyy")}
-                  </>
+        <div className="flex">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant={"outline"}
+                size="sm"
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal",
+                  !dateFilter.from && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFilter.from ? (
+                  dateFilter.to ? (
+                    <>
+                      {format(dateFilter.from, "LLL dd, y")} - {format(dateFilter.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateFilter.from, "LLL dd, y")
+                  )
                 ) : (
-                  format(dateFilter.from, "MMM d, yyyy")
-                )
-              ) : (
-                "All dates"
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <div className="p-3">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <div className="text-sm mb-2 font-medium">Start Date</div>
-                  <div className="border rounded-md p-2 flex items-center justify-between">
-                    <div>
-                      {dateFilter.from ? format(dateFilter.from, "MMM d, yyyy") : "Select date"}
-                    </div>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm mb-2 font-medium">End Date</div>
-                  <div className="border rounded-md p-2 flex items-center justify-between">
-                    <div>
-                      {dateFilter.to ? format(dateFilter.to, "MMM d, yyyy") : "Select date"}
-                    </div>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button 
+                  "All dates"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <div className="border-b p-3">
+                <div className="flex flex-wrap gap-1">
+                  <Button
                     variant="outline"
                     size="sm"
+                    className="h-7 text-xs"
                     onClick={() => {
                       const today = new Date();
-                      const sevenDaysAgo = new Date();
-                      sevenDaysAgo.setDate(today.getDate() - 7);
+                      const yesterday = new Date(today);
+                      yesterday.setDate(yesterday.getDate() - 1);
+                      setDateFilter({ from: yesterday, to: today });
+                    }}
+                  >
+                    Yesterday
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const today = new Date();
+                      const sevenDaysAgo = new Date(today);
+                      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                       setDateFilter({ from: sevenDaysAgo, to: today });
                     }}
-                    className="h-8 text-xs"
                   >
                     Last 7 days
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     size="sm"
+                    className="h-7 text-xs"
                     onClick={() => {
                       const today = new Date();
-                      const thirtyDaysAgo = new Date();
-                      thirtyDaysAgo.setDate(today.getDate() - 30);
+                      const thirtyDaysAgo = new Date(today);
+                      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
                       setDateFilter({ from: thirtyDaysAgo, to: today });
                     }}
-                    className="h-8 text-xs"
                   >
                     Last 30 days
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      const today = new Date();
-                      const ninetyDaysAgo = new Date();
-                      ninetyDaysAgo.setDate(today.getDate() - 90);
-                      setDateFilter({ from: ninetyDaysAgo, to: today });
-                    }}
-                    className="h-8 text-xs"
+                    className="h-7 text-xs"
+                    onClick={() => setDateFilter({})}
                   >
-                    Last 90 days
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setDateFilter({});
-                      setCalendarOpen(false);
-                    }}
-                  >
-                    Clear
-                  </Button>
-                  <Button 
-                    size="sm"
-                    onClick={() => setCalendarOpen(false)}
-                  >
-                    Apply
+                    All time
                   </Button>
                 </div>
               </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+              <CalendarComponent
+                initialFocus
+                mode="range"
+                defaultMonth={dateFilter.from}
+                selected={{ from: dateFilter.from, to: dateFilter.to }}
+                onSelect={(range) => setDateFilter(range || {})}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
