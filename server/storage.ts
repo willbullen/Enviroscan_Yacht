@@ -327,6 +327,7 @@ export interface IStorage {
   getTransactionReconciliationByExpense(expenseId: number): Promise<TransactionReconciliation | undefined>;
   getUnmatchedTransactions(vesselId: number): Promise<Transaction[]>;
   getMatchedTransactions(vesselId: number): Promise<Transaction[]>;
+  getBankingTransactionsByVessel(vesselId: number): Promise<BankingTransaction[]>;
   createTransactionReconciliation(reconciliation: InsertTransactionReconciliation): Promise<TransactionReconciliation>;
   updateTransactionReconciliation(id: number, reconciliation: Partial<TransactionReconciliation>): Promise<TransactionReconciliation | undefined>;
   deleteTransactionReconciliation(id: number): Promise<boolean>;

@@ -5571,6 +5571,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
   
+  // Get banking transactions for a specific vessel
+  apiRouter.get("/banking/transactions/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    try {
+      // Get banking transactions for this vessel
+      const transactions = await storage.getBankingTransactionsByVessel(vesselId);
+      res.json(transactions);
+    } catch (error) {
+      logger.error(`Error fetching banking transactions for vessel ${vesselId}:`, error);
+      res.status(500).json({ error: "Failed to fetch banking transactions" });
+    }
+  }));
+  
   // Create a new banking provider
   apiRouter.post("/banking/providers", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
