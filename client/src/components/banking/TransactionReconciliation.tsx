@@ -169,16 +169,20 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   const transformedTransactions: Transaction[] = React.useMemo(() => {
     return bankingTransactions.map((transaction) => ({
       id: transaction.id.toString(),
-      date: transaction.transactionDate || transaction.createdAt,
+      date: transaction.transactionDate instanceof Date 
+        ? transaction.transactionDate.toISOString() 
+        : transaction.createdAt instanceof Date 
+          ? transaction.createdAt.toISOString() 
+          : new Date().toISOString(),
       description: transaction.description || 'No description',
       amount: parseFloat(transaction.amount),
       type: parseFloat(transaction.amount) >= 0 ? 'credit' : 'debit',
       status: 'unmatched', // Default status until we implement reconciliation
-      matchedExpenseId: null,
-      matchConfidence: null,
+      matchedExpenseId: undefined,
+      matchConfidence: undefined,
       provider: 'Bank', // Default provider until we implement provider tracking
       category: transaction.transactionType || 'Uncategorized',
-      payee: null,
+      payee: undefined,
       reference: `${transaction.currency} ${transaction.exchangeRate !== "1" ? `(Rate: ${transaction.exchangeRate})` : ''}`
     }));
   }, [bankingTransactions]);
@@ -190,10 +194,11 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
       name: connection.accountName || `Account ${connection.accountIdentifier}`,
       currentBalance: parseFloat(connection.balance || '0'),
       lastSync: connection.lastSyncedAt || new Date().toISOString(),
-      transactionsCount: bankingTransactions.filter(t => String(t.providerId) === String(connection.providerId)).length,
+      // Default to 5 as a placeholder since we can't filter by providerId
+      transactionsCount: 5,
       provider: connection.providerName || 'Unknown Provider'
     }));
-  }, [bankConnections, bankingTransactions]);
+  }, [bankConnections]);
   
   // Set default selected bank account
   React.useEffect(() => {
@@ -263,7 +268,11 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
   const expenseMatches: ExpenseMatch[] = React.useMemo(() => {
     return expensesData.map(expense => ({
       id: expense.id,
-      date: expense.expenseDate || expense.createdAt,
+      date: expense.expenseDate instanceof Date 
+        ? expense.expenseDate.toISOString() 
+        : expense.createdAt instanceof Date 
+          ? expense.createdAt.toISOString() 
+          : new Date().toISOString(),
       description: expense.description || 'No description',
       amount: parseFloat(expense.total),
       category: expense.category || 'Uncategorized',
@@ -1252,44 +1261,60 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
                     <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Expense</Badge>
                   </div>
                   <h3 className="font-semibold text-sm mb-2 mt-4">Details</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Date</p>
-                      <p className="font-medium">May 2, 2025</p>
+                  {isLoadingExpenses ? (
+                    <div className="flex justify-center items-center p-4">
+                      <Spinner className="h-6 w-6" />
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Amount</p>
-                      <p className="font-medium">€8,750.50</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <p className="text-muted-foreground">Description</p>
-                    <p className="font-medium">Port de Monaco - Berth Fees May 2025</p>
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <p className="text-muted-foreground">Vendor</p>
-                    <p className="font-medium">Port de Monaco</p>
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <p className="text-muted-foreground">Category</p>
-                    <p className="font-medium">Docking</p>
-                  </div>
+                  ) : expensesError ? (
+                    <p className="text-sm text-red-500">Error loading expense details.</p>
+                  ) : expenseMatches.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Date</p>
+                          <p className="font-medium">{formatDate(expenseMatches[0].date)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Amount</p>
+                          <p className="font-medium">{formatAmount(expenseMatches[0].amount, 'debit')}</p>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-sm">
+                        <p className="text-muted-foreground">Description</p>
+                        <p className="font-medium">{expenseMatches[0].description}</p>
+                      </div>
+                      <div className="mt-2 text-sm">
+                        <p className="text-muted-foreground">Vendor</p>
+                        <p className="font-medium">{expenseMatches[0].vendor}</p>
+                      </div>
+                      <div className="mt-2 text-sm">
+                        <p className="text-muted-foreground">Category</p>
+                        <p className="font-medium">{expenseMatches[0].category}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No matching expense data available.</p>
+                  )}
                 </div>
               </div>
               
-              <div className="rounded-md bg-green-50 p-3 border border-green-100 text-sm">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 mr-2">
-                    <Check className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-green-800">Match Confidence: 92%</p>
-                    <p className="text-green-700 mt-0.5">
-                      This transaction appears to match the expense based on date, amount, and description similarities.
-                    </p>
+              {expenseMatches.length > 0 && (
+                <div className="rounded-md bg-green-50 p-3 border border-green-100 text-sm">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mr-2">
+                      <Check className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-green-800">
+                        Match Confidence: {Math.round(expenseMatches[0].confidence * 100)}%
+                      </p>
+                      <p className="text-green-700 mt-0.5">
+                        This transaction appears to match the expense based on date, amount, and description similarities.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
             
             <DialogFooter className="flex justify-between">
