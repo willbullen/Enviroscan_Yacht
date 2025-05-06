@@ -888,28 +888,7 @@ const FinancialManagement: React.FC = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle>Banking & Reconciliation</CardTitle>
-                  <CardDescription>
-                    Connect bank accounts, manage transactions, and reconcile with expenses.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="reconciliation" className="w-full">
-                    <TabsList className="grid grid-cols-2 mb-4">
-                      <TabsTrigger value="reconciliation">Transaction Reconciliation</TabsTrigger>
-                      <TabsTrigger value="integration">Banking Integration</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="reconciliation">
-                      <TransactionReconciliation vesselId={currentVessel.id} />
-                    </TabsContent>
-                    <TabsContent value="integration">
-                      <BankingIntegration vesselId={currentVessel.id} />
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+              <TransactionReconciliation vesselId={currentVessel.id} />
             </div>
           </div>
         );
