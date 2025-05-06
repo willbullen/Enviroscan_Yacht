@@ -132,7 +132,7 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }
     data: bankConnections = [],
     isLoading: isLoadingConnections
   } = useQuery<BankConnection[]>({
-    queryKey: ['/api/banking/connections/vessel', vesselId],
+    queryKey: [`/api/banking/connections/vessel/${vesselId}`, vesselId],
     enabled: !!vesselId && !useMockBankingData,
   });
   

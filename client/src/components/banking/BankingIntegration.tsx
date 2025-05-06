@@ -83,7 +83,7 @@ export const BankingIntegration: React.FC<BankingIntegrationProps> = ({ vesselId
     isLoading: isLoadingConnections,
     error: connectionsError
   } = useQuery({
-    queryKey: ['/api/banking/connections/vessel', vesselId],
+    queryKey: [`/api/banking/connections/vessel/${vesselId}`, vesselId],
     enabled: !!vesselId && !useMockBankingData
   });
   

@@ -151,7 +151,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
     error: transactionsError,
     refetch: refetchTransactions
   } = useQuery<BankingTransaction[]>({
-    queryKey: ['/api/banking/transactions/vessel', vesselId],
+    queryKey: [`/api/banking/transactions/vessel/${vesselId}`, vesselId],
     enabled: !!vesselId
   });
 
@@ -161,7 +161,7 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
     isLoading: isLoadingBankConnections,
     error: bankConnectionsError
   } = useQuery<any[]>({
-    queryKey: ['/api/banking/connections/vessel', vesselId],
+    queryKey: [`/api/banking/connections/vessel/${vesselId}`, vesselId],
     enabled: !!vesselId,
   });
   
