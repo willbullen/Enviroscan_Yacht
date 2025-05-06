@@ -525,8 +525,9 @@ const TransactionReconciliation: React.FC<TransactionReconciliationProps> = ({ v
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
+          <h1 className="text-2xl font-bold tracking-tight">Banking & Reconciliation</h1>
           <p className="text-muted-foreground">
-            Connect bank accounts and reconcile with expenses
+            Connect your bank accounts, manage transactions, and reconcile with expenses.
           </p>
         </div>
         
