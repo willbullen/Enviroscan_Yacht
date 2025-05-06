@@ -36,6 +36,9 @@ import {
   bankApiConnections,
   bankApiTransactions,
   bankSyncLogs,
+  bankingProviders,
+  bankConnections,
+  transactionReconciliations,
   type User,
   type InsertUser,
   type Equipment,
@@ -105,7 +108,13 @@ import {
   type BankApiTransaction,
   type InsertBankApiTransaction,
   type BankSyncLog,
-  type InsertBankSyncLog
+  type InsertBankSyncLog,
+  type BankingProvider,
+  type InsertBankingProvider,
+  type BankConnection,
+  type InsertBankConnection,
+  type TransactionReconciliation,
+  type InsertTransactionReconciliation
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db, executeWithRetry } from "./db";

@@ -39,7 +39,11 @@ import {
   bankingApiProviders, type BankingApiProvider, type InsertBankingApiProvider,
   bankApiConnections, type BankApiConnection, type InsertBankApiConnection,
   bankApiTransactions, type BankApiTransaction, type InsertBankApiTransaction,
-  bankSyncLogs, type BankSyncLog, type InsertBankSyncLog
+  bankSyncLogs, type BankSyncLog, type InsertBankSyncLog,
+  // New Banking Provider imports
+  bankingProviders, type BankingProvider, type InsertBankingProvider,
+  bankConnections, type BankConnection, type InsertBankConnection,
+  transactionReconciliations, type TransactionReconciliation, type InsertTransactionReconciliation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
@@ -299,6 +303,34 @@ export interface IStorage {
   deleteBankAccount(id: number): Promise<boolean>;
   
   // Banking Provider operations
+  getBankingProvider(id: number): Promise<BankingProvider | undefined>;
+  getBankingProvidersByVessel(vesselId: number): Promise<BankingProvider[]>;
+  getAllBankingProviders(): Promise<BankingProvider[]>;
+  getActiveBankingProviders(): Promise<BankingProvider[]>;
+  createBankingProvider(provider: InsertBankingProvider): Promise<BankingProvider>;
+  updateBankingProvider(id: number, provider: Partial<BankingProvider>): Promise<BankingProvider | undefined>;
+  deleteBankingProvider(id: number): Promise<boolean>;
+  
+  // Bank Connection operations
+  getBankConnection(id: number): Promise<BankConnection | undefined>;
+  getBankConnectionsByVessel(vesselId: number): Promise<BankConnection[]>;
+  getBankConnectionsByProvider(providerId: number): Promise<BankConnection[]>;
+  getActiveBankConnections(vesselId: number): Promise<BankConnection[]>;
+  createBankConnection(connection: InsertBankConnection): Promise<BankConnection>;
+  updateBankConnection(id: number, connection: Partial<BankConnection>): Promise<BankConnection | undefined>;
+  deleteBankConnection(id: number): Promise<boolean>;
+  
+  // Transaction Reconciliation operations
+  getTransactionReconciliation(id: number): Promise<TransactionReconciliation | undefined>;
+  getTransactionReconciliationByTransaction(transactionId: number): Promise<TransactionReconciliation | undefined>;
+  getTransactionReconciliationByExpense(expenseId: number): Promise<TransactionReconciliation | undefined>;
+  getUnmatchedTransactions(vesselId: number): Promise<Transaction[]>;
+  getMatchedTransactions(vesselId: number): Promise<Transaction[]>;
+  createTransactionReconciliation(reconciliation: InsertTransactionReconciliation): Promise<TransactionReconciliation>;
+  updateTransactionReconciliation(id: number, reconciliation: Partial<TransactionReconciliation>): Promise<TransactionReconciliation | undefined>;
+  deleteTransactionReconciliation(id: number): Promise<boolean>;
+  
+  // Legacy Banking API operations
   getBankingApiProvider(id: number): Promise<BankingApiProvider | undefined>;
   getBankingApiProviderByType(apiType: string): Promise<BankingApiProvider | undefined>;
   getAllBankingApiProviders(): Promise<BankingApiProvider[]>;
