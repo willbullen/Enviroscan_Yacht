@@ -5493,6 +5493,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(providers);
   }));
   
+  // Get banking providers for a specific vessel
+  apiRouter.get("/banking/providers/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    const providers = await storage.getBankingProvidersByVessel(vesselId);
+    res.json(providers);
+  }));
+  
+  // Get bank connections for a specific vessel
+  apiRouter.get("/banking/connections/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    const connections = await storage.getBankConnectionsByVessel(vesselId);
+    res.json(connections);
+  }));
+  
+  // Get transaction reconciliations for a specific vessel
+  apiRouter.get("/banking/reconciliations/vessel/:vesselId", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const vesselId = parseInt(req.params.vesselId);
+    if (isNaN(vesselId)) {
+      return res.status(400).json({ error: "Invalid vessel ID" });
+    }
+    
+    // Get transactions for this vessel that have reconciliations
+    const matchedTransactions = await storage.getMatchedTransactions(vesselId);
+    
+    // Get unmatched transactions for this vessel
+    const unmatchedTransactions = await storage.getUnmatchedTransactions(vesselId);
+    
+    res.json({
+      matched: matchedTransactions,
+      unmatched: unmatchedTransactions
+    });
+  }));
+  
+  // Create a new banking provider
+  apiRouter.post("/banking/providers", asyncHandler(async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required. Please log in." });
+    }
+    
+    const providerData = req.body;
+    const newProvider = await storage.createBankingProvider(providerData);
+    res.status(201).json(newProvider);
+  }));
+  
   // Get all bank API connections
   apiRouter.get("/banking/connections", asyncHandler(async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {

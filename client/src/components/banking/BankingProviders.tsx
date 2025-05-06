@@ -21,14 +21,18 @@ import {
   Link, 
   HelpCircle,
   AlertCircle,
-  Edit
+  Edit,
+  CreditCard
 } from 'lucide-react';
 import { useSystemSettings } from '@/contexts/SystemSettingsContext';
 import { Spinner } from '@/components/ui/spinner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface BankingProvidersProps {
   vesselId: number;
+  onClose?: () => void;
 }
 
 interface MappedAccount {
@@ -40,15 +44,54 @@ interface MappedAccount {
 }
 
 interface BankingProvider {
-  id: string;
+  id: number;
   name: string;
-  icon: React.ReactNode;
+  apiType: string;
+  authType: string;
+  baseUrl: string;
   status: 'connected' | 'disconnected';
-  lastSynced?: string;
-  accounts?: number;
+  vesselId: number;
+  isActive: boolean;
   apiKeySet?: boolean;
   apiSecretSet?: boolean;
-  mappedAccounts?: MappedAccount[];
+  lastSynced?: string;
+  createdAt: string;
+  updatedAt: string;
+  icon?: React.ReactNode; // For UI display only
+  accounts?: number; // Count of mapped accounts
+  mappedAccounts?: MappedAccount[]; // UI helper for mapped accounts
+}
+
+// Interface for API response
+interface BankingProviderApiResponse {
+  id: number;
+  name: string;
+  apiType: string;
+  authType: string;
+  baseUrl: string;
+  apiKey?: string | null;
+  apiSecret?: string | null;
+  status: string;
+  vesselId: number;
+  isActive: boolean;
+  lastSyncedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface BankConnection {
+  id: number;
+  providerId: number;
+  vesselId: number;
+  accountIdentifier: string;
+  accountName: string;
+  status: string;
+  lastSyncedAt: string | null;
+  balance: string;
+  currency: string;
+  mappedFinancialAccountId: number | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Interface for financial accounts
@@ -70,57 +113,123 @@ interface BankAccount {
   balance: string;
 }
 
-const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
+const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId, onClose }) => {
   const { useMockBankingData, updateSettings, bankingAPICredentialsSet } = useSystemSettings();
+  const queryClient = useQueryClient();
   
-  // Initial mock providers
-  const [providers, setProviders] = useState<BankingProvider[]>([
-    {
-      id: 'centtrip',
-      name: 'Centtrip',
-      icon: <Building2 className="h-8 w-8 text-blue-600" />,
-      status: 'connected',
-      lastSynced: '2025-05-05T09:30:00Z',
-      accounts: 2,
-      apiKeySet: true,
-      apiSecretSet: true,
-      mappedAccounts: [
+  // Fetch banking providers for the vessel
+  const { 
+    data: apiProviders = [], 
+    isLoading: isLoadingProviders,
+    error: providersError
+  } = useQuery<BankingProviderApiResponse[]>({
+    queryKey: ['/api/banking/providers/vessel', vesselId],
+    enabled: !!vesselId && !useMockBankingData,
+  });
+  
+  // Fetch bank connections for the vessel
+  const {
+    data: bankConnections = [],
+    isLoading: isLoadingConnections
+  } = useQuery<BankConnection[]>({
+    queryKey: ['/api/banking/connections/vessel', vesselId],
+    enabled: !!vesselId && !useMockBankingData,
+  });
+  
+  // Transform API data to component format with UI enhancements
+  const providers: BankingProvider[] = useMockBankingData 
+    ? [
         {
           id: 1,
-          accountNumber: 'FA-001',
-          accountName: 'Lazar Card',
-          bankAccountId: 'cent-001',
-          bankAccountName: 'Crew Card #1'
+          name: 'Centtrip',
+          apiType: 'REST',
+          authType: 'API_KEY',
+          baseUrl: 'https://api.centtrip.com',
+          status: 'connected',
+          vesselId: vesselId,
+          isActive: true,
+          apiKeySet: true,
+          apiSecretSet: true,
+          lastSynced: '2025-05-05T09:30:00Z',
+          createdAt: '2025-01-01T00:00:00Z',
+          updatedAt: '2025-05-05T09:30:00Z',
+          icon: <Building2 className="h-8 w-8 text-blue-600" />,
+          accounts: 2,
+          mappedAccounts: [
+            {
+              id: 1,
+              accountNumber: 'FA-001',
+              accountName: 'Lazar Card',
+              bankAccountId: 'cent-001',
+              bankAccountName: 'Crew Card #1'
+            },
+            {
+              id: 2,
+              accountNumber: 'FA-002',
+              accountName: 'Maintenance Account',
+              bankAccountId: 'cent-002',
+              bankAccountName: 'Operations Account'
+            }
+          ]
         },
         {
           id: 2,
-          accountNumber: 'FA-002',
-          accountName: 'Maintenance Account',
-          bankAccountId: 'cent-002',
-          bankAccountName: 'Operations Account'
+          name: 'Revolut',
+          apiType: 'REST',
+          authType: 'OAUTH2',
+          baseUrl: 'https://api.revolut.com',
+          status: 'connected',
+          vesselId: vesselId,
+          isActive: true,
+          apiKeySet: true,
+          apiSecretSet: true,
+          lastSynced: '2025-05-05T08:45:00Z',
+          createdAt: '2025-01-01T00:00:00Z',
+          updatedAt: '2025-05-05T08:45:00Z',
+          icon: <Building2 className="h-8 w-8 text-purple-600" />,
+          accounts: 1,
+          mappedAccounts: [
+            {
+              id: 4,
+              accountNumber: 'FA-004',
+              accountName: 'Provisions Account',
+              bankAccountId: 'rev-001',
+              bankAccountName: 'Food & Beverage'
+            }
+          ]
         }
       ]
-    },
-    {
-      id: 'revolut',
-      name: 'Revolut',
-      icon: <Building2 className="h-8 w-8 text-purple-600" />,
-      status: 'connected',
-      lastSynced: '2025-05-05T08:45:00Z',
-      accounts: 1,
-      apiKeySet: true,
-      apiSecretSet: true,
-      mappedAccounts: [
-        {
-          id: 4,
-          accountNumber: 'FA-004',
-          accountName: 'Provisions Account',
-          bankAccountId: 'rev-001',
-          bankAccountName: 'Food & Beverage'
-        }
-      ]
+    : apiProviders.map(provider => {
+        // Find connections for this provider
+        const providerConnections = bankConnections.filter(conn => conn.providerId === provider.id);
+        
+        // Create the enhanced provider object
+        return {
+          ...provider,
+          icon: getProviderIcon(provider.name),
+          status: provider.status === 'active' ? 'connected' : 'disconnected',
+          accounts: providerConnections.length,
+          apiKeySet: !!provider.apiKey,
+          apiSecretSet: !!provider.apiSecret,
+          lastSynced: provider.lastSyncedAt || undefined,
+        };
+      });
+      
+  // Helper to get icon based on provider name
+  function getProviderIcon(providerName: string): React.ReactNode {
+    const name = providerName.toLowerCase();
+    if (name.includes('centtrip')) {
+      return <Building2 className="h-8 w-8 text-blue-600" />;
+    } else if (name.includes('revolut')) {
+      return <Building2 className="h-8 w-8 text-purple-600" />;
+    } else if (name.includes('barclays')) {
+      return <Building2 className="h-8 w-8 text-blue-800" />;
+    } else if (name.includes('credit')) {
+      return <CreditCard className="h-8 w-8 text-green-600" />;
+    } else {
+      return <Building2 className="h-8 w-8 text-gray-600" />;
     }
-  ]);
+  }
   
   // Fetch financial accounts for the vessel
   const { data: financialAccounts = [], isLoading: isLoadingAccounts } = useQuery<FinancialAccount[]>({
@@ -133,17 +242,93 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
   const [showProviderDialog, setShowProviderDialog] = useState(false);
   const [showAddProviderDialog, setShowAddProviderDialog] = useState(false);
   const [showMapAccountsDialog, setShowMapAccountsDialog] = useState(false);
-  const [isSyncing, setIsSyncing] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState<number | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [newProviderName, setNewProviderName] = useState('');
-  const [newProviderId, setNewProviderId] = useState('');
+  const [newProviderApiType, setNewProviderApiType] = useState('REST');
+  const [newProviderAuthType, setNewProviderAuthType] = useState('API_KEY');
+  const [newProviderBaseUrl, setNewProviderBaseUrl] = useState('');
   
   // Mock bank accounts from provider API
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   
   // Account mapping state
   const [accountMappings, setAccountMappings] = useState<{[key: string]: string}>({});
+  
+  // Create provider mutation
+  const createProviderMutation = useMutation({
+    mutationFn: (newProvider: { 
+      name: string; 
+      apiType: string; 
+      authType: string; 
+      baseUrl: string;
+      vesselId: number;
+      apiKey?: string;
+      apiSecret?: string;
+      isActive: boolean;
+    }) => {
+      return apiRequest('/api/banking/providers', {
+        method: 'POST',
+        data: newProvider
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
+      setShowAddProviderDialog(false);
+      toast({
+        title: "Success",
+        description: "Banking provider added successfully",
+        variant: "default"
+      });
+      
+      // Reset form
+      setNewProviderName('');
+      setNewProviderApiType('REST');
+      setNewProviderAuthType('API_KEY');
+      setNewProviderBaseUrl('');
+      setApiKey('');
+      setApiSecret('');
+    },
+    onError: (error) => {
+      console.error("Failed to add provider:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add banking provider",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Update provider mutation
+  const updateProviderMutation = useMutation({
+    mutationFn: ({ id, updates }: { 
+      id: number;
+      updates: Partial<BankingProvider>;
+    }) => {
+      return apiRequest(`/api/banking/providers/${id}`, {
+        method: 'PATCH',
+        data: updates
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
+      setShowProviderDialog(false);
+      toast({
+        title: "Success",
+        description: "Banking provider updated successfully",
+        variant: "default"
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to update provider:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update banking provider",
+        variant: "destructive"
+      });
+    }
+  });
   
   // Fetch bank accounts when a provider is selected for mapping
   useEffect(() => {
@@ -168,18 +353,49 @@ const BankingProviders: React.FC<BankingProvidersProps> = ({ vesselId }) => {
     }
   }, [selectedProvider, showMapAccountsDialog]);
   
-  const handleSyncProvider = (providerId: string) => {
-    setIsSyncing(providerId);
-    
-    // Simulate API call
-    setTimeout(() => {
+  // Sync provider mutation
+  const syncProviderMutation = useMutation({
+    mutationFn: (providerId: number) => {
+      return apiRequest(`/api/banking/providers/${providerId}/sync`, {
+        method: 'POST'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/banking/providers/vessel', vesselId] });
+      toast({
+        title: "Success",
+        description: "Provider synced successfully",
+        variant: "default"
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to sync provider:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync with banking provider",
+        variant: "destructive"
+      });
+    },
+    onSettled: () => {
       setIsSyncing(null);
-      setProviders(providers.map(provider => 
-        provider.id === providerId 
-          ? { ...provider, lastSynced: new Date().toISOString() } 
-          : provider
-      ));
-    }, 2000);
+    }
+  });
+  
+  const handleSyncProvider = (providerId: number) => {
+    setIsSyncing(providerId);
+    if (!useMockBankingData) {
+      syncProviderMutation.mutate(providerId);
+    } else {
+      // Simulate API call for mock data
+      setTimeout(() => {
+        setIsSyncing(null);
+        toast({
+          title: "Success",
+          description: "Provider synced successfully (mock mode)",
+          variant: "default"
+        });
+      }, 2000);
+    }
   };
   
   const handleConfigureProvider = (provider: BankingProvider) => {
