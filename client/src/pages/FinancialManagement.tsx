@@ -39,6 +39,7 @@ import BatchImportDialog from "@/components/BatchImportDialog";
 import CashFlowTrendsChart from "@/components/financial/CashFlowTrendsChart";
 import { VendorTable } from "@/components/financial/VendorTable";
 import BankingIntegration from "@/components/banking/BankingIntegration";
+import TransactionReconciliation from "@/components/banking/TransactionReconciliation";
 import { VendorDialog } from "@/components/financial/VendorDialog";
 import { VendorSelect } from "@/components/financial/VendorSelect";
 import { AccountSelect } from "@/components/financial/AccountSelect";
@@ -885,8 +886,31 @@ const FinancialManagement: React.FC = () => {
     switch (activeTab) {
       case "banking":
         return (
-          <div className="space-y-4">
-            <BankingIntegration vesselId={currentVessel.id} />
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle>Banking & Reconciliation</CardTitle>
+                  <CardDescription>
+                    Connect bank accounts, manage transactions, and reconcile with expenses.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="reconciliation" className="w-full">
+                    <TabsList className="grid grid-cols-2 mb-4">
+                      <TabsTrigger value="reconciliation">Transaction Reconciliation</TabsTrigger>
+                      <TabsTrigger value="integration">Banking Integration</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="reconciliation">
+                      <TransactionReconciliation vesselId={currentVessel.id} />
+                    </TabsContent>
+                    <TabsContent value="integration">
+                      <BankingIntegration vesselId={currentVessel.id} />
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         );
         
