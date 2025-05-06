@@ -42,7 +42,7 @@ import {
   insertBudgetAllocationSchema,
   insertExpenseSchema,
   InsertExpense,
-  insertTransactionSchema,
+  insertBankingTransactionSchema,
   InsertDeposit,
   vendors,
   // Banking Integration schemas

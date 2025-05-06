@@ -591,8 +591,8 @@ export const insertBudgetAllocationSchema = createInsertSchema(budgetAllocations
 export type InsertBudgetAllocation = z.infer<typeof insertBudgetAllocationSchema>;
 export type BudgetAllocation = typeof budgetAllocations.$inferSelect;
 
-// Transactions - main financial transactions table
-export const transactions = pgTable("transactions", {
+// Banking transactions - main financial transactions table (replacing old transactions table)
+export const bankingTransactions = pgTable("banking_transactions", {
   id: serial("id").primaryKey(),
   transactionType: text("transaction_type").notNull(), // invoice, payment, expense, payroll, transfer
   transactionDate: timestamp("transaction_date").notNull(),
@@ -607,14 +607,14 @@ export const transactions = pgTable("transactions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-const baseTransactionSchema = createInsertSchema(transactions).omit({
+const baseBankingTransactionSchema = createInsertSchema(bankingTransactions).omit({
   id: true,
   createdAt: true,
   updatedAt: true
 });
 
 // Create a custom schema that handles date string conversion and amount validation
-export const insertTransactionSchema = baseTransactionSchema.extend({
+export const insertBankingTransactionSchema = baseBankingTransactionSchema.extend({
   transactionDate: z.union([
     z.date(),
     z.string().transform((val) => new Date(val)),
@@ -624,13 +624,31 @@ export const insertTransactionSchema = baseTransactionSchema.extend({
     z.number().transform((val) => val.toString()),
   ]),
 });
-export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type InsertBankingTransaction = z.infer<typeof insertBankingTransactionSchema>;
+export type BankingTransaction = typeof bankingTransactions.$inferSelect;
+
+// Legacy transactions table reference for backwards compatibility during migration
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  transactionType: text("transaction_type").notNull(),
+  transactionDate: timestamp("transaction_date").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
+  exchangeRate: decimal("exchange_rate", { precision: 10, scale: 6 }).default("1").notNull(),
+  description: text("description").notNull(),
+  vesselId: integer("vessel_id").references(() => vessels.id),
+  customerId: integer("customer_id").references(() => customers.id),
+  createdById: integer("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export type Transaction = typeof transactions.$inferSelect;
 
 // Transaction Lines for double-entry bookkeeping
 export const transactionLines = pgTable("transaction_lines", {
   id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id).notNull(),
   accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   description: text("description"),
@@ -649,7 +667,7 @@ export const insertTransactionLineSchema = createInsertSchema(transactionLines).
 export type InsertTransactionLine = z.infer<typeof insertTransactionLineSchema>;
 export type TransactionLine = typeof transactionLines.$inferSelect;
 
-// Expense transactions (independent table, not linked to transactions)
+// Expense transactions
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   description: text("description").notNull(),
@@ -657,7 +675,7 @@ export const expenses = pgTable("expenses", {
   total: decimal("total", { precision: 12, scale: 2 }).notNull(), // The column is named 'total' in the DB, not 'amount'
   // Note: currency is not in the database schema, but kept in the model for future migration
   // Leaving it out of the schema completely since it's not in the DB
-  transactionId: integer("transaction_id").references(() => transactions.id, { onDelete: 'set null' }), // Making this nullable so expenses can exist without transactions
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id, { onDelete: 'set null' }), // Making this nullable so expenses can exist without transactions
   vendorId: integer("vendor_id").references(() => vendors.id),
   vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
   paymentMethod: text("payment_method").notNull(), // credit card, bank transfer, cash, etc.
@@ -717,7 +735,7 @@ export type ExpenseLine = typeof expenseLines.$inferSelect;
 // Deposits - for tracking money deposits to accounts
 export const deposits = pgTable("deposits", {
   id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id).notNull(),
   accountId: integer("account_id").references(() => financialAccounts.id).notNull(),
   vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
   depositDate: timestamp("deposit_date").notNull(),
@@ -746,7 +764,7 @@ export type Deposit = typeof deposits.$inferSelect;
 // Invoices
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id).notNull(),
   invoiceNumber: text("invoice_number").notNull(),
   customerId: integer("customer_id").references(() => customers.id).notNull(),
   vesselId: integer("vessel_id").references(() => vessels.id),
@@ -801,7 +819,7 @@ export type InvoiceLine = typeof invoiceLines.$inferSelect;
 // Payments received
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  transactionId: integer("transaction_id").references(() => bankingTransactions.id).notNull(),
   paymentDate: timestamp("payment_date").notNull(),
   paymentMethod: text("payment_method").notNull(), // credit card, bank transfer, etc.
   referenceNumber: text("reference_number"),
