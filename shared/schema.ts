@@ -915,6 +915,71 @@ export const insertBankReconciliationItemSchema = createInsertSchema(bankReconci
 export type InsertBankReconciliationItem = z.infer<typeof insertBankReconciliationItemSchema>;
 export type BankReconciliationItem = typeof bankReconciliationItems.$inferSelect;
 
+// Banking Providers
+export const bankingProviders = pgTable("banking_providers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  code: text("code").notNull(),
+  logoUrl: text("logo_url"),
+  apiEndpoint: text("api_endpoint"),
+  isActive: boolean("is_active").default(true),
+  vesselId: integer("vessel_id").references(() => vessels.id),
+  credentials: json("credentials"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBankingProviderSchema = createInsertSchema(bankingProviders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBankingProvider = z.infer<typeof insertBankingProviderSchema>;
+export type BankingProvider = typeof bankingProviders.$inferSelect;
+
+// Bank Connections
+export const bankConnections = pgTable("bank_connections", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
+  providerId: integer("provider_id").references(() => bankingProviders.id).notNull(),
+  connectionStatus: text("connection_status").default("pending"),
+  credentials: json("credentials"),
+  lastSyncAt: timestamp("last_sync_at"),
+  connectionDetails: json("connection_details"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBankConnectionSchema = createInsertSchema(bankConnections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBankConnection = z.infer<typeof insertBankConnectionSchema>;
+export type BankConnection = typeof bankConnections.$inferSelect;
+
+// Transaction Reconciliations
+export const transactionReconciliations = pgTable("transaction_reconciliations", {
+  id: serial("id").primaryKey(),
+  transactionId: integer("transaction_id").references(() => transactions.id).notNull(),
+  expenseId: integer("expense_id").references(() => expenses.id),
+  status: text("status").default("unmatched").notNull(),
+  matchConfidence: real("match_confidence"),
+  reconciledById: integer("reconciled_by").references(() => users.id),
+  reconciledAt: timestamp("reconciled_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTransactionReconciliationSchema = createInsertSchema(transactionReconciliations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertTransactionReconciliation = z.infer<typeof insertTransactionReconciliationSchema>;
+export type TransactionReconciliation = typeof transactionReconciliations.$inferSelect;
+
 // Payroll runs 
 export const payrollRuns = pgTable("payroll_runs", {
   id: serial("id").primaryKey(),
