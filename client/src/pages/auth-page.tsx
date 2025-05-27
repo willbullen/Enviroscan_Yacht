@@ -82,7 +82,12 @@ export default function AuthPage() {
   }, [user, setLocation]);
 
   const onLogin = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        console.log("Login mutation successful, redirecting to home");
+        setLocation("/");
+      }
+    });
   };
 
   const onRegister = (data: RegisterFormValues) => {
