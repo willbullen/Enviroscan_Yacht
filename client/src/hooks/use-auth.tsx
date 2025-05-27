@@ -50,17 +50,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return res as User;
     },
-    onSuccess: (user: User) => {
+    onSuccess: async (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
       // Force invalidate to ensure all components see the update
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
       toast({
         title: "Login successful",
         description: `Welcome, ${user.fullName}`,
       });
       console.log("Login mutation successful, redirecting to home");
-      // Navigate to home page after successful login
-      setLocation("/");
+      
+      // Use setTimeout to ensure the query data has been properly set
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -105,8 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been logged out successfully",
       });
       console.log("Logout successful, redirecting to auth page");
-      // Navigate to auth page after successful logout
-      setLocation("/auth");
+      
+      // Use setTimeout to ensure the query data has been properly cleared
+      setTimeout(() => {
+        setLocation("/auth");
+      }, 50);
     },
     onError: (error: Error) => {
       toast({

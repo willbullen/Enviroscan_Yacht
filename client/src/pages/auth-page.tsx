@@ -74,12 +74,12 @@ export default function AuthPage() {
   });
 
   useEffect(() => {
-    // Redirect to home if already logged in
-    if (user) {
-      console.log("User logged in, redirecting to home page");
+    // Redirect to home if already logged in (only on initial load, not after login mutation)
+    if (user && !loginMutation.isPending) {
+      console.log("User already logged in, redirecting to home page");
       setLocation("/");
     }
-  }, [user, setLocation]);
+  }, [user, setLocation, loginMutation.isPending]);
 
   const onLogin = (data: LoginFormValues) => {
     loginMutation.mutate(data);
