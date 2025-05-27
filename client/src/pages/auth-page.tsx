@@ -73,13 +73,7 @@ export default function AuthPage() {
     },
   });
 
-  useEffect(() => {
-    // Redirect to home if already logged in (only on initial load, not after login mutation)
-    if (user && !loginMutation.isPending) {
-      console.log("User already logged in, redirecting to home page");
-      setLocation("/");
-    }
-  }, [user, setLocation, loginMutation.isPending]);
+  // Remove conflicting navigation - let the auth hook handle all redirections
 
   const onLogin = (data: LoginFormValues) => {
     loginMutation.mutate(data);

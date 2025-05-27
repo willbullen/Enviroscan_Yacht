@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: true, // Always enabled but we'll manage the data manually during mutations
   });
 
   const loginMutation = useMutation({
@@ -50,10 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return res as User;
     },
-    onSuccess: async (user: User) => {
+    onSuccess: (user: User) => {
+      // Set the query data directly
       queryClient.setQueryData(["/api/user"], user);
-      // Force invalidate to ensure all components see the update
-      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
       toast({
         title: "Login successful",
@@ -61,10 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       console.log("Login mutation successful, redirecting to home");
       
-      // Use setTimeout to ensure the query data has been properly set
-      setTimeout(() => {
-        setLocation("/");
-      }, 100);
+      // Navigate immediately - the data is already set
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({
@@ -110,10 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       console.log("Logout successful, redirecting to auth page");
       
-      // Use setTimeout to ensure the query data has been properly cleared
-      setTimeout(() => {
-        setLocation("/auth");
-      }, 50);
+      // Navigate immediately - the data is already cleared
+      setLocation("/auth");
     },
     onError: (error: Error) => {
       toast({
