@@ -76,6 +76,7 @@ export default function AuthPage() {
   useEffect(() => {
     // Redirect to home if already logged in
     if (user) {
+      console.log("User logged in, redirecting to home page");
       setLocation("/");
     }
   }, [user, setLocation]);
