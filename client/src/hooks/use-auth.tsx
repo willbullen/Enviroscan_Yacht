@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome, ${user.fullName}`,
       });
       // Redirect to home page after successful login
+      console.log("Login successful, redirecting to home page");
       setLocation("/");
     },
     onError: (error: Error) => {
@@ -100,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been logged out successfully",
       });
       // Redirect to login page after successful logout
+      console.log("Logout successful, redirecting to login page");
       setLocation("/auth");
     },
     onError: (error: Error) => {
