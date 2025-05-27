@@ -7,6 +7,7 @@ import {
 import { User } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 type AuthContextType = {
   user: User | null;
@@ -33,6 +34,7 @@ type RegisterData = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const {
     data: user,
     error,
@@ -56,7 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome, ${user.fullName}`,
       });
-      console.log("Login successful, user data updated and queries invalidated");
+      console.log("Login mutation successful, redirecting to home");
+      // Navigate to home page after successful login
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({
@@ -94,11 +98,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      // Clear all queries to ensure clean state
+      queryClient.clear();
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
       });
-      console.log("Logout successful, user data cleared");
+      console.log("Logout successful, redirecting to auth page");
+      // Navigate to auth page after successful logout
+      setLocation("/auth");
     },
     onError: (error: Error) => {
       toast({
