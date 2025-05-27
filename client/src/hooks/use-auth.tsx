@@ -50,11 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Force invalidate to ensure all components see the update
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Login successful",
         description: `Welcome, ${user.fullName}`,
       });
-      console.log("Login successful, user data updated");
+      console.log("Login successful, user data updated and queries invalidated");
     },
     onError: (error: Error) => {
       toast({
