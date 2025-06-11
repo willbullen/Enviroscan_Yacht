@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { 
@@ -41,7 +41,9 @@ import {
   MapPin,
   Eye,
   Edit,
-  MoreHorizontal
+  MoreHorizontal,
+  Target,
+  Crosshair
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -369,19 +371,55 @@ const CreateIssueDialog: React.FC<{
     severity: 'medium',
     priority: 'medium',
     locationReference: '',
+    coordinateX: null as number | null,
+    coordinateY: null as number | null,
+    coordinateZ: null as number | null,
     dueDate: ''
   });
+  const [showSpatialPicker, setShowSpatialPicker] = useState(false);
+
+  // Mock drawing data - in real app, this would come from API
+  const mockDrawings = [
+    {
+      id: 1,
+      drawingNumber: 'GA-001',
+      title: 'General Arrangement - Main Deck',
+      thumbnailUrl: '/api/placeholder-drawing.svg',
+      buildGroup: 'general_arrangement'
+    },
+    {
+      id: 2,
+      drawingNumber: 'STR-002',
+      title: 'Hull Structure - Frames 10-20',
+      thumbnailUrl: '/api/placeholder-drawing.svg',
+      buildGroup: 'structural'
+    }
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       ...formData,
-      dueDate: formData.dueDate || undefined
+      dueDate: formData.dueDate || undefined,
+      coordinateX: formData.coordinateX,
+      coordinateY: formData.coordinateY,
+      coordinateZ: formData.coordinateZ || 0.5
     });
   };
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSpatialLocation = (coordinates: { x: number; y: number; z?: number }, drawingId?: number, locationRef?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      coordinateX: coordinates.x,
+      coordinateY: coordinates.y,
+      coordinateZ: coordinates.z || 0.5,
+      locationReference: locationRef || prev.locationReference
+    }));
+    setShowSpatialPicker(false);
   };
 
   return (
@@ -493,14 +531,49 @@ const CreateIssueDialog: React.FC<{
             </div>
           </div>
 
+          {/* Spatial Location Section */}
           <div className="space-y-2">
-            <Label htmlFor="locationReference">Location Reference</Label>
-            <Input
-              id="locationReference"
-              value={formData.locationReference}
-              onChange={(e) => handleChange('locationReference', e.target.value)}
-              placeholder="e.g., Main salon, port side"
-            />
+            <Label>Location Reference</Label>
+            <div className="space-y-2">
+              <Input
+                value={formData.locationReference}
+                onChange={(e) => handleChange('locationReference', e.target.value)}
+                placeholder="e.g., Main salon, port side"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSpatialPicker(true)}
+                className="w-full"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                {formData.coordinateX !== null ? 'Update Spatial Location' : 'Add Spatial Location'}
+              </Button>
+              
+              {formData.coordinateX !== null && formData.coordinateY !== null && (
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">Spatial Location Set</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">X:</span>
+                      <span className="ml-1 font-mono">{(formData.coordinateX * 100).toFixed(1)}%</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Y:</span>
+                      <span className="ml-1 font-mono">{(formData.coordinateY * 100).toFixed(1)}%</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Z:</span>
+                      <span className="ml-1 font-mono">{((formData.coordinateZ || 0) * 100).toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -527,6 +600,162 @@ const CreateIssueDialog: React.FC<{
             </Button>
           </div>
         </form>
+
+        {/* Spatial Location Picker Dialog */}
+        <SpatialLocationPicker
+          isOpen={showSpatialPicker}
+          onClose={() => setShowSpatialPicker(false)}
+          onLocationSelect={handleSpatialLocation}
+          drawings={mockDrawings}
+          existingCoordinates={
+            formData.coordinateX !== null && formData.coordinateY !== null
+              ? { x: formData.coordinateX, y: formData.coordinateY, z: formData.coordinateZ || 0.5 }
+              : undefined
+          }
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Add SpatialLocationPicker component
+const SpatialLocationPicker: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onLocationSelect: (coordinates: { x: number; y: number; z?: number }, drawingId?: number, locationRef?: string) => void;
+  drawings: any[];
+  existingCoordinates?: { x: number; y: number; z?: number };
+}> = ({ isOpen, onClose, onLocationSelect, drawings, existingCoordinates }) => {
+  const [selectedDrawing, setSelectedDrawing] = useState(drawings[0] || null);
+  const [coordinates, setCoordinates] = useState(existingCoordinates || null);
+  const [isPickingMode, setIsPickingMode] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  const handleImageClick = useCallback((event: React.MouseEvent<HTMLImageElement>) => {
+    if (!isPickingMode || !imageRef.current) return;
+
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+
+    const clampedX = Math.max(0, Math.min(1, x));
+    const clampedY = Math.max(0, Math.min(1, y));
+
+    setCoordinates({ x: clampedX, y: clampedY, z: 0.5 });
+    setIsPickingMode(false);
+  }, [isPickingMode]);
+
+  const handleSave = () => {
+    if (coordinates) {
+      const locationRef = selectedDrawing 
+        ? `${selectedDrawing.drawingNumber} - ${selectedDrawing.title}`
+        : 'General vessel location';
+      
+      onLocationSelect(coordinates, selectedDrawing?.id, locationRef);
+      onClose();
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-4xl h-[80vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Select Issue Location
+          </DialogTitle>
+          <DialogDescription>
+            Click on the vessel plan to pinpoint the exact location of the issue.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+          <div className="lg:col-span-1 space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Select Drawing</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {drawings.map((drawing) => (
+                    <div
+                      key={drawing.id}
+                      className={`p-2 border rounded cursor-pointer transition-colors hover:bg-muted/50 ${
+                        selectedDrawing?.id === drawing.id ? 'bg-muted border-primary' : ''
+                      }`}
+                      onClick={() => setSelectedDrawing(drawing)}
+                    >
+                      <div className="text-sm font-medium">{drawing.drawingNumber}</div>
+                      <div className="text-xs text-muted-foreground">{drawing.title}</div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Controls</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant={isPickingMode ? "default" : "outline"}
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setIsPickingMode(!isPickingMode)}
+                >
+                  <Crosshair className="h-4 w-4 mr-2" />
+                  {isPickingMode ? 'Cancel Picking' : 'Pick Location'}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-3">
+            <Card className="h-full">
+              <CardContent className="p-0 h-full">
+                <div className={`relative h-full bg-gray-100 ${isPickingMode ? 'cursor-crosshair' : 'cursor-default'}`}>
+                  {selectedDrawing ? (
+                    <>
+                      <img
+                        ref={imageRef}
+                        src="/api/placeholder-drawing.svg"
+                        alt={selectedDrawing.title}
+                        className="w-full h-full object-contain"
+                        onClick={handleImageClick}
+                      />
+                      
+                      {coordinates && (
+                        <div
+                          className="absolute transform -translate-x-1/2 -translate-y-full z-10"
+                          style={{
+                            left: `${coordinates.x * 100}%`,
+                            top: `${coordinates.y * 100}%`,
+                          }}
+                        >
+                          <div className="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+                            <MapPin className="h-3 w-3 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">Select a drawing to begin</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSave} disabled={!coordinates}>
+            Use This Location
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

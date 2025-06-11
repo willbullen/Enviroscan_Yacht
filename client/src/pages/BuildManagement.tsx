@@ -46,6 +46,7 @@ import BuildDashboard from '@/components/build/BuildDashboard';
 import IssueTracker from '@/components/build/IssueTracker';
 import DrawingManager from '@/components/build/DrawingManager';
 import DocumentManager from '@/components/build/DocumentManager';
+import ModelViewer3D from '@/components/build/ModelViewer3D';
 
 // Types for our build management system
 export interface BuildProject {
@@ -381,11 +382,15 @@ const BuildManagement: React.FC = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="3d-models" className="space-y-4">
-              <Build3DModelsList 
-                projects={projects}
-                vesselId={currentVessel.id}
-              />
+            <TabsContent value="3d-models" className="space-y-6">
+              {selectedProjectId ? (
+                <ModelViewer3D projectId={selectedProjectId} />
+              ) : (
+                <Build3DModelsList 
+                  projects={projects}
+                  vesselId={currentVessel.id}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
