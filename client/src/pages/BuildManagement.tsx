@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Building, FileText, AlertTriangle, Box, Image, Cube } from "lucide-react";
+import { Plus, Building, FileText, AlertTriangle, Box, Image } from "lucide-react";
 import BuildProjectsList from "@/components/build/BuildProjectsList";
 import BuildDrawingsList from "@/components/build/BuildDrawingsList";
 import BuildIssuesList from "@/components/build/BuildIssuesList";
@@ -143,7 +143,7 @@ export default function BuildManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">3D Models</CardTitle>
-            <Cube className="h-4 w-4 text-muted-foreground" />
+            <Box className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{vesselModels.length}</div>
