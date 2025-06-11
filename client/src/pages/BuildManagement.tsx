@@ -9,6 +9,7 @@ import BuildProjectsList from "@/components/build/BuildProjectsList";
 import BuildDrawingsList from "@/components/build/BuildDrawingsList";
 import BuildIssuesList from "@/components/build/BuildIssuesList";
 import BuildDocumentsList from "@/components/build/BuildDocumentsList";
+import Build3DModelsList from "@/components/build/Build3DModelsList";
 import CreateProjectDialog from "@/components/build/CreateProjectDialog";
 
 export default function BuildManagement() {
@@ -231,7 +232,7 @@ export default function BuildManagement() {
       <CreateProjectDialog 
         open={createProjectOpen}
         onOpenChange={setCreateProjectOpen}
-        vesselId={selectedVessel.id}
+        vesselId={vesselId}
       />
     </div>
   );
