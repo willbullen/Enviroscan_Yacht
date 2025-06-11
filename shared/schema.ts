@@ -1450,7 +1450,8 @@ export const buildProjects = pgTable("build_projects", {
 export const insertBuildProjectSchema = createInsertSchema(buildProjects).omit({
   id: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
+  createdById: true
 }).extend({
   startDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   endDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
