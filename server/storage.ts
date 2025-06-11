@@ -44,7 +44,15 @@ import {
   // New Banking Provider imports
   bankingProviders, type BankingProvider, type InsertBankingProvider,
   bankConnections, type BankConnection, type InsertBankConnection,
-  transactionReconciliations, type TransactionReconciliation, type InsertTransactionReconciliation
+  transactionReconciliations, type TransactionReconciliation, type InsertTransactionReconciliation,
+  // Build Project imports
+  buildProjects, type BuildProject, type InsertBuildProject,
+  buildDrawings, type BuildDrawing, type InsertBuildDrawing,
+  drawingComments, type DrawingComment, type InsertDrawingComment,
+  buildIssues, type BuildIssue, type InsertBuildIssue,
+  issueComments, type IssueComment, type InsertIssueComment,
+  buildDocuments, type BuildDocument, type InsertBuildDocument,
+  build3DModels, type Build3DModel, type InsertBuild3DModel
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
@@ -459,6 +467,70 @@ export interface IStorage {
   getRecentBankSyncLogs(limit?: number): Promise<BankSyncLog[]>;
   createBankSyncLog(log: InsertBankSyncLog): Promise<BankSyncLog>;
   updateBankSyncLog(id: number, log: Partial<BankSyncLog>): Promise<BankSyncLog | undefined>;
+
+  // Build Project operations
+  getBuildProject(id: number): Promise<BuildProject | undefined>;
+  getBuildProjectsByVessel(vesselId: number): Promise<BuildProject[]>;
+  getBuildProjectsByStatus(status: string): Promise<BuildProject[]>;
+  getBuildProjectsByType(projectType: string): Promise<BuildProject[]>;
+  getActiveBuildProjects(vesselId: number): Promise<BuildProject[]>;
+  createBuildProject(project: InsertBuildProject): Promise<BuildProject>;
+  updateBuildProject(id: number, project: Partial<BuildProject>): Promise<BuildProject | undefined>;
+  deleteBuildProject(id: number): Promise<boolean>;
+
+  // Build Drawing operations
+  getBuildDrawing(id: number): Promise<BuildDrawing | undefined>;
+  getBuildDrawingsByProject(projectId: number): Promise<BuildDrawing[]>;
+  getBuildDrawingsByCategory(category: string): Promise<BuildDrawing[]>;
+  getBuildDrawingsByStatus(status: string): Promise<BuildDrawing[]>;
+  getLatestDrawingVersions(projectId: number): Promise<BuildDrawing[]>;
+  createBuildDrawing(drawing: InsertBuildDrawing): Promise<BuildDrawing>;
+  updateBuildDrawing(id: number, drawing: Partial<BuildDrawing>): Promise<BuildDrawing | undefined>;
+  deleteBuildDrawing(id: number): Promise<boolean>;
+
+  // Drawing Comment operations
+  getDrawingComment(id: number): Promise<DrawingComment | undefined>;
+  getDrawingCommentsByDrawing(drawingId: number): Promise<DrawingComment[]>;
+  getOpenDrawingComments(drawingId: number): Promise<DrawingComment[]>;
+  createDrawingComment(comment: InsertDrawingComment): Promise<DrawingComment>;
+  updateDrawingComment(id: number, comment: Partial<DrawingComment>): Promise<DrawingComment | undefined>;
+  deleteDrawingComment(id: number): Promise<boolean>;
+
+  // Build Issue operations
+  getBuildIssue(id: number): Promise<BuildIssue | undefined>;
+  getBuildIssuesByProject(projectId: number): Promise<BuildIssue[]>;
+  getBuildIssuesByStatus(status: string): Promise<BuildIssue[]>;
+  getBuildIssuesByPriority(priority: string): Promise<BuildIssue[]>;
+  getBuildIssuesByAssignee(assignedToId: number): Promise<BuildIssue[]>;
+  getOpenBuildIssues(projectId: number): Promise<BuildIssue[]>;
+  createBuildIssue(issue: InsertBuildIssue): Promise<BuildIssue>;
+  updateBuildIssue(id: number, issue: Partial<BuildIssue>): Promise<BuildIssue | undefined>;
+  deleteBuildIssue(id: number): Promise<boolean>;
+
+  // Issue Comment operations
+  getIssueComment(id: number): Promise<IssueComment | undefined>;
+  getIssueCommentsByIssue(issueId: number): Promise<IssueComment[]>;
+  createIssueComment(comment: InsertIssueComment): Promise<IssueComment>;
+  updateIssueComment(id: number, comment: Partial<IssueComment>): Promise<IssueComment | undefined>;
+  deleteIssueComment(id: number): Promise<boolean>;
+
+  // Build Document operations
+  getBuildDocument(id: number): Promise<BuildDocument | undefined>;
+  getBuildDocumentsByProject(projectId: number): Promise<BuildDocument[]>;
+  getBuildDocumentsByType(documentType: string): Promise<BuildDocument[]>;
+  getBuildDocumentsByCategory(category: string): Promise<BuildDocument[]>;
+  createBuildDocument(document: InsertBuildDocument): Promise<BuildDocument>;
+  updateBuildDocument(id: number, document: Partial<BuildDocument>): Promise<BuildDocument | undefined>;
+  deleteBuildDocument(id: number): Promise<boolean>;
+
+  // 3D Model operations
+  getBuild3DModel(id: number): Promise<Build3DModel | undefined>;
+  getBuild3DModelsByProject(projectId: number): Promise<Build3DModel[]>;
+  getBuild3DModelsByType(modelType: string): Promise<Build3DModel[]>;
+  getActiveBuild3DModels(projectId: number): Promise<Build3DModel[]>;
+  createBuild3DModel(model: InsertBuild3DModel): Promise<Build3DModel>;
+  updateBuild3DModel(id: number, model: Partial<Build3DModel>): Promise<Build3DModel | undefined>;
+  deleteBuild3DModel(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
