@@ -30,57 +30,45 @@ export default function BuildManagement() {
   // Fetch build issues for active projects
   const { data: issues = [] } = useQuery({
     queryKey: ["/api/build-issues"],
-    enabled: !!selectedVessel?.id,
+    enabled: !!vesselId,
   });
 
-  const openIssues = issues.filter(issue => 
-    vesselProjects.some(p => p.id === issue.projectId) && 
+  const openIssues = (issues as any[]).filter((issue: any) => 
+    vesselProjects.some((p: any) => p.id === issue.projectId) && 
     !['resolved', 'closed'].includes(issue.status)
   );
 
   // Fetch build drawings
   const { data: drawings = [] } = useQuery({
     queryKey: ["/api/build-drawings"],
-    enabled: !!selectedVessel?.id,
+    enabled: !!vesselId,
   });
 
-  const vesselDrawings = drawings.filter(drawing => 
-    vesselProjects.some(p => p.id === drawing.projectId)
+  const vesselDrawings = (drawings as any[]).filter((drawing: any) => 
+    vesselProjects.some((p: any) => p.id === drawing.projectId)
   );
 
   // Fetch build documents
   const { data: documents = [] } = useQuery({
     queryKey: ["/api/build-documents"],
-    enabled: !!selectedVessel?.id,
+    enabled: !!vesselId,
   });
 
-  const vesselDocuments = documents.filter(doc => 
-    vesselProjects.some(p => p.id === doc.projectId)
+  const vesselDocuments = (documents as any[]).filter((doc: any) => 
+    vesselProjects.some((p: any) => p.id === doc.projectId)
   );
 
   // Fetch 3D models
   const { data: models = [] } = useQuery({
     queryKey: ["/api/build-3d-models"],
-    enabled: !!selectedVessel?.id,
+    enabled: !!vesselId,
   });
 
-  const vesselModels = models.filter(model => 
-    vesselProjects.some(p => p.id === model.projectId)
+  const vesselModels = (models as any[]).filter((model: any) => 
+    vesselProjects.some((p: any) => p.id === model.projectId)
   );
 
-  if (!selectedVessel) {
-    return (
-      <div className="p-6">
-        <div className="text-center py-12">
-          <Building className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No vessel selected</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Please select a vessel to manage build and refit projects.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Remove vessel check for now since we're using hardcoded vessel ID
 
   return (
     <div className="p-6 space-y-6">
@@ -89,7 +77,7 @@ export default function BuildManagement() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Build & Refit Management</h1>
           <p className="text-muted-foreground">
-            Manage yacht construction and refit projects for {selectedVessel.name}
+            Manage yacht construction and refit projects for Vessel ID: {vesselId}
           </p>
         </div>
         <Button onClick={() => setCreateProjectOpen(true)}>
@@ -191,7 +179,7 @@ export default function BuildManagement() {
             Documents
           </TabsTrigger>
           <TabsTrigger value="models" className="flex items-center gap-2">
-            <Cube className="h-4 w-4" />
+            <Box className="h-4 w-4" />
             3D Models
           </TabsTrigger>
         </TabsList>
