@@ -40,6 +40,13 @@ import {
   bankingProviders,
   bankConnections,
   transactionReconciliations,
+  buildProjects,
+  buildDrawings,
+  drawingComments,
+  buildIssues,
+  issueComments,
+  buildDocuments,
+  build3DModels,
   type User,
   type InsertUser,
   type Equipment,
@@ -117,11 +124,25 @@ import {
   type TransactionReconciliation,
   type InsertTransactionReconciliation,
   type BankingTransaction,
-  type InsertBankingTransaction
+  type InsertBankingTransaction,
+  type BuildProject,
+  type InsertBuildProject,
+  type BuildDrawing,
+  type InsertBuildDrawing,
+  type DrawingComment,
+  type InsertDrawingComment,
+  type BuildIssue,
+  type InsertBuildIssue,
+  type IssueComment,
+  type InsertIssueComment,
+  type BuildDocument,
+  type InsertBuildDocument,
+  type Build3DModel,
+  type InsertBuild3DModel
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db, executeWithRetry } from "./db";
-import { and, eq, lte, gte, sql, between, desc, asc, ne, isNotNull, not, isNull } from "drizzle-orm";
+import { and, eq, lte, gte, sql, between, desc, asc, ne, isNotNull, not, isNull, inArray } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -3113,5 +3134,465 @@ export class DatabaseStorage implements IStorage {
       console.error("Error deleting transaction reconciliation:", error);
       return false;
     }
+  }
+
+  // Build Project operations
+  async getBuildProject(id: number): Promise<BuildProject | undefined> {
+    const [project] = await db
+      .select()
+      .from(buildProjects)
+      .where(eq(buildProjects.id, id));
+    return project || undefined;
+  }
+
+  async getBuildProjectsByVessel(vesselId: number): Promise<BuildProject[]> {
+    return await db
+      .select()
+      .from(buildProjects)
+      .where(eq(buildProjects.vesselId, vesselId))
+      .orderBy(desc(buildProjects.createdAt));
+  }
+
+  async getBuildProjectsByStatus(status: string): Promise<BuildProject[]> {
+    return await db
+      .select()
+      .from(buildProjects)
+      .where(eq(buildProjects.status, status))
+      .orderBy(desc(buildProjects.createdAt));
+  }
+
+  async getBuildProjectsByType(projectType: string): Promise<BuildProject[]> {
+    return await db
+      .select()
+      .from(buildProjects)
+      .where(eq(buildProjects.projectType, projectType))
+      .orderBy(desc(buildProjects.createdAt));
+  }
+
+  async getActiveBuildProjects(vesselId: number): Promise<BuildProject[]> {
+    return await db
+      .select()
+      .from(buildProjects)
+      .where(and(
+        eq(buildProjects.vesselId, vesselId),
+        ne(buildProjects.status, 'completed'),
+        ne(buildProjects.status, 'cancelled')
+      ))
+      .orderBy(desc(buildProjects.createdAt));
+  }
+
+  async createBuildProject(project: InsertBuildProject): Promise<BuildProject> {
+    const [newProject] = await db.insert(buildProjects).values(project).returning();
+    return newProject;
+  }
+
+  async updateBuildProject(id: number, project: Partial<BuildProject>): Promise<BuildProject | undefined> {
+    const [updatedProject] = await db
+      .update(buildProjects)
+      .set({ ...project, updatedAt: new Date() })
+      .where(eq(buildProjects.id, id))
+      .returning();
+    return updatedProject || undefined;
+  }
+
+  async deleteBuildProject(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(buildProjects).where(eq(buildProjects.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting build project:", error);
+      return false;
+    }
+  }
+
+  // Build Drawing operations
+  async getBuildDrawing(id: number): Promise<BuildDrawing | undefined> {
+    const [drawing] = await db
+      .select()
+      .from(buildDrawings)
+      .where(eq(buildDrawings.id, id));
+    return drawing || undefined;
+  }
+
+  async getBuildDrawingsByProject(projectId: number): Promise<BuildDrawing[]> {
+    return await db
+      .select()
+      .from(buildDrawings)
+      .where(eq(buildDrawings.projectId, projectId))
+      .orderBy(desc(buildDrawings.createdAt));
+  }
+
+  async getBuildDrawingsByCategory(category: string): Promise<BuildDrawing[]> {
+    return await db
+      .select()
+      .from(buildDrawings)
+      .where(eq(buildDrawings.category, category))
+      .orderBy(desc(buildDrawings.createdAt));
+  }
+
+  async getBuildDrawingsByStatus(status: string): Promise<BuildDrawing[]> {
+    return await db
+      .select()
+      .from(buildDrawings)
+      .where(eq(buildDrawings.status, status))
+      .orderBy(desc(buildDrawings.createdAt));
+  }
+
+  async getLatestDrawingVersions(projectId: number): Promise<BuildDrawing[]> {
+    return await db
+      .select()
+      .from(buildDrawings)
+      .where(and(
+        eq(buildDrawings.projectId, projectId),
+        eq(buildDrawings.isLatestVersion, true)
+      ))
+      .orderBy(desc(buildDrawings.createdAt));
+  }
+
+  async createBuildDrawing(drawing: InsertBuildDrawing): Promise<BuildDrawing> {
+    const [newDrawing] = await db.insert(buildDrawings).values(drawing).returning();
+    return newDrawing;
+  }
+
+  async updateBuildDrawing(id: number, drawing: Partial<BuildDrawing>): Promise<BuildDrawing | undefined> {
+    const [updatedDrawing] = await db
+      .update(buildDrawings)
+      .set({ ...drawing, updatedAt: new Date() })
+      .where(eq(buildDrawings.id, id))
+      .returning();
+    return updatedDrawing || undefined;
+  }
+
+  async deleteBuildDrawing(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(buildDrawings).where(eq(buildDrawings.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting build drawing:", error);
+      return false;
+    }
+  }
+
+  // Drawing Comment operations
+  async getDrawingComment(id: number): Promise<DrawingComment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(drawingComments)
+      .where(eq(drawingComments.id, id));
+    return comment || undefined;
+  }
+
+  async getDrawingCommentsByDrawing(drawingId: number): Promise<DrawingComment[]> {
+    return await db
+      .select()
+      .from(drawingComments)
+      .where(eq(drawingComments.drawingId, drawingId))
+      .orderBy(desc(drawingComments.createdAt));
+  }
+
+  async getOpenDrawingComments(drawingId: number): Promise<DrawingComment[]> {
+    return await db
+      .select()
+      .from(drawingComments)
+      .where(and(
+        eq(drawingComments.drawingId, drawingId),
+        eq(drawingComments.status, 'open')
+      ))
+      .orderBy(desc(drawingComments.createdAt));
+  }
+
+  async createDrawingComment(comment: InsertDrawingComment): Promise<DrawingComment> {
+    const [newComment] = await db.insert(drawingComments).values(comment).returning();
+    return newComment;
+  }
+
+  async updateDrawingComment(id: number, comment: Partial<DrawingComment>): Promise<DrawingComment | undefined> {
+    const [updatedComment] = await db
+      .update(drawingComments)
+      .set({ ...comment, updatedAt: new Date() })
+      .where(eq(drawingComments.id, id))
+      .returning();
+    return updatedComment || undefined;
+  }
+
+  async deleteDrawingComment(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(drawingComments).where(eq(drawingComments.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting drawing comment:", error);
+      return false;
+    }
+  }
+
+  // Build Issue operations
+  async getBuildIssue(id: number): Promise<BuildIssue | undefined> {
+    const [issue] = await db
+      .select()
+      .from(buildIssues)
+      .where(eq(buildIssues.id, id));
+    return issue || undefined;
+  }
+
+  async getBuildIssuesByProject(projectId: number): Promise<BuildIssue[]> {
+    return await db
+      .select()
+      .from(buildIssues)
+      .where(eq(buildIssues.projectId, projectId))
+      .orderBy(desc(buildIssues.createdAt));
+  }
+
+  async getBuildIssuesByStatus(status: string): Promise<BuildIssue[]> {
+    return await db
+      .select()
+      .from(buildIssues)
+      .where(eq(buildIssues.status, status))
+      .orderBy(desc(buildIssues.createdAt));
+  }
+
+  async getBuildIssuesByPriority(priority: string): Promise<BuildIssue[]> {
+    return await db
+      .select()
+      .from(buildIssues)
+      .where(eq(buildIssues.priority, priority))
+      .orderBy(desc(buildIssues.createdAt));
+  }
+
+  async getBuildIssuesByAssignee(assignedToId: number): Promise<BuildIssue[]> {
+    return await db
+      .select()
+      .from(buildIssues)
+      .where(eq(buildIssues.assignedToId, assignedToId))
+      .orderBy(desc(buildIssues.createdAt));
+  }
+
+  async getOpenBuildIssues(projectId: number): Promise<BuildIssue[]> {
+    return await db
+      .select()
+      .from(buildIssues)
+      .where(and(
+        eq(buildIssues.projectId, projectId),
+        ne(buildIssues.status, 'resolved'),
+        ne(buildIssues.status, 'closed')
+      ))
+      .orderBy(desc(buildIssues.createdAt));
+  }
+
+  async createBuildIssue(issue: InsertBuildIssue): Promise<BuildIssue> {
+    const [newIssue] = await db.insert(buildIssues).values(issue).returning();
+    return newIssue;
+  }
+
+  async updateBuildIssue(id: number, issue: Partial<BuildIssue>): Promise<BuildIssue | undefined> {
+    const [updatedIssue] = await db
+      .update(buildIssues)
+      .set({ ...issue, updatedAt: new Date() })
+      .where(eq(buildIssues.id, id))
+      .returning();
+    return updatedIssue || undefined;
+  }
+
+  async deleteBuildIssue(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(buildIssues).where(eq(buildIssues.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting build issue:", error);
+      return false;
+    }
+  }
+
+  // Issue Comment operations
+  async getIssueComment(id: number): Promise<IssueComment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(issueComments)
+      .where(eq(issueComments.id, id));
+    return comment || undefined;
+  }
+
+  async getIssueCommentsByIssue(issueId: number): Promise<IssueComment[]> {
+    return await db
+      .select()
+      .from(issueComments)
+      .where(eq(issueComments.issueId, issueId))
+      .orderBy(desc(issueComments.createdAt));
+  }
+
+  async createIssueComment(comment: InsertIssueComment): Promise<IssueComment> {
+    const [newComment] = await db.insert(issueComments).values(comment).returning();
+    return newComment;
+  }
+
+  async updateIssueComment(id: number, comment: Partial<IssueComment>): Promise<IssueComment | undefined> {
+    const [updatedComment] = await db
+      .update(issueComments)
+      .set({ ...comment, updatedAt: new Date() })
+      .where(eq(issueComments.id, id))
+      .returning();
+    return updatedComment || undefined;
+  }
+
+  async deleteIssueComment(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(issueComments).where(eq(issueComments.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting issue comment:", error);
+      return false;
+    }
+  }
+
+  // Build Document operations
+  async getBuildDocument(id: number): Promise<BuildDocument | undefined> {
+    const [document] = await db
+      .select()
+      .from(buildDocuments)
+      .where(eq(buildDocuments.id, id));
+    return document || undefined;
+  }
+
+  async getBuildDocumentsByProject(projectId: number): Promise<BuildDocument[]> {
+    return await db
+      .select()
+      .from(buildDocuments)
+      .where(eq(buildDocuments.projectId, projectId))
+      .orderBy(desc(buildDocuments.createdAt));
+  }
+
+  async getBuildDocumentsByType(documentType: string): Promise<BuildDocument[]> {
+    return await db
+      .select()
+      .from(buildDocuments)
+      .where(eq(buildDocuments.documentType, documentType))
+      .orderBy(desc(buildDocuments.createdAt));
+  }
+
+  async getBuildDocumentsByCategory(category: string): Promise<BuildDocument[]> {
+    return await db
+      .select()
+      .from(buildDocuments)
+      .where(eq(buildDocuments.category, category))
+      .orderBy(desc(buildDocuments.createdAt));
+  }
+
+  async createBuildDocument(document: InsertBuildDocument): Promise<BuildDocument> {
+    const [newDocument] = await db.insert(buildDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  async updateBuildDocument(id: number, document: Partial<BuildDocument>): Promise<BuildDocument | undefined> {
+    const [updatedDocument] = await db
+      .update(buildDocuments)
+      .set({ ...document, updatedAt: new Date() })
+      .where(eq(buildDocuments.id, id))
+      .returning();
+    return updatedDocument || undefined;
+  }
+
+  async deleteBuildDocument(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(buildDocuments).where(eq(buildDocuments.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting build document:", error);
+      return false;
+    }
+  }
+
+  // 3D Model operations
+  async getBuild3DModel(id: number): Promise<Build3DModel | undefined> {
+    const [model] = await db
+      .select()
+      .from(build3DModels)
+      .where(eq(build3DModels.id, id));
+    return model || undefined;
+  }
+
+  async getBuild3DModelsByProject(projectId: number): Promise<Build3DModel[]> {
+    return await db
+      .select()
+      .from(build3DModels)
+      .where(eq(build3DModels.projectId, projectId))
+      .orderBy(desc(build3DModels.createdAt));
+  }
+
+  async getBuild3DModelsByType(modelType: string): Promise<Build3DModel[]> {
+    return await db
+      .select()
+      .from(build3DModels)
+      .where(eq(build3DModels.modelType, modelType))
+      .orderBy(desc(build3DModels.createdAt));
+  }
+
+  async getActiveBuild3DModels(projectId: number): Promise<Build3DModel[]> {
+    return await db
+      .select()
+      .from(build3DModels)
+      .where(and(
+        eq(build3DModels.projectId, projectId),
+        eq(build3DModels.isActive, true)
+      ))
+      .orderBy(desc(build3DModels.createdAt));
+  }
+
+  async createBuild3DModel(model: InsertBuild3DModel): Promise<Build3DModel> {
+    const [newModel] = await db.insert(build3DModels).values(model).returning();
+    return newModel;
+  }
+
+  async updateBuild3DModel(id: number, model: Partial<Build3DModel>): Promise<Build3DModel | undefined> {
+    const [updatedModel] = await db
+      .update(build3DModels)
+      .set({ ...model, updatedAt: new Date() })
+      .where(eq(build3DModels.id, id))
+      .returning();
+    return updatedModel || undefined;
+  }
+
+  async deleteBuild3DModel(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(build3DModels).where(eq(build3DModels.id, id));
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error("Error deleting 3D model:", error);
+      return false;
+    }
+  }
+
+  // Helper methods for API routes
+  async getAllBuildProjects(): Promise<BuildProject[]> {
+    return await db
+      .select()
+      .from(buildProjects)
+      .orderBy(desc(buildProjects.createdAt));
+  }
+
+  async getAllBuildDrawings(): Promise<BuildDrawing[]> {
+    return await db
+      .select()
+      .from(buildDrawings)
+      .orderBy(desc(buildDrawings.createdAt));
+  }
+
+  async getAllBuildIssues(): Promise<BuildIssue[]> {
+    return await db
+      .select()
+      .from(buildIssues)
+      .orderBy(desc(buildIssues.createdAt));
+  }
+
+  async getAllBuildDocuments(): Promise<BuildDocument[]> {
+    return await db
+      .select()
+      .from(buildDocuments)
+      .orderBy(desc(buildDocuments.createdAt));
+  }
+
+  async getAllBuild3DModels(): Promise<Build3DModel[]> {
+    return await db
+      .select()
+      .from(build3DModels)
+      .orderBy(desc(build3DModels.createdAt));
   }
 }
