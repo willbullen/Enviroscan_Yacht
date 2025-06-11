@@ -188,7 +188,7 @@ export default function BuildManagement() {
           <BuildProjectsList 
             projects={vesselProjects} 
             loading={projectsLoading}
-            vesselId={selectedVessel.id}
+            vesselId={vesselId}
           />
         </TabsContent>
 
@@ -196,7 +196,7 @@ export default function BuildManagement() {
           <BuildDrawingsList 
             drawings={vesselDrawings}
             projects={vesselProjects}
-            vesselId={selectedVessel.id}
+            vesselId={vesselId}
           />
         </TabsContent>
 
@@ -206,7 +206,7 @@ export default function BuildManagement() {
               vesselProjects.some(p => p.id === issue.projectId)
             )}
             projects={vesselProjects}
-            vesselId={selectedVessel.id}
+            vesselId={vesselId}
           />
         </TabsContent>
 
@@ -214,7 +214,7 @@ export default function BuildManagement() {
           <BuildDocumentsList 
             documents={vesselDocuments}
             projects={vesselProjects}
-            vesselId={selectedVessel.id}
+            vesselId={vesselId}
           />
         </TabsContent>
 
