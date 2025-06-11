@@ -75,7 +75,7 @@ export default function BuildProjectsList({ projects, loading, vesselId }: Build
 
   const deleteProjectMutation = useMutation({
     mutationFn: (projectId: number) => 
-      apiRequest(`/api/build-projects/${projectId}`, { method: 'DELETE' }),
+      apiRequest('DELETE', `/api/build-projects/${projectId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/build-projects'] });
     },
