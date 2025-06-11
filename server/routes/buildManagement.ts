@@ -356,7 +356,7 @@ router.post("/projects/:id/team", async (req, res) => {
       'team',
       newTeamMember.id,
       `Team member ${teamMember?.user.fullName} added as ${teamData.role}`,
-      req.user?.id,
+      req.user?.id || 0,
       undefined,
       teamMember,
       req

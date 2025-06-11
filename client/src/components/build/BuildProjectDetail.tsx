@@ -554,6 +554,102 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* File Upload Dialogs */}
+      <FileUploadDialog
+        open={isUploadDrawingOpen}
+        onOpenChange={setIsUploadDrawingOpen}
+        category="drawings"
+        onUploadComplete={() => {
+          toast.success('Drawing uploaded successfully');
+          // TODO: Invalidate queries to refresh data
+        }}
+      />
+
+      <FileUploadDialog
+        open={isUploadDocumentOpen}
+        onOpenChange={setIsUploadDocumentOpen}
+        category="documents"
+        onUploadComplete={() => {
+          toast.success('Document uploaded successfully');
+          // TODO: Invalidate queries to refresh data
+        }}
+      />
+
+      <FileUploadDialog
+        open={isCreateIssueOpen}
+        onOpenChange={setIsCreateIssueOpen}
+        category="issue-photos"
+        title="Report Issue"
+        description="Upload photos to document this issue or defect."
+        onUploadComplete={() => {
+          toast.success('Issue photos uploaded successfully');
+          // TODO: Invalidate queries to refresh data
+        }}
+      />
+
+      <FileUploadDialog
+        open={isAddModelOpen}
+        onOpenChange={setIsAddModelOpen}
+        category="3d-models"
+        onUploadComplete={() => {
+          toast.success('3D model uploaded successfully');
+          // TODO: Invalidate queries to refresh data
+        }}
+      />
+
+      {/* Add Member Dialog */}
+      <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>
+              Add a new team member to this project
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Name</label>
+              <input 
+                type="text" 
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                placeholder="Enter member name"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Role</label>
+              <input 
+                type="text" 
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                placeholder="Enter role (e.g., Project Manager, Engineer)"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Email</label>
+              <input 
+                type="email" 
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                placeholder="Enter email address"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAddMemberOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              // TODO: Implement add member functionality
+              toast.success('Team member added successfully');
+              setIsAddMemberOpen(false);
+            }}>
+              Add Member
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
