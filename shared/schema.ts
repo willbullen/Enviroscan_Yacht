@@ -1418,3 +1418,452 @@ export const insertBankSyncLogSchema = createInsertSchema(bankSyncLogs).omit({
 });
 export type InsertBankSyncLog = z.infer<typeof insertBankSyncLogSchema>;
 export type BankSyncLog = typeof bankSyncLogs.$inferSelect;
+
+// Build Management Schema - Comprehensive yacht build/refit management
+
+// Build Projects - Main project container
+export const buildProjects = pgTable("build_projects", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").references(() => vessels.id).notNull(),
+  name: text("name").notNull(), // Project name
+  description: text("description"),
+  projectType: text("project_type").notNull(), // new_build, refit, major_refit, survey_rectification
+  status: text("status").notNull().default("planning"), // planning, design, construction, commissioning, completed, on_hold, cancelled
+  priority: text("priority").notNull().default("medium"), // low, medium, high, critical
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  estimatedCompletionDate: timestamp("estimated_completion_date"),
+  actualCompletionDate: timestamp("actual_completion_date"), 
+  budgetTotal: decimal("budget_total", { precision: 12, scale: 2 }),
+  budgetSpent: decimal("budget_spent", { precision: 12, scale: 2 }).default("0"),
+  progressPercentage: integer("progress_percentage").default(0), // 0-100
+  projectManagerId: integer("project_manager_id").references(() => users.id),
+  yardLocation: text("yard_location"), // Shipyard location
+  contractorCompany: text("contractor_company"),
+  notes: text("notes"),
+  tags: json("tags"), // Array of tags for categorization
+  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuildProjectSchema = createInsertSchema(buildProjects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuildProject = z.infer<typeof insertBuildProjectSchema>;
+export type BuildProject = typeof buildProjects.$inferSelect;
+
+// Team assignments for build projects
+export const buildProjectTeam = pgTable("build_project_team", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => buildProjects.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  role: text("role").notNull(), // project_manager, site_supervisor, naval_architect, engineer, inspector
+  isLead: boolean("is_lead").default(false),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  assignedById: integer("assigned_by_id").references(() => users.id).notNull(),
+});
+
+export const insertBuildProjectTeamSchema = createInsertSchema(buildProjectTeam).omit({
+  id: true,
+  assignedAt: true
+});
+export type InsertBuildProjectTeam = z.infer<typeof insertBuildProjectTeamSchema>;
+export type BuildProjectTeam = typeof buildProjectTeam.$inferSelect;
+
+// Drawing/Blueprint management
+export const buildDrawings = pgTable("build_drawings", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => buildProjects.id, { onDelete: "cascade" }).notNull(),
+  drawingNumber: text("drawing_number").notNull(), // e.g., GA-001, E-001
+  title: text("title").notNull(),
+  description: text("description"),
+  buildGroup: text("build_group").notNull(), // general_arrangement, structural, mechanical, electrical, interior, exterior
+  discipline: text("discipline").notNull(), // naval_architecture, engineering, interior_design, systems
+  drawingType: text("drawing_type").notNull(), // plan, section, detail, isometric, 3d_view
+  scale: text("scale"), // 1:100, 1:50, etc.
+  status: text("status").notNull().default("draft"), // draft, for_review, approved, superseded, cancelled
+  revisionNumber: text("revision_number").default("A"),
+  isCurrentRevision: boolean("is_current_revision").default(true),
+  approvalRequired: boolean("approval_required").default(true),
+  approvedById: integer("approved_by_id").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  fileUrl: text("file_url"), // URL to drawing file
+  fileName: text("file_name"),
+  fileSize: integer("file_size"),
+  fileMimeType: text("file_mime_type"),
+  thumbnailUrl: text("thumbnail_url"), // URL to thumbnail image
+  tags: json("tags"), // Array of tags
+  metadata: json("metadata"), // Additional drawing metadata
+  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuildDrawingSchema = createInsertSchema(buildDrawings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuildDrawing = z.infer<typeof insertBuildDrawingSchema>;
+export type BuildDrawing = typeof buildDrawings.$inferSelect;
+
+// Drawing revisions and version history
+export const buildDrawingRevisions = pgTable("build_drawing_revisions", {
+  id: serial("id").primaryKey(),
+  drawingId: integer("drawing_id").references(() => buildDrawings.id, { onDelete: "cascade" }).notNull(),
+  revisionNumber: text("revision_number").notNull(),
+  revisionDescription: text("revision_description").notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size"),
+  fileMimeType: text("file_mime_type"),
+  thumbnailUrl: text("thumbnail_url"),
+  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  supersededAt: timestamp("superseded_at"), // When this revision was superseded
+});
+
+export const insertBuildDrawingRevisionSchema = createInsertSchema(buildDrawingRevisions).omit({
+  id: true,
+  createdAt: true
+});
+export type InsertBuildDrawingRevision = z.infer<typeof insertBuildDrawingRevisionSchema>;
+export type BuildDrawingRevision = typeof buildDrawingRevisions.$inferSelect;
+
+// Comments on drawings
+export const buildDrawingComments = pgTable("build_drawing_comments", {
+  id: serial("id").primaryKey(),
+  drawingId: integer("drawing_id").references(() => buildDrawings.id, { onDelete: "cascade" }).notNull(),
+  commentText: text("comment_text").notNull(),
+  xCoordinate: real("x_coordinate"), // Position on drawing for spatial comments
+  yCoordinate: real("y_coordinate"),
+  status: text("status").notNull().default("open"), // open, addressed, resolved, closed
+  priority: text("priority").notNull().default("medium"), // low, medium, high
+  commentType: text("comment_type").notNull().default("general"), // general, design_change, clarification, approval
+  assignedToId: integer("assigned_to_id").references(() => users.id),
+  resolvedById: integer("resolved_by_id").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  resolutionNotes: text("resolution_notes"),
+  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuildDrawingCommentSchema = createInsertSchema(buildDrawingComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuildDrawingComment = z.infer<typeof insertBuildDrawingCommentSchema>;
+export type BuildDrawingComment = typeof buildDrawingComments.$inferSelect;
+
+// Issue tracking for build projects
+export const buildIssues = pgTable("build_issues", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => buildProjects.id, { onDelete: "cascade" }).notNull(),
+  issueNumber: text("issue_number").notNull(), // Auto-generated unique issue number
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  issueType: text("issue_type").notNull(), // defect, rework, design_change, procurement, quality, safety, schedule
+  category: text("category").notNull(), // structural, mechanical, electrical, interior, systems, exterior
+  severity: text("severity").notNull().default("medium"), // low, medium, high, critical
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  status: text("status").notNull().default("open"), // open, in_progress, resolved, closed, cancelled
+  // Location reference - can be coordinates on GA drawing or 3D model
+  locationReference: text("location_reference"), // Text description of location
+  locationCoordinatesGA: json("location_coordinates_ga"), // {x, y} coordinates on GA drawing
+  locationCoordinates3D: json("location_coordinates_3d"), // {x, y, z} coordinates in 3D model
+  drawingReference: text("drawing_reference"), // Related drawing number
+  relatedDrawingId: integer("related_drawing_id").references(() => buildDrawings.id),
+  assignedToId: integer("assigned_to_id").references(() => users.id),
+  reportedById: integer("reported_by_id").references(() => users.id).notNull(),
+  dueDate: timestamp("due_date"),
+  resolvedById: integer("resolved_by_id").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  resolutionNotes: text("resolution_notes"),
+  estimatedEffort: integer("estimated_effort"), // Hours
+  actualEffort: integer("actual_effort"), // Hours
+  costImpact: decimal("cost_impact", { precision: 10, scale: 2 }),
+  scheduleImpact: integer("schedule_impact"), // Days
+  tags: json("tags"), // Array of tags
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuildIssueSchema = createInsertSchema(buildIssues).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuildIssue = z.infer<typeof insertBuildIssueSchema>;
+export type BuildIssue = typeof buildIssues.$inferSelect;
+
+// Photos attached to issues (up to 20 per issue as specified)
+export const buildIssuePhotos = pgTable("build_issue_photos", {
+  id: serial("id").primaryKey(),
+  issueId: integer("issue_id").references(() => buildIssues.id, { onDelete: "cascade" }).notNull(),
+  photoUrl: text("photo_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size"),
+  caption: text("caption"),
+  takenAt: timestamp("taken_at"),
+  uploadedById: integer("uploaded_by_id").references(() => users.id).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+});
+
+export const insertBuildIssuePhotoSchema = createInsertSchema(buildIssuePhotos).omit({
+  id: true,
+  uploadedAt: true
+});
+export type InsertBuildIssuePhoto = z.infer<typeof insertBuildIssuePhotoSchema>;
+export type BuildIssuePhoto = typeof buildIssuePhotos.$inferSelect;
+
+// Comments on issues for discussion threads
+export const buildIssueComments = pgTable("build_issue_comments", {
+  id: serial("id").primaryKey(),  
+  issueId: integer("issue_id").references(() => buildIssues.id, { onDelete: "cascade" }).notNull(),
+  commentText: text("comment_text").notNull(),
+  commentType: text("comment_type").notNull().default("comment"), // comment, status_change, assignment_change
+  statusChange: json("status_change"), // {from: 'status', to: 'status'} if status change
+  assignmentChange: json("assignment_change"), // {from: userId, to: userId} if assignment change
+  attachments: json("attachments"), // Array of attachment URLs
+  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuildIssueCommentSchema = createInsertSchema(buildIssueComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuildIssueComment = z.infer<typeof insertBuildIssueCommentSchema>;
+export type BuildIssueComment = typeof buildIssueComments.$inferSelect;
+
+// Document library for build projects
+export const buildDocuments = pgTable("build_documents", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => buildProjects.id, { onDelete: "cascade" }).notNull(),
+  documentNumber: text("document_number"), // Optional document reference number
+  title: text("title").notNull(),
+  description: text("description"),
+  documentType: text("document_type").notNull(), // specification, report, certificate, manual, contract, correspondence, photo, video
+  category: text("category").notNull(), // technical, commercial, regulatory, quality, safety, progress
+  subCategory: text("sub_category"), // More specific categorization
+  version: text("version").default("1.0"),
+  status: text("status").notNull().default("active"), // active, superseded, archived, cancelled
+  confidentialityLevel: text("confidentiality_level").notNull().default("internal"), // public, internal, confidential, restricted
+  fileUrl: text("file_url").notNull(),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size"),
+  fileMimeType: text("file_mime_type"),
+  thumbnailUrl: text("thumbnail_url"), // For images/PDFs
+  previewUrl: text("preview_url"), // For document preview
+  checksum: text("checksum"), // File integrity verification
+  tags: json("tags"), // Array of tags for searchability
+  metadata: json("metadata"), // Additional document properties
+  authorName: text("author_name"), // Original document author
+  authorCompany: text("author_company"),
+  reviewRequired: boolean("review_required").default(false),
+  reviewedById: integer("reviewed_by_id").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  uploadedById: integer("uploaded_by_id").references(() => users.id).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  accessCount: integer("access_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuildDocumentSchema = createInsertSchema(buildDocuments).omit({
+  id: true,
+  uploadedAt: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuildDocument = z.infer<typeof insertBuildDocumentSchema>;
+export type BuildDocument = typeof buildDocuments.$inferSelect;
+
+// Document version history
+export const buildDocumentVersions = pgTable("build_document_versions", {
+  id: serial("id").primaryKey(),
+  documentId: integer("document_id").references(() => buildDocuments.id, { onDelete: "cascade" }).notNull(),
+  version: text("version").notNull(),
+  versionNotes: text("version_notes"),
+  fileUrl: text("file_url").notNull(),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size"),
+  fileMimeType: text("file_mime_type"),
+  checksum: text("checksum"),
+  uploadedById: integer("uploaded_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBuildDocumentVersionSchema = createInsertSchema(buildDocumentVersions).omit({
+  id: true,
+  createdAt: true
+});
+export type InsertBuildDocumentVersion = z.infer<typeof insertBuildDocumentVersionSchema>;
+export type BuildDocumentVersion = typeof buildDocumentVersions.$inferSelect;
+
+// 3D Models and scans (Matterport, etc.)
+export const build3DModels = pgTable("build_3d_models", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => buildProjects.id, { onDelete: "cascade" }).notNull(),
+  modelName: text("model_name").notNull(),
+  description: text("description"),
+  modelType: text("model_type").notNull(), // matterport, photogrammetry, cad_model, point_cloud
+  provider: text("provider"), // matterport, autodesk, etc.
+  modelUrl: text("model_url").notNull(), // URL to 3D model viewer or file
+  embeddedViewerUrl: text("embedded_viewer_url"), // Embeddable viewer URL
+  modelId: text("model_id"), // External provider model ID
+  accessToken: text("access_token"), // If required for model access
+  thumbnailUrl: text("thumbnail_url"),
+  previewImageUrl: text("preview_image_url"),
+  scanDate: timestamp("scan_date"),
+  scanLocation: text("scan_location"), // Where the scan was taken
+  fileSize: integer("file_size"),
+  fileFormat: text("file_format"), // .ply, .obj, .glb, etc.
+  resolution: text("resolution"), // High, medium, low or specific metrics
+  measurementUnits: text("measurement_units").default("meters"), // meters, feet, etc.
+  coordinateSystem: text("coordinate_system"), // Coordinate reference system
+  isActive: boolean("is_active").default(true),
+  tags: json("tags"),
+  metadata: json("metadata"), // Additional model properties
+  uploadedById: integer("uploaded_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuild3DModelSchema = createInsertSchema(build3DModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuild3DModel = z.infer<typeof insertBuild3DModelSchema>;
+export type Build3DModel = typeof build3DModels.$inferSelect;
+
+// Milestones and progress tracking
+export const buildMilestones = pgTable("build_milestones", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => buildProjects.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  milestoneType: text("milestone_type").notNull(), // start, completion, review, delivery, inspection
+  category: text("category").notNull(), // design, structural, mechanical, electrical, interior, commissioning
+  plannedDate: timestamp("planned_date").notNull(),
+  actualDate: timestamp("actual_date"),
+  status: text("status").notNull().default("planned"), // planned, in_progress, completed, delayed, cancelled
+  progressPercentage: integer("progress_percentage").default(0),
+  dependencies: json("dependencies"), // Array of milestone IDs this depends on
+  budget: decimal("budget", { precision: 10, scale: 2 }),
+  actualCost: decimal("actual_cost", { precision: 10, scale: 2 }),
+  responsibleParty: text("responsible_party"), // Company/team responsible
+  notes: text("notes"),
+  completedById: integer("completed_by_id").references(() => users.id),
+  createdById: integer("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBuildMilestoneSchema = createInsertSchema(buildMilestones).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+export type InsertBuildMilestone = z.infer<typeof insertBuildMilestoneSchema>;
+export type BuildMilestone = typeof buildMilestones.$inferSelect;
+
+// Activity log for build management
+export const buildActivityLogs = pgTable("build_activity_logs", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => buildProjects.id, { onDelete: "cascade" }).notNull(),
+  activityType: text("activity_type").notNull(), // project_created, drawing_uploaded, issue_created, document_added, etc.
+  entityType: text("entity_type").notNull(), // project, drawing, issue, document, milestone
+  entityId: integer("entity_id").notNull(), // ID of the related entity
+  description: text("description").notNull(),
+  oldValues: json("old_values"), // Previous values for updates
+  newValues: json("new_values"), // New values for updates
+  userId: integer("user_id").references(() => users.id).notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export const insertBuildActivityLogSchema = createInsertSchema(buildActivityLogs).omit({
+  id: true,
+  timestamp: true
+});
+export type InsertBuildActivityLog = z.infer<typeof insertBuildActivityLogSchema>;
+export type BuildActivityLog = typeof buildActivityLogs.$inferSelect;
+
+// Relations for build management
+export const buildProjectsRelations = relations(buildProjects, ({ one, many }) => ({
+  vessel: one(vessels, {
+    fields: [buildProjects.vesselId],
+    references: [vessels.id],
+  }),
+  projectManager: one(users, {
+    fields: [buildProjects.projectManagerId],
+    references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [buildProjects.createdById],
+    references: [users.id],
+  }),
+  team: many(buildProjectTeam),
+  drawings: many(buildDrawings),
+  issues: many(buildIssues),
+  documents: many(buildDocuments),
+  models3D: many(build3DModels),
+  milestones: many(buildMilestones),
+  activityLogs: many(buildActivityLogs),
+}));
+
+export const buildDrawingsRelations = relations(buildDrawings, ({ one, many }) => ({
+  project: one(buildProjects, {
+    fields: [buildDrawings.projectId],
+    references: [buildProjects.id],
+  }),
+  approvedBy: one(users, {
+    fields: [buildDrawings.approvedById],
+    references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [buildDrawings.createdById],
+    references: [users.id],
+  }),
+  revisions: many(buildDrawingRevisions),
+  comments: many(buildDrawingComments),
+  relatedIssues: many(buildIssues),
+}));
+
+export const buildIssuesRelations = relations(buildIssues, ({ one, many }) => ({
+  project: one(buildProjects, {
+    fields: [buildIssues.projectId],
+    references: [buildProjects.id],
+  }),
+  assignedTo: one(users, {
+    fields: [buildIssues.assignedToId],
+    references: [users.id],
+  }),
+  reportedBy: one(users, {
+    fields: [buildIssues.reportedById],
+    references: [users.id],
+  }),
+  resolvedBy: one(users, {
+    fields: [buildIssues.resolvedById],
+    references: [users.id],
+  }),
+  relatedDrawing: one(buildDrawings, {
+    fields: [buildIssues.relatedDrawingId],
+    references: [buildDrawings.id],
+  }),
+  photos: many(buildIssuePhotos),
+  comments: many(buildIssueComments),
+}));

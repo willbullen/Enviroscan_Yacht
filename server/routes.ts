@@ -10,6 +10,7 @@ import marineRouter, { initAisStreamWebsocket } from "./routes/marine";
 import { setupApiKeysRoutes } from "./routes/apiKeys";
 import { setupAuth } from "./auth";
 import setupReceiptRoutes from "./routes/receiptReconciliation";
+import buildManagementRouter from "./routes/buildManagement";
 import { categorizeExpense, batchCategorizeExpenses } from "./openai";
 import { 
   insertUserSchema, 
@@ -6294,6 +6295,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register receipt reconciliation routes
   const receiptRoutes = setupReceiptRoutes(storage);
   apiRouter.use("/receipts", receiptRoutes);
+  
+  // Register build management routes
+  apiRouter.use("/build", buildManagementRouter);
   
   app.use("/api", apiRouter);
   

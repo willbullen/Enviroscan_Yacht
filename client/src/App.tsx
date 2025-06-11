@@ -20,6 +20,7 @@ import { VoyagesListPage } from "@/pages/VoyagesListPage";
 import { VoyageDetailsPage } from "@/pages/VoyageDetailsPage";
 import { VoyageCreatePage } from "@/pages/VoyageCreatePage";
 import { VoyageEditPage } from "@/pages/VoyageEditPage";
+import BuildManagement from "@/pages/BuildManagement";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import AuthPage from "@/pages/auth-page";
@@ -47,6 +48,7 @@ function App() {
           <ProtectedRoute path="/crew-management" component={CrewManagement} />
           <ProtectedRoute path="/financial-management" component={FinancialManagement} />
           <ProtectedRoute path="/forms-administration" component={FormsAdministration} />
+          <ProtectedRoute path="/build-management" component={BuildManagement} />
           
           {/* Admin Routes */}
           <ProtectedRoute path="/vessels/admin" component={VesselAdmin} />
