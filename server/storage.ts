@@ -44,19 +44,7 @@ import {
   // New Banking Provider imports
   bankingProviders, type BankingProvider, type InsertBankingProvider,
   bankConnections, type BankConnection, type InsertBankConnection,
-  transactionReconciliations, type TransactionReconciliation, type InsertTransactionReconciliation,
-  // Build Management imports
-  buildProjects, type BuildProject, type InsertBuildProject,
-  buildProjectTeam, type BuildProjectTeam, type InsertBuildProjectTeam,
-  buildDrawings, type BuildDrawing, type InsertBuildDrawing,
-  buildDrawingRevisions, type BuildDrawingRevision, type InsertBuildDrawingRevision,
-  buildDrawingComments, type BuildDrawingComment, type InsertBuildDrawingComment,
-  buildIssues, type BuildIssue, type InsertBuildIssue,
-  buildIssuePhotos, type BuildIssuePhoto, type InsertBuildIssuePhoto,
-  buildIssueComments, type BuildIssueComment, type InsertBuildIssueComment,
-  buildDocuments, type BuildDocument, type InsertBuildDocument,
-  build3DModels, type Build3DModel, type InsertBuild3DModel,
-  buildMilestones, type BuildMilestone, type InsertBuildMilestone
+  transactionReconciliations, type TransactionReconciliation, type InsertTransactionReconciliation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt, gt, between, desc, asc } from "drizzle-orm";
