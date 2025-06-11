@@ -40,7 +40,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { FileUploadDialog } from '@/components/ui/FileUploadDialog';
+import FileUploadDialog from '@/components/ui/FileUploadDialog';
 import { BuildProject } from '@/pages/BuildManagement';
 import { toast } from 'sonner';
 
@@ -367,7 +367,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                       Manage team members and their roles
                     </CardDescription>
                   </div>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setIsAddMemberOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Add Member
                   </Button>
@@ -403,7 +403,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                     <p className="text-muted-foreground mb-4">
                       Start by adding team members to this project
                     </p>
-                    <Button>
+                    <Button onClick={() => setIsAddMemberOpen(true)}>
                       <Plus className="h-4 w-4 mr-1.5" />
                       Add First Member
                     </Button>
@@ -426,7 +426,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                       Manage project drawings and blueprints
                     </CardDescription>
                   </div>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setIsUploadDrawingOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Upload Drawing
                   </Button>
@@ -439,7 +439,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                   <p className="text-muted-foreground mb-4">
                     Upload technical drawings, plans, and blueprints
                   </p>
-                  <Button>
+                  <Button onClick={() => setIsUploadDrawingOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Upload First Drawing
                   </Button>
@@ -461,7 +461,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                       Track and manage project issues
                     </CardDescription>
                   </div>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setIsCreateIssueOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Create Issue
                   </Button>
@@ -474,7 +474,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                   <p className="text-muted-foreground mb-4">
                     Issues and defects will appear here
                   </p>
-                  <Button>
+                  <Button onClick={() => setIsCreateIssueOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Report First Issue
                   </Button>
@@ -496,7 +496,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                       Manage project documentation
                     </CardDescription>
                   </div>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setIsUploadDocumentOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Upload Document
                   </Button>
@@ -509,7 +509,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                   <p className="text-muted-foreground mb-4">
                     Upload specifications, reports, and other documents
                   </p>
-                  <Button>
+                  <Button onClick={() => setIsUploadDocumentOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Upload First Document
                   </Button>
@@ -531,7 +531,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                       View and manage 3D models and scans
                     </CardDescription>
                   </div>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setIsAddModelOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Add Model
                   </Button>
@@ -544,7 +544,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                   <p className="text-muted-foreground mb-4">
                     Add 3D models, Matterport scans, and CAD files
                   </p>
-                  <Button>
+                  <Button onClick={() => setIsAddModelOpen(true)}>
                     <Plus className="h-4 w-4 mr-1.5" />
                     Add First Model
                   </Button>
