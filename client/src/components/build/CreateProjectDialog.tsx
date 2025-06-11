@@ -54,10 +54,7 @@ export default function CreateProjectDialog({ open, onOpenChange, vesselId }: Cr
   const queryClient = useQueryClient();
 
   const createProjectMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/build-projects', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: any) => apiRequest('POST', '/api/build-projects', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/build-projects'] });
       toast({

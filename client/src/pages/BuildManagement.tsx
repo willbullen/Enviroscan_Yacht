@@ -11,13 +11,15 @@ import BuildIssuesList from "@/components/build/BuildIssuesList";
 import BuildDocumentsList from "@/components/build/BuildDocumentsList";
 import Build3DModelsList from "@/components/build/Build3DModelsList";
 import CreateProjectDialog from "@/components/build/CreateProjectDialog";
+import MainLayout from "@/components/layout/MainLayout";
+import { useVessel } from "@/contexts/VesselContext";
 
 export default function BuildManagement() {
   const [activeTab, setActiveTab] = useState("projects");
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const { currentVessel } = useVessel();
   
-  // For now, use a hardcoded vessel ID until vessel context is available
-  const vesselId = 1;
+  const vesselId = currentVessel?.id || 1;
 
   // Fetch build projects for the selected vessel
   const { data: projects = [], isLoading: projectsLoading } = useQuery({
@@ -72,7 +74,8 @@ export default function BuildManagement() {
   // Remove vessel check for now since we're using hardcoded vessel ID
 
   return (
-    <div className="p-6 space-y-6">
+    <MainLayout title="Build & Refit Management">
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -234,6 +237,7 @@ export default function BuildManagement() {
         onOpenChange={setCreateProjectOpen}
         vesselId={vesselId}
       />
-    </div>
+      </div>
+    </MainLayout>
   );
 }
