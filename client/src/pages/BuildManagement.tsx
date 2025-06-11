@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Building, FileText, AlertTriangle, Box, Image } from "lucide-react";
+import { Plus, Building, FileText, AlertTriangle, Box, Image, Cube } from "lucide-react";
 import BuildProjectsList from "@/components/build/BuildProjectsList";
 import BuildDrawingsList from "@/components/build/BuildDrawingsList";
 import BuildIssuesList from "@/components/build/BuildIssuesList";
