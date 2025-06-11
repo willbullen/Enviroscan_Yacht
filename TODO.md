@@ -49,11 +49,11 @@
   - [x] Model metadata and tagging
   - [x] Issue overlay on 3D models
 
-- [x] **Vessel-Wide Data Access**
-  - [x] Cross-project drawing aggregation
-  - [x] Vessel-wide issue tracking
-  - [x] Document aggregation across projects
-  - [x] 3D model collection management
+- [x] **Project-Centric Architecture**
+  - [x] Projects as main containers for all build data
+  - [x] Drawings, Issues, Documents, and 3D Models scoped to specific projects
+  - [x] Simplified navigation focused on project selection
+  - [x] Enhanced project detail views with tabbed sub-modules
 
 ### **Frontend Components (client/src/components/build/)**
 - [x] **BuildManagement.tsx** - Main tabbed interface
@@ -102,6 +102,27 @@
 - [x] **Error Handling** - Comprehensive error states
 - [x] **Loading States** - Skeleton loading throughout
 - [x] **Type Safety** - Full TypeScript implementation
+
+---
+
+## 🔄 **RECENT STRUCTURAL CHANGES**
+
+### **Project-Centric Architecture (December 2024)**
+- [x] **Restructured Build Management Module**
+  - [x] Removed vessel-wide tabs from main interface
+  - [x] Made Projects the primary navigation focus
+  - [x] Drawings, Issues, Documents, and 3D Models now exist only within project context
+  - [x] Simplified interface with Dashboard and Projects tabs only
+  - [x] Enhanced project detail views contain all sub-modules
+  - [x] Removed vessel-wide API endpoints to maintain clean architecture
+  - [x] Updated all component interfaces to be project-specific
+
+**Rationale:** This change provides a cleaner, more intuitive user experience where users:
+1. Select a vessel (via vessel context)
+2. Select a project within that vessel
+3. Access all project-related data (drawings, issues, documents, 3D models) within the project scope
+
+This eliminates confusion between vessel-wide and project-specific data while maintaining the hierarchical relationship: **Vessel → Projects → Project Data**.
 
 ---
 
@@ -288,4 +309,5 @@
 ---
 
 *Last Updated: December 2024*
-*Build Management Module: **PRODUCTION READY** ✅* 
+*Build Management Module: **PRODUCTION READY** ✅*
+*Recent Update: **PROJECT-CENTRIC ARCHITECTURE IMPLEMENTED** 🔄* 

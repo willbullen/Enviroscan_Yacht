@@ -76,16 +76,10 @@ interface Document {
 }
 
 interface DocumentManagerProps {
-  projectId?: number | null;
-  vesselId?: number;
-  showAllProjects?: boolean;
+  projectId: number;
 }
 
-const DocumentManager: React.FC<DocumentManagerProps> = ({ 
-  projectId, 
-  vesselId, 
-  showAllProjects = false 
-}) => {
+const DocumentManager: React.FC<DocumentManagerProps> = ({ projectId }) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,24 +87,19 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
   const [typeFilter, setTypeFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('cards');
 
-  // Fetch documents for the project or all projects for vessel
-  const queryKey = showAllProjects && vesselId 
-    ? [`/api/build/vessel/${vesselId}/documents`]
-    : [`/api/build/projects/${projectId}/documents`];
-  
+  // Fetch documents for the project
   const { data: documents = [], isLoading } = useQuery<Document[]>({
-    queryKey,
-    enabled: !!(showAllProjects ? vesselId : projectId)
+    queryKey: [`/api/build/projects/${projectId}/documents`],
+    enabled: !!projectId
   });
 
   // Upload document mutation
   const uploadDocumentMutation = useMutation({
     mutationFn: async (documentData: any) => {
-      if (!projectId) throw new Error('Project must be selected to upload documents');
       return apiRequest('POST', `/api/build/projects/${projectId}/documents`, documentData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: [`/api/build/projects/${projectId}/documents`] });
       setIsUploadOpen(false);
     },
   });
@@ -185,20 +174,15 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
             Document Library
           </h2>
           <p className="text-sm text-muted-foreground">
-            {showAllProjects 
-              ? "View all documents across vessel projects"
-              : "Manage project documentation, specifications, and reports"
-            }
+            Manage project documentation, specifications, and reports
           </p>
         </div>
-        {!showAllProjects && (
-          <UploadDocumentDialog 
-            open={isUploadOpen}
-            onOpenChange={setIsUploadOpen}
-            onSubmit={(data) => uploadDocumentMutation.mutate(data)}
-            isLoading={uploadDocumentMutation.isPending}
-          />
-        )}
+        <UploadDocumentDialog 
+          open={isUploadOpen}
+          onOpenChange={setIsUploadOpen}
+          onSubmit={(data) => uploadDocumentMutation.mutate(data)}
+          isLoading={uploadDocumentMutation.isPending}
+        />
       </div>
 
       {/* Filters and Search */}

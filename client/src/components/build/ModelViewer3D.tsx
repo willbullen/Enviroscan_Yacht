@@ -94,16 +94,10 @@ interface Issue {
 }
 
 interface ModelViewer3DProps {
-  projectId?: number | null;
-  vesselId?: number;
-  showAllProjects?: boolean;
+  projectId: number;
 }
 
-const ModelViewer3D: React.FC<ModelViewer3DProps> = ({ 
-  projectId, 
-  vesselId, 
-  showAllProjects = false 
-}) => {
+const ModelViewer3D: React.FC<ModelViewer3DProps> = ({ projectId }) => {
   const [selectedModel, setSelectedModel] = useState<Model3D | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showIssues, setShowIssues] = useState(true);
@@ -113,34 +107,25 @@ const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const viewerRef = useRef<HTMLIFrameElement>(null);
 
-  // Fetch 3D models for the project or all projects for vessel
-  const modelsQueryKey = showAllProjects && vesselId 
-    ? [`/api/build/vessel/${vesselId}/models`]
-    : [`/api/build/projects/${projectId}/models`];
-  
+  // Fetch 3D models for the project
   const { data: models = [], isLoading } = useQuery<Model3D[]>({
-    queryKey: modelsQueryKey,
-    enabled: !!(showAllProjects ? vesselId : projectId)
+    queryKey: [`/api/build/projects/${projectId}/models`],
+    enabled: !!projectId
   });
 
   // Fetch issues with spatial coordinates
-  const issuesQueryKey = showAllProjects && vesselId 
-    ? [`/api/build/vessel/${vesselId}/issues`]
-    : [`/api/build/projects/${projectId}/issues`];
-  
   const { data: issues = [] } = useQuery<Issue[]>({
-    queryKey: issuesQueryKey,
-    enabled: !!(showAllProjects ? vesselId : projectId) && showIssues
+    queryKey: [`/api/build/projects/${projectId}/issues`],
+    enabled: !!projectId && showIssues
   });
 
   // Upload model mutation
   const uploadModelMutation = useMutation({
     mutationFn: async (modelData: any) => {
-      if (!projectId) throw new Error('Project must be selected to upload 3D models');
       return apiRequest('POST', `/api/build/projects/${projectId}/models`, modelData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: modelsQueryKey });
+      queryClient.invalidateQueries({ queryKey: [`/api/build/projects/${projectId}/models`] });
       setIsUploadOpen(false);
     },
   });
@@ -219,20 +204,15 @@ const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
             3D Models & Scans
           </h2>
           <p className="text-sm text-muted-foreground">
-            {showAllProjects 
-              ? "View all 3D models and scans across vessel projects"
-              : "View and manage 3D models, Matterport scans, and spatial data"
-            }
+            View and manage 3D models, Matterport scans, and spatial data
           </p>
         </div>
-        {!showAllProjects && (
-          <UploadModelDialog 
-            open={isUploadOpen}
-            onOpenChange={setIsUploadOpen}
-            onSubmit={(data) => uploadModelMutation.mutate(data)}
-            isLoading={uploadModelMutation.isPending}
-          />
-        )}
+        <UploadModelDialog 
+          open={isUploadOpen}
+          onOpenChange={setIsUploadOpen}
+          onSubmit={(data) => uploadModelMutation.mutate(data)}
+          isLoading={uploadModelMutation.isPending}
+        />
       </div>
 
       {/* Search and Filters */}

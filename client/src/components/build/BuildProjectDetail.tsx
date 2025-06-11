@@ -15,11 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   ArrowLeft, 
   Hammer, 
-  Calendar, 
   DollarSign, 
   Users, 
-  MapPin,
-  Building2,
   TrendingUp,
   Clock,
   Settings,
@@ -251,17 +248,16 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="team">Team</TabsTrigger>
-              <TabsTrigger value="drawings">Drawings</TabsTrigger>
-              <TabsTrigger value="issues">Issues</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="models">3D Models</TabsTrigger>
-            </TabsList>
+      <div className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="team">Team</TabsTrigger>
+            <TabsTrigger value="drawings">Drawings</TabsTrigger>
+            <TabsTrigger value="issues">Issues</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="models">3D Models</TabsTrigger>
+          </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
               <Card>
@@ -542,87 +538,6 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="space-y-6">
-          {/* Project Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Vessel</p>
-                  <p className="text-sm text-muted-foreground">{project.vessel?.name || 'Unknown Vessel'}</p>
-                </div>
-              </div>
-              
-              {project.projectManager && (
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Project Manager</p>
-                    <p className="text-sm text-muted-foreground">{project.projectManager.fullName}</p>
-                  </div>
-                </div>
-              )}
-
-              {project.yardLocation && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Location</p>
-                    <p className="text-sm text-muted-foreground">{project.yardLocation}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Created</p>
-                  <p className="text-sm text-muted-foreground">{formatDate(project.createdAt)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Budget Breakdown */}
-          {project.budgetTotal && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Total Budget</span>
-                    <span className="font-medium">{formatCurrency(project.budgetTotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Spent</span>
-                    <span className="font-medium">{formatCurrency(project.budgetSpent)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Remaining</span>
-                    <span className="font-medium text-green-600">
-                      {formatCurrency((project.budgetTotal || 0) - (project.budgetSpent || 0))}
-                    </span>
-                  </div>
-                </div>
-                <Progress 
-                  value={project.budgetTotal && project.budgetSpent 
-                    ? (project.budgetSpent / project.budgetTotal) * 100 
-                    : 0
-                  } 
-                  className="h-2" 
-                />
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </div>

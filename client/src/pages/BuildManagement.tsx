@@ -273,17 +273,17 @@ const BuildManagement: React.FC = () => {
         </Card>
       </div>
 
-      {/* Main Content Tabs */}
+      {/* Main Content - Project-Centric Interface */}
       <Card>
         <CardHeader>
-          <CardTitle>Build Projects & Management</CardTitle>
+          <CardTitle>Build Projects</CardTitle>
           <CardDescription>
-            Comprehensive management of yacht build and refit projects
+            Select a project to manage drawings, issues, documents, and 3D models
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="dashboard" className="gap-1.5">
                 <BarChart3 className="h-4 w-4" />
                 Dashboard
@@ -291,22 +291,6 @@ const BuildManagement: React.FC = () => {
               <TabsTrigger value="projects" className="gap-1.5">
                 <Hammer className="h-4 w-4" />
                 Projects
-              </TabsTrigger>
-              <TabsTrigger value="drawings" className="gap-1.5">
-                <FileText className="h-4 w-4" />
-                Drawings
-              </TabsTrigger>
-              <TabsTrigger value="issues" className="gap-1.5">
-                <AlertTriangle className="h-4 w-4" />
-                Issues
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="gap-1.5">
-                <FolderOpen className="h-4 w-4" />
-                Documents
-              </TabsTrigger>
-              <TabsTrigger value="3d-models" className="gap-1.5">
-                <Box className="h-4 w-4" />
-                3D Models
               </TabsTrigger>
             </TabsList>
 
@@ -342,38 +326,6 @@ const BuildManagement: React.FC = () => {
                 onProjectSelect={handleProjectSelect}
                 searchQuery={searchQuery}
                 filterStatus={filterStatus}
-              />
-            </TabsContent>
-
-            <TabsContent value="drawings" className="space-y-6">
-              <DrawingManager 
-                projectId={selectedProjectId} 
-                vesselId={currentVessel.id}
-                showAllProjects={!selectedProjectId}
-              />
-            </TabsContent>
-
-            <TabsContent value="issues" className="space-y-6">
-              <IssueTracker 
-                projectId={selectedProjectId}
-                vesselId={currentVessel.id}
-                showAllProjects={!selectedProjectId}
-              />
-            </TabsContent>
-
-            <TabsContent value="documents" className="space-y-6">
-              <DocumentManager 
-                projectId={selectedProjectId}
-                vesselId={currentVessel.id}
-                showAllProjects={!selectedProjectId}
-              />
-            </TabsContent>
-
-            <TabsContent value="3d-models" className="space-y-6">
-              <ModelViewer3D 
-                projectId={selectedProjectId}
-                vesselId={currentVessel.id}
-                showAllProjects={!selectedProjectId}
               />
             </TabsContent>
           </Tabs>
