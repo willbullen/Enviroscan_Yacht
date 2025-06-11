@@ -1874,3 +1874,134 @@ export const buildIssuesRelations = relations(buildIssues, ({ one, many }) => ({
   photos: many(buildIssuePhotos),
   comments: many(buildIssueComments),
 }));
+
+export const buildProjectTeamRelations = relations(buildProjectTeam, ({ one }) => ({
+  project: one(buildProjects, {
+    fields: [buildProjectTeam.projectId],
+    references: [buildProjects.id],
+  }),
+  user: one(users, {
+    fields: [buildProjectTeam.userId],
+    references: [users.id],
+  }),
+  assignedBy: one(users, {
+    fields: [buildProjectTeam.assignedById],
+    references: [users.id],
+  }),
+}));
+
+export const buildDrawingRevisionsRelations = relations(buildDrawingRevisions, ({ one }) => ({
+  drawing: one(buildDrawings, {
+    fields: [buildDrawingRevisions.drawingId],
+    references: [buildDrawings.id],
+  }),
+  createdBy: one(users, {
+    fields: [buildDrawingRevisions.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const buildDrawingCommentsRelations = relations(buildDrawingComments, ({ one }) => ({
+  drawing: one(buildDrawings, {
+    fields: [buildDrawingComments.drawingId],
+    references: [buildDrawings.id],
+  }),
+  assignedTo: one(users, {
+    fields: [buildDrawingComments.assignedToId],
+    references: [users.id],
+  }),
+  resolvedBy: one(users, {
+    fields: [buildDrawingComments.resolvedById],
+    references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [buildDrawingComments.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const buildIssuePhotosRelations = relations(buildIssuePhotos, ({ one }) => ({
+  issue: one(buildIssues, {
+    fields: [buildIssuePhotos.issueId],
+    references: [buildIssues.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [buildIssuePhotos.uploadedById],
+    references: [users.id],
+  }),
+}));
+
+export const buildIssueCommentsRelations = relations(buildIssueComments, ({ one }) => ({
+  issue: one(buildIssues, {
+    fields: [buildIssueComments.issueId],
+    references: [buildIssues.id],
+  }),
+  createdBy: one(users, {
+    fields: [buildIssueComments.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const buildDocumentsRelations = relations(buildDocuments, ({ one, many }) => ({
+  project: one(buildProjects, {
+    fields: [buildDocuments.projectId],
+    references: [buildProjects.id],
+  }),
+  reviewedBy: one(users, {
+    fields: [buildDocuments.reviewedById],
+    references: [users.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [buildDocuments.uploadedById],
+    references: [users.id],
+  }),
+  versions: many(buildDocumentVersions),
+}));
+
+export const buildDocumentVersionsRelations = relations(buildDocumentVersions, ({ one }) => ({
+  document: one(buildDocuments, {
+    fields: [buildDocumentVersions.documentId],
+    references: [buildDocuments.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [buildDocumentVersions.uploadedById],
+    references: [users.id],
+  }),
+}));
+
+export const build3DModelsRelations = relations(build3DModels, ({ one }) => ({
+  project: one(buildProjects, {
+    fields: [build3DModels.projectId],
+    references: [buildProjects.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [build3DModels.uploadedById],
+    references: [users.id],
+  }),
+}));
+
+export const buildMilestonesRelations = relations(buildMilestones, ({ one }) => ({
+  project: one(buildProjects, {
+    fields: [buildMilestones.projectId],
+    references: [buildProjects.id],
+  }),
+  completedBy: one(users, {
+    fields: [buildMilestones.completedById],
+    references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [buildMilestones.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const buildActivityLogsRelations = relations(buildActivityLogs, ({ one }) => ({
+  project: one(buildProjects, {
+    fields: [buildActivityLogs.projectId],
+    references: [buildProjects.id],
+  }),
+  user: one(users, {
+    fields: [buildActivityLogs.userId],
+    references: [users.id],
+  }),
+}));
