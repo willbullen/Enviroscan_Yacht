@@ -222,7 +222,7 @@ export default function BuildManagement() {
           <Build3DModelsList 
             models={vesselModels}
             projects={vesselProjects}
-            vesselId={selectedVessel.id}
+            vesselId={vesselId}
           />
         </TabsContent>
       </Tabs>
