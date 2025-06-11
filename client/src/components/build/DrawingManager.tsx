@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
+import { toast } from 'sonner';
 import { 
   Card, 
   CardContent, 
@@ -468,25 +470,70 @@ const UploadDrawingDialog: React.FC<{
     revisionNumber: 'A',
     approvalRequired: true
   });
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadError, setUploadError] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    if (uploadedFiles.length === 0) {
+      setUploadError('Please upload a drawing file');
+      return;
+    }
+
+    const uploadedFile = uploadedFiles[0]; // Use first uploaded file
+    const submitData = {
+      ...formData,
+      fileUrl: uploadedFile.url,
+      fileName: uploadedFile.originalName,
+      fileSize: uploadedFile.fileSize,
+      thumbnailUrl: uploadedFile.thumbnailPath ? `/api/thumbnails/${uploadedFile.thumbnailPath.split('/').pop()}` : undefined
+    };
+    
+    onSubmit(submitData);
   };
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleFileUpload = (files: UploadedFile[]) => {
+    setUploadedFiles(files);
+    setUploadError('');
+    toast.success(`Drawing file uploaded successfully`);
+  };
+
+  const handleFileError = (error: string) => {
+    setUploadError(error);
+    toast.error(`Upload failed: ${error}`);
+  };
+
+  const handleClose = () => {
+    setUploadedFiles([]);
+    setUploadError('');
+    setFormData({
+      drawingNumber: '',
+      title: '',
+      description: '',
+      buildGroup: 'general_arrangement',
+      discipline: 'naval_architecture',
+      drawingType: 'plan',
+      scale: '',
+      revisionNumber: 'A',
+      approvalRequired: true
+    });
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <Button>
           <Upload className="h-4 w-4 mr-1.5" />
           Upload Drawing
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Upload New Drawing</DialogTitle>
           <DialogDescription>
@@ -601,28 +648,38 @@ const UploadDrawingDialog: React.FC<{
             </div>
           </div>
 
-          <div className="border rounded-lg p-4 bg-muted/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Upload className="h-5 w-5 text-muted-foreground" />
-              <span className="font-medium">File Upload</span>
-            </div>
-            <p className="text-sm text-muted-foreground mb-3">
-              Select the drawing file to upload (PDF, DWG, or image formats)
-            </p>
-            <Input type="file" accept=".pdf,.dwg,.jpg,.jpeg,.png,.tiff" />
+          <div className="space-y-4">
+            <h4 className="font-medium">Drawing File</h4>
+            <FileUpload
+              category="drawings"
+              onUpload={handleFileUpload}
+              onError={handleFileError}
+              multiple={false}
+              metadata={{
+                projectId: formData.drawingNumber,
+                drawingNumber: formData.drawingNumber,
+                buildGroup: formData.buildGroup
+              }}
+            />
+            {uploadError && (
+              <p className="text-sm text-red-600">{uploadError}</p>
+            )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
               disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !formData.drawingNumber || !formData.title}>
-              {isLoading ? 'Uploading...' : 'Upload Drawing'}
+            <Button 
+              type="submit" 
+              disabled={isLoading || !formData.drawingNumber || !formData.title || uploadedFiles.length === 0}
+            >
+              {isLoading ? 'Creating Drawing...' : 'Create Drawing'}
             </Button>
           </div>
         </form>

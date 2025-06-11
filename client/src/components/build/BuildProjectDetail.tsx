@@ -32,7 +32,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { FileUploadDialog } from '@/components/ui/FileUploadDialog';
 import { BuildProject } from '@/pages/BuildManagement';
+import { toast } from 'sonner';
 
 interface BuildProjectDetailProps {
   projectId: number;
@@ -44,6 +54,11 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
   onBack
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isUploadDrawingOpen, setIsUploadDrawingOpen] = useState(false);
+  const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
+  const [isUploadDocumentOpen, setIsUploadDocumentOpen] = useState(false);
+  const [isAddModelOpen, setIsAddModelOpen] = useState(false);
 
   // Fetch detailed project information
   const { data: project, isLoading } = useQuery<BuildProject>({
@@ -259,286 +274,285 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
             <TabsTrigger value="models">3D Models</TabsTrigger>
           </TabsList>
 
-            <TabsContent value="overview" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Project Overview</CardTitle>
-                  <CardDescription>
-                    Key project information and current status
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Project Type</label>
-                      <p className="capitalize">{project.projectType.replace('_', ' ')}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                      <p className="capitalize">{project.status.replace('_', ' ')}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Start Date</label>
-                      <p>{formatDate(project.startDate)}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Target Completion</label>
-                      <p>{formatDate(project.estimatedCompletionDate)}</p>
-                    </div>
-                    {project.yardLocation && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Location</label>
-                        <p>{project.yardLocation}</p>
-                      </div>
-                    )}
-                    {project.contractorCompany && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Contractor</label>
-                        <p>{project.contractorCompany}</p>
-                      </div>
-                    )}
+          <TabsContent value="overview" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Overview</CardTitle>
+                <CardDescription>
+                  Key project information and current status
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Project Type</label>
+                    <p className="capitalize">{project.projectType.replace('_', ' ')}</p>
                   </div>
-                  
-                  {project.description && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Status</label>
+                    <p className="capitalize">{project.status.replace('_', ' ')}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Start Date</label>
+                    <p>{formatDate(project.startDate)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Target Completion</label>
+                    <p>{formatDate(project.estimatedCompletionDate)}</p>
+                  </div>
+                  {project.yardLocation && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">Description</label>
-                      <p className="mt-1">{project.description}</p>
+                      <label className="text-sm font-medium text-muted-foreground">Location</label>
+                      <p>{project.yardLocation}</p>
                     </div>
                   )}
-
-                  {project.notes && (
+                  {project.contractorCompany && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">Notes</label>
-                      <p className="mt-1">{project.notes}</p>
+                      <label className="text-sm font-medium text-muted-foreground">Contractor</label>
+                      <p>{project.contractorCompany}</p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Latest project updates and changes
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 p-3 border rounded-lg">
-                      <div className="h-2 w-2 bg-blue-500 rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <p className="text-sm">Project created</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDate(project.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-center py-4 text-muted-foreground text-sm">
-                      Activity history will appear here as the project progresses
-                    </div>
+                </div>
+                
+                {project.description && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Description</label>
+                    <p className="mt-1">{project.description}</p>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                )}
 
-            <TabsContent value="team" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Project Team</CardTitle>
-                      <CardDescription>
-                        Manage team members and their roles
-                      </CardDescription>
-                    </div>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Add Member
-                    </Button>
+                {project.notes && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Notes</label>
+                    <p className="mt-1">{project.notes}</p>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {project.team && project.team.length > 0 ? (
-                    <div className="space-y-3">
-                      {project.team.map((member: any) => (
-                        <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarImage src={member.user?.avatarUrl} />
-                              <AvatarFallback>
-                                {member.user?.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{member.user?.fullName || 'Unknown User'}</p>
-                              <p className="text-sm text-muted-foreground capitalize">{member.role.replace('_', ' ')}</p>
-                            </div>
-                          </div>
-                          {member.isLead && (
-                            <Badge variant="secondary">Lead</Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No team members</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Start by adding team members to this project
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Latest project updates and changes
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 border rounded-lg">
+                    <div className="h-2 w-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm">Project created</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDate(project.createdAt)}
                       </p>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-1.5" />
-                        Add First Member
-                      </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="drawings" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        Technical Drawings
-                      </CardTitle>
-                      <CardDescription>
-                        Manage project drawings and blueprints
-                      </CardDescription>
-                    </div>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Upload Drawing
-                    </Button>
                   </div>
-                </CardHeader>
-                <CardContent>
+                  <div className="text-center py-4 text-muted-foreground text-sm">
+                    Activity history will appear here as the project progresses
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="team" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Project Team</CardTitle>
+                    <CardDescription>
+                      Manage team members and their roles
+                    </CardDescription>
+                  </div>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add Member
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {project.team && project.team.length > 0 ? (
+                  <div className="space-y-3">
+                    {project.team.map((member: any) => (
+                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={member.user?.avatarUrl} />
+                            <AvatarFallback>
+                              {member.user?.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{member.user?.fullName || 'Unknown User'}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{member.role.replace('_', ' ')}</p>
+                          </div>
+                        </div>
+                        {member.isLead && (
+                          <Badge variant="secondary">Lead</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                   <div className="text-center py-8">
-                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No drawings uploaded</h3>
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No team members</h3>
                     <p className="text-muted-foreground mb-4">
-                      Upload technical drawings, plans, and blueprints
+                      Start by adding team members to this project
                     </p>
                     <Button>
                       <Plus className="h-4 w-4 mr-1.5" />
-                      Upload First Drawing
+                      Add First Member
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="issues" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5" />
-                        Project Issues
-                      </CardTitle>
-                      <CardDescription>
-                        Track and manage project issues
-                      </CardDescription>
-                    </div>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Create Issue
-                    </Button>
+          <TabsContent value="drawings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Technical Drawings
+                    </CardTitle>
+                    <CardDescription>
+                      Manage project drawings and blueprints
+                    </CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No issues reported</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Issues and defects will appear here
-                    </p>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Report First Issue
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Upload Drawing
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No drawings uploaded</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Upload technical drawings, plans, and blueprints
+                  </p>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Upload First Drawing
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="documents" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FolderOpen className="h-5 w-5" />
-                        Project Documents
-                      </CardTitle>
-                      <CardDescription>
-                        Manage project documentation
-                      </CardDescription>
-                    </div>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Upload Document
-                    </Button>
+          <TabsContent value="issues" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      Project Issues
+                    </CardTitle>
+                    <CardDescription>
+                      Track and manage project issues
+                    </CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No documents uploaded</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Upload specifications, reports, and other documents
-                    </p>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Upload First Document
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Create Issue
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No issues reported</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Issues and defects will appear here
+                  </p>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Report First Issue
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="models" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Box className="h-5 w-5" />
-                        3D Models & Scans
-                      </CardTitle>
-                      <CardDescription>
-                        View and manage 3D models and scans
-                      </CardDescription>
-                    </div>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Add Model
-                    </Button>
+          <TabsContent value="documents" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <FolderOpen className="h-5 w-5" />
+                      Project Documents
+                    </CardTitle>
+                    <CardDescription>
+                      Manage project documentation
+                    </CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Box className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No 3D models</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Add 3D models, Matterport scans, and CAD files
-                    </p>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Add First Model
-                    </Button>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Upload Document
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No documents uploaded</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Upload specifications, reports, and other documents
+                  </p>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Upload First Document
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="models" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Box className="h-5 w-5" />
+                      3D Models & Scans
+                    </CardTitle>
+                    <CardDescription>
+                      View and manage 3D models and scans
+                    </CardDescription>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add Model
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Box className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No 3D models</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Add 3D models, Matterport scans, and CAD files
+                  </p>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add First Model
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

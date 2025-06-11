@@ -11,6 +11,7 @@ import { setupApiKeysRoutes } from "./routes/apiKeys";
 import { setupAuth } from "./auth";
 import setupReceiptRoutes from "./routes/receiptReconciliation";
 import buildManagementRouter from "./routes/buildManagement";
+import fileUploadRouter from "./routes/fileUpload";
 import { categorizeExpense, batchCategorizeExpenses } from "./openai";
 import { 
   insertUserSchema, 
@@ -6298,6 +6299,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register build management routes
   apiRouter.use("/build", buildManagementRouter);
+  
+  // Register file upload routes
+  apiRouter.use("/", fileUploadRouter);
   
   app.use("/api", apiRouter);
   
