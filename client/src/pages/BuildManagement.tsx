@@ -4,28 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Building, FileText, AlertTriangle, Cube, Image } from "lucide-react";
-import { useVesselContext } from "@/contexts/VesselContext";
+import { Plus, Building, FileText, AlertTriangle, Box, Image } from "lucide-react";
 import BuildProjectsList from "@/components/build/BuildProjectsList";
 import BuildDrawingsList from "@/components/build/BuildDrawingsList";
 import BuildIssuesList from "@/components/build/BuildIssuesList";
 import BuildDocumentsList from "@/components/build/BuildDocumentsList";
-import Build3DModelsList from "@/components/build/Build3DModelsList";
 import CreateProjectDialog from "@/components/build/CreateProjectDialog";
 
 export default function BuildManagement() {
-  const { selectedVessel } = useVesselContext();
   const [activeTab, setActiveTab] = useState("projects");
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  
+  // For now, use a hardcoded vessel ID until vessel context is available
+  const vesselId = 1;
 
   // Fetch build projects for the selected vessel
   const { data: projects = [], isLoading: projectsLoading } = useQuery({
-    queryKey: ["/api/build-projects", selectedVessel?.id],
-    enabled: !!selectedVessel?.id,
+    queryKey: ["/api/build-projects", vesselId],
+    enabled: !!vesselId,
   });
 
-  const vesselProjects = projects.filter(p => p.vesselId === selectedVessel?.id);
-  const activeProjects = vesselProjects.filter(p => !['completed', 'cancelled'].includes(p.status));
+  const vesselProjects = (projects as any[]).filter((p: any) => p.vesselId === vesselId);
+  const activeProjects = vesselProjects.filter((p: any) => !['completed', 'cancelled'].includes(p.status));
 
   // Fetch build issues for active projects
   const { data: issues = [] } = useQuery({
