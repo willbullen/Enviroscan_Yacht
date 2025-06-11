@@ -2,6 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { db, executeWithRetry } from "../db";
 import { 
+  users,
+  vessels,
   buildProjects, 
   buildProjectTeam,
   buildDrawings,
