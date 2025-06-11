@@ -1731,7 +1731,9 @@ router.get("/vessel/:vesselId/drawings", async (req, res) => {
         createdAt: buildDrawings.createdAt,
         updatedAt: buildDrawings.updatedAt,
         project: buildProjects,
-        createdBy: users,
+        createdBy: sql`CASE WHEN ${buildDrawings.createdById} IS NOT NULL THEN 
+          (SELECT row_to_json(u) FROM (SELECT id, "fullName", username FROM users WHERE id = ${buildDrawings.createdById}) u) 
+          ELSE NULL END`.as('createdBy'),
         approvedBy: sql`CASE WHEN ${buildDrawings.approvedById} IS NOT NULL THEN 
           (SELECT row_to_json(u) FROM (SELECT id, "fullName", username FROM users WHERE id = ${buildDrawings.approvedById}) u) 
           ELSE NULL END`.as('approvedBy')
