@@ -405,7 +405,7 @@ router.delete("/projects/:id/team/:memberId", async (req, res) => {
       'team',
       memberId,
       `Team member ${teamMember.user.fullName} removed from project`,
-      req.user?.id,
+      req.user?.id || 0,
       teamMember,
       undefined,
       req
@@ -437,13 +437,14 @@ router.get("/projects/:id/drawings", async (req, res) => {
     }
 
     if (search) {
-      whereConditions.push(
-        or(
-          like(buildDrawings.title, `%${search}%`),
-          like(buildDrawings.drawingNumber, `%${search}%`),
-          like(buildDrawings.description, `%${search}%`)
-        )
+      const searchCondition = or(
+        like(buildDrawings.title, `%${search}%`),
+        like(buildDrawings.drawingNumber, `%${search}%`),
+        like(buildDrawings.description, `%${search}%`)
       );
+      if (searchCondition) {
+        whereConditions.push(searchCondition);
+      }
     }
 
     const drawings = await executeWithRetry(() =>
@@ -497,7 +498,7 @@ router.post("/projects/:id/drawings", async (req, res) => {
       'drawing',
       newDrawing.id,
       `Drawing "${newDrawing.drawingNumber} - ${newDrawing.title}" uploaded`,
-      req.user?.id,
+      req.user?.id || 0,
       undefined,
       newDrawing,
       req
@@ -599,7 +600,7 @@ router.post("/drawings/:id/comments", async (req, res) => {
         'drawing_comment',
         newComment.id,
         `Comment added to drawing "${drawing.drawingNumber}"`,
-        req.user?.id,
+        req.user?.id || 0,
         undefined,
         comment,
         req
@@ -647,13 +648,14 @@ router.get("/projects/:id/issues", async (req, res) => {
     }
 
     if (search) {
-      whereConditions.push(
-        or(
-          like(buildIssues.title, `%${search}%`),
-          like(buildIssues.description, `%${search}%`),
-          like(buildIssues.issueNumber, `%${search}%`)
-        )
+      const searchCondition = or(
+        like(buildIssues.title, `%${search}%`),
+        like(buildIssues.description, `%${search}%`),
+        like(buildIssues.issueNumber, `%${search}%`)
       );
+      if (searchCondition) {
+        whereConditions.push(searchCondition);
+      }
     }
 
     const issues = await executeWithRetry(() =>
@@ -841,7 +843,7 @@ router.post("/issues/:id/photos", async (req, res) => {
         'issue_photo',
         newPhoto.id,
         `Photo added to issue "${issue.issueNumber}"`,
-        req.user?.id,
+        req.user?.id || 0,
         undefined,
         newPhoto,
         req
@@ -895,7 +897,7 @@ router.post("/issues/:id/comments", async (req, res) => {
         'issue_comment',
         newComment.id,
         `Comment added to issue "${issue.issueNumber}"`,
-        req.user?.id,
+        req.user?.id || 0,
         undefined,
         comment,
         req
