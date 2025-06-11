@@ -48,6 +48,14 @@ import {
   // Banking Integration schemas
   insertBankAccountSchema,
   insertBankApiConnectionSchema,
+  // Build Project schemas
+  insertBuildProjectSchema,
+  insertBuildDrawingSchema,
+  insertDrawingCommentSchema,
+  insertBuildIssueSchema,
+  insertIssueCommentSchema,
+  insertBuildDocumentSchema,
+  insertBuild3DModelSchema,
   insertBankApiTransactionSchema,
   insertBankSyncLogSchema,
   BankApiConnection,
@@ -6286,6 +6294,437 @@ export async function registerRoutes(app: Express): Promise<Server> {
       errors: null
     };
   }
+
+  // ======================
+  // BUILD PROJECT ROUTES
+  // ======================
+
+  // Build Projects
+  apiRouter.get("/build-projects", async (req: Request, res: Response) => {
+    try {
+      const { vesselId } = req.query;
+      let projects;
+      if (vesselId) {
+        projects = await storage.getBuildProjectsByVessel(parseInt(vesselId as string));
+      } else {
+        projects = await storage.getAllBuildProjects();
+      }
+      res.json(projects);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build projects" });
+    }
+  });
+
+  apiRouter.get("/build-projects/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const project = await storage.getBuildProject(id);
+      if (!project) {
+        return res.status(404).json({ message: "Build project not found" });
+      }
+      res.json(project);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build project" });
+    }
+  });
+
+  apiRouter.post("/build-projects", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertBuildProjectSchema.parse(req.body);
+      const project = await storage.createBuildProject(validatedData);
+      
+      await storage.createActivityLog({
+        activityType: 'build_project_created',
+        description: `New build project created: ${project.projectName}`,
+        userId: project.createdById || null,
+        relatedEntityType: 'build_project',
+        relatedEntityId: project.id,
+        metadata: { projectType: project.projectType, vesselId: project.vesselId }
+      });
+      
+      res.status(201).json(project);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid build project data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create build project" });
+    }
+  });
+
+  apiRouter.patch("/build-projects/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const project = await storage.updateBuildProject(id, req.body);
+      if (!project) {
+        return res.status(404).json({ message: "Build project not found" });
+      }
+      res.json(project);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update build project" });
+    }
+  });
+
+  apiRouter.delete("/build-projects/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteBuildProject(id);
+      if (!success) {
+        return res.status(404).json({ message: "Build project not found" });
+      }
+      res.json({ message: "Build project deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete build project" });
+    }
+  });
+
+  // Build Drawings
+  apiRouter.get("/build-drawings", async (req: Request, res: Response) => {
+    try {
+      const { projectId, category, status } = req.query;
+      let drawings;
+      if (projectId) {
+        drawings = await storage.getBuildDrawingsByProject(parseInt(projectId as string));
+      } else if (category) {
+        drawings = await storage.getBuildDrawingsByCategory(category as string);
+      } else if (status) {
+        drawings = await storage.getBuildDrawingsByStatus(status as string);
+      } else {
+        drawings = await storage.getAllBuildDrawings();
+      }
+      res.json(drawings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build drawings" });
+    }
+  });
+
+  apiRouter.get("/build-drawings/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const drawing = await storage.getBuildDrawing(id);
+      if (!drawing) {
+        return res.status(404).json({ message: "Build drawing not found" });
+      }
+      res.json(drawing);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build drawing" });
+    }
+  });
+
+  apiRouter.post("/build-drawings", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertBuildDrawingSchema.parse(req.body);
+      const drawing = await storage.createBuildDrawing(validatedData);
+      
+      await storage.createActivityLog({
+        activityType: 'build_drawing_created',
+        description: `New drawing created: ${drawing.title} (${drawing.drawingNumber})`,
+        userId: drawing.createdById || null,
+        relatedEntityType: 'build_drawing',
+        relatedEntityId: drawing.id,
+        metadata: { projectId: drawing.projectId, category: drawing.category }
+      });
+      
+      res.status(201).json(drawing);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid drawing data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create build drawing" });
+    }
+  });
+
+  apiRouter.patch("/build-drawings/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const drawing = await storage.updateBuildDrawing(id, req.body);
+      if (!drawing) {
+        return res.status(404).json({ message: "Build drawing not found" });
+      }
+      res.json(drawing);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update build drawing" });
+    }
+  });
+
+  // Drawing Comments
+  apiRouter.get("/drawing-comments/:drawingId", async (req: Request, res: Response) => {
+    try {
+      const drawingId = parseInt(req.params.drawingId);
+      const comments = await storage.getDrawingCommentsByDrawing(drawingId);
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get drawing comments" });
+    }
+  });
+
+  apiRouter.post("/drawing-comments", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertDrawingCommentSchema.parse(req.body);
+      const comment = await storage.createDrawingComment(validatedData);
+      res.status(201).json(comment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid comment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create drawing comment" });
+    }
+  });
+
+  apiRouter.patch("/drawing-comments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const comment = await storage.updateDrawingComment(id, req.body);
+      if (!comment) {
+        return res.status(404).json({ message: "Drawing comment not found" });
+      }
+      res.json(comment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update drawing comment" });
+    }
+  });
+
+  // Build Issues
+  apiRouter.get("/build-issues", async (req: Request, res: Response) => {
+    try {
+      const { projectId, status, priority, assignedTo } = req.query;
+      let issues;
+      if (projectId) {
+        issues = await storage.getBuildIssuesByProject(parseInt(projectId as string));
+      } else if (status) {
+        issues = await storage.getBuildIssuesByStatus(status as string);
+      } else if (priority) {
+        issues = await storage.getBuildIssuesByPriority(priority as string);
+      } else if (assignedTo) {
+        issues = await storage.getBuildIssuesByAssignee(parseInt(assignedTo as string));
+      } else {
+        issues = await storage.getAllBuildIssues();
+      }
+      res.json(issues);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build issues" });
+    }
+  });
+
+  apiRouter.get("/build-issues/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const issue = await storage.getBuildIssue(id);
+      if (!issue) {
+        return res.status(404).json({ message: "Build issue not found" });
+      }
+      res.json(issue);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build issue" });
+    }
+  });
+
+  apiRouter.post("/build-issues", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertBuildIssueSchema.parse(req.body);
+      const issue = await storage.createBuildIssue(validatedData);
+      
+      await storage.createActivityLog({
+        activityType: 'build_issue_created',
+        description: `New build issue reported: ${issue.title}`,
+        userId: issue.reportedById,
+        relatedEntityType: 'build_issue',
+        relatedEntityId: issue.id,
+        metadata: { 
+          projectId: issue.projectId, 
+          issueType: issue.issueType,
+          priority: issue.priority 
+        }
+      });
+      
+      res.status(201).json(issue);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid issue data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create build issue" });
+    }
+  });
+
+  apiRouter.patch("/build-issues/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const issue = await storage.updateBuildIssue(id, req.body);
+      if (!issue) {
+        return res.status(404).json({ message: "Build issue not found" });
+      }
+      res.json(issue);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update build issue" });
+    }
+  });
+
+  // Issue Comments
+  apiRouter.get("/issue-comments/:issueId", async (req: Request, res: Response) => {
+    try {
+      const issueId = parseInt(req.params.issueId);
+      const comments = await storage.getIssueCommentsByIssue(issueId);
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get issue comments" });
+    }
+  });
+
+  apiRouter.post("/issue-comments", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertIssueCommentSchema.parse(req.body);
+      const comment = await storage.createIssueComment(validatedData);
+      res.status(201).json(comment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid comment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create issue comment" });
+    }
+  });
+
+  // Build Documents
+  apiRouter.get("/build-documents", async (req: Request, res: Response) => {
+    try {
+      const { projectId, type, category } = req.query;
+      let documents;
+      if (projectId) {
+        documents = await storage.getBuildDocumentsByProject(parseInt(projectId as string));
+      } else if (type) {
+        documents = await storage.getBuildDocumentsByType(type as string);
+      } else if (category) {
+        documents = await storage.getBuildDocumentsByCategory(category as string);
+      } else {
+        documents = await storage.getAllBuildDocuments();
+      }
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build documents" });
+    }
+  });
+
+  apiRouter.get("/build-documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getBuildDocument(id);
+      if (!document) {
+        return res.status(404).json({ message: "Build document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get build document" });
+    }
+  });
+
+  apiRouter.post("/build-documents", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertBuildDocumentSchema.parse(req.body);
+      const document = await storage.createBuildDocument(validatedData);
+      
+      await storage.createActivityLog({
+        activityType: 'build_document_uploaded',
+        description: `New document uploaded: ${document.title}`,
+        userId: document.uploadedById,
+        relatedEntityType: 'build_document',
+        relatedEntityId: document.id,
+        metadata: { 
+          projectId: document.projectId, 
+          documentType: document.documentType,
+          fileName: document.fileName 
+        }
+      });
+      
+      res.status(201).json(document);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid document data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create build document" });
+    }
+  });
+
+  apiRouter.patch("/build-documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.updateBuildDocument(id, req.body);
+      if (!document) {
+        return res.status(404).json({ message: "Build document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update build document" });
+    }
+  });
+
+  // 3D Models
+  apiRouter.get("/build-3d-models", async (req: Request, res: Response) => {
+    try {
+      const { projectId, type } = req.query;
+      let models;
+      if (projectId) {
+        models = await storage.getBuild3DModelsByProject(parseInt(projectId as string));
+      } else if (type) {
+        models = await storage.getBuild3DModelsByType(type as string);
+      } else {
+        models = await storage.getAllBuild3DModels();
+      }
+      res.json(models);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get 3D models" });
+    }
+  });
+
+  apiRouter.get("/build-3d-models/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const model = await storage.getBuild3DModel(id);
+      if (!model) {
+        return res.status(404).json({ message: "3D model not found" });
+      }
+      res.json(model);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get 3D model" });
+    }
+  });
+
+  apiRouter.post("/build-3d-models", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertBuild3DModelSchema.parse(req.body);
+      const model = await storage.createBuild3DModel(validatedData);
+      
+      await storage.createActivityLog({
+        activityType: 'build_3d_model_uploaded',
+        description: `New 3D model uploaded: ${model.title}`,
+        userId: model.uploadedById,
+        relatedEntityType: 'build_3d_model',
+        relatedEntityId: model.id,
+        metadata: { 
+          projectId: model.projectId, 
+          modelType: model.modelType,
+          fileFormat: model.fileFormat 
+        }
+      });
+      
+      res.status(201).json(model);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid 3D model data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create 3D model" });
+    }
+  });
+
+  apiRouter.patch("/build-3d-models/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const model = await storage.updateBuild3DModel(id, req.body);
+      if (!model) {
+        return res.status(404).json({ message: "3D model not found" });
+      }
+      res.json(model);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update 3D model" });
+    }
+  });
 
   // Register API routes
   // Setup API Keys routes
