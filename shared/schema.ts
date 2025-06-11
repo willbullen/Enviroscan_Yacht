@@ -1451,6 +1451,13 @@ export const insertBuildProjectSchema = createInsertSchema(buildProjects).omit({
   id: true,
   createdAt: true,
   updatedAt: true
+}).extend({
+  startDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  endDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  estimatedCompletionDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  actualCompletionDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  budgetTotal: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  budgetSpent: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
 });
 export type InsertBuildProject = z.infer<typeof insertBuildProjectSchema>;
 export type BuildProject = typeof buildProjects.$inferSelect;

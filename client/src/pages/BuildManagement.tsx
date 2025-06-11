@@ -38,10 +38,6 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import BuildProjectList from '@/components/build/BuildProjectList';
 import BuildProjectDetail from '@/components/build/BuildProjectDetail';
 import CreateProjectDialog from '@/components/build/CreateProjectDialog';
-import BuildDrawingsList from '@/components/build/BuildDrawingsList';
-import BuildIssuesList from '@/components/build/BuildIssuesList';
-import BuildDocumentsList from '@/components/build/BuildDocumentsList';
-import Build3DModelsList from '@/components/build/Build3DModelsList';
 import BuildDashboard from '@/components/build/BuildDashboard';
 import IssueTracker from '@/components/build/IssueTracker';
 import DrawingManager from '@/components/build/DrawingManager';
@@ -350,47 +346,35 @@ const BuildManagement: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="drawings" className="space-y-6">
-              {selectedProjectId ? (
-                <DrawingManager projectId={selectedProjectId} />
-              ) : (
-                <BuildDrawingsList 
-                  projects={projects}
-                  vesselId={currentVessel.id}
-                />
-              )}
+              <DrawingManager 
+                projectId={selectedProjectId} 
+                vesselId={currentVessel.id}
+                showAllProjects={!selectedProjectId}
+              />
             </TabsContent>
 
             <TabsContent value="issues" className="space-y-6">
-              {selectedProjectId ? (
-                <IssueTracker projectId={selectedProjectId} />
-              ) : (
-                <BuildIssuesList 
-                  projects={projects}
-                  vesselId={currentVessel.id}
-                />
-              )}
+              <IssueTracker 
+                projectId={selectedProjectId}
+                vesselId={currentVessel.id}
+                showAllProjects={!selectedProjectId}
+              />
             </TabsContent>
 
             <TabsContent value="documents" className="space-y-6">
-              {selectedProjectId ? (
-                <DocumentManager projectId={selectedProjectId} />
-              ) : (
-                <BuildDocumentsList 
-                  projects={projects}
-                  vesselId={currentVessel.id}
-                />
-              )}
+              <DocumentManager 
+                projectId={selectedProjectId}
+                vesselId={currentVessel.id}
+                showAllProjects={!selectedProjectId}
+              />
             </TabsContent>
 
             <TabsContent value="3d-models" className="space-y-6">
-              {selectedProjectId ? (
-                <ModelViewer3D projectId={selectedProjectId} />
-              ) : (
-                <Build3DModelsList 
-                  projects={projects}
-                  vesselId={currentVessel.id}
-                />
-              )}
+              <ModelViewer3D 
+                projectId={selectedProjectId}
+                vesselId={currentVessel.id}
+                showAllProjects={!selectedProjectId}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -74,29 +74,40 @@ interface Issue {
 }
 
 interface IssueTrackerProps {
-  projectId: number;
+  projectId?: number | null;
+  vesselId?: number;
+  showAllProjects?: boolean;
 }
 
-const IssueTracker: React.FC<IssueTrackerProps> = ({ projectId }) => {
+const IssueTracker: React.FC<IssueTrackerProps> = ({ 
+  projectId, 
+  vesselId, 
+  showAllProjects = false 
+}) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
 
-  // Fetch issues for the project
+  // Fetch issues for the project or all projects for vessel
+  const queryKey = showAllProjects && vesselId 
+    ? [`/api/build/vessel/${vesselId}/issues`]
+    : [`/api/build/projects/${projectId}/issues`];
+  
   const { data: issues = [], isLoading } = useQuery<Issue[]>({
-    queryKey: [`/api/build/projects/${projectId}/issues`],
-    enabled: !!projectId
+    queryKey,
+    enabled: !!(showAllProjects ? vesselId : projectId)
   });
 
   // Create issue mutation
   const createIssueMutation = useMutation({
     mutationFn: async (issueData: any) => {
+      if (!projectId) throw new Error('Project must be selected to create issues');
       return apiRequest('POST', `/api/build/projects/${projectId}/issues`, issueData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/build/projects/${projectId}/issues`] });
+      queryClient.invalidateQueries({ queryKey });
       setIsCreateOpen(false);
     },
   });
@@ -162,15 +173,20 @@ const IssueTracker: React.FC<IssueTrackerProps> = ({ projectId }) => {
             Issue Tracker
           </h2>
           <p className="text-sm text-muted-foreground">
-            Track and manage project issues, defects, and work items
+            {showAllProjects 
+              ? "View all issues across vessel projects"
+              : "Track and manage project issues, defects, and work items"
+            }
           </p>
         </div>
-        <CreateIssueDialog 
-          open={isCreateOpen}
-          onOpenChange={setIsCreateOpen}
-          onSubmit={(data) => createIssueMutation.mutate(data)}
-          isLoading={createIssueMutation.isPending}
-        />
+        {!showAllProjects && (
+          <CreateIssueDialog 
+            open={isCreateOpen}
+            onOpenChange={setIsCreateOpen}
+            onSubmit={(data) => createIssueMutation.mutate(data)}
+            isLoading={createIssueMutation.isPending}
+          />
+        )}
       </div>
 
       {/* Filters */}

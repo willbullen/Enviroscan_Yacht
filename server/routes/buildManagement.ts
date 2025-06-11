@@ -1299,7 +1299,7 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
       if (drawing.status === 'for_review') {
         await db.insert(buildDrawingComments).values({
           drawingId: newDrawing.id,
-          comment: 'Please review the structural calculations for frame 15. The load distribution seems asymmetric.',
+          commentText: 'Please review the structural calculations for frame 15. The load distribution seems asymmetric.',
           commentType: 'review',
           status: 'open',
           createdById: userId
@@ -1430,7 +1430,7 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
         const comments = [
           {
             issueId: newIssue.id,
-            comment: 'Started investigation. Will need to order replacement parts.',
+            commentText: 'Started investigation. Will need to order replacement parts.',
             createdById: issue.assignedToId || userId,
             createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
           }
@@ -1439,7 +1439,7 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
         if (issue.status === 'resolved') {
           comments.push({
             issueId: newIssue.id,
-            comment: 'Work completed and quality checked. Issue resolved.',
+            commentText: 'Work completed and quality checked. Issue resolved.',
             createdById: issue.resolvedById || userId,
             createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000)
           });
@@ -1676,6 +1676,262 @@ router.delete("/projects/:id/test-data", async (req, res) => {
   } catch (error) {
     console.error("Error clearing test data:", error);
     res.status(500).json({ error: "Failed to clear test data" });
+  }
+});
+
+// ==================== VESSEL-WIDE ENDPOINTS ====================
+
+// Get all drawings for a vessel across all projects
+router.get("/vessel/:vesselId/drawings", async (req, res) => {
+  try {
+    const vesselId = parseInt(req.params.vesselId);
+    const { buildGroup, status, search } = req.query;
+    
+    let whereConditions = [eq(buildProjects.vesselId, vesselId)];
+    
+    if (buildGroup && buildGroup !== 'all') {
+      whereConditions.push(eq(buildDrawings.buildGroup, buildGroup as string));
+    }
+    
+    if (status && status !== 'all') {
+      whereConditions.push(eq(buildDrawings.status, status as string));
+    }
+
+    if (search) {
+      whereConditions.push(
+        or(
+          like(buildDrawings.title, `%${search}%`),
+          like(buildDrawings.drawingNumber, `%${search}%`),
+          like(buildDrawings.description, `%${search}%`)
+        )
+      );
+    }
+
+    const drawings = await executeWithRetry(() =>
+      db.select({
+        id: buildDrawings.id,
+        projectId: buildDrawings.projectId,
+        drawingNumber: buildDrawings.drawingNumber,
+        title: buildDrawings.title,
+        description: buildDrawings.description,
+        buildGroup: buildDrawings.buildGroup,
+        discipline: buildDrawings.discipline,
+        drawingType: buildDrawings.drawingType,
+        scale: buildDrawings.scale,
+        status: buildDrawings.status,
+        revisionNumber: buildDrawings.revisionNumber,
+        isCurrentRevision: buildDrawings.isCurrentRevision,
+        approvalRequired: buildDrawings.approvalRequired,
+        approvedAt: buildDrawings.approvedAt,
+        fileUrl: buildDrawings.fileUrl,
+        fileName: buildDrawings.fileName,
+        fileSize: buildDrawings.fileSize,
+        thumbnailUrl: buildDrawings.thumbnailUrl,
+        tags: buildDrawings.tags,
+        createdAt: buildDrawings.createdAt,
+        updatedAt: buildDrawings.updatedAt,
+        project: buildProjects,
+        createdBy: users,
+        approvedBy: sql`CASE WHEN ${buildDrawings.approvedById} IS NOT NULL THEN 
+          (SELECT row_to_json(u) FROM (SELECT id, "fullName", username FROM users WHERE id = ${buildDrawings.approvedById}) u) 
+          ELSE NULL END`.as('approvedBy')
+      })
+      .from(buildDrawings)
+      .innerJoin(buildProjects, eq(buildDrawings.projectId, buildProjects.id))
+      .leftJoin(users, eq(buildDrawings.createdById, users.id))
+      .where(and(...whereConditions))
+      .orderBy(desc(buildDrawings.createdAt))
+    );
+
+    res.json(drawings);
+  } catch (error) {
+    console.error("Error fetching vessel drawings:", error);
+    res.status(500).json({ error: "Failed to fetch vessel drawings" });
+  }
+});
+
+// Get all issues for a vessel across all projects
+router.get("/vessel/:vesselId/issues", async (req, res) => {
+  try {
+    const vesselId = parseInt(req.params.vesselId);
+    const { status, priority, category, assignedTo, search } = req.query;
+    
+    let whereConditions = [eq(buildProjects.vesselId, vesselId)];
+    
+    if (status && status !== 'all') {
+      whereConditions.push(eq(buildIssues.status, status as string));
+    }
+    
+    if (priority && priority !== 'all') {
+      whereConditions.push(eq(buildIssues.priority, priority as string));
+    }
+    
+    if (category && category !== 'all') {
+      whereConditions.push(eq(buildIssues.category, category as string));
+    }
+    
+    if (assignedTo && assignedTo !== 'all') {
+      if (assignedTo === 'unassigned') {
+        whereConditions.push(isNull(buildIssues.assignedToId));
+      } else {
+        whereConditions.push(eq(buildIssues.assignedToId, parseInt(assignedTo as string)));
+      }
+    }
+
+    if (search) {
+      whereConditions.push(
+        or(
+          like(buildIssues.title, `%${search}%`),
+          like(buildIssues.description, `%${search}%`),
+          like(buildIssues.issueNumber, `%${search}%`)
+        )
+      );
+    }
+
+    const issues = await executeWithRetry(() =>
+      db.select({
+        id: buildIssues.id,
+        projectId: buildIssues.projectId,
+        issueNumber: buildIssues.issueNumber,
+        title: buildIssues.title,
+        description: buildIssues.description,
+        issueType: buildIssues.issueType,
+        category: buildIssues.category,
+        severity: buildIssues.severity,
+        priority: buildIssues.priority,
+        status: buildIssues.status,
+        locationReference: buildIssues.locationReference,
+        coordinateX: sql`${buildIssues.locationCoordinatesGA}->>'x'`.as('coordinateX'),
+        coordinateY: sql`${buildIssues.locationCoordinatesGA}->>'y'`.as('coordinateY'),
+        coordinateZ: sql`${buildIssues.locationCoordinates3D}->>'z'`.as('coordinateZ'),
+        dueDate: buildIssues.dueDate,
+        createdAt: buildIssues.createdAt,
+        updatedAt: buildIssues.updatedAt,
+        project: buildProjects,
+        assignedTo: sql`CASE WHEN ${buildIssues.assignedToId} IS NOT NULL THEN 
+          (SELECT row_to_json(u) FROM (SELECT id, "fullName", username, "avatarUrl" FROM users WHERE id = ${buildIssues.assignedToId}) u) 
+          ELSE NULL END`.as('assignedTo'),
+        reportedBy: sql`(SELECT row_to_json(u) FROM (SELECT id, "fullName", username, "avatarUrl" FROM users WHERE id = ${buildIssues.reportedById}) u)`.as('reportedBy')
+      })
+      .from(buildIssues)
+      .innerJoin(buildProjects, eq(buildIssues.projectId, buildProjects.id))
+      .where(and(...whereConditions))
+      .orderBy(desc(buildIssues.createdAt))
+    );
+
+    res.json(issues);
+  } catch (error) {
+    console.error("Error fetching vessel issues:", error);
+    res.status(500).json({ error: "Failed to fetch vessel issues" });
+  }
+});
+
+// Get all documents for a vessel across all projects
+router.get("/vessel/:vesselId/documents", async (req, res) => {
+  try {
+    const vesselId = parseInt(req.params.vesselId);
+    const { category, documentType, search } = req.query;
+    
+    let whereConditions = [eq(buildProjects.vesselId, vesselId)];
+    
+    if (category && category !== 'all') {
+      whereConditions.push(eq(buildDocuments.category, category as string));
+    }
+    
+    if (documentType && documentType !== 'all') {
+      whereConditions.push(eq(buildDocuments.documentType, documentType as string));
+    }
+
+    if (search) {
+      whereConditions.push(
+        or(
+          like(buildDocuments.title, `%${search}%`),
+          like(buildDocuments.description, `%${search}%`)
+        )
+      );
+    }
+
+    const documents = await executeWithRetry(() =>
+      db.select({
+        id: buildDocuments.id,
+        projectId: buildDocuments.projectId,
+        title: buildDocuments.title,
+        description: buildDocuments.description,
+        category: buildDocuments.category,
+        documentType: buildDocuments.documentType,
+        tags: buildDocuments.tags,
+        fileUrl: buildDocuments.fileUrl,
+        fileName: buildDocuments.fileName,
+        fileSize: buildDocuments.fileSize,
+        mimeType: buildDocuments.fileMimeType,
+        isLatestVersion: sql`CASE WHEN ${buildDocuments.status} = 'active' THEN true ELSE false END`.as('isLatestVersion'),
+        versionNumber: buildDocuments.version,
+        uploadedAt: buildDocuments.uploadedAt,
+        project: buildProjects,
+        uploadedBy: sql`(SELECT row_to_json(u) FROM (SELECT id, "fullName", username FROM users WHERE id = ${buildDocuments.uploadedById}) u)`.as('uploadedBy')
+      })
+      .from(buildDocuments)
+      .innerJoin(buildProjects, eq(buildDocuments.projectId, buildProjects.id))
+      .where(and(...whereConditions))
+      .orderBy(desc(buildDocuments.uploadedAt))
+    );
+
+    res.json(documents);
+  } catch (error) {
+    console.error("Error fetching vessel documents:", error);
+    res.status(500).json({ error: "Failed to fetch vessel documents" });
+  }
+});
+
+// Get all 3D models for a vessel across all projects
+router.get("/vessel/:vesselId/models", async (req, res) => {
+  try {
+    const vesselId = parseInt(req.params.vesselId);
+    const { modelType, search } = req.query;
+    
+    let whereConditions = [eq(buildProjects.vesselId, vesselId), eq(build3DModels.isActive, true)];
+    
+    if (modelType && modelType !== 'all') {
+      whereConditions.push(eq(build3DModels.modelType, modelType as string));
+    }
+
+    if (search) {
+      whereConditions.push(
+        or(
+          like(build3DModels.modelName, `%${search}%`),
+          like(build3DModels.description, `%${search}%`)
+        )
+      );
+    }
+
+    const models = await executeWithRetry(() =>
+      db.select({
+        id: build3DModels.id,
+        projectId: build3DModels.projectId,
+        modelName: build3DModels.modelName,
+        description: build3DModels.description,
+        modelType: build3DModels.modelType,
+        fileUrl: build3DModels.modelUrl,
+        embedCode: build3DModels.embeddedViewerUrl,
+        fileSize: build3DModels.fileSize,
+        thumbnailUrl: build3DModels.thumbnailUrl,
+        captureDate: build3DModels.scanDate,
+        isActive: build3DModels.isActive,
+        tags: build3DModels.tags,
+        createdAt: build3DModels.createdAt,
+        project: buildProjects,
+        uploadedBy: sql`(SELECT row_to_json(u) FROM (SELECT id, "fullName", username FROM users WHERE id = ${build3DModels.uploadedById}) u)`.as('uploadedBy')
+      })
+      .from(build3DModels)
+      .innerJoin(buildProjects, eq(build3DModels.projectId, buildProjects.id))
+      .where(and(...whereConditions))
+      .orderBy(desc(build3DModels.createdAt))
+    );
+
+    res.json(models);
+  } catch (error) {
+    console.error("Error fetching vessel 3D models:", error);
+    res.status(500).json({ error: "Failed to fetch vessel 3D models" });
   }
 });
 

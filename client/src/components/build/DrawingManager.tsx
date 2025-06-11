@@ -85,10 +85,16 @@ interface Drawing {
 }
 
 interface DrawingManagerProps {
-  projectId: number;
+  projectId?: number | null;
+  vesselId?: number;
+  showAllProjects?: boolean;
 }
 
-const DrawingManager: React.FC<DrawingManagerProps> = ({ projectId }) => {
+const DrawingManager: React.FC<DrawingManagerProps> = ({ 
+  projectId, 
+  vesselId, 
+  showAllProjects = false 
+}) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedDrawing, setSelectedDrawing] = useState<Drawing | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,19 +102,24 @@ const DrawingManager: React.FC<DrawingManagerProps> = ({ projectId }) => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('grid');
 
-  // Fetch drawings for the project
+  // Fetch drawings for the project or all projects for vessel
+  const queryKey = showAllProjects && vesselId 
+    ? [`/api/build/vessel/${vesselId}/drawings`]
+    : [`/api/build/projects/${projectId}/drawings`];
+  
   const { data: drawings = [], isLoading } = useQuery<Drawing[]>({
-    queryKey: [`/api/build/projects/${projectId}/drawings`],
-    enabled: !!projectId
+    queryKey,
+    enabled: !!(showAllProjects ? vesselId : projectId)
   });
 
   // Upload drawing mutation
   const uploadDrawingMutation = useMutation({
     mutationFn: async (drawingData: any) => {
+      if (!projectId) throw new Error('Project must be selected to upload drawings');
       return apiRequest('POST', `/api/build/projects/${projectId}/drawings`, drawingData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/build/projects/${projectId}/drawings`] });
+      queryClient.invalidateQueries({ queryKey });
       setIsUploadOpen(false);
     },
   });
@@ -174,15 +185,20 @@ const DrawingManager: React.FC<DrawingManagerProps> = ({ projectId }) => {
             Technical Drawings
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage project drawings, blueprints, and technical documentation
+            {showAllProjects 
+              ? "View all technical drawings across vessel projects"
+              : "Manage project drawings, blueprints, and technical documentation"
+            }
           </p>
         </div>
-        <UploadDrawingDialog 
-          open={isUploadOpen}
-          onOpenChange={setIsUploadOpen}
-          onSubmit={(data) => uploadDrawingMutation.mutate(data)}
-          isLoading={uploadDrawingMutation.isPending}
-        />
+        {!showAllProjects && (
+          <UploadDrawingDialog 
+            open={isUploadOpen}
+            onOpenChange={setIsUploadOpen}
+            onSubmit={(data) => uploadDrawingMutation.mutate(data)}
+            isLoading={uploadDrawingMutation.isPending}
+          />
+        )}
       </div>
 
       {/* Filters and View Toggle */}
