@@ -1,0 +1,343 @@
+You are tasked with implementing a comprehensive Yacht Build/Refit Management module for an existing yacht management application built with React/TypeScript (frontend) and Express/Node.js (backend). This module will serve as a centralized platform for managing complex yacht construction and refit projects, addressing key pain points in the current workflow including document management, drawing reviews, issue tracking, and 3D visualization integration.
+
+The application is hosted on Replit and follows a modern web architecture with a React frontend and Express backend. The existing codebase includes modules for vessel management, crew management, maintenance tracking, and financial management.
+
+Technical Requirements
+
+Frontend (React/TypeScript)
+
+•
+Create a new BuildManagement.tsx page component with responsive design
+
+•
+Implement a project list view with filtering and search capabilities
+
+•
+Develop a detailed project view with tabbed navigation for different functional areas
+
+•
+Create components for drawing management, issue tracking, document library, and 3D model viewing
+
+•
+Ensure consistent styling with the existing application using Tailwind CSS
+
+•
+Implement data fetching from the backend API endpoints
+
+Backend (Express/Node.js)
+
+•
+Create new API routes for build project management
+
+•
+Implement endpoints for project-related data (drawings, issues, documents)
+
+•
+Design and implement a database schema for all required entities
+
+•
+Ensure proper authentication and authorization for all endpoints
+
+•
+Implement data validation using Zod or similar library
+
+Database (PostgreSQL with Drizzle ORM)
+
+•
+Create tables for projects, drawings, revisions, comments, issues, photos, and 3D models
+
+•
+Establish relationships between entities and with existing application tables
+
+•
+Implement migrations for schema changes
+
+•
+Ensure data integrity through proper constraints and indexes
+
+Functional Requirements
+
+1.
+Project Management
+
+•
+Project list view with search and filtering
+
+•
+Project detail view with overview, team, and activity sections
+
+•
+Progress tracking with visual indicators
+
+•
+Budget and milestone tracking
+
+•
+Team member assignment and role management
+
+
+
+2.
+Drawing Management
+
+•
+Drawing list with metadata and status indicators
+
+•
+Support for drawing revisions and approval workflow
+
+•
+Comment tracking with resolution status
+
+•
+Version history and comparison
+
+•
+Drawing categorization by build group
+
+
+
+3.
+Issue Tracking
+
+•
+Issue list with priority and status indicators
+
+•
+Location reference for spatial context (coordinates on GA or 3D model)
+
+•
+Photo attachment capability (up to 20 photos per issue)
+
+•
+Assignment and due date tracking
+
+•
+Comment thread for discussion
+
+•
+Status workflow (open, in progress, resolved)
+
+
+
+4.
+Document Library
+
+•
+Card-based document organization
+
+•
+Version tracking and metadata display
+
+•
+Preview capability for common document types
+
+•
+Categorization and tagging system
+
+•
+Search functionality across document content
+
+
+
+5.
+3D Model Integration
+
+•
+3D model viewer for Matterport or similar 3D scan data
+
+•
+Issue pin visualization in 3D space
+
+•
+Navigation and exploration tools
+
+•
+Measurement capabilities
+
+•
+Comparison between design and actual build
+
+
+
+UI/UX Guidelines
+
+•
+Follow the existing application's design language and component patterns
+
+•
+Use a card-based interface for organizing different functional areas
+
+•
+Implement a tabbed navigation system for project details
+
+•
+Use visual indicators (badges, progress bars) for status information
+
+•
+Ensure mobile responsiveness for on-site use via tablets
+
+•
+Maintain consistent color coding for priority and status indicators
+
+•
+Provide clear feedback for user actions
+
+•
+Implement skeleton loaders for better perceived performance
+
+Implementation Approach
+
+1.
+Start by creating the database schema and migrations
+
+2.
+Implement the backend API endpoints with proper validation
+
+3.
+Create the frontend components and pages
+
+4.
+Integrate frontend and backend
+
+5.
+Implement advanced features (3D viewer, file uploads)
+
+6.
+Test thoroughly across different devices and scenarios
+
+Advanced Features to Consider
+
+1.
+Offline Capabilities
+
+•
+Implement service workers for offline access to critical data
+
+•
+Add synchronization mechanism for data collected offline
+
+•
+Cache important documents and drawings for offline viewing
+
+
+
+2.
+Advanced Search
+
+•
+Implement full-text search across all project documents and issues
+
+•
+Add filters for complex queries (status, assignee, date ranges)
+
+•
+Provide saved search functionality for common queries
+
+
+
+3.
+Notification System
+
+•
+Integrate with a notification system for drawing approvals and issue updates
+
+•
+Implement email notifications for critical events
+
+•
+Add in-app notification center with read/unread status
+
+
+
+4.
+Analytics Dashboard
+
+•
+Create visualizations for project progress and metrics
+
+•
+Implement burndown charts for issue resolution
+
+•
+Add budget tracking and forecasting tools
+
+•
+Provide insights on bottlenecks and potential delays
+
+
+
+5.
+Integration with External Tools
+
+•
+Add webhooks for integration with external systems
+
+•
+Implement API endpoints for third-party access
+
+•
+Create import/export functionality for common file formats
+
+
+
+6.
+Enhanced 3D Capabilities
+
+•
+Implement annotation tools directly in the 3D viewer
+
+•
+Add measurement tools for precise dimensions
+
+•
+Create comparison view between design intent and actual build
+
+•
+Support for different 3D file formats (glTF, OBJ, FBX)
+
+
+
+7.
+AI-Assisted Features
+
+•
+Implement automatic categorization of issues based on description
+
+•
+Add smart suggestions for issue resolution based on historical data
+
+•
+Create automated progress reports and summaries
+
+•
+Implement predictive analytics for project timeline and budget
+
+
+
+Code Structure and Best Practices
+
+•
+Follow a component-based architecture with clear separation of concerns
+
+•
+Implement proper state management using React Context or Redux
+
+•
+Use TypeScript interfaces for all data structures
+
+•
+Write comprehensive unit and integration tests
+
+•
+Implement error handling and logging
+
+•
+Follow accessibility best practices (WCAG 2.1 AA)
+
+•
+Optimize for performance with lazy loading and code splitting
+
+•
+Document all components and functions with JSDoc comments
+
