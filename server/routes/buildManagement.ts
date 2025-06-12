@@ -1224,6 +1224,7 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
         drawingNumber: 'GA-001',
         title: 'General Arrangement - Main Deck',
         description: 'General arrangement showing main deck layout and structure',
+        category: 'general_arrangement',
         buildGroup: 'general_arrangement',
         discipline: 'naval_architecture',
         drawingType: 'plan',
