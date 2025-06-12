@@ -249,7 +249,13 @@ const BuildProjectList: React.FC<BuildProjectListProps> = ({
                   </span>
                 </div>
                 <Progress 
-                  value={(project.budgetSpent / project.budgetTotal) * 100} 
+                  value={(() => {
+                    const spent = parseFloat(project.budgetSpent || '0');
+                    const total = parseFloat(project.budgetTotal || '0');
+                    return !isNaN(spent) && !isNaN(total) && total > 0 
+                      ? (spent / total) * 100 
+                      : 0;
+                  })()} 
                   className="h-2" 
                 />
               </div>
