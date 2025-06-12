@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
+import { toast } from 'sonner';
 import { 
   Card, 
   CardContent, 
@@ -13,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
@@ -52,7 +57,9 @@ import {
   Grid,
   Layers,
   Filter,
-  Search
+  Search,
+  MoreHorizontal,
+  ArrowUpDown
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -130,11 +137,7 @@ const ModelViewer3D: React.FC<ModelViewer3DProps> = ({ projectId }) => {
     },
   });
 
-  const filteredModels = models.filter(model => 
-    searchQuery === '' || 
-    model.modelName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    model.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredModels = models.filter(model => model.isActive);
 
   const getModelTypeIcon = (type: string) => {
     switch (type) {
@@ -142,6 +145,8 @@ const ModelViewer3D: React.FC<ModelViewer3DProps> = ({ projectId }) => {
       case 'cad': return '📐';
       case 'scan': return '📸';
       case 'bim': return '🏗️';
+      case 'point_cloud': return '☁️';
+      case 'vr': return '🥽';
       default: return '📦';
     }
   };
@@ -207,26 +212,7 @@ const ModelViewer3D: React.FC<ModelViewer3DProps> = ({ projectId }) => {
             View and manage 3D models, Matterport scans, and spatial data
           </p>
         </div>
-        <UploadModelDialog 
-          open={isUploadOpen}
-          onOpenChange={setIsUploadOpen}
-          onSubmit={(data) => uploadModelMutation.mutate(data)}
-          isLoading={uploadModelMutation.isPending}
-        />
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search 3D models..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button
             variant={showIssues ? "default" : "outline"}
             size="sm"
@@ -243,11 +229,17 @@ const ModelViewer3D: React.FC<ModelViewer3DProps> = ({ projectId }) => {
             <Ruler className="h-4 w-4 mr-1.5" />
             Measurements
           </Button>
+          <UploadModelDialog 
+            open={isUploadOpen}
+            onOpenChange={setIsUploadOpen}
+            onSubmit={(data) => uploadModelMutation.mutate(data)}
+            isLoading={uploadModelMutation.isPending}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Models List */}
+        {/* Models Table */}
         <div className="lg:col-span-1 space-y-4">
           <Card>
             <CardHeader>

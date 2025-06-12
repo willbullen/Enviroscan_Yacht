@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { 
   Card, 
   CardContent, 
@@ -32,18 +34,16 @@ import {
 import { 
   AlertTriangle, 
   Plus, 
-  Filter, 
-  Search,
-  Camera,
-  MessageSquare,
-  Calendar,
-  User,
-  MapPin,
   Eye,
   Edit,
-  MoreHorizontal,
+  MapPin,
+  User,
+  Calendar,
+  Camera,
+  MessageSquare,
   Target,
-  Crosshair
+  MoreHorizontal,
+  ArrowUpDown
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -51,6 +51,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import SpatialIssuePicker from './SpatialIssuePicker';
 
 interface Issue {
   id: number;
@@ -80,9 +81,6 @@ interface IssueTrackerProps {
 const IssueTracker: React.FC<IssueTrackerProps> = ({ projectId }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
 
   // Fetch issues for the project
   const { data: issues = [], isLoading } = useQuery<Issue[]>({
@@ -100,6 +98,260 @@ const IssueTracker: React.FC<IssueTrackerProps> = ({ projectId }) => {
       setIsCreateOpen(false);
     },
   });
+
+  // Define columns for the data table
+  const columns: ColumnDef<Issue>[] = [
+    {
+      accessorKey: "issueNumber",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Issue Number
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="font-mono text-sm">
+            {row.getValue("issueNumber")}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "title",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Title
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const issue = row.original;
+        return (
+          <div className="max-w-[300px]">
+            <div className="font-medium">{issue.title}</div>
+            <div className="text-sm text-muted-foreground line-clamp-2">
+              {issue.description}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        return (
+          <Badge className={getStatusColor(status)}>
+            {status?.replace('_', ' ') || 'Unknown'}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "priority",
+      header: "Priority",
+      cell: ({ row }) => {
+        const priority = row.getValue("priority") as string;
+        return (
+          <Badge variant="outline" className={getPriorityColor(priority)}>
+            {priority}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "severity",
+      header: "Severity",
+      cell: ({ row }) => {
+        const severity = row.getValue("severity") as string;
+        return (
+          <Badge variant="outline" className={getSeverityColor(severity)}>
+            {severity}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "issueType",
+      header: "Type",
+      cell: ({ row }) => {
+        const issueType = row.getValue("issueType") as string;
+        return <span className="capitalize">{issueType?.replace('_', ' ') || 'N/A'}</span>;
+      },
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }) => {
+        const category = row.getValue("category") as string;
+        return <span className="capitalize">{category}</span>;
+      },
+    },
+    {
+      accessorKey: "locationReference",
+      header: "Location",
+      cell: ({ row }) => {
+        const location = row.getValue("locationReference") as string;
+        if (!location) return "—";
+        return (
+          <div className="flex items-center gap-2 max-w-[200px]">
+            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="truncate">{location}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "assignedTo",
+      header: "Assigned To",
+      cell: ({ row }) => {
+        const assignedTo = row.getValue("assignedTo") as any;
+        if (!assignedTo) return "—";
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={assignedTo?.avatarUrl} />
+              <AvatarFallback className="text-xs">
+                {assignedTo?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{assignedTo?.fullName || 'Unknown'}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "reportedBy",
+      header: "Reported By",
+      cell: ({ row }) => {
+        const reportedBy = row.getValue("reportedBy") as any;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={reportedBy?.avatarUrl} />
+              <AvatarFallback className="text-xs">
+                {reportedBy?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{reportedBy?.fullName || 'Unknown'}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "dueDate",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Due Date
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const dueDate = row.getValue("dueDate") as string;
+        if (!dueDate) return "—";
+        return (
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{formatDate(dueDate)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Created
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return formatDate(row.getValue("createdAt"));
+      },
+    },
+    {
+      id: "attachments",
+      header: "Attachments",
+      cell: ({ row }) => {
+        const issue = row.original;
+        const photoCount = issue.photos?.length || 0;
+        const commentCount = issue.comments?.length || 0;
+        
+        if (photoCount === 0 && commentCount === 0) return "—";
+        
+        return (
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            {photoCount > 0 && (
+              <div className="flex items-center gap-1">
+                <Camera className="h-4 w-4" />
+                <span>{photoCount}</span>
+              </div>
+            )}
+            {commentCount > 0 && (
+              <div className="flex items-center gap-1">
+                <MessageSquare className="h-4 w-4" />
+                <span>{commentCount}</span>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const issue = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSelectedIssue(issue)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Issue
+              </DropdownMenuItem>
+              {issue.status === 'open' && (
+                <DropdownMenuItem>
+                  <Target className="mr-2 h-4 w-4" />
+                  Assign
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -139,19 +391,6 @@ const IssueTracker: React.FC<IssueTrackerProps> = ({ projectId }) => {
     });
   };
 
-  // Filter issues
-  const filteredIssues = issues.filter(issue => {
-    const matchesSearch = searchQuery === '' || 
-      issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      issue.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      issue.issueNumber.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || issue.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || issue.priority === priorityFilter;
-    
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -173,60 +412,24 @@ const IssueTracker: React.FC<IssueTrackerProps> = ({ projectId }) => {
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search issues..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="resolved">Resolved</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Priority" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Priority</SelectItem>
-            <SelectItem value="urgent">Urgent</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Issues List */}
+      {/* Issues Data Table */}
       {isLoading ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
-          ))}
-        </div>
-      ) : filteredIssues.length === 0 ? (
+        <Card>
+          <CardContent className="p-8">
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : issues.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No issues found</h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all'
-                ? "Try adjusting your search or filter criteria"
-                : "No issues have been reported for this project yet"
-              }
+              No issues have been reported for this project yet
             </p>
             <Button onClick={() => setIsCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-1.5" />
@@ -235,113 +438,12 @@ const IssueTracker: React.FC<IssueTrackerProps> = ({ projectId }) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {filteredIssues.map((issue) => (
-            <Card key={issue.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-mono text-muted-foreground">
-                        {issue.issueNumber}
-                      </span>
-                      <Badge className={getStatusColor(issue.status)}>
-                        {issue.status.replace('_', ' ')}
-                      </Badge>
-                      <Badge variant="outline" className={getPriorityColor(issue.priority)}>
-                        {issue.priority}
-                      </Badge>
-                      <Badge variant="outline" className={getSeverityColor(issue.severity)}>
-                        {issue.severity}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg">{issue.title}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {issue.description}
-                    </CardDescription>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setSelectedIssue(issue)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Issue
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Type:</span>
-                    <span className="capitalize">{issue.issueType.replace('_', ' ')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Category:</span>
-                    <span className="capitalize">{issue.category}</span>
-                  </div>
-                  {issue.locationReference && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{issue.locationReference}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>Reported by {issue.reportedBy?.fullName || 'Unknown'}</span>
-                  </div>
-                  {issue.assignedTo && (
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span>Assigned to {issue.assignedTo.fullName}</span>
-                    </div>
-                  )}
-                  {issue.dueDate && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>Due {formatDate(issue.dueDate)}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Issue Metadata */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    {issue.photos && issue.photos.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Camera className="h-4 w-4" />
-                        <span>{issue.photos.length} photo{issue.photos.length !== 1 ? 's' : ''}</span>
-                      </div>
-                    )}
-                    {issue.comments && issue.comments.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{issue.comments.length} comment{issue.comments.length !== 1 ? 's' : ''}</span>
-                      </div>
-                    )}
-                    <span>Created {formatDate(issue.createdAt)}</span>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setSelectedIssue(issue)}
-                  >
-                    View Details
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DataTable 
+          columns={columns} 
+          data={issues}
+          filterColumn="title"
+          filterPlaceholder="Search issues..."
+        />
       )}
 
       {/* Issue Detail Dialog */}
@@ -781,7 +883,7 @@ const IssueDetailDialog: React.FC<{
               'resolved': 'bg-green-100 text-green-800',
               'closed': 'bg-gray-100 text-gray-800'
             }[issue.status] || 'bg-gray-100 text-gray-800'}`}>
-              {issue.status.replace('_', ' ')}
+              {issue.status?.replace('_', ' ') || 'Unknown'}
             </Badge>
           </div>
           <DialogTitle>{issue.title}</DialogTitle>
@@ -794,7 +896,7 @@ const IssueDetailDialog: React.FC<{
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-muted-foreground">Type:</span>
-              <p className="capitalize">{issue.issueType.replace('_', ' ')}</p>
+              <p className="capitalize">{issue.issueType?.replace('_', ' ') || 'N/A'}</p>
             </div>
             <div>
               <span className="font-medium text-muted-foreground">Category:</span>

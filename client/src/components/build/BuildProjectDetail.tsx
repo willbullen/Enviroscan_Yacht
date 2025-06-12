@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { 
   Card, 
   CardContent, 
@@ -24,7 +26,11 @@ import {
   FileText,
   AlertTriangle,
   FolderOpen,
-  Box
+  Box,
+  MoreHorizontal,
+  ArrowUpDown,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import {
   Tabs,
@@ -40,9 +46,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import FileUploadDialog from '@/components/ui/FileUploadDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { BuildProject } from '@/pages/BuildManagement';
 import { toast } from 'sonner';
+import DrawingManager from './DrawingManager';
+import IssueTracker from './IssueTracker';
+import DocumentManager from './DocumentManager';
+import ModelViewer3D from './ModelViewer3D';
 
 interface BuildProjectDetailProps {
   projectId: number;
@@ -55,38 +70,10 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const [isUploadDrawingOpen, setIsUploadDrawingOpen] = useState(false);
-  const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
-  const [isUploadDocumentOpen, setIsUploadDocumentOpen] = useState(false);
-  const [isAddModelOpen, setIsAddModelOpen] = useState(false);
 
   // Fetch detailed project information
   const { data: project, isLoading } = useQuery<BuildProject>({
     queryKey: [`/api/build/projects/${projectId}`],
-    enabled: !!projectId
-  });
-
-  // Fetch project drawings
-  const { data: drawings = [], isLoading: drawingsLoading } = useQuery<any[]>({
-    queryKey: [`/api/build/projects/${projectId}/drawings`],
-    enabled: !!projectId
-  });
-
-  // Fetch project issues
-  const { data: issues = [], isLoading: issuesLoading } = useQuery<any[]>({
-    queryKey: [`/api/build/projects/${projectId}/issues`],
-    enabled: !!projectId
-  });
-
-  // Fetch project documents
-  const { data: documents = [], isLoading: documentsLoading } = useQuery<any[]>({
-    queryKey: [`/api/build/projects/${projectId}/documents`],
-    enabled: !!projectId
-  });
-
-  // Fetch project 3D models
-  const { data: models = [], isLoading: modelsLoading } = useQuery<any[]>({
-    queryKey: [`/api/build/projects/${projectId}/models`],
     enabled: !!projectId
   });
 
@@ -407,27 +394,10 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
               </CardHeader>
               <CardContent>
                 {project.team && project.team.length > 0 ? (
-                  <div className="space-y-3">
-                    {project.team.map((member: any) => (
-                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={member.user?.avatarUrl} />
-                            <AvatarFallback>
-                              {member.user?.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{member.user?.fullName || 'Unknown User'}</p>
-                            <p className="text-sm text-muted-foreground capitalize">{member.role.replace('_', ' ')}</p>
-                          </div>
-                        </div>
-                        {member.isLead && (
-                          <Badge variant="secondary">Lead</Badge>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <DataTable
+                    columns={teamColumns}
+                    data={project.team}
+                  />
                 ) : (
                   <div className="text-center py-8">
                     <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -446,591 +416,22 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
           </TabsContent>
 
           <TabsContent value="drawings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Technical Drawings ({drawings.length})
-                    </CardTitle>
-                    <CardDescription>
-                      Manage project drawings and blueprints
-                    </CardDescription>
-                  </div>
-                  <Button size="sm" onClick={() => setIsUploadDrawingOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Upload Drawing
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {drawingsLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : drawings.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No drawings uploaded</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Upload technical drawings, plans, and blueprints
-                    </p>
-                    <Button onClick={() => setIsUploadDrawingOpen(true)}>
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Upload First Drawing
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {drawings.map((drawing: any) => (
-                      <Card key={drawing.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {drawing.status?.replace('_', ' ')}
-                              </Badge>
-                              {drawing.isCurrentRevision && (
-                                <Badge variant="secondary" className="text-xs">Current</Badge>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-sm font-mono text-muted-foreground">
-                              {drawing.drawingNumber} {drawing.revisionNumber && `Rev. ${drawing.revisionNumber}`}
-                            </div>
-                            <CardTitle className="text-base mt-1">{drawing.title}</CardTitle>
-                            {drawing.description && (
-                              <CardDescription className="mt-1 text-sm line-clamp-2">
-                                {drawing.description}
-                              </CardDescription>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="aspect-[4/3] bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                            {drawing.thumbnailUrl ? (
-                              <img 
-                                src={drawing.thumbnailUrl} 
-                                alt={drawing.title}
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                            ) : (
-                              <FileText className="h-12 w-12 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Type:</span>
-                              <span className="capitalize">{drawing.drawingType?.replace('_', ' ')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Build Group:</span>
-                              <span className="capitalize">{drawing.buildGroup?.replace('_', ' ')}</span>
-                            </div>
-                            {drawing.scale && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Scale:</span>
-                                <span>{drawing.scale}</span>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <DrawingManager projectId={projectId} />
           </TabsContent>
 
           <TabsContent value="issues" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5" />
-                      Project Issues ({issues.length})
-                    </CardTitle>
-                    <CardDescription>
-                      Track and manage project issues
-                    </CardDescription>
-                  </div>
-                  <Button size="sm" onClick={() => setIsCreateIssueOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Create Issue
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {issuesLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-24 bg-gray-200 rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : issues.length === 0 ? (
-                  <div className="text-center py-8">
-                    <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No issues reported</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Issues and defects will appear here
-                    </p>
-                    <Button onClick={() => setIsCreateIssueOpen(true)}>
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Report First Issue
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {issues.map((issue: any) => (
-                      <Card key={issue.id} className="border-l-4 border-l-orange-400">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-2">
-                              <Badge variant={issue.priority === 'critical' ? 'destructive' : 
-                                           issue.priority === 'high' ? 'default' : 'secondary'}>
-                                {issue.priority}
-                              </Badge>
-                              <Badge variant="outline">
-                                {issue.status?.replace('_', ' ')}
-                              </Badge>
-                            </div>
-                            <span className="text-sm text-muted-foreground">
-                              #{issue.issueNumber}
-                            </span>
-                          </div>
-                          <div>
-                            <CardTitle className="text-base">{issue.title}</CardTitle>
-                            {issue.description && (
-                              <CardDescription className="mt-1">
-                                {issue.description}
-                              </CardDescription>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Category:</span>
-                              <p className="capitalize">{issue.category?.replace('_', ' ')}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Impact:</span>
-                              <p className="capitalize">{issue.impact}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Discovered:</span>
-                              <p>{new Date(issue.discoveredDate).toLocaleDateString()}</p>
-                            </div>
-                            {issue.estimatedCost && (
-                              <div>
-                                <span className="text-muted-foreground">Est. Cost:</span>
-                                <p>{formatCurrency(issue.estimatedCost)}</p>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <IssueTracker projectId={projectId} />
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <FolderOpen className="h-5 w-5" />
-                      Project Documents ({documents.length})
-                    </CardTitle>
-                    <CardDescription>
-                      Manage project documentation
-                    </CardDescription>
-                  </div>
-                  <Button size="sm" onClick={() => setIsUploadDocumentOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Upload Document
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {documentsLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-20 bg-gray-200 rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : documents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No documents uploaded</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Upload specifications, reports, and other documents
-                    </p>
-                    <Button onClick={() => setIsUploadDocumentOpen(true)}>
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Upload First Document
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {documents.map((document: any) => (
-                      <Card key={document.id} className="hover:shadow-sm transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start gap-3 flex-1">
-                              <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <FileText className="h-5 w-5 text-blue-600" />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium">{document.documentName}</h4>
-                                {document.description && (
-                                  <p className="text-sm text-muted-foreground mt-1">{document.description}</p>
-                                )}
-                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                  <span className="capitalize">{document.documentType?.replace('_', ' ')}</span>
-                                  <span>Version {document.version}</span>
-                                  <span>{new Date(document.createdAt).toLocaleDateString()}</span>
-                                  {document.fileSize && (
-                                    <span>{Math.round(document.fileSize / 1024)} KB</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {document.status?.replace('_', ' ')}
-                              </Badge>
-                              {document.isCurrentVersion && (
-                                <Badge variant="secondary" className="text-xs">Current</Badge>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <DocumentManager projectId={projectId} />
           </TabsContent>
 
           <TabsContent value="models" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Box className="h-5 w-5" />
-                      3D Models & Scans ({models.length})
-                    </CardTitle>
-                    <CardDescription>
-                      View and manage 3D models and scans
-                    </CardDescription>
-                  </div>
-                  <Button size="sm" onClick={() => setIsAddModelOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Add Model
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {modelsLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : models.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Box className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No 3D models</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Add 3D models, Matterport scans, and CAD files
-                    </p>
-                    <Button onClick={() => setIsAddModelOpen(true)}>
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Add First Model
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {models.map((model: any) => (
-                      <Card key={model.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {model.modelType?.replace('_', ' ')}
-                              </Badge>
-                              {model.isActive && (
-                                <Badge variant="secondary" className="text-xs">Active</Badge>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <CardTitle className="text-base">{model.modelName}</CardTitle>
-                            {model.description && (
-                              <CardDescription className="mt-1 text-sm line-clamp-2">
-                                {model.description}
-                              </CardDescription>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="aspect-[4/3] bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                            {model.thumbnailUrl ? (
-                              <img 
-                                src={model.thumbnailUrl} 
-                                alt={model.modelName}
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                            ) : (
-                              <Box className="h-12 w-12 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Type:</span>
-                              <span className="capitalize">{model.modelType?.replace('_', ' ')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Format:</span>
-                              <span className="uppercase">{model.fileFormat}</span>
-                            </div>
-                            {model.captureDate && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Captured:</span>
-                                <span>{new Date(model.captureDate).toLocaleDateString()}</span>
-                              </div>
-                            )}
-                            {model.fileSize && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Size:</span>
-                                <span>{Math.round(model.fileSize / (1024 * 1024))} MB</span>
-                              </div>
-                            )}
-                            {model.scanAccuracy && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Accuracy:</span>
-                                <span>{model.scanAccuracy}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="mt-4">
-                            <Button variant="outline" size="sm" className="w-full">
-                              <Box className="h-4 w-4 mr-1" />
-                              View Model
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ModelViewer3D projectId={projectId} />
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* File Upload Dialogs */}
-      <FileUploadDialog
-        open={isUploadDrawingOpen}
-        onOpenChange={setIsUploadDrawingOpen}
-        category="drawings"
-        onUploadComplete={async (files) => {
-          for (const file of files) {
-            try {
-              // Create drawing record in database
-              const drawingData = {
-                projectId,
-                title: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
-                drawingNumber: `DWG-${Date.now()}`,
-                description: `Technical drawing: ${file.originalName}`,
-                category: "technical", // Required field in database
-                buildGroup: "general_arrangement", // Required field
-                discipline: "naval_architecture", // Required field
-                drawingType: "plan", // Required field
-                version: "1.0", // Required field in database
-                scale: "1:100",
-                status: "draft",
-                revisionNumber: "A",
-                isCurrentRevision: true,
-                approvalRequired: false,
-                fileUrl: file.url,
-                fileName: file.originalName,
-                fileSize: file.fileSize,
-                fileMimeType: file.mimeType,
-                fileType: file.mimeType, // Required field in database
-                createdById: 5 // Current user ID
-              };
-
-              const response = await fetch(`/api/build/projects/${projectId}/drawings`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(drawingData),
-              });
-
-              if (!response.ok) {
-                throw new Error('Failed to save drawing to database');
-              }
-            } catch (error) {
-              console.error('Error saving drawing:', error);
-              toast.error(`Failed to save drawing: ${file.originalName}`);
-              return;
-            }
-          }
-          
-          toast.success('Technical drawing uploaded and saved successfully');
-          // Refresh the drawings data
-          window.location.reload();
-        }}
-      />
-
-      <FileUploadDialog
-        open={isUploadDocumentOpen}
-        onOpenChange={setIsUploadDocumentOpen}
-        category="documents"
-        onUploadComplete={async (files) => {
-          for (const file of files) {
-            try {
-              // Create document record in database
-              const documentData = {
-                projectId,
-                title: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
-                category: "specification",
-                version: "1.0",
-                status: "active",
-                filePath: file.url,
-                fileSize: file.fileSize,
-                uploadedBy: 5, // Current user ID
-                description: `Project document: ${file.originalName}`
-              };
-
-              const response = await fetch(`/api/build/projects/${projectId}/documents`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(documentData),
-              });
-
-              if (!response.ok) {
-                throw new Error('Failed to save document to database');
-              }
-            } catch (error) {
-              console.error('Error saving document:', error);
-              toast.error(`Failed to save document: ${file.originalName}`);
-              return;
-            }
-          }
-          
-          toast.success('Document uploaded and saved successfully');
-          // Refresh the documents data
-          window.location.reload();
-        }}
-      />
-
-      <FileUploadDialog
-        open={isCreateIssueOpen}
-        onOpenChange={setIsCreateIssueOpen}
-        category="issue-photos"
-        title="Report Issue"
-        description="Upload photos to document this issue or defect."
-        onUploadComplete={async (files) => {
-          for (const file of files) {
-            try {
-              // Create issue record with photo in database
-              const issueData = {
-                projectId,
-                title: `Issue documented in ${file.originalName}`,
-                issueNumber: `ISS-${Date.now()}`,
-                category: "defect",
-                priority: "medium",
-                status: "open",
-                description: `Issue documented with photo: ${file.originalName}`,
-                reportedBy: 5, // Current user ID
-                photoPath: file.url
-              };
-
-              const response = await fetch(`/api/build/projects/${projectId}/issues`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(issueData),
-              });
-
-              if (!response.ok) {
-                throw new Error('Failed to save issue to database');
-              }
-            } catch (error) {
-              console.error('Error saving issue:', error);
-              toast.error(`Failed to save issue: ${file.originalName}`);
-              return;
-            }
-          }
-          
-          toast.success('Issue reported with photos successfully');
-          window.location.reload();
-        }}
-      />
-
-      <FileUploadDialog
-        open={isAddModelOpen}
-        onOpenChange={setIsAddModelOpen}
-        category="3d-models"
-        onUploadComplete={async (files) => {
-          for (const file of files) {
-            try {
-              // Create 3D model record in database
-              const modelData = {
-                projectId,
-                modelName: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
-                fileUrl: file.url,
-                fileSize: file.fileSize,
-                uploadedBy: 5, // Current user ID
-                modelType: "scan",
-                description: `3D model: ${file.originalName}`,
-                captureDate: new Date(),
-                isActive: true,
-                tags: ["uploaded"]
-              };
-
-              const response = await fetch(`/api/build/projects/${projectId}/models`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(modelData),
-              });
-
-              if (!response.ok) {
-                throw new Error('Failed to save 3D model to database');
-              }
-            } catch (error) {
-              console.error('Error saving 3D model:', error);
-              toast.error(`Failed to save 3D model: ${file.originalName}`);
-              return;
-            }
-          }
-          
-          toast.success('3D model uploaded and saved successfully');
-          window.location.reload();
-        }}
-      />
 
       {/* Add Member Dialog */}
       <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
@@ -1087,5 +488,117 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
     </div>
   );
 };
+
+const teamColumns: ColumnDef<any>[] = [
+  {
+    accessorKey: "user",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Team Member
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const member = row.original;
+      const user = member.user;
+      return (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.avatarUrl} />
+            <AvatarFallback>
+              {user?.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{user?.fullName || 'Unknown User'}</div>
+            <div className="text-sm text-muted-foreground">{user?.username || ''}</div>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => {
+      const role = row.getValue("role") as string;
+      return <span className="capitalize">{role?.replace('_', ' ') || 'No role'}</span>;
+    },
+  },
+  {
+    id: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const member = row.original;
+      return (
+        <div className="flex items-center gap-2">
+          {member.isLead && (
+            <Badge variant="secondary">Lead</Badge>
+          )}
+          <Badge variant="outline" className="text-xs">
+            Active
+          </Badge>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "assignedAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Assigned
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const assignedAt = row.getValue("assignedAt") as string;
+      return assignedAt ? new Date(assignedAt).toLocaleDateString() : "—";
+    },
+  },
+  {
+    accessorKey: "assignedBy",
+    header: "Assigned By",
+    cell: ({ row }) => {
+      const assignedBy = row.getValue("assignedBy") as any;
+      return assignedBy?.fullName || "—";
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const member = row.original;
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Role
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Remove from Project
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];
 
 export default BuildProjectDetail; 

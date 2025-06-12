@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
+import { toast } from 'sonner';
 import { 
   Card, 
   CardContent, 
@@ -13,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
@@ -31,17 +36,13 @@ import {
 import { 
   FolderOpen, 
   Plus, 
-  Search,
   Upload,
   Eye,
   Download,
-  FileText,
   File,
+  FileText,
   MoreHorizontal,
-  Clock,
-  User,
-  Tag,
-  Filter
+  ArrowUpDown
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -82,10 +83,6 @@ interface DocumentManagerProps {
 const DocumentManager: React.FC<DocumentManagerProps> = ({ projectId }) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState('cards');
 
   // Fetch documents for the project
   const { data: documents = [], isLoading } = useQuery<Document[]>({
@@ -103,6 +100,179 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ projectId }) => {
       setIsUploadOpen(false);
     },
   });
+
+  // Define columns for the data table
+  const columns: ColumnDef<Document>[] = [
+    {
+      accessorKey: "title",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Title
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const document = row.original;
+        return (
+          <div className="max-w-[300px]">
+            <div className="font-medium">{document.title}</div>
+            {document.description && (
+              <div className="text-sm text-muted-foreground line-clamp-2">
+                {document.description}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }) => {
+        const category = row.getValue("category") as string;
+        return (
+          <Badge className={getCategoryColor(category)}>
+            {category}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "documentType",
+      header: "Type",
+      cell: ({ row }) => {
+        const documentType = row.getValue("documentType") as string;
+        return <span className="capitalize">{documentType}</span>;
+      },
+    },
+    {
+      id: "file",
+      header: "File",
+      cell: ({ row }) => {
+        const document = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            {getFileIcon(document.mimeType)}
+            <div className="min-w-0">
+              <div className="text-sm font-medium truncate max-w-[150px]" title={document.fileName}>
+                {document.fileName || 'No file'}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {formatFileSize(document.fileSize)}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "uploadedBy",
+      header: "Uploaded By",
+      cell: ({ row }) => {
+        const uploadedBy = row.getValue("uploadedBy") as any;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={uploadedBy?.avatarUrl} />
+              <AvatarFallback className="text-xs">
+                {uploadedBy?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{uploadedBy?.fullName || 'Unknown'}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "uploadedAt",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Uploaded
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return formatDate(row.getValue("uploadedAt"));
+      },
+    },
+    {
+      accessorKey: "tags",
+      header: "Tags",
+      cell: ({ row }) => {
+        const tags = row.getValue("tags") as string[];
+        if (!tags || tags.length === 0) return "—";
+        return (
+          <div className="flex flex-wrap gap-1 max-w-[200px]">
+            {tags.slice(0, 3).map((tag, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            {tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">
+                +{tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: "version",
+      header: "Version",
+      cell: ({ row }) => {
+        const document = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            {document.versionNumber && (
+              <span className="text-sm font-mono">{document.versionNumber}</span>
+            )}
+            {document.isLatestVersion && (
+              <Badge variant="outline" className="text-xs">Latest</Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const document = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSelectedDocument(document)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              {document.fileUrl && (
+                <DropdownMenuItem>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -142,28 +312,6 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ projectId }) => {
     });
   };
 
-  // Filter documents
-  const filteredDocuments = documents.filter(document => {
-    const matchesSearch = searchQuery === '' || 
-      document.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      document.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      document.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesCategory = categoryFilter === 'all' || document.category === categoryFilter;
-    const matchesType = typeFilter === 'all' || document.documentType === typeFilter;
-    
-    return matchesSearch && matchesCategory && matchesType;
-  });
-
-  // Group documents by category for cards view
-  const documentsByCategory = filteredDocuments.reduce((acc, doc) => {
-    if (!acc[doc.category]) {
-      acc[doc.category] = [];
-    }
-    acc[doc.category].push(doc);
-    return acc;
-  }, {} as Record<string, Document[]>);
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -185,272 +333,39 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ projectId }) => {
         />
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 flex-1">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="specification">Specifications</SelectItem>
-              <SelectItem value="report">Reports</SelectItem>
-              <SelectItem value="certificate">Certificates</SelectItem>
-              <SelectItem value="contract">Contracts</SelectItem>
-              <SelectItem value="correspondence">Correspondence</SelectItem>
-              <SelectItem value="manual">Manuals</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="technical">Technical</SelectItem>
-              <SelectItem value="financial">Financial</SelectItem>
-              <SelectItem value="legal">Legal</SelectItem>
-              <SelectItem value="operational">Operational</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Results Summary and View Toggle */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} found
-        </p>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="cards">Cards</TabsTrigger>
-            <TabsTrigger value="list">List</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* Documents Display */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsContent value="cards" className="mt-0">
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+      {/* Documents Data Table */}
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-8">
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
               ))}
             </div>
-          ) : filteredDocuments.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No documents found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery || categoryFilter !== 'all' || typeFilter !== 'all'
-                    ? "Try adjusting your search or filter criteria"
-                    : "No documents have been uploaded for this project yet"
-                  }
-                </p>
-                <Button onClick={() => setIsUploadOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Upload First Document
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {Object.entries(documentsByCategory).map(([category, docs]) => (
-                <div key={category}>
-                  <div className="flex items-center gap-2 mb-4">
-                    <h3 className="text-lg font-medium capitalize">{category.replace('_', ' ')}</h3>
-                    <Badge variant="secondary">{docs.length}</Badge>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {docs.map((document) => (
-                      <Card key={document.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge className={getCategoryColor(document.category)}>
-                                  {document.category}
-                                </Badge>
-                                {document.isLatestVersion && (
-                                  <Badge variant="outline">Latest</Badge>
-                                )}
-                              </div>
-                              <CardTitle className="text-base">{document.title}</CardTitle>
-                              {document.description && (
-                                <CardDescription className="mt-1 line-clamp-2">
-                                  {document.description}
-                                </CardDescription>
-                              )}
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setSelectedDocument(document)}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Details
-                                </DropdownMenuItem>
-                                {document.fileUrl && (
-                                  <DropdownMenuItem>
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Download
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          {/* File Icon */}
-                          <div className="flex justify-center mb-4">
-                            {getFileIcon(document.mimeType)}
-                          </div>
-
-                          {/* Document Info */}
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Type:</span>
-                              <span className="capitalize">{document.documentType}</span>
-                            </div>
-                            {document.fileName && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">File:</span>
-                                <span className="truncate max-w-[120px]" title={document.fileName}>
-                                  {document.fileName}
-                                </span>
-                              </div>
-                            )}
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Size:</span>
-                              <span>{formatFileSize(document.fileSize)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Uploaded:</span>
-                              <span>{formatDate(document.uploadedAt)}</span>
-                            </div>
-                          </div>
-
-                          {/* Tags */}
-                          {document.tags && document.tags.length > 0 && (
-                            <div className="mt-3">
-                              <div className="flex flex-wrap gap-1">
-                                {document.tags.slice(0, 3).map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                                {document.tags.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{document.tags.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Action Buttons */}
-                          <div className="flex gap-2 mt-4">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="flex-1"
-                              onClick={() => setSelectedDocument(document)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                            {document.fileUrl && (
-                              <Button variant="outline" size="sm">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="list" className="mt-0">
-          {filteredDocuments.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No documents found</h3>
-                <p className="text-muted-foreground">
-                  Start by uploading your first project document
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {filteredDocuments.map((document) => (
-                <Card key={document.id} className="hover:shadow-sm transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div>{getFileIcon(document.mimeType)}</div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{document.title}</span>
-                            <Badge className={getCategoryColor(document.category)}>
-                              {document.category}
-                            </Badge>
-                            {document.isLatestVersion && (
-                              <Badge variant="outline">Latest</Badge>
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {document.fileName} • {formatFileSize(document.fileSize)} • 
-                            Uploaded {formatDate(document.uploadedAt)} by {document.uploadedBy?.fullName || 'Unknown'}
-                          </div>
-                          {document.tags && document.tags.length > 0 && (
-                            <div className="flex gap-1 mt-2">
-                              {document.tags.slice(0, 5).map((tag, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedDocument(document)}
-                        >
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          </CardContent>
+        </Card>
+      ) : documents.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No documents found</h3>
+            <p className="text-muted-foreground mb-4">
+              No documents have been uploaded for this project yet
+            </p>
+            <Button onClick={() => setIsUploadOpen(true)}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Upload First Document
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <DataTable 
+          columns={columns} 
+          data={documents}
+          filterColumn="title"
+          filterPlaceholder="Search documents..."
+        />
+      )}
 
       {/* Document Detail Dialog */}
       {selectedDocument && (
