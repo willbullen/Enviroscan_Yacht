@@ -568,12 +568,20 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                 projectId,
                 title: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
                 drawingNumber: `DWG-${Date.now()}`,
-                version: "1.0",
-                status: "active",
-                filePath: file.url,
+                description: `Technical drawing: ${file.originalName}`,
+                buildGroup: "general_arrangement", // Required field
+                discipline: "naval_architecture", // Required field
+                drawingType: "plan", // Required field
+                scale: "1:100",
+                status: "draft",
+                revisionNumber: "A",
+                isCurrentRevision: true,
+                approvalRequired: false,
+                fileUrl: file.url,
+                fileName: file.originalName,
                 fileSize: file.fileSize,
-                uploadedBy: 5, // Current user ID
-                description: `Technical drawing: ${file.originalName}`
+                fileMimeType: file.mimeType,
+                createdById: 5 // Current user ID
               };
 
               const response = await fetch(`/api/build/projects/${projectId}/drawings`, {
