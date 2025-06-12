@@ -569,9 +569,11 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                 title: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
                 drawingNumber: `DWG-${Date.now()}`,
                 description: `Technical drawing: ${file.originalName}`,
+                category: "technical", // Required field in database
                 buildGroup: "general_arrangement", // Required field
                 discipline: "naval_architecture", // Required field
                 drawingType: "plan", // Required field
+                version: "1.0", // Required field in database
                 scale: "1:100",
                 status: "draft",
                 revisionNumber: "A",
@@ -581,6 +583,7 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
                 fileName: file.originalName,
                 fileSize: file.fileSize,
                 fileMimeType: file.mimeType,
+                fileType: file.mimeType, // Required field in database
                 createdById: 5 // Current user ID
               };
 

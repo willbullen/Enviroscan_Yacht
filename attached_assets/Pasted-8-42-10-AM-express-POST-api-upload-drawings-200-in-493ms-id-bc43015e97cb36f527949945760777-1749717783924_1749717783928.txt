@@ -1,0 +1,56 @@
+8:42:10 AM [express] POST /api/upload/drawings 200 in 493ms :: {"id":"bc43015e97cb36f527949945760777…
+Database operation failed (attempt 1/3): null value in column "category" of relation "build_drawings" violates not-null constraint
+Retrying in 1000ms...
+Database operation failed (attempt 2/3): null value in column "category" of relation "build_drawings" violates not-null constraint
+Retrying in 2000ms...
+Database operation failed (attempt 3/3): null value in column "category" of relation "build_drawings" violates not-null constraint
+Giving up after 3 attempts. Last error: error: null value in column "category" of relation "build_drawings" violates not-null constraint
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async executeWithRetry (/home/runner/workspace/server/db.ts:42:14)
+    at async <anonymous> (/home/runner/workspace/server/routes/buildManagement.ts:490:26) {
+  length: 562,
+  severity: 'ERROR',
+  code: '23502',
+  detail: 'Failing row contains (23, 5, DWG-1749717730955, file, Technical drawing: file.pdf, null, general_arrangement, 1.0, draft, /api/files/drawings/1749717730366-1ee78538546279e3.pdf, 188098, null, 1:100, null, null, null, null, null, t, null, 5, 2025-06-12 08:42:14.111772, 2025-06-12 08:42:14.111772, naval_architecture, plan, A, f, file.pdf, application/pdf, null, null, null).',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'build_drawings',
+  column: 'category',
+  dataType: undefined,
+  constraint: undefined,
+  file: 'execMain.c',
+  line: '2006',
+  routine: 'ExecConstraints'
+}
+Error uploading drawing: error: null value in column "category" of relation "build_drawings" violates not-null constraint
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async executeWithRetry (/home/runner/workspace/server/db.ts:42:14)
+    at async <anonymous> (/home/runner/workspace/server/routes/buildManagement.ts:490:26) {
+  length: 562,
+  severity: 'ERROR',
+  code: '23502',
+  detail: 'Failing row contains (23, 5, DWG-1749717730955, file, Technical drawing: file.pdf, null, general_arrangement, 1.0, draft, /api/files/drawings/1749717730366-1ee78538546279e3.pdf, 188098, null, 1:100, null, null, null, null, null, t, null, 5, 2025-06-12 08:42:14.111772, 2025-06-12 08:42:14.111772, naval_architecture, plan, A, f, file.pdf, application/pdf, null, null, null).',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'build_drawings',
+  column: 'category',
+  dataType: undefined,
+  constraint: undefined,
+  file: 'execMain.c',
+  line: '2006',
+  routine: 'ExecConstraints'
+}
+[SLOW OPERATION] POST /api/build/projects/5/drawings took 3191ms
+8:42:14 AM [express] POST /api/build/projects/5/drawings 500 in 3216ms :: {"error":"Failed to upload…
