@@ -89,14 +89,16 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
     }
   };
 
-  const formatCurrency = (amount?: number) => {
+  const formatCurrency = (amount?: string | number) => {
     if (!amount) return 'N/A';
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return 'N/A';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const formatDate = (dateString?: string) => {
@@ -221,7 +223,13 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
           <CardContent>
             <div className="text-2xl font-bold">
               {project.budgetTotal && project.budgetSpent 
-                ? Math.round((project.budgetSpent / project.budgetTotal) * 100)
+                ? (() => {
+                    const spent = parseFloat(project.budgetSpent);
+                    const total = parseFloat(project.budgetTotal);
+                    return !isNaN(spent) && !isNaN(total) && total > 0 
+                      ? Math.round((spent / total) * 100) 
+                      : 0;
+                  })()
                 : 0}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">

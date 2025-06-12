@@ -44,7 +44,7 @@ import DrawingManager from '@/components/build/DrawingManager';
 import DocumentManager from '@/components/build/DocumentManager';
 import ModelViewer3D from '@/components/build/ModelViewer3D';
 
-// Types for our build management system
+// Types for our build management system - matching database schema
 export interface BuildProject {
   id: number;
   vesselId: number;
@@ -57,8 +57,8 @@ export interface BuildProject {
   endDate?: string;
   estimatedCompletionDate?: string;
   actualCompletionDate?: string;
-  budgetTotal?: number;
-  budgetSpent?: number;
+  budgetTotal?: string; // Database uses decimal/string
+  budgetSpent?: string; // Database uses decimal/string
   progressPercentage?: number;
   projectManagerId?: number;
   yardLocation?: string;

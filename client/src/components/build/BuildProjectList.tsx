@@ -72,14 +72,16 @@ const BuildProjectList: React.FC<BuildProjectListProps> = ({
     }
   };
 
-  const formatCurrency = (amount?: number) => {
+  const formatCurrency = (amount?: string | number) => {
     if (!amount) return 'N/A';
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return 'N/A';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const formatDate = (dateString?: string) => {
