@@ -12,6 +12,7 @@ import { setupAuth } from "./auth";
 import setupReceiptRoutes from "./routes/receiptReconciliation";
 import buildManagementRouter from "./routes/buildManagement";
 import fileUploadRouter from "./routes/fileUpload";
+import systemRouter from "./routes/system";
 import { categorizeExpense, batchCategorizeExpenses } from "./openai";
 import { 
   insertUserSchema, 
@@ -6302,6 +6303,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register file upload routes
   apiRouter.use("/", fileUploadRouter);
+  
+  // Register system monitoring routes
+  apiRouter.use("/system", systemRouter);
   
   app.use("/api", apiRouter);
   

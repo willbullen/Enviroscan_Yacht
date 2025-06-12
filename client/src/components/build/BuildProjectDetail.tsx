@@ -560,9 +560,43 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
         open={isUploadDrawingOpen}
         onOpenChange={setIsUploadDrawingOpen}
         category="drawings"
-        onUploadComplete={() => {
-          toast.success('Drawing uploaded successfully');
-          // TODO: Invalidate queries to refresh data
+        onUploadComplete={async (files) => {
+          for (const file of files) {
+            try {
+              // Create drawing record in database
+              const drawingData = {
+                projectId,
+                title: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
+                drawingNumber: `DWG-${Date.now()}`,
+                version: "1.0",
+                status: "active",
+                filePath: file.url,
+                fileSize: file.fileSize,
+                uploadedBy: 5, // Current user ID
+                description: `Technical drawing: ${file.originalName}`
+              };
+
+              const response = await fetch(`/api/build/projects/${projectId}/drawings`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(drawingData),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to save drawing to database');
+              }
+            } catch (error) {
+              console.error('Error saving drawing:', error);
+              toast.error(`Failed to save drawing: ${file.originalName}`);
+              return;
+            }
+          }
+          
+          toast.success('Technical drawing uploaded and saved successfully');
+          // Refresh the drawings data
+          window.location.reload();
         }}
       />
 
@@ -570,9 +604,43 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
         open={isUploadDocumentOpen}
         onOpenChange={setIsUploadDocumentOpen}
         category="documents"
-        onUploadComplete={() => {
-          toast.success('Document uploaded successfully');
-          // TODO: Invalidate queries to refresh data
+        onUploadComplete={async (files) => {
+          for (const file of files) {
+            try {
+              // Create document record in database
+              const documentData = {
+                projectId,
+                title: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
+                category: "specification",
+                version: "1.0",
+                status: "active",
+                filePath: file.url,
+                fileSize: file.fileSize,
+                uploadedBy: 5, // Current user ID
+                description: `Project document: ${file.originalName}`
+              };
+
+              const response = await fetch(`/api/build/projects/${projectId}/documents`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(documentData),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to save document to database');
+              }
+            } catch (error) {
+              console.error('Error saving document:', error);
+              toast.error(`Failed to save document: ${file.originalName}`);
+              return;
+            }
+          }
+          
+          toast.success('Document uploaded and saved successfully');
+          // Refresh the documents data
+          window.location.reload();
         }}
       />
 
@@ -582,9 +650,42 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
         category="issue-photos"
         title="Report Issue"
         description="Upload photos to document this issue or defect."
-        onUploadComplete={() => {
-          toast.success('Issue photos uploaded successfully');
-          // TODO: Invalidate queries to refresh data
+        onUploadComplete={async (files) => {
+          for (const file of files) {
+            try {
+              // Create issue record with photo in database
+              const issueData = {
+                projectId,
+                title: `Issue documented in ${file.originalName}`,
+                issueNumber: `ISS-${Date.now()}`,
+                category: "defect",
+                priority: "medium",
+                status: "open",
+                description: `Issue documented with photo: ${file.originalName}`,
+                reportedBy: 5, // Current user ID
+                photoPath: file.url
+              };
+
+              const response = await fetch(`/api/build/projects/${projectId}/issues`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(issueData),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to save issue to database');
+              }
+            } catch (error) {
+              console.error('Error saving issue:', error);
+              toast.error(`Failed to save issue: ${file.originalName}`);
+              return;
+            }
+          }
+          
+          toast.success('Issue reported with photos successfully');
+          window.location.reload();
         }}
       />
 
@@ -592,9 +693,43 @@ const BuildProjectDetail: React.FC<BuildProjectDetailProps> = ({
         open={isAddModelOpen}
         onOpenChange={setIsAddModelOpen}
         category="3d-models"
-        onUploadComplete={() => {
-          toast.success('3D model uploaded successfully');
-          // TODO: Invalidate queries to refresh data
+        onUploadComplete={async (files) => {
+          for (const file of files) {
+            try {
+              // Create 3D model record in database
+              const modelData = {
+                projectId,
+                modelName: file.originalName.replace(/\.[^/.]+$/, ""), // Remove extension
+                fileUrl: file.url,
+                fileSize: file.fileSize,
+                uploadedBy: 5, // Current user ID
+                modelType: "scan",
+                description: `3D model: ${file.originalName}`,
+                captureDate: new Date(),
+                isActive: true,
+                tags: ["uploaded"]
+              };
+
+              const response = await fetch(`/api/build/projects/${projectId}/models`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(modelData),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to save 3D model to database');
+              }
+            } catch (error) {
+              console.error('Error saving 3D model:', error);
+              toast.error(`Failed to save 3D model: ${file.originalName}`);
+              return;
+            }
+          }
+          
+          toast.success('3D model uploaded and saved successfully');
+          window.location.reload();
         }}
       />
 

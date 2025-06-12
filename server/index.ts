@@ -5,6 +5,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/requestLogger";
 import { logger } from "./services/logger";
+import { performanceMiddleware, memoryOptimization } from "./utils/performance";
 
 // Initialize Express app
 const app = express();
@@ -14,10 +15,13 @@ app.use(express.urlencoded({ extended: false }));
 // Add request logger middleware
 app.use(requestLogger);
 
+// Add performance monitoring middleware
+app.use(performanceMiddleware());
+
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// Keep existing logger for compatibility
+// Keep existing logger for compatibility with some additional info
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -97,5 +101,14 @@ process.on('unhandledRejection', (reason, promise) => {
   }, () => {
     logger.performance('server_start', { port, environment: app.get("env") });
     log(`serving on port ${port}`);
+
+    // Log initial memory usage
+    const memoryUsage = memoryOptimization.getMemoryUsage();
+    log(`Server started - Memory usage: ${memoryUsage.heapUsed}MB / ${memoryUsage.heapTotal}MB`);
+
+    // Set up periodic memory monitoring (every 5 minutes)
+    setInterval(() => {
+      memoryOptimization.monitorMemory(256); // Warning threshold of 256MB
+    }, 5 * 60 * 1000);
   });
 })();

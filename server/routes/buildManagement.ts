@@ -936,13 +936,14 @@ router.get("/projects/:id/documents", async (req, res) => {
     }
 
     if (search) {
-      whereConditions.push(
-        or(
-          like(buildDocuments.title, `%${search}%`),
-          like(buildDocuments.description, `%${search}%`),
-          like(buildDocuments.documentNumber, `%${search}%`)
-        )
+      const searchCondition = or(
+        like(buildDocuments.title, `%${search}%`),
+        like(buildDocuments.description, `%${search}%`),
+        like(buildDocuments.documentNumber, `%${search}%`)
       );
+      if (searchCondition) {
+        whereConditions.push(searchCondition);
+      }
     }
 
     const documents = await executeWithRetry(() =>
@@ -988,7 +989,7 @@ router.post("/projects/:id/documents", async (req, res) => {
       'document',
       newDocument.id,
       `Document "${newDocument.title}" uploaded`,
-      req.user?.id,
+      req.user?.id || 0,
       undefined,
       newDocument,
       req
@@ -1054,7 +1055,7 @@ router.post("/projects/:id/models", async (req, res) => {
       '3d_model',
       newModel.id,
       `3D model "${newModel.modelName}" added`,
-      req.user?.id,
+      req.user?.id || 0,
       undefined,
       newModel,
       req
@@ -1120,7 +1121,7 @@ router.post("/projects/:id/milestones", async (req, res) => {
       'milestone',
       newMilestone.id,
       `Milestone "${newMilestone.name}" created`,
-      req.user?.id,
+      req.user?.id || 0,
       undefined,
       newMilestone,
       req
@@ -1544,10 +1545,13 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
         modelName: 'Hull Structure Scan - Week 12',
         description: 'Matterport 3D scan of hull structure taken during week 12 of construction',
         modelType: 'matterport',
-        fileUrl: 'https://my.matterport.com/show/?m=sample123',
-        embedCode: '<iframe src="https://my.matterport.com/show/?m=sample123" width="100%" height="400"></iframe>',
+        modelUrl: 'https://my.matterport.com/show/?m=sample123',
+        embeddedViewerUrl: 'https://my.matterport.com/show/?m=sample123',
+        modelId: 'sample123',
+        provider: 'matterport',
         fileSize: 45678912,
-        captureDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+        scanDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+        scanLocation: 'Hull structure - frames 10-20',
         isActive: true,
         tags: ['hull', 'structure', 'progress']
       },
@@ -1555,10 +1559,13 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
         modelName: 'Interior Progress Scan - Guest Areas',
         description: '3D scan showing interior construction progress in guest cabin areas',
         modelType: 'matterport',
-        fileUrl: 'https://my.matterport.com/show/?m=sample456',
-        embedCode: '<iframe src="https://my.matterport.com/show/?m=sample456" width="100%" height="400"></iframe>',
+        modelUrl: 'https://my.matterport.com/show/?m=sample456',
+        embeddedViewerUrl: 'https://my.matterport.com/show/?m=sample456',
+        modelId: 'sample456',
+        provider: 'matterport',
         fileSize: 38947612,
-        captureDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        scanDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        scanLocation: 'Guest cabins and corridors',
         isActive: true,
         tags: ['interior', 'guest', 'progress']
       },
@@ -1566,8 +1573,10 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
         modelName: 'Final Assembly 3D Model',
         description: 'CAD-based 3D model showing final assembly with all systems integrated',
         modelType: 'cad',
-        fileUrl: '/api/files/3d-models/final-assembly.obj',
+        modelUrl: '/api/files/3d-models/final-assembly.obj',
         thumbnailUrl: '/api/files/3d-models/thumbs/final-assembly-thumb.jpg',
+        fileFormat: '.obj',
+        resolution: 'high',
         fileSize: 125678943,
         isActive: true,
         tags: ['cad', 'assembly', 'final']
@@ -1588,39 +1597,59 @@ router.post("/projects/:id/generate-test-data", async (req, res) => {
       {
         name: 'Hull Completion',
         description: 'Complete hull structure including deck and superstructure',
+        milestoneType: 'completion',
+        category: 'structural',
         plannedDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         actualDate: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
         status: 'completed',
+        progressPercentage: 100,
         completedById: 3,
+        responsibleParty: 'Construction Team',
         notes: 'Hull structure completed 2 days ahead of schedule'
       },
       {
         name: 'Systems Integration',
         description: 'Installation and integration of all mechanical and electrical systems',
+        milestoneType: 'completion',
+        category: 'mechanical',
         plannedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
         actualDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
         status: 'completed',
+        progressPercentage: 100,
         completedById: 4,
+        responsibleParty: 'Systems Team',
         notes: 'All systems integrated and tested successfully'
       },
       {
         name: 'Interior Fit-out',
         description: 'Complete interior installation including furniture and finishes',
+        milestoneType: 'completion',
+        category: 'interior',
         plannedDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        status: 'pending',
+        status: 'in_progress',
+        progressPercentage: 65,
+        responsibleParty: 'Interior Design Team',
         notes: 'Waiting for custom furniture delivery'
       },
       {
         name: 'Sea Trials',
         description: 'Comprehensive sea trials and performance testing',
+        milestoneType: 'inspection',
+        category: 'commissioning',
         plannedDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
-        status: 'pending'
+        status: 'planned',
+        progressPercentage: 0,
+        responsibleParty: 'Sea Trial Team'
       },
       {
         name: 'Final Delivery',
         description: 'Final inspection, documentation, and delivery to owner',
+        milestoneType: 'delivery',
+        category: 'commissioning',
         plannedDate: new Date(Date.now() + 42 * 24 * 60 * 60 * 1000),
-        status: 'pending'
+        status: 'planned',
+        progressPercentage: 0,
+        responsibleParty: 'Project Management'
       }
     ];
 
